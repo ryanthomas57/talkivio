@@ -63,9 +63,10 @@ const AGENT: Permission[] = [
   'tags.create',
 ];
 
+// Websites and their chat widget (site keys, installation code, widget configuration) are owner/admin only:
+// supervisors, like agents and analysts, neither see nor reach them (sites.view / sites.manage).
 const SUPERVISOR: Permission[] = [
   ...AGENT,
-  'sites.view',
   'schedules.view',
   'triggers.view',
   'shortcuts.manage_department',
@@ -85,7 +86,13 @@ export const ROLE_PERMISSIONS: Record<Role, ReadonlySet<Permission>> = {
   admin: new Set(ADMIN),
   supervisor: new Set(SUPERVISOR),
   agent: new Set(AGENT),
-  analyst: new Set<Permission>(['tenant.read', 'analytics.view', 'analytics.agents', 'departments.view', 'agents.view']),
+  analyst: new Set<Permission>([
+    'tenant.read',
+    'analytics.view',
+    'analytics.agents',
+    'departments.view',
+    'agents.view',
+  ]),
 };
 
 /** Roles whose data scope is the whole tenant; others are limited to their departments. */
@@ -108,6 +115,7 @@ export function permissionsForRole(role: Role): ReadonlySet<Permission> {
 
 export function permissionsForScopes(scopes: string[]): Set<Permission> {
   const out = new Set<Permission>();
-  for (const s of scopes) for (const p of TOKEN_SCOPE_PERMISSIONS[s] ?? []) if (ROLE_PERMISSIONS.admin.has(p)) out.add(p);
+  for (const s of scopes)
+    for (const p of TOKEN_SCOPE_PERMISSIONS[s] ?? []) if (ROLE_PERMISSIONS.admin.has(p)) out.add(p);
   return out;
 }

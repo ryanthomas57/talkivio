@@ -58,7 +58,12 @@ export function ChatList({ activeId }: { activeId: string | null }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-surface">
-      <div role="tablist" aria-label={t('inbox.list.tablistLabel')} className="flex h-14 shrink-0 items-end gap-1 border-b border-line px-2">
+      {/* The list column is 280 px: tabs may shrink (a long label truncates, its count never clips). */}
+      <div
+        role="tablist"
+        aria-label={t('inbox.list.tablistLabel')}
+        className="flex h-14 shrink-0 items-end gap-0.5 border-b border-line px-1"
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -66,35 +71,81 @@ export function ChatList({ activeId }: { activeId: string | null }) {
             id={`tab-${tab.id}`}
             aria-selected={view === tab.id}
             aria-controls="chat-list-panel"
+            title={tab.label}
             onClick={() => setView(tab.id)}
-            className={cn('-mb-px inline-flex h-11 items-center gap-1.5 border-b-2 px-3 text-sm font-medium', view === tab.id ? 'border-primary text-fg' : 'border-transparent text-fg-2 hover:text-fg')}
+            className={cn(
+              '-mb-px inline-flex h-11 min-w-0 items-center gap-1.5 border-b-2 px-2 text-sm font-medium',
+              view === tab.id ? 'border-primary text-fg' : 'border-transparent text-fg-2 hover:text-fg',
+            )}
           >
-            {tab.label}
-            <span className={cn('rounded-full px-1.5 text-xs tabular', view === tab.id ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'bg-surface-3 text-fg-2')} aria-label={t('inbox.list.chatCount', { count: tab.count })}>
+            <span className="truncate">{tab.label}</span>
+            <span
+              className={cn(
+                'shrink-0 rounded-full px-1.5 text-xs tabular',
+                view === tab.id
+                  ? 'bg-primary-tint text-primary-hover dark:text-primary'
+                  : 'bg-surface-3 text-fg-2',
+              )}
+              aria-label={t('inbox.list.chatCount', { count: tab.count })}
+            >
               {tab.count > 99 ? '99+' : tab.count}
             </span>
           </button>
         ))}
       </div>
-      <div id="chat-list-panel" role="tabpanel" aria-labelledby={`tab-${view}`} className="min-h-0 flex-1 overflow-y-auto scroll-thin">
+      <div
+        id="chat-list-panel"
+        role="tabpanel"
+        aria-labelledby={`tab-${view}`}
+        className="min-h-0 flex-1 overflow-y-auto scroll-thin"
+      >
         {status[view] === 'loading' && !ids.length ? (
           <ListSkeleton />
         ) : status[view] === 'error' ? (
-          <PanelError message={errors[view] ?? t('inbox.list.loadError')} onRetry={() => void loadList(view)} />
+          <PanelError
+            message={errors[view] ?? t('inbox.list.loadError')}
+            onRetry={() => void loadList(view)}
+          />
         ) : ids.length === 0 ? (
           <EmptyState
             icon={<InboxIcon />}
-            title={t(view === 'queue' ? 'inbox.list.emptyQueueTitle' : view === 'mine' ? 'inbox.list.emptyMineTitle' : 'inbox.list.emptyAllTitle')}
-            description={t(view === 'queue' ? 'inbox.list.emptyQueueBody' : view === 'mine' ? 'inbox.list.emptyMineBody' : 'inbox.list.emptyAllBody')}
+            title={t(
+              view === 'queue'
+                ? 'inbox.list.emptyQueueTitle'
+                : view === 'mine'
+                  ? 'inbox.list.emptyMineTitle'
+                  : 'inbox.list.emptyAllTitle',
+            )}
+            description={t(
+              view === 'queue'
+                ? 'inbox.list.emptyQueueBody'
+                : view === 'mine'
+                  ? 'inbox.list.emptyMineBody'
+                  : 'inbox.list.emptyAllBody',
+            )}
           />
         ) : (
           <ul className="flex flex-col">
-            {ids.map((id) => chats[id] && <ChatRow key={id} chat={chats[id]!} view={view} active={id === activeId} ended={ended.includes(id)} />)}
+            {ids.map(
+              (id) =>
+                chats[id] && (
+                  <ChatRow
+                    key={id}
+                    chat={chats[id]!}
+                    view={view}
+                    active={id === activeId}
+                    ended={ended.includes(id)}
+                  />
+                ),
+            )}
           </ul>
         )}
       </div>
       {canOffline && (
-        <Link href="/offline-messages" className="flex min-h-11 shrink-0 items-center gap-2 border-t border-line px-4 text-sm font-medium text-fg-2 hover:bg-surface-2 hover:text-fg">
+        <Link
+          href="/offline-messages"
+          className="flex min-h-11 shrink-0 items-center gap-2 border-t border-line px-4 text-sm font-medium text-fg-2 hover:bg-surface-2 hover:text-fg"
+        >
           <Mail className="size-4" aria-hidden /> {t('inbox.list.offlineMessages')}
         </Link>
       )}
@@ -119,7 +170,17 @@ function ListSkeleton() {
   );
 }
 
-function ChatRow({ chat, view, active, ended }: { chat: StaffChat; view: InboxView; active: boolean; ended: boolean }) {
+function ChatRow({
+  chat,
+  view,
+  active,
+  ended,
+}: {
+  chat: StaffChat;
+  view: InboxView;
+  active: boolean;
+  ended: boolean;
+}) {
   const t = useT();
   const now = useNow(1000);
   const router = useRouter();
@@ -132,13 +193,21 @@ function ChatRow({ chat, view, active, ended }: { chat: StaffChat; view: InboxVi
   const unread = chat.unreadCount ?? 0;
   const reasonKey = chat.routeReason ? ROUTE_REASON[chat.routeReason] : undefined;
   const reason = chat.routeReason ? (reasonKey ? t(reasonKey) : chat.routeReason.replace(/_/g, ' ')) : null;
-  const severity = waiting ? (wait >= 180_000 ? 'text-danger' : wait >= 60_000 ? 'text-warning' : 'text-fg-2') : 'text-fg-2';
+  const severity = waiting
+    ? wait >= 180_000
+      ? 'text-danger'
+      : wait >= 60_000
+        ? 'text-warning'
+        : 'text-fg-2'
+    : 'text-fg-2';
   const participant = !!me && (chat.ownerMembershipId === me || chat.collaboratorIds.includes(me));
 
   const accept = async () => {
     setBusy(true);
     try {
-      const c = realtime.connected ? await realtime.command<StaffChat>('offer.accept', { chatId: chat.id, offerId: null }) : await api.post<StaffChat>(`/chats/${chat.id}/accept`, {});
+      const c = realtime.connected
+        ? await realtime.command<StaffChat>('offer.accept', { chatId: chat.id, offerId: null })
+        : await api.post<StaffChat>(`/chats/${chat.id}/accept`, {});
       focusComposerWhenReady(chat.id);
       useInbox.getState().upsertChat(c);
       router.push(`/inbox/${chat.id}`);
@@ -153,14 +222,27 @@ function ChatRow({ chat, view, active, ended }: { chat: StaffChat; view: InboxVi
   };
 
   return (
-    <li className={cn('relative flex min-h-[76px] gap-3 border-b border-line-subtle px-4 py-3', active ? 'bg-primary-tint/70' : 'hover:bg-surface-2')}>
+    <li
+      className={cn(
+        'relative flex min-h-[76px] gap-3 border-b border-line-subtle px-4 py-3',
+        active ? 'bg-primary-tint/70' : 'hover:bg-surface-2',
+      )}
+    >
       <Avatar name={chat.visitor.displayName} color={chat.visitor.avatarColor} size="md" className="mt-0.5" />
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-2">
-          <Link href={`/inbox/${chat.id}?view=${view}`} aria-current={active ? 'page' : undefined} className="min-w-0 flex-1 truncate text-sm font-semibold text-fg after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-primary">
+          <Link
+            href={`/inbox/${chat.id}?view=${view}`}
+            aria-current={active ? 'page' : undefined}
+            className="min-w-0 flex-1 truncate text-sm font-semibold text-fg after:absolute after:inset-0 focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-[-2px] focus-visible:after:outline-primary"
+          >
             <bdi>{chat.visitor.displayName}</bdi>
             <span className="sr-only">
-              {waiting ? t('inbox.row.srWaiting', { duration: formatDurationLong(wait) }) : ended ? t('inbox.row.srEnded') : ''}
+              {waiting
+                ? t('inbox.row.srWaiting', { duration: formatDurationLong(wait) })
+                : ended
+                  ? t('inbox.row.srEnded')
+                  : ''}
               {unread ? t('inbox.row.srUnread', { count: unread }) : ''}
             </span>
           </Link>
@@ -174,21 +256,41 @@ function ChatRow({ chat, view, active, ended }: { chat: StaffChat; view: InboxVi
             </span>
           )}
         </div>
-        <p className={cn('flex items-center gap-1 truncate text-sm', unread ? 'font-medium text-fg' : 'text-fg-2')}>
-          {chat.lastMessagePreview.startsWith('📎') && <Paperclip className="size-3.5 shrink-0" aria-hidden />}
-          <span className="truncate" dir="auto">{chat.lastMessagePreview.replace(/^📎\s*/, '') || t('inbox.row.noMessages')}</span>
+        <p
+          className={cn(
+            'flex items-center gap-1 truncate text-sm',
+            unread ? 'font-medium text-fg' : 'text-fg-2',
+          )}
+        >
+          {chat.lastMessagePreview.startsWith('📎') && (
+            <Paperclip className="size-3.5 shrink-0" aria-hidden />
+          )}
+          <span className="truncate" dir="auto">
+            {chat.lastMessagePreview.replace(/^📎\s*/, '') || t('inbox.row.noMessages')}
+          </span>
         </p>
         <div className="flex items-center gap-2">
           <p className="flex min-w-0 flex-1 flex-wrap items-center gap-x-1.5 text-xs text-fg-2">
             {dept && <span className="truncate">{dept}</span>}
             {waiting && reason && <span className="truncate">· {reason}</span>}
             {ended && <span className="font-medium">· {t('inbox.row.ended')}</span>}
-            {!waiting && !ended && chat.awaitingReply && participant && <span className="font-medium text-warning">· {t('inbox.row.awaitingReply')}</span>}
-            {chat.status === 'offered' && <span className="font-medium text-info">· {t('inbox.row.offered')}</span>}
+            {!waiting && !ended && chat.awaitingReply && participant && (
+              <span className="font-medium text-warning">· {t('inbox.row.awaitingReply')}</span>
+            )}
+            {chat.status === 'offered' && (
+              <span className="font-medium text-info">· {t('inbox.row.offered')}</span>
+            )}
           </p>
           <CountBadge count={unread} label={t('inbox.row.unreadMessages')} className="relative z-[1]" />
           {waiting && !participant && (
-            <Button size="sm" variant="primary" onClick={accept} loading={busy} aria-label={t('inbox.accept.withName', { name: chat.visitor.displayName })} className="relative z-[1] h-7 px-2.5">
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={accept}
+              loading={busy}
+              aria-label={t('inbox.accept.withName', { name: chat.visitor.displayName })}
+              className="relative z-[1] h-7 px-2.5"
+            >
               {t('inbox.accept.button')}
             </Button>
           )}
