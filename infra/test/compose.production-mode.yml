@@ -1,0 +1,14 @@
+# Overlay for the CI upgrade rehearsal: the local stack's application services run with NODE_ENV=production,
+# as they do on a real server (shutdown drain delay, no development conveniences), so both the previous and the
+# new release are exercised the way they will be deployed. The local SMTP sink, MinIO and ClamAV wiring stay as
+# in docker-compose.yml; the private-webhook test exception is ignored in production mode.
+services:
+  api:
+    environment:
+      NODE_ENV: production
+  gateway:
+    environment:
+      NODE_ENV: production
+  worker:
+    environment:
+      NODE_ENV: production

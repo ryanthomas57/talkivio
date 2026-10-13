@@ -18,8 +18,13 @@ ARG NODE_IMAGE=node:22.23.3-bookworm-slim
 
 # ───────────── runtime-base: OS packages shared by every stage ─────────────
 FROM ${NODE_IMAGE} AS runtime-base
+# Debian security fixes newer than the Node base image (e.g. perl-base CVE-2026-13221, found by the Trivy gate).
+# CI passes the build date as OS_PATCH_DATE so this layer is refreshed at least daily, never reused stale.
 # openssl: Prisma engine platform detection (debian-openssl-3.0.x); tini: PID 1 signal forwarding/reaping.
-RUN apt-get update \
+ARG OS_PATCH_DATE=unset
+RUN echo "OS security updates as of ${OS_PATCH_DATE}" \
+ && apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
  && apt-get install -y --no-install-recommends ca-certificates openssl tini \
  && rm -rf /var/lib/apt/lists/*
 
@@ -72,6 +77,16 @@ RUN apt-get update \
 WORKDIR /repo
 USER node
 ENTRYPOINT ["/usr/bin/tini", "--", "sh", "/repo/infra/postgres/migrate.sh"]
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=unknown
+ARG VERSION=0.0.0-dev
+ARG SOURCE_URL=unknown
+LABEL org.opencontainers.image.title="talkivio-migrate" \
+      org.opencontainers.image.description="Talkivio one-shot migration job (role bootstrap + prisma migrate deploy)" \
+      org.opencontainers.image.source="${SOURCE_URL}" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.revision="${GIT_SHA}" \
+      org.opencontainers.image.created="${BUILD_TIME}"
 
 # ───────────── runtime (default target) ─────────────
 FROM runtime-base AS runtime

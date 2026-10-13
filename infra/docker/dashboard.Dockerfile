@@ -13,7 +13,12 @@
 ARG NODE_IMAGE=node:22.23.3-bookworm-slim
 
 FROM ${NODE_IMAGE} AS runtime-base
-RUN apt-get update \
+# Debian security fixes newer than the Node base image; CI passes the build date as OS_PATCH_DATE so this layer
+# is refreshed at least daily (see api.Dockerfile).
+ARG OS_PATCH_DATE=unset
+RUN echo "OS security updates as of ${OS_PATCH_DATE}" \
+ && apt-get update \
+ && apt-get upgrade -y --no-install-recommends \
  && apt-get install -y --no-install-recommends ca-certificates tini \
  && rm -rf /var/lib/apt/lists/*
 
