@@ -14,7 +14,12 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   const signup = await fetch(`${api}/api/v1/auth/signup`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email: UI_OWNER.email, password: UI_OWNER.password, tenant_name: UI_OWNER.workspace, display_name: UI_OWNER.name }),
+    body: JSON.stringify({
+      email: UI_OWNER.email,
+      password: UI_OWNER.password,
+      tenant_name: UI_OWNER.workspace,
+      display_name: UI_OWNER.name,
+    }),
   });
   // 409/422: the owner exists; 429: signup is rate limited for this address (the UI login below still verifies the owner).
   if (![201, 409, 422, 429].includes(signup.status)) throw new Error(`signup probe failed: ${signup.status}`);
@@ -22,16 +27,34 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   const page = await browser.newPage({ baseURL });
   await page.goto('/login');
   await page.getByLabel(/email/i).fill(UI_OWNER.email);
-  await page.getByLabel(/password/i).first().fill(UI_OWNER.password);
+  await page
+    .getByLabel(/password/i)
+    .first()
+    .fill(UI_OWNER.password);
   await page.getByRole('button', { name: /sign in|log in/i }).click();
   await page.waitForURL((u) => !u.pathname.startsWith('/login'), { timeout: 30_000 });
   // A fresh database (CI): the visitor-facing specs need one site whose origin is the widget demo storefront.
+  // Like an installed site, it routes to the workspace's default department, so department routing settings
+  // (e.g. keyboard.spec's assigned routing) apply to its chats.
   const csrf = (await page.context().cookies()).find((c) => c.name === 'rd_csrf')?.value ?? '';
   const sites = (await (await page.request.get(`${api}/api/v1/sites`)).json()).data as unknown[];
   if (!sites?.length) {
     const origin = process.env.WIDGET_DEMO_URL ?? 'http://localhost:5173';
-    const created = await page.request.post(`${api}/api/v1/sites`, { data: { name: 'UI test site', origins: [{ origin, pattern_type: 'exact' }] }, headers: { 'x-csrf-token': csrf } });
-    if (!created.ok()) throw new Error(`creating the UI test site failed: ${created.status()} ${await created.text()}`);
+    const depts = (await (await page.request.get(`${api}/api/v1/departments`)).json()).data as Array<{
+      id: string;
+      name: string;
+    }>;
+    const support = depts.find((d) => d.name === 'Support') ?? depts[0];
+    const created = await page.request.post(`${api}/api/v1/sites`, {
+      data: {
+        name: 'UI test site',
+        origins: [{ origin, pattern_type: 'exact' }],
+        default_department_id: support?.id ?? null,
+      },
+      headers: { 'x-csrf-token': csrf },
+    });
+    if (!created.ok())
+      throw new Error(`creating the UI test site failed: ${created.status()} ${await created.text()}`);
   }
   mkdirSync(dirname(AUTH_FILE), { recursive: true });
   await page.context().storageState({ path: AUTH_FILE });

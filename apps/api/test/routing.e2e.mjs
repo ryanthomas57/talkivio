@@ -511,9 +511,13 @@ const offerStates = Object.fromEntries(
     .map((l) => l.split('|'))
     .map(([s, n]) => [s, Number(n)]),
 );
+// A decline in flight when the socket dropped lost only its ack: it may have committed (once) or not at all.
+const cutDeclines = allAcks.filter((x) => x.kind === 'decline' && x.r.type === 'transport').length;
 ok(
-  offerStates.accepted === 12 && (offerStates.declined ?? 0) === declines,
-  `offer ledger reconciles (${JSON.stringify(offerStates)})`,
+  offerStates.accepted === 12 &&
+    (offerStates.declined ?? 0) >= declines &&
+    (offerStates.declined ?? 0) <= declines + cutDeclines,
+  `offer ledger reconciles (${JSON.stringify(offerStates)}; ${declines} declines acked, ${cutDeclines} cut in flight)`,
 );
 for (const a of agents) {
   a.autoAccept = false;
