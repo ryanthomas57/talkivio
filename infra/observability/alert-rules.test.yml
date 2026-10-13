@@ -1,0 +1,196 @@
+# Unit tests for alert-rules.yml (AUD-72-28): `promtool test rules infra/observability/alert-rules.test.yml`.
+# Each alert is shown quiet before its condition (and before its `for:` window ends) and firing after, with its
+# exact labels and annotations. Burn-rate scenarios check that only the intended window pair fires.
+rule_files:
+  - alert-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # ── Error budget: 6 h 40 min healthy (so every window holds healthy history), then 4.8 % of commands fail ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_commands_total{outcome="ok"}'
+        values: '0+1000x470'
+      - series: 'talkivio_commands_total{outcome="server_error"}'
+        values: '0x400 50+50x69'
+      - series: 'talkivio_commands_total{outcome="validation"}'
+        values: '0+500x470' # client mistakes never count against the budget
+    alert_rule_test:
+      - eval_time: 399m
+        alertname: TalkivioErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 410m # 1 h ratio ≈ 0.8 % < 1.44 %: the 5 m window alone does not page
+        alertname: TalkivioErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 430m # 1 h ≈ 2.3 %, 5 m ≈ 4.8 %: both above 14.4 × 0.1 %
+        alertname: TalkivioErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-01 }
+            exp_annotations: { summary: 'Error budget burning > 14.4× (1 h and 5 m)' }
+      - eval_time: 430m # 6 h ratio ≈ 0.4 % < 0.6 %
+        alertname: TalkivioErrorBudgetBurnSlow
+        exp_alerts: []
+      - eval_time: 430m
+        alertname: TalkivioErrorBudgetBurnTicket
+        exp_alerts:
+          - exp_labels: { severity: ticket, runbook: RB-01 }
+            exp_annotations: { summary: 'Error budget burning > 1× (3 d and 6 h)' }
+
+  # ── Error budget: a steady 1 % failure rate for 6 h — slow burn and ticket, never the fast page ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_commands_total{outcome="ok"}'
+        values: '0+990x370'
+      - series: 'talkivio_commands_total{outcome="dependency_error"}'
+        values: '0+10x370'
+    alert_rule_test:
+      - eval_time: 365m
+        alertname: TalkivioErrorBudgetBurnSlow
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-01 }
+            exp_annotations: { summary: 'Error budget burning > 6× (6 h and 30 m)' }
+      - eval_time: 365m
+        alertname: TalkivioErrorBudgetBurnFast
+        exp_alerts: []
+
+  # ── Message delivery latency: healthy for 30 min, then every message takes 0.5–1 s ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_message_delivery_seconds_bucket{le="0.1"}'
+        values: '0+100x30 3000x50'
+      - series: 'talkivio_message_delivery_seconds_bucket{le="0.5"}'
+        values: '0+100x30 3000x50'
+      - series: 'talkivio_message_delivery_seconds_bucket{le="1"}'
+        values: '0+100x80'
+      - series: 'talkivio_message_delivery_seconds_bucket{le="+Inf"}'
+        values: '0+100x80'
+    alert_rule_test:
+      - eval_time: 29m
+        alertname: TalkivioSendLatency
+        exp_alerts: []
+      - eval_time: 44m # condition true, still inside the 15 min `for`
+        alertname: TalkivioSendLatency
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: TalkivioSendLatency
+        exp_alerts:
+          - exp_labels: { severity: ticket, runbook: RB-02 }
+            exp_annotations: { summary: 'Message commit → emit p95 > 0.5 s or p99 > 2 s' }
+
+  # ── REST latency: exports are slow by design and never page; chats becoming slow do ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_http_request_duration_seconds_bucket{route_group="export",le="0.3"}'
+        values: '0x80'
+      - series: 'talkivio_http_request_duration_seconds_bucket{route_group="export",le="+Inf"}'
+        values: '0+50x80'
+      - series: 'talkivio_http_request_duration_seconds_bucket{route_group="chats",le="0.3"}'
+        values: '0+100x30 3000x50'
+      - series: 'talkivio_http_request_duration_seconds_bucket{route_group="chats",le="1"}'
+        values: '0+100x80'
+      - series: 'talkivio_http_request_duration_seconds_bucket{route_group="chats",le="+Inf"}'
+        values: '0+100x80'
+    alert_rule_test:
+      - eval_time: 29m # only exports are slow
+        alertname: TalkivioRestLatency
+        exp_alerts: []
+      - eval_time: 55m
+        alertname: TalkivioRestLatency
+        exp_alerts:
+          - exp_labels: { severity: ticket, runbook: RB-01 }
+            exp_annotations: { summary: 'REST p95 > 300 ms or p99 > 1 s' }
+
+  # ── Outbox lag above 30 s from minute 11 ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_outbox_oldest_unpublished_seconds{service="worker"}'
+        values: '0x10 45x20'
+    alert_rule_test:
+      - eval_time: 14m
+        alertname: TalkivioMessagePublishLag
+        exp_alerts: []
+      - eval_time: 17m
+        alertname: TalkivioMessagePublishLag
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-03 }
+            exp_annotations: { summary: 'Outbox events unpublished for > 30 s' }
+      - eval_time: 17m
+        alertname: TalkivioOperationalSignalsAbsent
+        exp_alerts: []
+
+  # ── The DB-derived gauge disappears at minute 10 (snapshot query failing): absent, then the page ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_outbox_oldest_unpublished_seconds{service="worker"}'
+        values: '2x10 _x30'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: TalkivioOperationalSignalsAbsent
+        exp_alerts: []
+      - eval_time: 25m
+        alertname: TalkivioOperationalSignalsAbsent
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-04 }
+            exp_annotations:
+              { summary: 'Database-derived gauges absent (snapshot query failing or every target down)' }
+
+  # ── Routing queue: only routable chats count ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_routing_queue_oldest_seconds{routable="false"}'
+        values: '900x20'
+      - series: 'talkivio_routing_queue_oldest_seconds{routable="true"}'
+        values: '10x5 200x15'
+    alert_rule_test:
+      - eval_time: 5m # a long-waiting chat no agent can serve does not page
+        alertname: TalkivioRoutingQueueAge
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: TalkivioRoutingQueueAge
+        exp_alerts: []
+      - eval_time: 9m
+        alertname: TalkivioRoutingQueueAge
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-05 }
+            exp_annotations: { summary: 'A routable chat has waited > 180 s' }
+
+  # ── Scan backlog and monitor freshness ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_scan_backlog_seconds'
+        values: '10x5 400x15'
+      - series: 'talkivio_monitor_freshness_seconds'
+        values: '2x5 30x15'
+    alert_rule_test:
+      - eval_time: 9m
+        alertname: TalkivioScanBacklog
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: TalkivioScanBacklog
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-06 }
+            exp_annotations: { summary: 'Uploads awaiting a scan verdict for > 5 min' }
+      - eval_time: 9m
+        alertname: TalkivioMonitorStale
+        exp_alerts: []
+      - eval_time: 12m
+        alertname: TalkivioMonitorStale
+        exp_alerts:
+          - exp_labels: { severity: ticket, runbook: RB-05 }
+            exp_annotations: { summary: 'Supervisor monitor snapshots older than 15 s' }
+
+  # ── Reconnect storm against yesterday's baseline (10 reconnects/min for two days, then 100/min) ──
+  - interval: 1m
+    input_series:
+      - series: 'talkivio_socket_reconnects_total{service="api"}'
+        values: '0+10x2880 28900+100x29'
+    alert_rule_test:
+      - eval_time: 2879m
+        alertname: TalkivioReconnectStorm
+        exp_alerts: []
+      - eval_time: 2896m
+        alertname: TalkivioReconnectStorm
+        exp_alerts:
+          - exp_labels: { severity: page, runbook: RB-02 }
+            exp_annotations: { summary: 'Socket reconnects > 5× the 1-day baseline' }

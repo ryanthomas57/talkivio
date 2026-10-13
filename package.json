@@ -43,6 +43,11 @@
       "@tailwindcss/oxide",
       "sharp",
       "msgpackr-extract"
-    ]
+    ],
+    "overrides": {
+      "postcss@<8.5.18": "8.5.29",
+      "deepmerge-ts@<8.0.0": "8.0.2",
+      "tinypool@<2.1.2": "2.2.0"
+    }
   }
 }

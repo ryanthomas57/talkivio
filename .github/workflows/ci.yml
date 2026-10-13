@@ -123,6 +123,10 @@ jobs:
         run: node apps/api/scripts/audit-coverage.mjs
       - name: Traceability gate (every cited file exists and every quoted check is still in its test)
         run: node scripts/ledger-check.mjs
+      - name: Alert rules — syntax and unit tests (every alert quiet before, firing after its for window)
+        run: |
+          docker run --rm --entrypoint promtool -v "$PWD/infra/observability:/rules:ro" prom/prometheus:v3.15.0 check rules /rules/alert-rules.yml
+          docker run --rm --entrypoint promtool -v "$PWD/infra/observability:/rules:ro" prom/prometheus:v3.15.0 test rules /rules/alert-rules.test.yml
 
   unit:
     name: Unit tests
@@ -584,6 +588,10 @@ jobs:
       PW_CHANNEL: chrome
       DASHBOARD_URL: http://localhost:3000
       WIDGET_DEMO_URL: http://localhost:5173
+      # Baked into the dashboard build: the agent socket connects to the API directly (Next rewrites do not proxy WebSockets).
+      NEXT_PUBLIC_REALTIME_ORIGIN: http://localhost:4000
+      # The /design-system reference page (forced-colors and a11y sweeps) is served only in builds that opt in.
+      ENABLE_DESIGN_SYSTEM: '1'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -847,6 +855,17 @@ jobs:
         env:
           API_URL: http://localhost:8080
         run: node infra/test/seed-fixtures.mjs 2>&1 | tee reports/compose/seed-fixtures.log
+      - name: Files through the proxy (presigned uploads into MinIO, real ClamAV verdicts, proxied downloads)
+        env:
+          API_URL: http://localhost:8080
+          DATABASE_OWNER_URL: postgresql://talkivio_owner:local-dev-only-owner-db@localhost:55432/talkivio
+          SCAN_MODE: clamav
+        run: node apps/api/test/files.e2e.mjs 2>&1 | tee reports/compose/files.log
+      - name: Webhooks from the worker container to the receiver container (signed, retried)
+        env:
+          API_URL: http://localhost:8080
+          RECEIVER_URL: http://localhost:4196
+        run: node apps/api/test/compose-webhook.mjs 2>&1 | tee reports/compose/webhooks.log
       - name: Mail reached Mailpit (real SMTP path)
         run: |
           total=$(curl -fsS http://localhost:8025/api/v1/messages | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).total))")
@@ -866,4 +885,134 @@ jobs:
         with:
           name: compose-stack-${{ github.sha }}
           path: reports/compose
+          retention-days: 30
+
+  # Rolling upgrade + rollback rehearsal (DEPLOY02, AUD-72-03, AUD-72-33): the main commit this push replaces is
+  # the previous release. It serves seeded data and a live conversation; this commit's expand migrations run while
+  # it still serves, then worker, gateway, api and dashboard are replaced one at a time, rolled back to the previous
+  # application on the new schema, and rolled forward again. The traffic client retries every send with its
+  # original idempotency key and must end with every message present exactly once, in order.
+  upgrade-rehearsal:
+    name: Upgrade, rollback and roll-forward under live traffic (previous main → this commit, Compose)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [integration]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      BEFORE_SHA: ${{ github.event.before }}
+      OWNER_URL: postgresql://talkivio_owner:local-dev-only-owner-db@localhost:55432/talkivio?schema=public
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install test client dependencies (socket.io-client, prisma for the drift gate)
+        run: pnpm install --frozen-lockfile --filter @talkivio/api
+      - name: Resolve the previous release (the main commit this push replaces)
+        id: prev
+        run: |
+          prev="$BEFORE_SHA"
+          if [ -z "$prev" ] || [ "$prev" = 0000000000000000000000000000000000000000 ] || ! git cat-file -e "${prev}^{commit}" 2>/dev/null; then
+            prev=$(git rev-parse HEAD~1)
+          fi
+          echo "sha=$prev" >> "$GITHUB_OUTPUT"
+          mkdir -p reports/upgrade
+          echo "previous release $prev → this release $GITHUB_SHA" | tee reports/upgrade/timeline.txt >> "$GITHUB_STEP_SUMMARY"
+          git diff --stat "$prev" HEAD -- apps/api/prisma/migrations | tee reports/upgrade/migrations-diff.txt
+          git worktree add "$RUNNER_TEMP/prev" "$prev"
+      - name: Build both releases (api, migrate, dashboard)
+        env:
+          PREV: ${{ steps.prev.outputs.sha }}
+        run: |
+          (cd "$RUNNER_TEMP/prev" && GIT_SHA="$PREV" docker compose build api migrate dashboard)
+          for i in api migrate dashboard; do docker tag "talkivio/$i:local" "talkivio/$i:prev"; done
+          GIT_SHA="$GITHUB_SHA" docker compose build api migrate dashboard
+          for i in api migrate dashboard; do docker tag "talkivio/$i:local" "talkivio/$i:next"; done
+      - name: Start the previous release, seed it and give it history
+        run: |
+          for i in api migrate dashboard; do docker tag "talkivio/$i:prev" "talkivio/$i:local"; done
+          docker compose up -d --no-build reverse-proxy webhook-receiver
+          for i in $(seq 1 180); do
+            if curl -fsS http://localhost:8080/health/ready > /dev/null; then break; fi
+            if [ "$i" = 180 ]; then docker compose ps -a; docker compose logs --no-color --tail 100; exit 1; fi
+            sleep 5
+          done
+          docker compose run --rm --no-deps seed > reports/upgrade/seed-prev.log 2>&1
+          # The previous release's own smoke test, run from this checkout so it resolves node_modules.
+          cp "$RUNNER_TEMP/prev/apps/api/test/smoke-v2.mjs" apps/api/test/smoke-v2.prev.mjs
+          API_URL=http://localhost:8080 DATABASE_OWNER_URL="$OWNER_URL" node apps/api/test/smoke-v2.prev.mjs > reports/upgrade/smoke-prev.log 2>&1
+      - name: Live traffic through upgrade, rollback and roll-forward
+        run: |
+          use() { for i in api migrate dashboard; do docker tag "talkivio/$i:$1" "talkivio/$i:local"; done; }
+          note() { echo "$(date -u +%H:%M:%S) $*" | tee -a reports/upgrade/timeline.txt; }
+          # One service at a time; each must pass its health check before the next is replaced.
+          replace() {
+            for svc in worker gateway api dashboard; do
+              docker compose up -d --no-build --no-deps --force-recreate "$svc" 2> /dev/null
+              st=starting
+              for i in $(seq 1 90); do
+                st=$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' "$(docker compose ps -q "$svc")")
+                if [ "$st" = healthy ]; then break; fi
+                sleep 2
+              done
+              if [ "$st" != healthy ]; then docker compose logs --no-color --tail 80 "$svc"; exit 1; fi
+              note "$svc healthy on $(docker inspect -f '{{ index .Config.Labels "org.opencontainers.image.revision" }}' "$(docker compose ps -q "$svc")")"
+              sleep 3
+            done
+          }
+          STOP="$RUNNER_TEMP/rehearsal.stop" READY="$RUNNER_TEMP/rehearsal.ready"
+          API_URL=http://localhost:8080 STOP_FILE="$STOP" READY_FILE="$READY" REPORT_FILE=reports/upgrade/traffic.json \
+            node apps/api/test/rolling-upgrade.mjs > reports/upgrade/traffic.log 2>&1 &
+          client=$!
+          for i in $(seq 1 90); do if [ -f "$READY" ]; then break; fi; sleep 1; done
+          if [ ! -f "$READY" ]; then cat reports/upgrade/traffic.log; exit 1; fi
+          sleep 5
+          note "upgrade: this release's migrations run while the previous release serves"
+          use next
+          docker compose run --rm --no-deps migrate > reports/upgrade/migrate-next.log 2>&1
+          replace
+          sleep 10
+          note "rollback: the previous application on the new schema"
+          use prev
+          replace
+          sleep 10
+          note "roll forward"
+          use next
+          replace
+          sleep 5
+          touch "$STOP"
+          wait "$client"
+          note "traffic client finished"
+      - name: Traffic report
+        if: always()
+        run: if [ -f reports/upgrade/traffic.log ]; then tail -n 40 reports/upgrade/traffic.log; fi
+      - name: Data written by the previous release is served by this one; the schema is exactly this release's
+        env:
+          API_URL: http://localhost:8080
+          DATABASE_OWNER_URL: ${{ env.OWNER_URL }}
+          DRIFT_ADMIN_URL: postgresql://postgres:local-dev-only-postgres@localhost:55432/postgres
+        run: |
+          node infra/test/seed-fixtures.mjs 2>&1 | tee reports/upgrade/seed-fixtures-after.log
+          node apps/api/test/smoke-v2.mjs 2>&1 | tee reports/upgrade/smoke-after.log
+          docker compose run --rm --no-deps migrate 2>&1 | tee reports/upgrade/migrate-rerun.log
+          node apps/api/scripts/schema-drift.mjs --compare-url "$DATABASE_OWNER_URL" --report reports/upgrade 2>&1 | tee reports/upgrade/schema-drift.log
+      - name: Collect state and logs
+        if: always()
+        run: |
+          mkdir -p reports/upgrade
+          docker compose ps -a > reports/upgrade/ps.txt 2>&1 || true
+          docker compose logs --no-color --timestamps > reports/upgrade/compose.log 2>&1 || true
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: upgrade-rehearsal-${{ github.sha }}
+          path: reports/upgrade
           retention-days: 30

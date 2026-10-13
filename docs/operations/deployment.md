@@ -13,9 +13,9 @@ RPO/RTO, deviations) belongs in `docs/traceability.csv` (DEPLOY02, DEPLOY03, PRI
 
 | Artifact                         | Built by                                                                              | Notes                                                                                                                                                          |
 | -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `talkivio/api@sha256:…`         | `infra/docker/api.Dockerfile`, target `runtime`                                       | one image for api, gateway, worker (role = command)                                                                                                            |
-| `talkivio/migrate@sha256:…`     | same Dockerfile, target `migrate`                                                     | owner credentials are given to this job only                                                                                                                   |
-| `talkivio/dashboard@sha256:…`   | `infra/docker/dashboard.Dockerfile`                                                   | `API_INTERNAL_URL` / `NEXT_PUBLIC_*` are build-time; build once per environment _family_ or move them to runtime config before promoting one digest everywhere |
+| `talkivio/api@sha256:…`          | `infra/docker/api.Dockerfile`, target `runtime`                                       | one image for api, gateway, worker (role = command)                                                                                                            |
+| `talkivio/migrate@sha256:…`      | same Dockerfile, target `migrate`                                                     | owner credentials are given to this job only                                                                                                                   |
+| `talkivio/dashboard@sha256:…`    | `infra/docker/dashboard.Dockerfile`                                                   | `API_INTERNAL_URL` / `NEXT_PUBLIC_*` are build-time; build once per environment _family_ or move them to runtime config before promoting one digest everywhere |
 | Widget assets                    | `apps/widget/dist` (inside the api image at `/app/widget-dist`, or uploaded to a CDN) | hashed `frame/*` files are immutable; `loader.js` is short-cached (300 s)                                                                                      |
 | SBOM, Trivy report, test reports | CI artifacts named with the commit SHA                                                |                                                                                                                                                                |
 
@@ -31,8 +31,8 @@ Signing and provenance attestations are a TODO in CI until a registry is chosen.
   `GATEWAY_SEPARATE=true`, no `TALKIVIO_WEBHOOK_ALLOW_PRIVATE` (local webhook test path only; the code
   ignores it in production anyway), no `SEED_*`, no `SCAN_MODE=dev_unscanned` (refused in production).
   Files/exports: `S3_QUARANTINE_BUCKET` / `S3_CLEAN_BUCKET` (private), `S3_*_PREFIX`, `S3_DOWNLOAD_MODE`
-  (`proxy` adds nosniff/CSP; `presigned` needs `S3_PRESIGN_ENDPOINT` when browsers reach the store on a
-  different host), `CLAMAV_HOST`/`CLAMAV_PORT`/`CLAMAV_TIMEOUT_MS`, `UPLOAD_DAILY_QUOTA_*`.
+  (`proxy` adds nosniff/CSP). Uploads are always presigned PUTs from the browser, so set `S3_PRESIGN_ENDPOINT`
+  whenever browsers reach the store on a different host than the API does (either download mode). Scanner: `CLAMAV_HOST`/`CLAMAV_PORT`/`CLAMAV_TIMEOUT_MS`, `UPLOAD_DAILY_QUOTA_*`.
   Webhooks/privacy tuning: `TALKIVIO_WEBHOOK_TIMEOUT_MS`, `TALKIVIO_WEBHOOK_ROTATION_OVERLAP_MINUTES`,
   `TALKIVIO_ERASURE_TRANSCRIPT_POLICY`, `TALKIVIO_ACCESS_EXPORT_INCLUDE_NOTES`,
   `TALKIVIO_PRIVACY_EXPORT_TTL_DAYS`, `TALKIVIO_PROOF_RETENTION_DAYS`, `TALKIVIO_RETENTION_*`,

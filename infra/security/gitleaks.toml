@@ -15,6 +15,10 @@ regexes = [
   '''talkivio_app_dev_password''',
   '''talkivio-local-demo-2026''',
   '''rds_(Alpha|Beta)LocalDemo[0-9]+''',
+  # Test fixture proving the excerpt sanitizer redacts a Stripe-shaped key (not a real key).
+  '''sk_live_abcdefghij\b''',
+  # Example request header in the product specification (a random UUID, not a credential).
+  '''Idempotency-Key: [0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}''',
 ]
 paths = [
   '''pnpm-lock\.yaml''',

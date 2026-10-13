@@ -3,6 +3,7 @@
 Authority: `docs/master-prompt.txt` (Talkivio spec). Architecture decisions: `docs/adr/`.
 
 ## Layout
+
 - `apps/api/src/db/tenant-db.ts` — **all tenant data access** goes through `TenantDb.tx(tenantId, fn)` /
   `TenantDb.read(tenantId, fn)`, which set `app.tenant_id` for PostgreSQL RLS. `db.root` is only for global
   tables (users, auth_sessions, auth_tokens, outbound_emails …) and `rd_*` SECURITY DEFINER functions.
@@ -39,6 +40,7 @@ Authority: `docs/master-prompt.txt` (Talkivio spec). Architecture decisions: `do
   Reuse these services; do not write chat rows directly from other features.
 
 ## Adding a feature
+
 1. Put everything in `apps/api/src/features/<feature>/` and register providers/controllers in that folder's
    `index.ts` arrays (`<FEATURE>_PROVIDERS`, `<FEATURE>_CONTROLLERS`). Do not edit `modules.ts`/`registry.ts`.
 2. Controllers: agent API under `/api/v1/...` (global prefix), public widget API under `@Controller('widget/v1/...')`
@@ -52,7 +54,9 @@ Authority: `docs/master-prompt.txt` (Talkivio spec). Architecture decisions: `do
    end-to-end script in `apps/api/test/` (pattern: `test/smoke-v2.mjs`).
 
 ## Running an isolated copy (parallel development)
+
 Use your own database, Redis DB index, port and build directory so you never disturb other work:
+
 ```bash
 cd apps/api
 set -a; . ../../.env; set +a
@@ -64,6 +68,7 @@ export PORT=<4100+n> API_URL=http://localhost:<4100+n>
 npx tsc -p tsconfig.build.json --outDir .build/<name>
 node .build/<name>/main.js &  node .build/<name>/worker.js &
 ```
+
 Typecheck without emitting: `npx tsc --noEmit -p tsconfig.json`. Never run `nest build` into the shared `dist/`.
 
 The integrations + privacy suite needs its own two-API + receiver setup; `apps/api/scripts/integrations-local.sh`

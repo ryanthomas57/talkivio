@@ -186,9 +186,19 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
   // ════════════════════════ Wiring ════════════════════════
 
   onModuleInit(): void {
-    this.presence.onVisitorConnection((tenantId, visitorId, sessionId, event) => this.onPresence(tenantId, visitorId, sessionId, event));
+    this.presence.onVisitorConnection((tenantId, visitorId, sessionId, event) =>
+      this.onPresence(tenantId, visitorId, sessionId, event),
+    );
     this.consumers.on('visitor.page.changed', 'visitors.monitor.page', (e) => this.onPageChanged(e));
-    for (const type of ['chat.requested', 'chat.updated', 'chat.closed', 'chat.transferred', 'assignment.accepted', 'participant.joined', 'participant.left']) {
+    for (const type of [
+      'chat.requested',
+      'chat.updated',
+      'chat.closed',
+      'chat.transferred',
+      'assignment.accepted',
+      'participant.joined',
+      'participant.left',
+    ]) {
       this.consumers.on(type, `visitors.monitor.${type}`, (e) => this.onChatEvent(e));
     }
     this.worker.onMaintenance('visitors-maintenance', () => this.maintenance());
@@ -216,9 +226,20 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const now = Date.now();
     const highLoad = q.mode === 'high_load';
     const limit = pageLimit(q.limit);
-    const filterHash = sha256(JSON.stringify({ s: q.siteId, d: q.departmentId, st: q.status, t: q.tag, q: q.q, c: q.country, m: q.mode ?? 'normal' })).slice(0, 16);
+    const filterHash = sha256(
+      JSON.stringify({
+        s: q.siteId,
+        d: q.departmentId,
+        st: q.status,
+        t: q.tag,
+        q: q.q,
+        c: q.country,
+        m: q.mode ?? 'normal',
+      }),
+    ).slice(0, 16);
     const cur = decodeCursor<{ r: number; k: number; id: string }>(q.cursor, filterHash);
-    if (q.cursor && !cur) throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
+    if (q.cursor && !cur)
+      throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
 
     const settings = await this.settings(tenantId);
     const cores = await this.liveCores(tenantId, !highLoad, !!cur);
@@ -228,7 +249,9 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     if (q.departmentId) list = list.filter((c) => c.chat?.departmentId === q.departmentId);
     if (q.country) {
       const cc = q.country.toUpperCase();
-      list = settings.tracking.locationEnabled ? list.filter((c) => c.consenting && c.liveSessions.some((s) => s.country === cc)) : [];
+      list = settings.tracking.locationEnabled
+        ? list.filter((c) => c.consenting && c.liveSessions.some((s) => s.country === cc))
+        : [];
     }
     if (q.tag || q.q) list = await this.filterByRecord(tenantId, list, q.tag, q.q);
 
@@ -239,10 +262,20 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const keyed = list.map((c) => ({ c, key: this.sortKey(c) })).sort((a, b) => this.cmp(a.key, b.key));
     const after = cur ? keyed.filter((x) => this.cmp(x.key, [cur.r, cur.k, cur.id]) > 0) : keyed;
     const slice = after.slice(0, limit);
-    const items = await this.hydrate(tenantId, slice.map((x) => x.c), settings, now);
+    const items = await this.hydrate(
+      tenantId,
+      slice.map((x) => x.c),
+      settings,
+      now,
+    );
     const last = slice[slice.length - 1];
-    const nextCursor = after.length > limit && last ? encodeCursor({ r: last.key[0], k: last.key[1], id: last.key[2] }, filterHash) : null;
-    const maxSeq = await this.db.read(tenantId, (tx) => tx.outboxEvent.findFirst({ where: { tenantId }, orderBy: { seq: 'desc' }, select: { seq: true } }));
+    const nextCursor =
+      after.length > limit && last
+        ? encodeCursor({ r: last.key[0], k: last.key[1], id: last.key[2] }, filterHash)
+        : null;
+    const maxSeq = await this.db.read(tenantId, (tx) =>
+      tx.outboxEvent.findFirst({ where: { tenantId }, orderBy: { seq: 'desc' }, select: { seq: true } }),
+    );
     return {
       items,
       asOf: new Date(now),
@@ -255,14 +288,16 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       idleAfterMs: IDLE_AFTER_MS,
       realtime: {
         unscopedRoom: { kind: 'visitor', id: 'all' },
-        departmentRooms: 'Visitors whose open chat belongs to a department are published only to that department queue scope.',
+        departmentRooms:
+          'Visitors whose open chat belongs to a department are published only to that department queue scope.',
       },
     };
   }
 
   private sortKey(c: Core): [number, number, string] {
     const rank = GROUP_RANK[c.group!];
-    if (c.group === 'incoming' || c.group === 'served') return [rank, c.chat!.requestedAt.getTime(), c.visitorId];
+    if (c.group === 'incoming' || c.group === 'served')
+      return [rank, c.chat!.requestedAt.getTime(), c.visitorId];
     return [rank, -(c.arrivedAt ?? 0), c.visitorId];
   }
 
@@ -274,16 +309,27 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
   private visibleTo(c: Core, auth: AuthContext): boolean {
     if (!c.group) return false;
     if (!c.chat?.departmentId || auth.departmentScope === 'all') return true;
-    return auth.departmentScope.includes(c.chat.departmentId) || (!!auth.membershipId && c.chat.ownerMembershipId === auth.membershipId);
+    return (
+      auth.departmentScope.includes(c.chat.departmentId) ||
+      (!!auth.membershipId && c.chat.ownerMembershipId === auth.membershipId)
+    );
   }
 
-  private async filterByRecord(tenantId: string, list: Core[], tag: string | undefined, q: string | undefined): Promise<Core[]> {
+  private async filterByRecord(
+    tenantId: string,
+    list: Core[],
+    tag: string | undefined,
+    q: string | undefined,
+  ): Promise<Core[]> {
     if (!list.length) return list;
     const ids = list.map((c) => c.visitorId);
     const keep = await this.db.read(tenantId, async (tx) => {
       let set: Set<string> | null = null;
       if (tag) {
-        const t = await tx.tag.findFirst({ where: { tenantId, ...(UUID_RE.test(tag) ? { id: tag } : { slug: tag.toLowerCase() }) }, select: { id: true } });
+        const t = await tx.tag.findFirst({
+          where: { tenantId, ...(UUID_RE.test(tag) ? { id: tag } : { slug: tag.toLowerCase() }) },
+          select: { id: true },
+        });
         if (!t) return new Set<string>();
         const rows = await tx.$queryRaw<Array<{ visitor_id: string }>>`
           SELECT visitor_id FROM visitor_tags WHERE tenant_id = ${tenantId}::uuid AND tag_id = ${t.id}::uuid AND visitor_id = ANY(${ids}::uuid[])`;
@@ -305,12 +351,17 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     return list.filter((c) => keep.has(c.visitorId));
   }
 
-  private liveCores(tenantId: string, includeBrowsing: boolean, continuation: boolean): Promise<Map<string, Core>> {
+  private liveCores(
+    tenantId: string,
+    includeBrowsing: boolean,
+    continuation: boolean,
+  ): Promise<Map<string, Core>> {
     const key = `${tenantId}:${includeBrowsing ? 1 : 0}`;
     const now = Date.now();
     const hit = this.recentCores.get(key);
     if (continuation && hit && now - hit.at < CONTINUATION_REUSE_MS) return hit.cores;
-    for (const [k, v] of this.recentCores) if (now - v.at >= CONTINUATION_REUSE_MS) this.recentCores.delete(k);
+    for (const [k, v] of this.recentCores)
+      if (now - v.at >= CONTINUATION_REUSE_MS) this.recentCores.delete(k);
     const cores = this.resolveCores(tenantId, { includeBrowsing });
     this.recentCores.set(key, { at: now, cores });
     cores.catch(() => this.recentCores.delete(key));
@@ -319,28 +370,56 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
 
   // ════════════════════════ Core resolution (batched) ════════════════════════
 
-  private async resolveCores(tenantId: string, opts: { visitorIds?: string[]; includeBrowsing: boolean }): Promise<Map<string, Core>> {
+  private async resolveCores(
+    tenantId: string,
+    opts: { visitorIds?: string[]; includeBrowsing: boolean },
+  ): Promise<Map<string, Core>> {
     const now = Date.now();
     let presence: Map<string, PresenceSnapshot>;
     let chats: OpenChat[];
-    const chatSelect = { id: true, visitorId: true, siteId: true, departmentId: true, status: true, ownerMembershipId: true, requestedAt: true } satisfies Prisma.ChatSelect;
+    const chatSelect = {
+      id: true,
+      visitorId: true,
+      siteId: true,
+      departmentId: true,
+      status: true,
+      ownerMembershipId: true,
+      requestedAt: true,
+    } satisfies Prisma.ChatSelect;
     if (opts.visitorIds) {
       const ids = opts.visitorIds.filter((id) => UUID_RE.test(id));
       [presence, chats] = await Promise.all([
         this.reader.read(tenantId, ids),
         ids.length
-          ? this.db.read(tenantId, (tx) => tx.chat.findMany({ where: { tenantId, visitorId: { in: ids }, status: { not: 'closed' }, isPreview: false }, select: chatSelect, orderBy: { requestedAt: 'desc' } }))
+          ? this.db.read(tenantId, (tx) =>
+              tx.chat.findMany({
+                where: { tenantId, visitorId: { in: ids }, status: { not: 'closed' }, isPreview: false },
+                select: chatSelect,
+                orderBy: { requestedAt: 'desc' },
+              }),
+            )
           : Promise.resolve([] as OpenChat[]),
       ]);
     } else {
       const [live, open] = await Promise.all([
-        opts.includeBrowsing ? this.reader.liveVisitors(tenantId) : Promise.resolve([] as Array<{ visitorId: string; score: number }>),
-        this.db.read(tenantId, (tx) => tx.chat.findMany({ where: { tenantId, status: { not: 'closed' }, isPreview: false }, select: chatSelect, orderBy: { requestedAt: 'desc' }, take: 20_000 })),
+        opts.includeBrowsing
+          ? this.reader.liveVisitors(tenantId)
+          : Promise.resolve([] as Array<{ visitorId: string; score: number }>),
+        this.db.read(tenantId, (tx) =>
+          tx.chat.findMany({
+            where: { tenantId, status: { not: 'closed' }, isPreview: false },
+            select: chatSelect,
+            orderBy: { requestedAt: 'desc' },
+            take: 20_000,
+          }),
+        ),
       ]);
       chats = open;
       const scores = new Map(live.map((l) => [l.visitorId, l.score]));
       const ids = [...new Set([...live.map((l) => l.visitorId), ...open.map((c) => c.visitorId)])];
-      presence = opts.includeBrowsing ? await this.reader.read(tenantId, ids, scores) : await this.reader.read(tenantId, ids);
+      presence = opts.includeBrowsing
+        ? await this.reader.read(tenantId, ids, scores)
+        : await this.reader.read(tenantId, ids);
       if (opts.includeBrowsing) for (const id of ids) if (!scores.has(id)) presence.delete(id);
     }
 
@@ -348,16 +427,43 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     for (const c of chats) if (!chatByVisitor.has(c.visitorId)) chatByVisitor.set(c.visitorId, c);
 
     const sessionIds = new Set<string>();
-    for (const p of presence.values()) if (this.reader.isOnline(p)) for (const c of p.connections) if (UUID_RE.test(c.sessionId)) sessionIds.add(c.sessionId);
+    for (const p of presence.values())
+      if (this.reader.isOnline(p))
+        for (const c of p.connections) if (UUID_RE.test(c.sessionId)) sessionIds.add(c.sessionId);
     const sessions = sessionIds.size
-      ? await this.db.read(tenantId, (tx) =>
-          tx.$queryRaw<Array<{ id: string; visitor_id: string; site_id: string; started_at: Date; last_seen_at: Date; ended_at: Date | null; analytics_consent: string; country: string | null }>>`
+      ? await this.db.read(
+          tenantId,
+          (tx) =>
+            tx.$queryRaw<
+              Array<{
+                id: string;
+                visitor_id: string;
+                site_id: string;
+                started_at: Date;
+                last_seen_at: Date;
+                ended_at: Date | null;
+                analytics_consent: string;
+                country: string | null;
+              }>
+            >`
             SELECT id, visitor_id, site_id, started_at, last_seen_at, ended_at, analytics_consent, country
             FROM visitor_sessions WHERE tenant_id = ${tenantId}::uuid AND id = ANY(${[...sessionIds]}::uuid[])`,
         )
       : [];
     const sessionById = new Map<string, SessionLite>(
-      sessions.map((s) => [s.id, { id: s.id, visitorId: s.visitor_id, siteId: s.site_id, startedAt: s.started_at, lastSeenAt: s.last_seen_at, endedAt: s.ended_at, analyticsConsent: s.analytics_consent, country: s.country }]),
+      sessions.map((s) => [
+        s.id,
+        {
+          id: s.id,
+          visitorId: s.visitor_id,
+          siteId: s.site_id,
+          startedAt: s.started_at,
+          lastSeenAt: s.last_seen_at,
+          endedAt: s.ended_at,
+          analyticsConsent: s.analytics_consent,
+          country: s.country,
+        },
+      ]),
     );
 
     const candidates = opts.visitorIds ?? [...new Set([...presence.keys(), ...chatByVisitor.keys()])];
@@ -382,7 +488,9 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       let group: LiveGroup | null = null;
       if (chat) group = chat.status === 'active' ? 'served' : 'incoming';
       else if (online && liveSessions.length && consenting) group = idle ? 'idle' : 'browsing';
-      const arrived = liveSessions.length ? Math.min(...liveSessions.map((s) => s.startedAt.getTime())) : null;
+      const arrived = liveSessions.length
+        ? Math.min(...liveSessions.map((s) => s.startedAt.getTime()))
+        : null;
       out.set(visitorId, {
         visitorId,
         group,
@@ -401,22 +509,52 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
   }
 
   private async settings(tenantId: string): Promise<OrgSettings> {
-    return this.db.read(tenantId, async (tx) => mergeOrgSettings((await tx.tenant.findUniqueOrThrow({ where: { id: tenantId }, select: { settings: true } })).settings));
+    return this.db.read(tenantId, async (tx) =>
+      mergeOrgSettings(
+        (await tx.tenant.findUniqueOrThrow({ where: { id: tenantId }, select: { settings: true } })).settings,
+      ),
+    );
   }
 
   /** Full, consent-limited projections for a bounded set of visitors (one query per relation). */
-  private async hydrate(tenantId: string, cores: Core[], settings: OrgSettings, now: number): Promise<LiveVisitorItem[]> {
+  private async hydrate(
+    tenantId: string,
+    cores: Core[],
+    settings: OrgSettings,
+    now: number,
+  ): Promise<LiveVisitorItem[]> {
     if (!cores.length) return [];
     const ids = cores.map((c) => c.visitorId);
     const sessionIds = cores.flatMap((c) => c.liveSessions.map((s) => s.id));
     const deptIds = [...new Set(cores.map((c) => c.chat?.departmentId).filter((d): d is string => !!d))];
     const data = await this.db.read(tenantId, async (tx) => {
       const [visitors, sessions, entered, tagRows, depts, identities] = await Promise.all([
-        tx.visitor.findMany({ where: { tenantId, id: { in: ids } }, select: { id: true, anonymousLabel: true, name: true, verified: true, visitCount: true, deviceCategory: true, emailCiphertext: true } }),
+        tx.visitor.findMany({
+          where: { tenantId, id: { in: ids } },
+          select: {
+            id: true,
+            anonymousLabel: true,
+            name: true,
+            verified: true,
+            visitCount: true,
+            deviceCategory: true,
+            emailCiphertext: true,
+          },
+        }),
         sessionIds.length
           ? tx.visitorSession.findMany({
               where: { tenantId, id: { in: sessionIds } },
-              select: { id: true, siteId: true, startedAt: true, currentUrl: true, currentTitle: true, referrerOrigin: true, deviceCategory: true, country: true, analyticsConsent: true },
+              select: {
+                id: true,
+                siteId: true,
+                startedAt: true,
+                currentUrl: true,
+                currentTitle: true,
+                referrerOrigin: true,
+                deviceCategory: true,
+                country: true,
+                analyticsConsent: true,
+              },
             })
           : Promise.resolve([]),
         sessionIds.length
@@ -425,12 +563,29 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
               WHERE tenant_id = ${tenantId}::uuid AND session_id = ANY(${sessionIds}::uuid[]) AND kind = 'entered'
               ORDER BY session_id, received_at DESC, id DESC`
           : Promise.resolve([] as Array<{ session_id: string; received_at: Date }>),
-        tx.visitorTag.findMany({ where: { tenantId, visitorId: { in: ids } }, select: { visitorId: true, tagId: true } }),
-        deptIds.length ? tx.department.findMany({ where: { tenantId, id: { in: deptIds } }, select: { id: true, name: true } }) : Promise.resolve([]),
-        tx.visitorIdentity.findMany({ where: { tenantId, visitorId: { in: ids } }, select: { visitorId: true }, distinct: ['visitorId'] }),
+        tx.visitorTag.findMany({
+          where: { tenantId, visitorId: { in: ids } },
+          select: { visitorId: true, tagId: true },
+        }),
+        deptIds.length
+          ? tx.department.findMany({
+              where: { tenantId, id: { in: deptIds } },
+              select: { id: true, name: true },
+            })
+          : Promise.resolve([]),
+        tx.visitorIdentity.findMany({
+          where: { tenantId, visitorId: { in: ids } },
+          select: { visitorId: true },
+          distinct: ['visitorId'],
+        }),
       ]);
       const tagIds = [...new Set(tagRows.map((t) => t.tagId))];
-      const tags = tagIds.length ? await tx.tag.findMany({ where: { tenantId, id: { in: tagIds }, archivedAt: null }, select: { id: true, slug: true, label: true } }) : [];
+      const tags = tagIds.length
+        ? await tx.tag.findMany({
+            where: { tenantId, id: { in: tagIds }, archivedAt: null },
+            select: { id: true, slug: true, label: true },
+          })
+        : [];
       return { visitors, sessions, entered, tagRows, tags, depts, identities };
     });
     const visitorById = new Map(data.visitors.map((v) => [v.id, v]));
@@ -474,7 +629,10 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       let recent: LiveSessionItem | null = null;
       let recentAt = -1;
       for (const s of sessionItems) {
-        const at = enteredBySession.get(s.sessionId) ?? c.liveSessions.find((x) => x.id === s.sessionId)?.startedAt.getTime() ?? 0;
+        const at =
+          enteredBySession.get(s.sessionId) ??
+          c.liveSessions.find((x) => x.id === s.sessionId)?.startedAt.getTime() ??
+          0;
         const tieBreak = c.presence?.sessionId === s.sessionId ? 0.5 : 0;
         if (at + tieBreak > recentAt) {
           recentAt = at + tieBreak;
@@ -482,9 +640,13 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         }
       }
       if (recent) recent.mostRecent = true;
-      const shown = recent && !recent.browsingHidden ? recent : (sessionItems.find((s) => !s.browsingHidden) ?? null);
+      const shown =
+        recent && !recent.browsingHidden ? recent : (sessionItems.find((s) => !s.browsingHidden) ?? null);
       const consenting = c.consenting;
-      const country = consenting && settings.tracking.locationEnabled ? (c.liveSessions.find((s) => s.country)?.country ?? null) : null;
+      const country =
+        consenting && settings.tracking.locationEnabled
+          ? (c.liveSessions.find((s) => s.country)?.country ?? null)
+          : null;
       items.push({
         visitorId: c.visitorId,
         group: c.group,
@@ -504,7 +666,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         arrivedAt: consenting && c.arrivedAt ? new Date(c.arrivedAt) : null,
         timeOnSiteMs: consenting && c.arrivedAt ? Math.max(0, now - c.arrivedAt) : null,
         country,
-        deviceCategory: sessionById.get(c.liveSessions[0]?.id ?? '')?.deviceCategory ?? v.deviceCategory ?? null,
+        deviceCategory:
+          sessionById.get(c.liveSessions[0]?.id ?? '')?.deviceCategory ?? v.deviceCategory ?? null,
         sessionCount: consenting ? v.visitCount : null,
         lastActivityAt: c.lastActivityAt ? new Date(c.lastActivityAt) : null,
         idle: c.idle,
@@ -533,10 +696,40 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const ids = [...new Set(visitorIds.filter((v) => UUID_RE.test(v)))];
     if (!ids.length) return;
     try {
-      await this.redis.client.multi().sadd(K.dirty(tenantId), ...ids).sadd(K.dirtyTenants, tenantId).exec();
+      await this.redis.client
+        .multi()
+        .sadd(K.dirty(tenantId), ...ids)
+        .sadd(K.dirtyTenants, tenantId)
+        .exec();
     } catch (err) {
       this.logger.warn(`markDirty failed: ${(err as Error).message}`);
     }
+  }
+
+  /**
+   * A workspace that no longer exists (a hook raced its deletion and re-registered it, or Redis outlived the
+   * database) fails every flush: drop its monitor state once instead of retrying it every tick forever.
+   * Row-level security lets a tenant read its own row, so "not found in its own context" means it is gone.
+   */
+  private async flushFailed(tenantId: string, err: unknown): Promise<void> {
+    const gone =
+      (err as { code?: string }).code === 'P2025' &&
+      !(await this.db
+        .read(tenantId, (tx) => tx.tenant.findUnique({ where: { id: tenantId }, select: { id: true } }))
+        .catch(() => true));
+    if (!gone) {
+      this.logger.warn(`flush ${tenantId}: ${(err as Error).message}`);
+      return;
+    }
+    const r = this.redis.client;
+    await r
+      .multi()
+      .srem(K.dirtyTenants, tenantId)
+      .srem(K.sigTenants, tenantId)
+      .srem('pv:tenants', tenantId)
+      .del(K.dirty(tenantId), K.sig(tenantId), K.ended(tenantId))
+      .exec();
+    this.logger.log(`Dropped live-monitor state of workspace ${tenantId}: it no longer exists`);
   }
 
   private async tick(): Promise<void> {
@@ -549,7 +742,7 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         await r.srem(K.dirtyTenants, tenantId);
         const ids = (await r.spop(K.dirty(tenantId), FLUSH_BATCH)) as unknown as string[];
         if ((await r.scard(K.dirty(tenantId))) > 0) await r.sadd(K.dirtyTenants, tenantId);
-        if (ids?.length) await this.flush(tenantId, ids).catch((err) => this.logger.warn(`flush ${tenantId}: ${(err as Error).message}`));
+        if (ids?.length) await this.flush(tenantId, ids).catch((err) => this.flushFailed(tenantId, err));
       }
       if (Date.now() - this.lastReconcile >= RECONCILE_MS) {
         this.lastReconcile = Date.now();
@@ -579,10 +772,21 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const asOf = new Date(now);
     const settings = await this.settings(tenantId);
     const cores = await this.resolveCores(tenantId, { visitorIds, includeBrowsing: true });
-    const items = new Map((await this.hydrate(tenantId, [...cores.values()].filter((c) => c.group), settings, now)).map((i) => [i.visitorId, i]));
+    const items = new Map(
+      (
+        await this.hydrate(
+          tenantId,
+          [...cores.values()].filter((c) => c.group),
+          settings,
+          now,
+        )
+      ).map((i) => [i.visitorId, i]),
+    );
     const r = this.redis.client;
     const prevRaw = await r.hmget(K.sig(tenantId), ...visitorIds);
-    const prev = new Map<string, Signature | null>(visitorIds.map((id, i) => [id, this.parseSig(prevRaw[i])]));
+    const prev = new Map<string, Signature | null>(
+      visitorIds.map((id, i) => [id, this.parseSig(prevRaw[i])]),
+    );
 
     // Disconnected sessions recorded by onPresence, per visitor (in addition to the previous signature).
     const wanted = new Set(visitorIds);
@@ -598,17 +802,24 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     for (const id of visitorIds) {
       const p = prev.get(id);
       const nowSessions = new Set(cores.get(id)?.liveSessions.map((s) => s.id) ?? []);
-      const left = [...new Set([...(p?.s ?? []), ...(endedByVisitor.get(id) ?? [])])].filter((s) => !nowSessions.has(s));
+      const left = [...new Set([...(p?.s ?? []), ...(endedByVisitor.get(id) ?? [])])].filter(
+        (s) => !nowSessions.has(s),
+      );
       leftByVisitor.set(id, left);
       for (const s of left) leftIds.add(s);
       // A recorded disconnect is settled once the session is no longer live (left) or live again.
-      for (const s of endedByVisitor.get(id) ?? []) if (left.includes(s) || nowSessions.has(s)) announced.push(`${id}|${s}`);
+      for (const s of endedByVisitor.get(id) ?? [])
+        if (left.includes(s) || nowSessions.has(s)) announced.push(`${id}|${s}`);
     }
     const lastSeen = leftIds.size
       ? new Map(
           (
-            await this.db.read(tenantId, (tx) =>
-              tx.$queryRaw<Array<{ id: string; last_seen_at: Date }>>`SELECT id, last_seen_at FROM visitor_sessions WHERE tenant_id = ${tenantId}::uuid AND id = ANY(${[...leftIds]}::uuid[])`,
+            await this.db.read(
+              tenantId,
+              (tx) =>
+                tx.$queryRaw<
+                  Array<{ id: string; last_seen_at: Date }>
+                >`SELECT id, last_seen_at FROM visitor_sessions WHERE tenant_id = ${tenantId}::uuid AND id = ANY(${[...leftIds]}::uuid[])`,
             )
           ).map((s) => [s.id, s.last_seen_at]),
         )
@@ -625,14 +836,52 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       const sig = this.signature(c, item);
       for (const sessionId of leftByVisitor.get(visitorId) ?? []) {
         const payload = { visitorId, sessionId, lastSeenAt: lastSeen.get(sessionId) ?? asOf };
-        this.realtime.ephemeral(AGENT_NS, allRoom, 'visitor.session.left', { kind: 'visitor', id: 'all' }, payload, 10_000);
-        if (p?.d) this.realtime.ephemeral(AGENT_NS, deptRoom(p.d), 'visitor.session.left', { kind: 'queue', id: p.d }, payload, 10_000);
+        this.realtime.ephemeral(
+          AGENT_NS,
+          allRoom,
+          'visitor.session.left',
+          { kind: 'visitor', id: 'all' },
+          payload,
+          10_000,
+        );
+        if (p?.d)
+          this.realtime.ephemeral(
+            AGENT_NS,
+            deptRoom(p.d),
+            'visitor.session.left',
+            { kind: 'queue', id: p.d },
+            payload,
+            10_000,
+          );
       }
       const dept = item?.chat?.departmentId ?? null;
       // Unscoped room: full projection, or null (hidden / department-restricted / gone).
-      this.realtime.ephemeral(AGENT_NS, allRoom, 'visitor.updated', { kind: 'visitor', id: 'all' }, { visitorId, allowedPatch: dept ? null : item, asOf }, 10_000);
-      if (dept) this.realtime.ephemeral(AGENT_NS, deptRoom(dept), 'visitor.updated', { kind: 'queue', id: dept }, { visitorId, allowedPatch: item, asOf }, 10_000);
-      if (p?.d && p.d !== dept) this.realtime.ephemeral(AGENT_NS, deptRoom(p.d), 'visitor.updated', { kind: 'queue', id: p.d }, { visitorId, allowedPatch: null, asOf }, 10_000);
+      this.realtime.ephemeral(
+        AGENT_NS,
+        allRoom,
+        'visitor.updated',
+        { kind: 'visitor', id: 'all' },
+        { visitorId, allowedPatch: dept ? null : item, asOf },
+        10_000,
+      );
+      if (dept)
+        this.realtime.ephemeral(
+          AGENT_NS,
+          deptRoom(dept),
+          'visitor.updated',
+          { kind: 'queue', id: dept },
+          { visitorId, allowedPatch: item, asOf },
+          10_000,
+        );
+      if (p?.d && p.d !== dept)
+        this.realtime.ephemeral(
+          AGENT_NS,
+          deptRoom(p.d),
+          'visitor.updated',
+          { kind: 'queue', id: p.d },
+          { visitorId, allowedPatch: null, asOf },
+          10_000,
+        );
       if (c && (c.online || c.chat)) sigWrites[visitorId] = JSON.stringify(sig);
       else sigDeletes.push(visitorId);
     }
@@ -664,7 +913,11 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       if ((await r.set(K.reconLock(tenantId), '1', 'PX', RECONCILE_MS - 500, 'NX')) !== 'OK') continue;
       const live = await this.reader.liveVisitors(tenantId);
       const scores = new Map(live.map((l) => [l.visitorId, l.score]));
-      const presence = await this.reader.read(tenantId, live.map((l) => l.visitorId), scores);
+      const presence = await this.reader.read(
+        tenantId,
+        live.map((l) => l.visitorId),
+        scores,
+      );
       const sigs = await r.hgetall(K.sig(tenantId));
       const now = Date.now();
       const dirty: string[] = [];
@@ -677,7 +930,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         const idle = p.lastActivityAt === null || now - p.lastActivityAt > IDLE_AFTER_MS ? 1 : 0;
         const sessions = [...new Set(p.connections.map((c) => c.sessionId))].sort();
         const known = sig.a ?? [];
-        if (idle !== sig.i || sessions.length !== known.length || sessions.some((s, i) => s !== known[i])) dirty.push(visitorId);
+        if (idle !== sig.i || sessions.length !== known.length || sessions.some((s, i) => s !== known[i]))
+          dirty.push(visitorId);
       }
       for (const [visitorId, raw] of Object.entries(sigs)) {
         if (presence.has(visitorId)) continue;
@@ -691,7 +945,12 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
 
   // ════════════════════════ Hooks & consumers ════════════════════════
 
-  private async onPresence(tenantId: string, visitorId: string, sessionId: string, event: 'connected' | 'disconnected' | 'gone'): Promise<void> {
+  private async onPresence(
+    tenantId: string,
+    visitorId: string,
+    sessionId: string,
+    event: 'connected' | 'disconnected' | 'gone',
+  ): Promise<void> {
     const sessions = new Set<string>(UUID_RE.test(sessionId) ? [sessionId] : []);
     if (event === 'gone') {
       const sig = this.parseSig(await this.redis.client.hget(K.sig(tenantId), visitorId));
@@ -734,7 +993,12 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const chat = e.payload.chat as { visitor_id?: string } | undefined;
     let visitorId = chat?.visitor_id ?? null;
     if (!visitorId) {
-      const row = await this.db.read(e.tenantId, (tx) => tx.chat.findFirst({ where: { tenantId: e.tenantId, id: e.aggregateId }, select: { visitorId: true } }));
+      const row = await this.db.read(e.tenantId, (tx) =>
+        tx.chat.findFirst({
+          where: { tenantId: e.tenantId, id: e.aggregateId },
+          select: { visitorId: true },
+        }),
+      );
       visitorId = row?.visitorId ?? null;
     }
     if (visitorId) await this.markDirty(e.tenantId, [visitorId]);
@@ -747,8 +1011,18 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     for (const tenantId of await this.reader.tenants()) {
       try {
         const live = await this.reader.liveVisitors(tenantId);
-        const presence = await this.reader.read(tenantId, live.map((l) => l.visitorId), new Map(live.map((l) => [l.visitorId, l.score])));
-        const sessionIds = [...new Set([...presence.values()].flatMap((p) => p.connections.map((c) => c.sessionId)).filter((s) => UUID_RE.test(s)))];
+        const presence = await this.reader.read(
+          tenantId,
+          live.map((l) => l.visitorId),
+          new Map(live.map((l) => [l.visitorId, l.score])),
+        );
+        const sessionIds = [
+          ...new Set(
+            [...presence.values()]
+              .flatMap((p) => p.connections.map((c) => c.sessionId))
+              .filter((s) => UUID_RE.test(s)),
+          ),
+        ];
         const visitorIds = [...presence.keys()];
         liveByTenant.set(tenantId, sessionIds);
         if (!sessionIds.length) continue;
@@ -785,7 +1059,16 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
             DELETE FROM identity_handoffs WHERE tenant_id = ${tenantId}::uuid AND expires_at < now() - interval '1 day'`;
         });
         const pending = await this.db.read(tenantId, (tx) =>
-          tx.job.findMany({ where: { tenantId, kind: 'consent_purge', state: { in: ['queued', 'running'] }, runAfter: { lt: new Date(Date.now() - 120_000) } }, select: { id: true }, take: 50 }),
+          tx.job.findMany({
+            where: {
+              tenantId,
+              kind: 'consent_purge',
+              state: { in: ['queued', 'running'] },
+              runAfter: { lt: new Date(Date.now() - 120_000) },
+            },
+            select: { id: true },
+            take: 50,
+          }),
         );
         for (const j of pending) await this.runConsentPurge(tenantId, j.id);
       } catch (err) {
@@ -797,29 +1080,53 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
   // ════════════════════════ Consent withdrawal purge ════════════════════════
 
   /** Record a durable purge job inside the consent transaction; enqueue it after commit. */
-  async createConsentPurgeJob(tx: Tx, tenantId: string, visitorId: string, recordId: string, before: Date): Promise<string> {
+  async createConsentPurgeJob(
+    tx: Tx,
+    tenantId: string,
+    visitorId: string,
+    recordId: string,
+    before: Date,
+  ): Promise<string> {
     const job = await tx.job.create({
-      data: { tenantId, kind: 'consent_purge', dedupeKey: `${visitorId}:${recordId}`, state: 'queued', payload: { visitorId, before: before.toISOString() } },
+      data: {
+        tenantId,
+        kind: 'consent_purge',
+        dedupeKey: `${visitorId}:${recordId}`,
+        state: 'queued',
+        payload: { visitorId, before: before.toISOString() },
+      },
     });
     return job.id;
   }
 
   async enqueueConsentPurge(tenantId: string, jobId: string): Promise<void> {
     await this.queues
-      .add(QUEUES.timers, 'visitors.consent-purge', { tenantId, jobId }, { jobId: `consent-purge-${jobId}`, attempts: 5, backoff: { type: 'exponential', delay: 2000 } })
-      .catch((err) => this.logger.warn(`enqueue consent purge failed (maintenance will retry): ${(err as Error).message}`));
+      .add(
+        QUEUES.timers,
+        'visitors.consent-purge',
+        { tenantId, jobId },
+        { jobId: `consent-purge-${jobId}`, attempts: 5, backoff: { type: 'exponential', delay: 2000 } },
+      )
+      .catch((err) =>
+        this.logger.warn(`enqueue consent purge failed (maintenance will retry): ${(err as Error).message}`),
+      );
   }
 
   async runConsentPurge(tenantId: string, jobId: string): Promise<void> {
     await this.db.tx(tenantId, async (tx) => {
-      const rows = await tx.$queryRaw<Array<{ id: string; state: string; payload: { visitorId?: string; before?: string } }>>`
+      const rows = await tx.$queryRaw<
+        Array<{ id: string; state: string; payload: { visitorId?: string; before?: string } }>
+      >`
         SELECT id, state, payload FROM jobs WHERE tenant_id = ${tenantId}::uuid AND id = ${jobId}::uuid AND kind = 'consent_purge' FOR UPDATE SKIP LOCKED`;
       const job = rows[0];
       if (!job || job.state === 'succeeded' || job.state === 'cancelled') return;
       const visitorId = job.payload?.visitorId;
       const before = job.payload?.before ? new Date(job.payload.before) : new Date();
       if (!visitorId || !UUID_RE.test(visitorId)) {
-        await tx.job.update({ where: { id: jobId }, data: { state: 'failed', lastErrorCode: 'INVALID_PAYLOAD', attempts: { increment: 1 } } });
+        await tx.job.update({
+          where: { id: jobId },
+          data: { state: 'failed', lastErrorCode: 'INVALID_PAYLOAD', attempts: { increment: 1 } },
+        });
         return;
       }
       const deleted = await tx.$executeRaw`
@@ -830,7 +1137,13 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         WHERE tenant_id = ${tenantId}::uuid AND visitor_id = ${visitorId}::uuid AND analytics_consent <> 'granted'`;
       await tx.job.update({
         where: { id: jobId },
-        data: { state: 'succeeded', attempts: { increment: 1 }, completedAt: new Date(), progress: 100, result: { pageEventsDeleted: Number(deleted), sessionsCleared: Number(cleared) } },
+        data: {
+          state: 'succeeded',
+          attempts: { increment: 1 },
+          completedAt: new Date(),
+          progress: 100,
+          result: { pageEventsDeleted: Number(deleted), sessionsCleared: Number(cleared) },
+        },
       });
     });
   }

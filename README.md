@@ -43,9 +43,9 @@ live in [`docs/adr/`](docs/adr). Workspace packages: `@talkivio/api`, `@talkivio
 | Path                               | What                                                                                                                                         |
 | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
 | `apps/api`                         | NestJS API, gateway and worker (`src/main.ts`, `src/gateway.ts`, `src/worker.ts`), Prisma schema + SQL migrations, demo seed (`src/seed.ts`) |
-| `apps/dashboard`                         | Agent/admin dashboard (Next.js, port 3000)                                                                                                   |
+| `apps/dashboard`                   | Agent/admin dashboard (Next.js, port 3000)                                                                                                   |
 | `apps/widget`                      | Widget loader + iframe app (Vite/Preact), demo storefront in `apps/widget/demo`                                                              |
-| `packages/contracts`                  | Shared contracts, schemas and pure logic                                                                                                     |
+| `packages/contracts`               | Shared contracts, schemas and pure logic                                                                                                     |
 | `infra/`                           | Dockerfiles, Caddy, PostgreSQL bootstrap + migration job, MinIO init, CI helpers, webhook test receiver                                      |
 | `docs/operations`, `docs/security` | Runbooks, deployment/rollback/backup, alert rules, threat model                                                                              |
 
@@ -71,15 +71,16 @@ Order is enforced by health checks, not sleeps: `postgres` (healthy) -> `migrate
 `worker` -> `dashboard` -> `reverse-proxy`. The first start downloads ClamAV signatures (a few minutes);
 uploads stay in the scanning state until clamd is healthy.
 
-| URL (all bound to 127.0.0.1)                                              | What                                                                                                                       |
-| ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| http://localhost:8080                                                     | Dashboard, REST (`/api/v1`), widget assets (`/widget`), sockets (`/realtime/v1`), `/health/live`, `/health/ready`          |
-| http://localhost:5173/?api=http://localhost:8080&w=rds_AlphaLocalDemo0001 | Demo store, origin A, tenant **Alpha**                                                                                     |
-| http://localhost:5174/?api=http://localhost:8080&w=rds_AlphaLocalDemo0001 | Demo store, origin B, tenant **Alpha** (cross-origin tests)                                                                |
-| http://127.0.0.1:5173/?api=http://localhost:8080&w=rds_BetaLocalDemo00001 | Demo store, tenant **Beta** (Alpha's key is refused here)                                                                  |
-| http://localhost:8025                                                     | Mailpit — every email the stack sends                                                                                      |
+| URL (all bound to 127.0.0.1)                                              | What                                                                                                                     |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| http://localhost:8080                                                     | Dashboard, REST (`/api/v1`), widget assets (`/widget`), sockets (`/realtime/v1`), `/health/live`, `/health/ready`        |
+| http://localhost:5173/?api=http://localhost:8080&w=rds_AlphaLocalDemo0001 | Demo store, origin A, tenant **Alpha**                                                                                   |
+| http://localhost:5174/?api=http://localhost:8080&w=rds_AlphaLocalDemo0001 | Demo store, origin B, tenant **Alpha** (cross-origin tests)                                                              |
+| http://127.0.0.1:5173/?api=http://localhost:8080&w=rds_BetaLocalDemo00001 | Demo store, tenant **Beta** (Alpha's key is refused here)                                                                |
+| http://localhost:8025                                                     | Mailpit — every email the stack sends                                                                                    |
 | http://localhost:9001                                                     | MinIO console (root user from `docker-compose.yml` defaults) — check uploads in `talkivio-quarantine` / `talkivio-clean` |
-| http://localhost:4196/events                                              | Webhook test receiver (signed deliveries, de-duplicated)                                                                   |
+| http://localhost:9000                                                     | MinIO S3 API — browsers PUT uploads here (presigned URLs are signed for this address; `RD_S3_PORT`)                      |
+| http://localhost:4196/events                                              | Webhook test receiver (signed deliveries, de-duplicated)                                                                 |
 | `localhost:55432`                                                         | PostgreSQL (`talkivio_owner` / `talkivio_app`, passwords in `docker-compose.yml`)                                        |
 
 **Demo logins** (local only): the seed prints them at the end of `docker compose logs seed`. Emails are
@@ -176,14 +177,14 @@ together exceed the per-IP signup limit). Mirror it locally with your own databa
 
 Master prompt command contract (ch. 62) — current status, so nothing is mistaken for passing:
 
-| Command                                                                                                   | Status                                                                |
-| --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm test`, `pnpm build`                             | available                                                             |
-| `pnpm lint`                                                                                               | available, currently `tsc --noEmit` per package (no ESLint rules yet) |
-| `pnpm test:integration`                                                                                   | available (smoke v2; needs running api + worker)                      |
+| Command                                                                                                                                 | Status                                                                |
+| --------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `pnpm install --frozen-lockfile`, `pnpm typecheck`, `pnpm test`, `pnpm build`                                                           | available                                                             |
+| `pnpm lint`                                                                                                                             | available, currently `tsc --noEmit` per package (no ESLint rules yet) |
+| `pnpm test:integration`                                                                                                                 | available (smoke v2; needs running api + worker)                      |
 | `docker compose up --build`, `pnpm db:migration:new <name>` (dev), `pnpm db:drift`, `pnpm db:deploy`, `pnpm db:prepare`, `pnpm db:seed` | available                                                             |
-| `pnpm verify:all`                                                                                         | available (typecheck + unit + build; not yet e2e/load)                |
-| `pnpm contracts:generate`, `pnpm test:e2e`, `pnpm test:load`                                              | **not implemented yet**                                               |
+| `pnpm verify:all`                                                                                                                       | available (typecheck + unit + build; not yet e2e/load)                |
+| `pnpm contracts:generate`, `pnpm test:e2e`, `pnpm test:load`                                                                            | **not implemented yet**                                               |
 
 CI ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) runs lockfile integrity, compose validation,
 format (changed files), typecheck, unit tests (`pnpm -r test`, JUnit artifacts), build, an integration job
@@ -208,8 +209,8 @@ stack with smoke v2 through the proxy.
 ## Troubleshooting
 
 **Port already in use** (`bind: address already in use`): something else listens on 8080, 5173, 5174,
-8025, 9001, 4196 or 55432 — often a local `vite` demo server (5173) or Postgres. Stop it, or override
-`RD_HTTP_PORT` / `RD_POSTGRES_PORT`. The demo ports 5173/5174 are fixed because they are the seeded
+8025, 9000, 9001, 4196 or 55432 — often a local `vite` demo server (5173) or Postgres. Stop it, or override
+`RD_HTTP_PORT` / `RD_POSTGRES_PORT` / `RD_S3_PORT`. The demo ports 5173/5174 are fixed because they are the seeded
 allowed origins. Find the owner with `lsof -nP -iTCP:5173 -sTCP:LISTEN`.
 
 **A service is unhealthy / the stack does not come up**: `docker compose ps` then

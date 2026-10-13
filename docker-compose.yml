@@ -83,9 +83,10 @@ x-app-env: &app-env
   S3_CLEAN_PREFIX: clean/
   # Export artifacts AND the privacy erasure ledger (exports/privacy-ledger/) live under this prefix.
   S3_EXPORTS_PREFIX: exports/
-  # Stream downloads through the API (nosniff/CSP headers) so the MinIO S3 port stays internal;
-  # S3_PRESIGN_ENDPOINT is therefore not needed locally.
+  # Stream downloads through the API (nosniff/CSP headers). Uploads are presigned PUTs straight from the browser,
+  # so they are signed for the address the browser reaches MinIO on (published on loopback below), not minio:9000.
   S3_DOWNLOAD_MODE: proxy
+  S3_PRESIGN_ENDPOINT: http://localhost:${RD_S3_PORT:-9000}
   SCAN_MODE: clamav
   CLAMAV_HOST: clamav
   CLAMAV_PORT: '3310'
@@ -404,6 +405,8 @@ services:
     volumes:
       - minio_data:/data
     ports:
+      # S3 API for browser uploads (presigned PUT URLs carry this host in their signature).
+      - '127.0.0.1:${RD_S3_PORT:-9000}:9000'
       - '127.0.0.1:9001:9001'
     healthcheck:
       test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:9000/minio/health/live']

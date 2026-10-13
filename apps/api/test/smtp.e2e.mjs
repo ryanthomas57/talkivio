@@ -24,7 +24,8 @@ const API = `http://localhost:${PORT}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let passed = 0;
 function ok(cond, msg, detail) {
-  if (!cond) throw new Error(`ASSERTION FAILED: ${msg}${detail === undefined ? '' : ` — ${JSON.stringify(detail)}`}`);
+  if (!cond)
+    throw new Error(`ASSERTION FAILED: ${msg}${detail === undefined ? '' : ` — ${JSON.stringify(detail)}`}`);
   passed++;
   console.log(`  ✓ ${msg}`);
 }
@@ -69,7 +70,8 @@ const smtp = createServer((sock) => {
       const line = buf.slice(0, nl);
       buf = buf.slice(nl + 2);
       const cmd = line.slice(0, 4).toUpperCase();
-      if (cmd === 'EHLO' || cmd === 'HELO') sock.write('250-talkivio-test-smtp\r\n250-8BITMIME\r\n250 SMTPUTF8\r\n');
+      if (cmd === 'EHLO' || cmd === 'HELO')
+        sock.write('250-talkivio-test-smtp\r\n250-8BITMIME\r\n250 SMTPUTF8\r\n');
       else if (cmd === 'MAIL') {
         msg.from = /<([^>]*)>/.exec(line)?.[1] ?? '';
         sock.write('250 2.1.0 Ok\r\n');
@@ -123,7 +125,10 @@ const ENV = {
   SHUTDOWN_DRAIN_DELAY_MS: '0',
   LOG_LEVEL: 'warn',
 };
-const sql = (q) => execFileSync('psql', [`${ownerBase}/${DB}`, '-At', '-F', '|', '-c', q]).toString().trim();
+const sql = (q) =>
+  execFileSync('psql', [`${ownerBase}/${DB}`, '-At', '-F', '|', '-c', q])
+    .toString()
+    .trim();
 const redisDir = resolve(process.env.TMPDIR ?? '/tmp', `talkivio-smtp-redis-${process.pid}`);
 const procs = [];
 let logs = '';
@@ -134,7 +139,10 @@ function start(name, cmd, args) {
   procs.push(p);
   return p;
 }
-const ready = (url) => fetch(url).then((r) => r.status === 200).catch(() => false);
+const ready = (url) =>
+  fetch(url)
+    .then((r) => r.status === 200)
+    .catch(() => false);
 
 class Client {
   constructor() {
@@ -143,7 +151,13 @@ class Client {
   async call(method, path, body) {
     const res = await fetch(`${API}/api/v1${path}`, {
       method,
-      headers: { 'content-type': 'application/json', cookie: Object.entries(this.cookies).map(([k, v]) => `${k}=${v}`).join('; '), ...(this.cookies.rd_csrf ? { 'x-csrf-token': this.cookies.rd_csrf } : {}) },
+      headers: {
+        'content-type': 'application/json',
+        cookie: Object.entries(this.cookies)
+          .map(([k, v]) => `${k}=${v}`)
+          .join('; '),
+        ...(this.cookies.rd_csrf ? { 'x-csrf-token': this.cookies.rd_csrf } : {}),
+      },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
     for (const c of res.headers.getSetCookie?.() ?? []) {
@@ -161,14 +175,17 @@ class Client {
   }
 }
 const emailRow = (to, template) => {
-  const row = sql(`SELECT status, attempts, coalesce(last_error, ''), coalesce(provider_message_id, '') FROM outbound_emails WHERE recipient = '${to}' AND template = '${template}' ORDER BY created_at DESC LIMIT 1`);
+  const row = sql(
+    `SELECT status, attempts, coalesce(last_error, ''), coalesce(provider_message_id, '') FROM outbound_emails WHERE recipient = '${to}' AND template = '${template}' ORDER BY created_at DESC LIMIT 1`,
+  );
   if (!row) return null;
   const [status, attempts, lastError, providerId] = row.split('|');
   return { status, attempts: Number(attempts), lastError, providerId };
 };
 const messagesTo = (to) => received.filter((m) => m.to.includes(to.toLowerCase()));
 // Quoted-printable soft breaks and =XX escapes, enough to read links back out of the received body.
-const decodeQp = (s) => s.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
+const decodeQp = (s) =>
+  s.replace(/=\r?\n/g, '').replace(/=([0-9A-F]{2})/g, (_, h) => String.fromCharCode(parseInt(h, 16)));
 
 const cleanup = () => {
   for (const p of procs) if (p.exitCode === null) p.kill('SIGKILL');
@@ -176,12 +193,32 @@ const cleanup = () => {
   rmSync(redisDir, { recursive: true, force: true });
 };
 try {
-  console.log(`Setup (isolated: db ${DB}, redis :${REDIS_PORT}, api :${PORT}, smtp :${SMTP_PORT}, build ${BUILD})`);
+  console.log(
+    `Setup (isolated: db ${DB}, redis :${REDIS_PORT}, api :${PORT}, smtp :${SMTP_PORT}, build ${BUILD})`,
+  );
   rmSync(redisDir, { recursive: true, force: true });
   mkdirSync(redisDir, { recursive: true });
-  start('redis', 'redis-server', ['--port', String(REDIS_PORT), '--save', '', '--appendonly', 'no', '--dir', redisDir, '--loglevel', 'warning']);
-  await until(() => execFileSync('redis-cli', ['-p', String(REDIS_PORT), 'ping']).toString().trim() === 'PONG', 10_000, 'redis');
-  execFileSync('sh', ['scripts/db-reset.sh'], { cwd: apiDir, env: ENV, stdio: 'ignore' });
+  start('redis', 'redis-server', [
+    '--port',
+    String(REDIS_PORT),
+    '--save',
+    '',
+    '--appendonly',
+    'no',
+    '--dir',
+    redisDir,
+    '--loglevel',
+    'warning',
+  ]);
+  await until(
+    () =>
+      execFileSync('redis-cli', ['-p', String(REDIS_PORT), 'ping'])
+        .toString()
+        .trim() === 'PONG',
+    10_000,
+    'redis',
+  );
+  execFileSync('bash', ['scripts/db-reset.sh'], { cwd: apiDir, env: ENV, stdio: 'ignore' });
   start('api', process.execPath, ['--enable-source-maps', resolve(BUILD, 'main.js')]);
   start('worker', process.execPath, ['--enable-source-maps', resolve(BUILD, 'worker.js')]);
   await until(() => ready(`${API}/health/ready`), 60_000, 'api ready');
@@ -192,49 +229,127 @@ try {
   const stamp = Date.now().toString(36);
   const owner = new Client();
   const email = `smtp-owner+${stamp}@example.com`;
-  await owner.must('POST', '/auth/signup', { email, password: 'smtp passphrase long', tenant_name: `SMTP ${stamp}`, timezone: 'UTC' });
+  await owner.must('POST', '/auth/signup', {
+    email,
+    password: 'smtp passphrase long',
+    tenant_name: `SMTP ${stamp}`,
+    timezone: 'UTC',
+  });
   const msg = await until(() => messagesTo(email)[0], 20_000, 'verification email over SMTP');
   const headers = msg.data.split('\r\n\r\n')[0];
-  ok(/^Subject: Confirm your email address/m.test(headers) && /^Content-Type: multipart\/alternative/m.test(headers) && msg.from.length > 0, `the verification email arrived over SMTP (from ${msg.from}, multipart text + HTML)`);
-  const row = await until(() => (emailRow(email, 'verify_email')?.status === 'accepted' ? emailRow(email, 'verify_email') : null), 10_000, 'accepted status');
-  ok(row.attempts === 1 && row.providerId.length > 0, `the row is "accepted" with the provider's message id after one attempt (${row.providerId})`);
+  ok(
+    /^Subject: Confirm your email address/m.test(headers) &&
+      /^Content-Type: multipart\/alternative/m.test(headers) &&
+      msg.from.length > 0,
+    `the verification email arrived over SMTP (from ${msg.from}, multipart text + HTML)`,
+  );
+  const row = await until(
+    () => (emailRow(email, 'verify_email')?.status === 'accepted' ? emailRow(email, 'verify_email') : null),
+    10_000,
+    'accepted status',
+  );
+  ok(
+    row.attempts === 1 && row.providerId.length > 0,
+    `the row is "accepted" with the provider's message id after one attempt (${row.providerId})`,
+  );
   const token = decodeURIComponent((/[?&]token=([^\s&"<]+)/.exec(decodeQp(msg.data)) ?? [])[1] ?? '');
   const verified = await owner.call('POST', '/auth/verify-email', { token });
   ok(token.length > 10 && verified.status < 300, 'the link inside the received message verifies the account');
   // AUTH01: the token exists only as a hash at rest, and a consumed link cannot be replayed.
   const tokenHash = createHash('sha256').update(token).digest('hex');
-  const stored = sql(`SELECT count(*) FILTER (WHERE token_hash = '${tokenHash}') || '|' || count(*) FILTER (WHERE token_hash = '${token}' OR coalesce(payload::text, '') LIKE '%${token}%') || '|' || bool_and(consumed_at IS NOT NULL) FILTER (WHERE token_hash = '${tokenHash}') FROM auth_tokens`);
-  ok(stored === '1|0|true', `the verification token is stored as its SHA-256 only, and marked consumed (${stored})`);
+  const stored = sql(
+    `SELECT count(*) FILTER (WHERE token_hash = '${tokenHash}') || '|' || count(*) FILTER (WHERE token_hash = '${token}' OR coalesce(payload::text, '') LIKE '%${token}%') || '|' || bool_and(consumed_at IS NOT NULL) FILTER (WHERE token_hash = '${tokenHash}') FROM auth_tokens`,
+  );
+  ok(
+    stored === '1|0|true',
+    `the verification token is stored as its SHA-256 only, and marked consumed (${stored})`,
+  );
   const replay = await new Client().call('POST', '/auth/verify-email', { token });
-  ok(replay.status >= 400 && replay.status < 500, `replaying the consumed link fails (${replay.status} ${replay.error?.code})`);
+  ok(
+    replay.status >= 400 && replay.status < 500,
+    `replaying the consumed link fails (${replay.status} ${replay.error?.code})`,
+  );
 
   console.log('Temporary failure (451): queued with the error, then delivered once');
   const flaky = `smtp-flaky+${stamp}@example.com`;
   policy.tempFail.set(flaky, 2);
-  await owner.must('POST', '/agents/invitations', { email: flaky, role: 'agent', department_ids: [], capacity: 2 });
-  const interim = await until(() => {
-    const r = emailRow(flaky, 'agent_invitation');
-    return r && r.attempts >= 1 && r.status !== 'accepted' ? r : null;
-  }, 10_000, 'first failed attempt');
-  ok(interim.status === 'queued' && /451|Temporary/i.test(interim.lastError), `after a temporary failure the email stays "queued" with the error recorded, not "failed" (${interim.status}, ${interim.lastError.slice(0, 60)})`);
-  const done = await until(() => (emailRow(flaky, 'agent_invitation')?.status === 'accepted' ? emailRow(flaky, 'agent_invitation') : null), 30_000, 'retried delivery');
-  ok(done.attempts === 3 && done.lastError === '' && messagesTo(flaky).length === 1, `the retry delivered it exactly once (attempt ${done.attempts}, ${messagesTo(flaky).length} message received)`);
+  await owner.must('POST', '/agents/invitations', {
+    email: flaky,
+    role: 'agent',
+    department_ids: [],
+    capacity: 2,
+  });
+  const interim = await until(
+    () => {
+      const r = emailRow(flaky, 'agent_invitation');
+      return r && r.attempts >= 1 && r.status !== 'accepted' ? r : null;
+    },
+    10_000,
+    'first failed attempt',
+  );
+  ok(
+    interim.status === 'queued' && /451|Temporary/i.test(interim.lastError),
+    `after a temporary failure the email stays "queued" with the error recorded, not "failed" (${interim.status}, ${interim.lastError.slice(0, 60)})`,
+  );
+  const done = await until(
+    () =>
+      emailRow(flaky, 'agent_invitation')?.status === 'accepted' ? emailRow(flaky, 'agent_invitation') : null,
+    30_000,
+    'retried delivery',
+  );
+  ok(
+    done.attempts === 3 && done.lastError === '' && messagesTo(flaky).length === 1,
+    `the retry delivered it exactly once (attempt ${done.attempts}, ${messagesTo(flaky).length} message received)`,
+  );
 
   console.log('Permanent rejection (550): failed only after the final attempt, never delivered');
   const bounce = `smtp-bounce+${stamp}@example.com`;
   policy.reject.add(bounce);
-  await owner.must('POST', '/agents/invitations', { email: bounce, role: 'agent', department_ids: [], capacity: 2 });
-  const early = await until(() => {
-    const r = emailRow(bounce, 'agent_invitation');
-    return r && r.attempts >= 1 ? r : null;
-  }, 10_000, 'first rejection');
-  ok(early.status === 'queued', `while retries remain the rejected email is "queued" (attempt ${early.attempts})`);
-  const final = await until(() => (emailRow(bounce, 'agent_invitation')?.status === 'failed' ? emailRow(bounce, 'agent_invitation') : null), 90_000, 'final failure');
-  ok(final.attempts === 8 && /550/.test(final.lastError) && messagesTo(bounce).length === 0, `after the 8th attempt it is "failed" with the provider's reason (${final.lastError.slice(0, 60)})`);
-  ok(sql(`SELECT count(*) FROM outbound_emails WHERE status = 'delivered'`) === '0', 'no email is reported as delivered without a provider delivery callback');
-  const metrics = await fetch(`http://localhost:${ENV.WORKER_HEALTH_PORT}/health/metrics`).then((r) => r.text());
-  const count = (outcome) => Number(new RegExp(`talkivio_email_deliveries_total\\{[^}]*outcome="${outcome}"[^}]*\\} (\\d+)`).exec(metrics)?.[1] ?? 0);
-  ok(count('accepted') >= 2 && count('retried') >= 2 + 7 && count('failed') === 1, `delivery metrics: accepted ${count('accepted')}, retried ${count('retried')}, failed ${count('failed')}`);
+  await owner.must('POST', '/agents/invitations', {
+    email: bounce,
+    role: 'agent',
+    department_ids: [],
+    capacity: 2,
+  });
+  const early = await until(
+    () => {
+      const r = emailRow(bounce, 'agent_invitation');
+      return r && r.attempts >= 1 ? r : null;
+    },
+    10_000,
+    'first rejection',
+  );
+  ok(
+    early.status === 'queued',
+    `while retries remain the rejected email is "queued" (attempt ${early.attempts})`,
+  );
+  const final = await until(
+    () =>
+      emailRow(bounce, 'agent_invitation')?.status === 'failed' ? emailRow(bounce, 'agent_invitation') : null,
+    90_000,
+    'final failure',
+  );
+  ok(
+    final.attempts === 8 && /550/.test(final.lastError) && messagesTo(bounce).length === 0,
+    `after the 8th attempt it is "failed" with the provider's reason (${final.lastError.slice(0, 60)})`,
+  );
+  ok(
+    sql(`SELECT count(*) FROM outbound_emails WHERE status = 'delivered'`) === '0',
+    'no email is reported as delivered without a provider delivery callback',
+  );
+  const metrics = await fetch(`http://localhost:${ENV.WORKER_HEALTH_PORT}/health/metrics`).then((r) =>
+    r.text(),
+  );
+  const count = (outcome) =>
+    Number(
+      new RegExp(`talkivio_email_deliveries_total\\{[^}]*outcome="${outcome}"[^}]*\\} (\\d+)`).exec(
+        metrics,
+      )?.[1] ?? 0,
+    );
+  ok(
+    count('accepted') >= 2 && count('retried') >= 2 + 7 && count('failed') === 1,
+    `delivery metrics: accepted ${count('accepted')}, retried ${count('retried')}, failed ${count('failed')}`,
+  );
 } catch (err) {
   console.error(logs.split('\n').slice(-30).join('\n'));
   cleanup();
