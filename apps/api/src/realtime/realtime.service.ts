@@ -32,10 +32,13 @@ export interface DurableFrame {
   payload: unknown;
 }
 
+/** Sockets whose outbound queue is backed up (gateway backpressure guard); ephemeral frames skip them. */
+export const CONGESTED_ROOM = 'rt:congested';
+
 interface RoomEmitter {
   emit(event: string, ...args: unknown[]): unknown;
   disconnectSockets?(close?: boolean): void;
-  readonly volatile?: RoomEmitter;
+  except?(room: string | string[]): RoomEmitter;
 }
 
 /**
@@ -68,13 +71,21 @@ export class RealtimeService {
   }
 
   /** Ephemeral frame (typing, presence, monitoring deltas). Payload is converted to wire format. */
-  ephemeral(nsName: string, rooms: string | string[], type: string, scope: { kind: string; id: string }, payload: unknown, ttlMs = 6000): void {
+  ephemeral(
+    nsName: string,
+    rooms: string | string[],
+    type: string,
+    scope: { kind: string; id: string },
+    payload: unknown,
+    ttlMs = 6000,
+  ): void {
     const list = Array.isArray(rooms) ? rooms : [rooms];
     if (!list.length) return;
-    // Volatile: dropped for sockets whose transport cannot take writes right now (ephemeral goes first
-    // under backpressure, ch. 47); durable frames are never volatile and are replayable by cursor.
+    // Skipped for congested sockets (ephemeral goes first under backpressure, ch. 47); durable frames always flow
+    // and are replayable by cursor. Not Socket.IO's `volatile`: it drops every frame of a burst after the first
+    // whenever a write is still in flight, so most live visitor/typing updates would never arrive.
     const t = this.target(nsName, list);
-    (t?.volatile ?? t)?.emit('ephemeral', {
+    (t?.except?.(CONGESTED_ROOM) ?? t)?.emit('ephemeral', {
       v: 1,
       type,
       scope,
@@ -88,7 +99,10 @@ export class RealtimeService {
    * clients reconnect with a fresh ticket (scopes are re-authorized) instead of signing out.
    */
   revoke(nsName: string, room: string, reason: string): void {
-    const frame = { type: 'access.revoked', payload: { reason, relogin_required: !RESCOPE_REASONS.has(reason) } };
+    const frame = {
+      type: 'access.revoked',
+      payload: { reason, relogin_required: !RESCOPE_REASONS.has(reason) },
+    };
     const ns = this.namespaces.get(nsName);
     if (ns) {
       // Only the sockets in the room when the revocation happens: a client that reconnects inside the

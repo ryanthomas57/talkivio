@@ -6,10 +6,16 @@
   var LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
   var api = params.get('api') || localStorage.getItem('demo:api') || 'http://localhost:4000';
   if (!LOCAL.test(api)) api = 'http://localhost:4000';
-  var key = params.get('w');
+  // Accepts the bare key or the whole install snippet pasted from the dashboard (data-site-key="rds_…").
+  function keyFrom(v) {
+    var s = (v || '').trim();
+    var m = s.match(/data-site-key\s*=\s*["']([^"']+)["']/) || s.match(/\b(rds_[A-Za-z0-9]+)\b/);
+    return m ? m[1] : s;
+  }
+  var key = keyFrom(params.get('w'));
   try {
     if (key) localStorage.setItem('demo:siteKey', key);
-    else key = localStorage.getItem('demo:siteKey');
+    else key = keyFrom(localStorage.getItem('demo:siteKey'));
     if (params.get('api')) localStorage.setItem('demo:api', api);
   } catch (e) {}
 
@@ -19,13 +25,13 @@
     el.innerHTML =
       '<strong>Demo store</strong>' +
       '<span>This page embeds the chat widget from <code></code>.</span>' +
-      '<label>Site key <input placeholder="wk_…" aria-label="Site key" /></label>' +
+      '<label>Site key <input placeholder="rds_… or the install snippet" aria-label="Site key" /></label>' +
       '<button type="button">Use key</button>';
     el.querySelector('code').textContent = api + '/widget/loader.js';
     var input = el.querySelector('input');
     input.value = key || '';
     el.querySelector('button').addEventListener('click', function () {
-      var v = input.value.trim();
+      var v = keyFrom(input.value);
       if (!v) return;
       try {
         localStorage.setItem('demo:siteKey', v);
@@ -53,7 +59,24 @@
     s.setAttribute('data-site-key', key);
     document.head.appendChild(s);
 
-    var events = ['ready', 'opened', 'closed', 'availability.changed', 'connection.changed', 'identity.changed', 'chat.requested', 'chat.started', 'message.received', 'unread.changed', 'chat.ended', 'rating.changed', 'invitation.displayed', 'invitation.accepted', 'offline.submitted', 'error'];
+    var events = [
+      'ready',
+      'opened',
+      'closed',
+      'availability.changed',
+      'connection.changed',
+      'identity.changed',
+      'chat.requested',
+      'chat.started',
+      'message.received',
+      'unread.changed',
+      'chat.ended',
+      'rating.changed',
+      'invitation.displayed',
+      'invitation.accepted',
+      'offline.submitted',
+      'error',
+    ];
     events.forEach(function (name) {
       window.Talkivio('on', name, function (payload) {
         log(name + ' ' + JSON.stringify(payload));

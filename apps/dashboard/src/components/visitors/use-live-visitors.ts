@@ -10,13 +10,28 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useEphemeralEvent, useResync, useScopes } from '@/hooks/use-realtime';
 import { tStatic } from '@/i18n';
 import { api, errorMessage } from '@/lib/api';
-import { applyFrames, displayCompare, effectiveGroups, serverKey, type LiveFilters, type LiveFrame, type LiveRow } from './live-model';
+import {
+  applyFrames,
+  displayCompare,
+  effectiveGroups,
+  serverKey,
+  type LiveFilters,
+  type LiveFrame,
+  type LiveRow,
+} from './live-model';
 import { mono } from './display';
-import type { LiveGroup, LiveSnapshot, LiveVisitor, VisitorSessionLeftFrame, VisitorUpdatedFrame } from './types';
+import type {
+  LiveGroup,
+  LiveSnapshot,
+  LiveVisitor,
+  VisitorSessionLeftFrame,
+  VisitorUpdatedFrame,
+} from './types';
 
 const PAGE = 100;
 const FLUSH_MS = 250;
 const COUNTS_REFRESH_MS = 20_000;
+const RESYNC_MS = 60_000;
 
 export interface LiveState {
   status: 'loading' | 'ready' | 'error';
@@ -62,7 +77,12 @@ function queryFor(f: LiveFilters, cursor?: string | null, limit = PAGE) {
   };
 }
 
-function rowsFrom(items: LiveVisitor[], asOf: string, recv: number, into?: Map<string, LiveRow>): Map<string, LiveRow> {
+function rowsFrom(
+  items: LiveVisitor[],
+  asOf: string,
+  recv: number,
+  into?: Map<string, LiveRow>,
+): Map<string, LiveRow> {
   const out = new Map(into ?? []);
   const at = Date.parse(asOf);
   for (const v of items) {
@@ -117,7 +137,11 @@ export function useLiveVisitors(filters: LiveFilters, enabled = true) {
       }));
     } catch (e) {
       if (my !== gen.current) return;
-      setState((s) => (soft && s.status === 'ready' ? s : { ...s, status: 'error', error: errorMessage(e, tStatic('visitors.live.loadError')) }));
+      setState((s) =>
+        soft && s.status === 'ready'
+          ? s
+          : { ...s, status: 'error', error: errorMessage(e, tStatic('visitors.live.loadError')) },
+      );
     }
   }, []);
 
@@ -150,7 +174,11 @@ export function useLiveVisitors(filters: LiveFilters, enabled = true) {
       if (my !== gen.current) return;
       // A stale cursor (the list changed under it) restarts from the first page.
       if ((e as { code?: string }).code === 'VALIDATION_FAILED') return void load(true);
-      setState((x) => ({ ...x, loadingMore: false, moreError: errorMessage(e, tStatic('visitors.live.loadMoreError')) }));
+      setState((x) => ({
+        ...x,
+        loadingMore: false,
+        moreError: errorMessage(e, tStatic('visitors.live.loadMoreError')),
+      }));
     }
   }, [load]);
 
@@ -163,13 +191,17 @@ export function useLiveVisitors(filters: LiveFilters, enabled = true) {
     if (s.status !== 'ready' || !buffer.current.length) return;
     const frames = buffer.current;
     buffer.current = [];
-    const r = applyFrames(s.rows, frames, filtersRef.current, { lastLoadedKey: s.lastKey, hasMore: s.hasMore });
+    const r = applyFrames(s.rows, frames, filtersRef.current, {
+      lastLoadedKey: s.lastKey,
+      hasMore: s.hasMore,
+    });
     if (!r.changed) return;
     setState((x) => {
       const counts = { ...x.counts };
       for (const t of r.transitions) {
         if (t.from && counts[t.from] !== undefined) counts[t.from] = Math.max(0, (counts[t.from] ?? 0) - 1);
-        if (t.to && (counts[t.to] !== undefined || !x.omittedBrowsing)) counts[t.to] = (counts[t.to] ?? 0) + 1;
+        if (t.to && (counts[t.to] !== undefined || !x.omittedBrowsing))
+          counts[t.to] = (counts[t.to] ?? 0) + 1;
       }
       return { ...x, rows: r.rows, counts, version: x.version + 1 };
     });
@@ -200,7 +232,8 @@ export function useLiveVisitors(filters: LiveFilters, enabled = true) {
 
   // Buffered frames received while the first page loads are applied once it lands.
   useEffect(() => {
-    if (state.status === 'ready' && buffer.current.length && !timer.current) timer.current = setTimeout(flush, FLUSH_MS);
+    if (state.status === 'ready' && buffer.current.length && !timer.current)
+      timer.current = setTimeout(flush, FLUSH_MS);
   }, [state.status, flush]);
 
   useEffect(
@@ -210,12 +243,41 @@ export function useLiveVisitors(filters: LiveFilters, enabled = true) {
     [],
   );
 
+  // Visitor deltas are ephemeral: a socket that was congested skips them. A periodic soft snapshot (and one when
+  // the tab comes back) keeps a skipped update from leaving a stale row — only while the whole list fits one page,
+  // so rows loaded with "Show more" are never thrown away.
+  useEffect(() => {
+    if (!enabled) return;
+    let hiddenAt = 0;
+    const resync = () => {
+      const s = stateRef.current;
+      if (s.status === 'ready' && !s.hasMore && !s.loadingMore) void load(true);
+    };
+    const t = setInterval(() => {
+      if (document.visibilityState === 'visible') resync();
+    }, RESYNC_MS);
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now();
+      else if (hiddenAt && Date.now() - hiddenAt > 15_000) resync();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(t);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [enabled, key, load]);
+
   // Group totals drift for visitors outside the loaded rows; refresh them cheaply.
   useEffect(() => {
     if (!enabled) return;
     const t = setInterval(() => {
       const s = stateRef.current;
-      if (s.status !== 'ready' || document.visibilityState === 'hidden' || !effectiveGroups(filtersRef.current).length) return;
+      if (
+        s.status !== 'ready' ||
+        document.visibilityState === 'hidden' ||
+        !effectiveGroups(filtersRef.current).length
+      )
+        return;
       const my = gen.current;
       api
         .get<LiveSnapshot>('/visitors/live', queryFor(filtersRef.current, null, 1))

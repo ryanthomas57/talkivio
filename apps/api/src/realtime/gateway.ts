@@ -22,9 +22,22 @@ import { env, isProd } from '../config/env';
 import { AuthGuard } from '../auth/auth.guard';
 import { PresenceService } from '../core/presence.service';
 import { RateLimitService } from '../core/rate-limit.service';
-import { decodeEventCursor, encodeEventCursor, roomFor, type Audience, type ScopeKind } from '../outbox/outbox.service';
+import {
+  decodeEventCursor,
+  encodeEventCursor,
+  roomFor,
+  type Audience,
+  type ScopeKind,
+} from '../outbox/outbox.service';
 import { CommandRegistry, type SocketCommand } from './command-registry';
-import { AGENT_NS, controlRooms, RealtimeService, VISITOR_NS, type DurableFrame } from './realtime.service';
+import {
+  AGENT_NS,
+  CONGESTED_ROOM,
+  controlRooms,
+  RealtimeService,
+  VISITOR_NS,
+  type DurableFrame,
+} from './realtime.service';
 import { ScopeAuthorizer } from './scope-authorizer';
 import { TicketsService, type AgentTicketClaims, type VisitorTicketClaims } from './tickets.service';
 import { isDraining } from '../common/graceful-shutdown';
@@ -50,6 +63,18 @@ export function isOverloaded(conn: EngineConn): boolean {
   return packets > OUTBOUND_MAX_PACKETS || bytes > OUTBOUND_MAX_BYTES;
 }
 
+/**
+ * Pressure at which a socket stops receiving ephemeral frames (typing, presence, live visitor deltas) until it
+ * drains (ch. 47: ephemeral goes first under backpressure). Durable frames keep flowing and stay replayable.
+ */
+export const CONGESTED_PACKETS = 100;
+export const CONGESTED_BYTES = 128 * 1024;
+export function isCongested(conn: EngineConn): boolean {
+  const packets = conn.writeBuffer?.length ?? 0;
+  const bytes = conn.transport?.socket?.bufferedAmount ?? 0;
+  return packets > CONGESTED_PACKETS || bytes > CONGESTED_BYTES;
+}
+
 interface AgentData extends AgentTicketClaims {
   connectionId: string;
   subscriptions: Set<string>;
@@ -68,12 +93,18 @@ function originOf(socket: Socket): string | null {
 
 function dashboardOrigins(): string[] {
   const e = env();
-  return [...new Set([...e.CORS_ORIGINS.split(','), e.APP_URL].map((o) => o.trim().replace(/\/$/, '')).filter(Boolean))];
+  return [
+    ...new Set(
+      [...e.CORS_ORIGINS.split(','), e.APP_URL].map((o) => o.trim().replace(/\/$/, '')).filter(Boolean),
+    ),
+  ];
 }
 
 function widgetOrigins(): string[] {
   const e = env();
-  return [...new Set([new URL(e.API_URL).origin, ...(e.WIDGET_CDN_URL ? [new URL(e.WIDGET_CDN_URL).origin] : [])])];
+  return [
+    ...new Set([new URL(e.API_URL).origin, ...(e.WIDGET_CDN_URL ? [new URL(e.WIDGET_CDN_URL).origin] : [])]),
+  ];
 }
 
 /** Shared replay logic for both namespaces. */
@@ -94,8 +125,10 @@ abstract class BaseGateway {
   }
 
   /**
-   * Slow-consumer guard (ch. 47): a socket whose outbound queue exceeds 1000 packets or 1 MiB is closed at
-   * the transport level. Ephemeral frames are already volatile; the client sees a transport close,
+   * Slow-consumer guard (ch. 47). A socket whose outbound queue passes the congestion mark joins CONGESTED_ROOM,
+   * which ephemeral frames skip until it drains (they go first under backpressure; Socket.IO's own `volatile`
+   * flag is not used because it drops every frame of a burst after the first, congested or not). A socket whose
+   * queue exceeds 1000 packets or 1 MiB is closed at the transport level; the client sees a transport close,
    * reconnects with a fresh ticket and replays durable events from its cursor (resumable, nothing lost).
    * The queue is discarded: a plain engine.io close() waits for it to drain first, which a stalled reader never
    * does, so the connection (and its growing queue) would stay open forever.
@@ -106,11 +139,16 @@ abstract class BaseGateway {
       let packets = 0;
       let bytes = 0;
       for (const s of ns.sockets.values()) {
-        const conn = s.conn as unknown as EngineConn & { close(discard?: boolean): void; readyState?: string };
+        const conn = s.conn as unknown as EngineConn & {
+          close(discard?: boolean): void;
+          readyState?: string;
+        };
         if (conn.readyState === 'closing' || conn.readyState === 'closed') continue;
         if (!isOverloaded(conn)) {
           packets += conn.writeBuffer?.length ?? 0;
           bytes += conn.transport?.socket?.bufferedAmount ?? 0;
+          if (isCongested(conn)) void s.join(CONGESTED_ROOM);
+          else if (s.rooms.has(CONGESTED_ROOM)) void s.leave(CONGESTED_ROOM);
           continue;
         }
         this.metrics.socketOverloads.inc(labels);
@@ -128,18 +166,39 @@ abstract class BaseGateway {
     this.metrics.socketsConnected.inc(this.metrics.labels({ namespace: this.ns.replace('/', '') }), -1);
   }
 
-  protected async replay(socket: Socket, tenantId: string, scopes: Array<{ kind: ScopeKind; id: string }>, cursor: string | null): Promise<{ snapshotCursor: string; snapshotRequired: boolean }> {
+  protected async replay(
+    socket: Socket,
+    tenantId: string,
+    scopes: Array<{ kind: ScopeKind; id: string }>,
+    cursor: string | null,
+  ): Promise<{ snapshotCursor: string; snapshotRequired: boolean }> {
     return this.db.read(tenantId, async (tx) => {
-      const maxRow = await tx.outboxEvent.findFirst({ where: { tenantId }, orderBy: { seq: 'desc' }, select: { seq: true } });
+      const maxRow = await tx.outboxEvent.findFirst({
+        where: { tenantId },
+        orderBy: { seq: 'desc' },
+        select: { seq: true },
+      });
       const snapshotCursor = encodeEventCursor(maxRow?.seq ?? 0n);
       const since = decodeEventCursor(cursor);
       if (since === null) return { snapshotCursor, snapshotRequired: false };
-      const minRow = await tx.outboxEvent.findFirst({ where: { tenantId }, orderBy: { seq: 'asc' }, select: { seq: true } });
+      const minRow = await tx.outboxEvent.findFirst({
+        where: { tenantId },
+        orderBy: { seq: 'asc' },
+        select: { seq: true },
+      });
       if (minRow && since < minRow.seq - 1n) return { snapshotCursor, snapshotRequired: true };
-      const relevant = { tenantId, audience: this.audience, seq: { gt: since }, OR: scopes.map((s) => ({ scopeKind: s.kind, scopeId: s.id })) };
+      const relevant = {
+        tenantId,
+        audience: this.audience,
+        seq: { gt: since },
+        OR: scopes.map((s) => ({ scopeKind: s.kind, scopeId: s.id })),
+      };
       // Replay covers 24 h; a cursor behind that with relevant events in the gap must resnapshot, never skip them.
       const windowStart = new Date(Date.now() - REPLAY_WINDOW_MS);
-      const beyondWindow = await tx.outboxEvent.findFirst({ where: { ...relevant, occurredAt: { lte: windowStart } }, select: { seq: true } });
+      const beyondWindow = await tx.outboxEvent.findFirst({
+        where: { ...relevant, occurredAt: { lte: windowStart } },
+        select: { seq: true },
+      });
       if (beyondWindow) return { snapshotCursor, snapshotRequired: true };
       const rows = await tx.outboxEvent.findMany({
         where: { ...relevant, occurredAt: { gt: windowStart } },
@@ -182,8 +241,12 @@ abstract class BaseGateway {
   }
 
   /** `unsubscribe {scope_ids: ['kind:id']}` (ch. 77) or `{scopes: [{kind, id}]}`. */
-  protected scopesToLeave(body: { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> } | undefined): Array<{ kind: ScopeKind; id: string }> {
-    const out = Array.isArray(body?.scopes) ? body.scopes.filter((s) => typeof s?.kind === 'string' && typeof s?.id === 'string') : [];
+  protected scopesToLeave(
+    body: { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> } | undefined,
+  ): Array<{ kind: ScopeKind; id: string }> {
+    const out = Array.isArray(body?.scopes)
+      ? body.scopes.filter((s) => typeof s?.kind === 'string' && typeof s?.id === 'string')
+      : [];
     if (Array.isArray(body?.scopeIds)) {
       for (const v of body.scopeIds.slice(0, 200)) {
         if (typeof v !== 'string') continue;
@@ -198,27 +261,53 @@ abstract class BaseGateway {
     // NUL cannot be stored in PostgreSQL text; treat it as a malformed command (VALIDATION_FAILED).
     if (containsNul(raw)) return null;
     const c = fromWire(raw) as Partial<SocketCommand> & { v?: number };
-    if (!c || typeof c !== 'object' || typeof c.type !== 'string' || typeof c.commandId !== 'string' || c.commandId.length > 64) return null;
-    return { commandId: c.commandId, type: c.type, scope: c.scope, expectedVersion: c.expectedVersion, payload: (c.payload as Record<string, unknown>) ?? {} };
+    if (
+      !c ||
+      typeof c !== 'object' ||
+      typeof c.type !== 'string' ||
+      typeof c.commandId !== 'string' ||
+      c.commandId.length > 64
+    )
+      return null;
+    return {
+      commandId: c.commandId,
+      type: c.type,
+      scope: c.scope,
+      expectedVersion: c.expectedVersion,
+      payload: (c.payload as Record<string, unknown>) ?? {},
+    };
   }
 
   protected ackError(commandId: string, err: unknown, commandType?: string) {
     const { status, body } = errorBody(err);
     const e = body.error as { code: string; message: string; retryable: boolean };
     if (commandType) this.metrics.command(commandType, this.metrics.outcomeFor(status, e.code));
-    return { type: 'command.error', command_id: commandId, code: e.code, message: e.message, retryable: e.retryable };
+    return {
+      type: 'command.error',
+      command_id: commandId,
+      code: e.code,
+      message: e.message,
+      retryable: e.retryable,
+    };
   }
 }
 
 @WebSocketGateway({
   namespace: AGENT_NS,
   path: REALTIME_PATH,
-  cors: { origin: (o: string | undefined, cb: (e: Error | null, ok?: boolean) => void) => cb(null, !o || dashboardOrigins().includes(o)), credentials: true },
+  cors: {
+    origin: (o: string | undefined, cb: (e: Error | null, ok?: boolean) => void) =>
+      cb(null, !o || dashboardOrigins().includes(o)),
+    credentials: true,
+  },
   pingInterval: HEARTBEAT_MS,
   pingTimeout: 30_000,
   maxHttpBufferSize: 64 * 1024,
 })
-export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy {
+export class AgentGateway
+  extends BaseGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+{
   private readonly logger = new Logger('AgentGateway');
   protected readonly ns = AGENT_NS;
   protected readonly audience: Audience = 'staff';
@@ -247,14 +336,22 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
       try {
         const origin = originOf(socket);
         if (origin && !dashboardOrigins().includes(origin)) return next(new Error('ORIGIN_NOT_ALLOWED'));
-        if (!(await this.rateLimit.hit(`ws-agent-connect:${socketClientIp(socket.handshake)}`, 60, 60))) return next(new Error('RATE_LIMITED'));
+        if (!(await this.rateLimit.hit(`ws-agent-connect:${socketClientIp(socket.handshake)}`, 60, 60)))
+          return next(new Error('RATE_LIMITED'));
         const claims = await this.tickets.consume((socket.handshake.auth as { ticket?: string })?.ticket);
         if (!claims || claims.kind !== 'agent') return next(new Error('AUTH_REQUIRED'));
         const session = await this.db.root.authSession.findUnique({ where: { id: claims.sessionId } });
-        if (!session || session.revokedAt || session.expiresAt < new Date()) return next(new Error('AUTH_REQUIRED'));
+        if (!session || session.revokedAt || session.expiresAt < new Date())
+          return next(new Error('AUTH_REQUIRED'));
         const m = await this.guard.membership(claims.tenantId, claims.userId);
-        if (!m || !m.enabled || m.membershipId !== claims.membershipId) return next(new Error('PERMISSION_DENIED'));
-        socket.data = { ...claims, connectionId: randomUUID(), subscriptions: new Set<string>(), capabilityExpiry: session.expiresAt.toISOString() } satisfies AgentData;
+        if (!m || !m.enabled || m.membershipId !== claims.membershipId)
+          return next(new Error('PERMISSION_DENIED'));
+        socket.data = {
+          ...claims,
+          connectionId: randomUUID(),
+          subscriptions: new Set<string>(),
+          capabilityExpiry: session.expiresAt.toISOString(),
+        } satisfies AgentData;
         next();
       } catch (err) {
         this.logger.error(`Agent socket auth failed: ${(err as Error).message}`);
@@ -264,7 +361,10 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
     this.timer = setInterval(() => {
       for (const s of this.namespace.sockets.values()) {
         const d = s.data as AgentData;
-        if (d?.membershipId) void this.presence.agentHeartbeat(d.tenantId, d.membershipId, d.connectionId).catch(() => undefined);
+        if (d?.membershipId)
+          void this.presence
+            .agentHeartbeat(d.tenantId, d.membershipId, d.connectionId)
+            .catch(() => undefined);
       }
     }, HEARTBEAT_MS);
     this.overloadGuard = this.startBackpressureGuard(ns);
@@ -284,7 +384,9 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
       membershipId: m.membershipId,
       role: m.role,
       permissions: permissionsForRole(m.role),
-      departmentScope: TENANT_WIDE_ROLES.has(m.role) ? 'all' : [...new Set([...m.servedDepartmentIds, ...m.monitoredDepartmentIds])],
+      departmentScope: TENANT_WIDE_ROLES.has(m.role)
+        ? 'all'
+        : [...new Set([...m.servedDepartmentIds, ...m.monitoredDepartmentIds])],
       servedDepartmentIds: m.servedDepartmentIds,
       sessionId: d.sessionId,
       tokenId: null,
@@ -299,7 +401,11 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
     const d = socket.data as AgentData;
     if (!d?.membershipId) return;
     this.socketOpened();
-    await socket.join([controlRooms.session(d.sessionId), controlRooms.membership(d.tenantId, d.membershipId), controlRooms.tenant(d.tenantId)]);
+    await socket.join([
+      controlRooms.session(d.sessionId),
+      controlRooms.membership(d.tenantId, d.membershipId),
+      controlRooms.tenant(d.tenantId),
+    ]);
     await socket.join(roomFor(d.tenantId, 'agent', d.membershipId, 'staff'));
     d.subscriptions.add(`agent:${d.membershipId}`);
     const first = await this.presence.agentConnected(d.tenantId, d.membershipId, d.connectionId);
@@ -336,7 +442,10 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
   @SubscribeMessage('subscribe')
   async subscribe(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as AgentData;
-    const body = fromWire(raw) as { scopes?: Array<{ kind: ScopeKind; id: string }>; lastCursor?: string | null };
+    const body = fromWire(raw) as {
+      scopes?: Array<{ kind: ScopeKind; id: string }>;
+      lastCursor?: string | null;
+    };
     const scopes = Array.isArray(body?.scopes) ? body.scopes.slice(0, 200) : [];
     try {
       const auth = await this.authContext(d);
@@ -359,7 +468,9 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
   @SubscribeMessage('unsubscribe')
   async unsubscribe(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as AgentData;
-    const leave = this.scopesToLeave(fromWire(raw) as { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> });
+    const leave = this.scopesToLeave(
+      fromWire(raw) as { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> },
+    );
     for (const s of leave) {
       // The agent's own offer stream is part of the connection, not a subscription.
       if (s.kind === 'agent' && s.id === d.membershipId) continue;
@@ -373,17 +484,43 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
   async command(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as AgentData;
     const cmd = this.parseCommand(raw);
-    if (!cmd) return { type: 'command.error', command_id: null, code: 'VALIDATION_FAILED', message: 'Malformed command', retryable: false };
+    if (!cmd)
+      return {
+        type: 'command.error',
+        command_id: null,
+        code: 'VALIDATION_FAILED',
+        message: 'Malformed command',
+        retryable: false,
+      };
     const burst = await this.rateLimit.hit(`ws-cmd:${d.connectionId}:burst`, 20, 1);
     const sustained = await this.rateLimit.hit(`ws-cmd:${d.connectionId}`, 600, 60);
-    if (!burst || !sustained) return { type: 'command.error', command_id: cmd.commandId, code: 'RATE_LIMITED', message: 'Slow down', retryable: true };
+    if (!burst || !sustained)
+      return {
+        type: 'command.error',
+        command_id: cmd.commandId,
+        code: 'RATE_LIMITED',
+        message: 'Slow down',
+        retryable: true,
+      };
     const handler = this.commands.agentHandler(cmd.type);
-    if (!handler) return { type: 'command.error', command_id: cmd.commandId, code: 'VALIDATION_FAILED', message: `Unknown command ${cmd.type}`, retryable: false };
+    if (!handler)
+      return {
+        type: 'command.error',
+        command_id: cmd.commandId,
+        code: 'VALIDATION_FAILED',
+        message: `Unknown command ${cmd.type}`,
+        retryable: false,
+      };
     try {
       const auth = await this.authContext(d);
       const result = await handler({ auth, connectionId: d.connectionId }, cmd);
       this.metrics.command(cmd.type, 'ok');
-      return { type: 'command.ack', command_id: cmd.commandId, result: this.ackResult(result), committed_at: new Date().toISOString() };
+      return {
+        type: 'command.ack',
+        command_id: cmd.commandId,
+        result: this.ackResult(result),
+        committed_at: new Date().toISOString(),
+      };
     } catch (err) {
       return this.ackError(cmd.commandId, err, cmd.type);
     }
@@ -398,7 +535,10 @@ export class AgentGateway extends BaseGateway implements OnGatewayInit, OnGatewa
   pingTimeout: 30_000,
   maxHttpBufferSize: 64 * 1024,
 })
-export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy {
+export class VisitorGateway
+  extends BaseGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect, OnModuleDestroy
+{
   private readonly logger = new Logger('VisitorGateway');
   protected readonly ns = VISITOR_NS;
   protected readonly audience: Audience = 'public';
@@ -427,11 +567,17 @@ export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGate
         const origin = originOf(socket);
         // Visitor sockets come from the widget frame origin; the host page origin
         // was validated when the capability was issued (and enforced by frame-ancestors).
-        if (origin && !widgetOrigins().includes(origin) && isProd()) return next(new Error('ORIGIN_NOT_ALLOWED'));
-        if (!(await this.rateLimit.hit(`ws-visitor-connect:${socketClientIp(socket.handshake)}`, 120, 60))) return next(new Error('RATE_LIMITED'));
+        if (origin && !widgetOrigins().includes(origin) && isProd())
+          return next(new Error('ORIGIN_NOT_ALLOWED'));
+        if (!(await this.rateLimit.hit(`ws-visitor-connect:${socketClientIp(socket.handshake)}`, 120, 60)))
+          return next(new Error('RATE_LIMITED'));
         const claims = await this.tickets.consume((socket.handshake.auth as { ticket?: string })?.ticket);
         if (!claims || claims.kind !== 'visitor') return next(new Error('AUTH_REQUIRED'));
-        socket.data = { ...claims, connectionId: randomUUID(), subscriptions: new Set<string>() } satisfies VisitorData;
+        socket.data = {
+          ...claims,
+          connectionId: randomUUID(),
+          subscriptions: new Set<string>(),
+        } satisfies VisitorData;
         next();
       } catch (err) {
         this.logger.error(`Visitor socket auth failed: ${(err as Error).message}`);
@@ -441,7 +587,10 @@ export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGate
     this.timer = setInterval(() => {
       for (const s of this.namespace.sockets.values()) {
         const d = s.data as VisitorData;
-        if (d?.visitorId) void this.presence.visitorHeartbeat(d.tenantId, d.visitorId, d.sessionId, d.connectionId, false, d.siteId).catch(() => undefined);
+        if (d?.visitorId)
+          void this.presence
+            .visitorHeartbeat(d.tenantId, d.visitorId, d.sessionId, d.connectionId, false, d.siteId)
+            .catch(() => undefined);
       }
     }, HEARTBEAT_MS);
     this.overloadGuard = this.startBackpressureGuard(ns);
@@ -491,32 +640,50 @@ export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGate
     if (!d?.visitorId) return;
     this.socketClosed();
     if (isDraining()) return; // see the agent gateway: reconnect elsewhere or age out via the sweeper
-    await this.presence.visitorDisconnected(d.tenantId, d.visitorId, d.sessionId, d.connectionId).catch((err) => this.logger.warn(`visitor disconnect: ${(err as Error).message}`));
+    await this.presence
+      .visitorDisconnected(d.tenantId, d.visitorId, d.sessionId, d.connectionId)
+      .catch((err) => this.logger.warn(`visitor disconnect: ${(err as Error).message}`));
   }
 
   @SubscribeMessage('heartbeat')
   async heartbeat(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as VisitorData;
     const body = fromWire(raw) as { visible?: boolean; focused?: boolean } | undefined;
-    await this.presence.visitorHeartbeat(d.tenantId, d.visitorId, d.sessionId, d.connectionId, body?.visible !== false && body?.focused !== false, d.siteId);
+    await this.presence.visitorHeartbeat(
+      d.tenantId,
+      d.visitorId,
+      d.sessionId,
+      d.connectionId,
+      body?.visible !== false && body?.focused !== false,
+      d.siteId,
+    );
     return { ok: true, server_time: new Date().toISOString() };
   }
 
   @SubscribeMessage('subscribe')
   async subscribe(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as VisitorData;
-    const body = fromWire(raw) as { scopes?: Array<{ kind: ScopeKind; id: string }>; lastCursor?: string | null };
+    const body = fromWire(raw) as {
+      scopes?: Array<{ kind: ScopeKind; id: string }>;
+      lastCursor?: string | null;
+    };
     const scopes = Array.isArray(body?.scopes) ? body.scopes.slice(0, 20) : [];
     try {
       const granted: Array<{ kind: ScopeKind; id: string }> = [];
       const denied: Array<{ kind: string; id: string }> = [];
       for (const s of scopes) {
-        if (await this.scopes.canVisitorSubscribe(this.visitorContext(d, socket), s.kind, s.id)) granted.push(s);
+        if (await this.scopes.canVisitorSubscribe(this.visitorContext(d, socket), s.kind, s.id))
+          granted.push(s);
         else denied.push(s);
       }
       await socket.join(granted.map((s) => roomFor(d.tenantId, s.kind, s.id, 'public')));
       for (const s of granted) d.subscriptions.add(`${s.kind}:${s.id}`);
-      const r = await this.replay(socket, d.tenantId, [...granted, { kind: 'visitor', id: d.sessionId }], body.lastCursor ?? null);
+      const r = await this.replay(
+        socket,
+        d.tenantId,
+        [...granted, { kind: 'visitor', id: d.sessionId }],
+        body.lastCursor ?? null,
+      );
       if (r.snapshotRequired) return { type: 'snapshot.required', snapshot_cursor: r.snapshotCursor, denied };
       return { type: 'subscription.ok', snapshot_cursor: r.snapshotCursor, granted: granted.length, denied };
     } catch (err) {
@@ -527,10 +694,13 @@ export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGate
   @SubscribeMessage('unsubscribe')
   async unsubscribe(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as VisitorData;
-    const leave = this.scopesToLeave(fromWire(raw) as { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> });
+    const leave = this.scopesToLeave(
+      fromWire(raw) as { scopeIds?: unknown; scopes?: Array<{ kind: ScopeKind; id: string }> },
+    );
     for (const s of leave) {
       // The session's own stream and its site config are part of the connection.
-      if ((s.kind === 'visitor' && s.id === d.sessionId) || (s.kind === 'config' && s.id === d.siteId)) continue;
+      if ((s.kind === 'visitor' && s.id === d.sessionId) || (s.kind === 'config' && s.id === d.siteId))
+        continue;
       await socket.leave(roomFor(d.tenantId, s.kind, s.id, 'public'));
       d.subscriptions.delete(`${s.kind}:${s.id}`);
     }
@@ -541,16 +711,45 @@ export class VisitorGateway extends BaseGateway implements OnGatewayInit, OnGate
   async command(@ConnectedSocket() socket: Socket, @MessageBody() raw: unknown) {
     const d = socket.data as VisitorData;
     const cmd = this.parseCommand(raw);
-    if (!cmd) return { type: 'command.error', command_id: null, code: 'VALIDATION_FAILED', message: 'Malformed command', retryable: false };
+    if (!cmd)
+      return {
+        type: 'command.error',
+        command_id: null,
+        code: 'VALIDATION_FAILED',
+        message: 'Malformed command',
+        retryable: false,
+      };
     const burst = await this.rateLimit.hit(`ws-vcmd:${d.connectionId}:burst`, 20, 1);
     const sustained = await this.rateLimit.hit(`ws-vcmd:${d.connectionId}`, 600, 60);
-    if (!burst || !sustained) return { type: 'command.error', command_id: cmd.commandId, code: 'RATE_LIMITED', message: 'Slow down', retryable: true };
+    if (!burst || !sustained)
+      return {
+        type: 'command.error',
+        command_id: cmd.commandId,
+        code: 'RATE_LIMITED',
+        message: 'Slow down',
+        retryable: true,
+      };
     const handler = this.commands.visitorHandler(cmd.type);
-    if (!handler) return { type: 'command.error', command_id: cmd.commandId, code: 'VALIDATION_FAILED', message: `Unknown command ${cmd.type}`, retryable: false };
+    if (!handler)
+      return {
+        type: 'command.error',
+        command_id: cmd.commandId,
+        code: 'VALIDATION_FAILED',
+        message: `Unknown command ${cmd.type}`,
+        retryable: false,
+      };
     try {
-      const result = await handler({ visitor: this.visitorContext(d, socket), connectionId: d.connectionId }, cmd);
+      const result = await handler(
+        { visitor: this.visitorContext(d, socket), connectionId: d.connectionId },
+        cmd,
+      );
       this.metrics.command(cmd.type, 'ok');
-      return { type: 'command.ack', command_id: cmd.commandId, result: this.ackResult(result), committed_at: new Date().toISOString() };
+      return {
+        type: 'command.ack',
+        command_id: cmd.commandId,
+        result: this.ackResult(result),
+        committed_at: new Date().toISOString(),
+      };
     } catch (err) {
       return this.ackError(cmd.commandId, err, cmd.type);
     }
