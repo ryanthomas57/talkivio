@@ -1,0 +1,38 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dashboard",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@talkivio/dashboard",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "widget-demo",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@talkivio/widget",
+        "exec",
+        "vite",
+        "--config",
+        "vite.demo.config.ts"
+      ],
+      "port": 5173
+    },
+    {
+      "name": "dashboard-prod",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@talkivio/dashboard",
+        "start"
+      ],
+      "port": 3000
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.next/
+out/
+coverage/
+*.log
+.env
+.env.local
+.env.*.local
+!.env.example
+.DS_Store
+.turbo/
+storage/
+apps/api/storage/
+apps/api/storage-*/
+playwright-report/
+test-results/
+*.tsbuildinfo
+.build/
+apps/api/.build/
+._*
+
+# Local gate outputs (CI uploads its own reports as artifacts)
+reports/
+apps/dashboard/e2e/.auth/
+apps/dashboard/e2e-results/

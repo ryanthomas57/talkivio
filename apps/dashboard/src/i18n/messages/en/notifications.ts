@@ -1,0 +1,20 @@
+/** English source strings for 'notifications' (keys are prefixed 'notifications.'). */
+export const notifications = {
+  'notifications.title': 'Notifications',
+  'notifications.bellUnread': '{count, plural, one {Notifications, # unread} other {Notifications, # unread}}',
+  'notifications.unreadBadge': 'unread',
+  'notifications.unreadCount': '{count, plural, one {# unread} other {# unread}}',
+  'notifications.allCaughtUp': 'All caught up',
+  'notifications.announceNew': 'New notification: {title}',
+  'notifications.allMarkedRead': 'All notifications marked as read',
+  'notifications.markReadFailed': 'Could not mark as read: {error}',
+  'notifications.markAllFailed': 'Could not mark all as read: {error}',
+  'notifications.markAll': 'Mark all as read',
+  'notifications.loading': 'Loading notifications',
+  'notifications.loadFailed': 'Could not load notifications: {error}',
+  'notifications.emptyTitle': 'No notifications yet',
+  'notifications.emptyBody': 'Chat assignments, transfers and new offline messages appear here.',
+  'notifications.offlineMessages': 'Offline messages',
+  'notifications.srUnread': ', unread',
+  'notifications.markAsReadLabel': '{title}. Mark as read',
+} satisfies Record<string, string>;

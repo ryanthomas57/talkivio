@@ -1,0 +1,42 @@
+# Talkivio local reverse proxy (docker-compose `reverse-proxy`).
+# Production terminates TLS 1.2+ at the platform load balancer / ingress with the same routing
+# (see docs/operations/deployment.md). This file is local-only: plain HTTP, admin API disabled.
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+# One origin for the dashboard, REST API, widget assets and realtime gateway, so dashboard
+# session cookies stay first-party and the gateway can validate an exact Origin.
+:8080 {
+	handle /proxy-health {
+		respond "ok" 200
+	}
+
+	# Socket.IO (WebSocket + polling fallback) -> gateway process (GATEWAY_SEPARATE=true on api).
+	handle /realtime/* {
+		reverse_proxy gateway:4001
+	}
+
+	# REST API, public widget API + static widget assets, health probes -> api process.
+	@backend path /api/* /widget/* /health/*
+	handle @backend {
+		reverse_proxy api:4000
+	}
+
+	# Everything else -> Next.js dashboard (apps/dashboard standalone server).
+	handle {
+		reverse_proxy dashboard:3000
+	}
+}
+
+# Demo storefront (apps/widget/demo) on two explicit origins for cross-origin widget tests:
+#   http://localhost:5173 and http://localhost:5174 -> tenant Alpha (seeded allowed origins)
+#   http://127.0.0.1:5173 and http://127.0.0.1:5174 -> tenant Beta  (seeded allowed origins)
+# Static files only; the pages load the loader from the API origin (?api=http://localhost:8080).
+:5173, :5174 {
+	root * /srv/demo
+	try_files {path} /public{path}
+	file_server
+}

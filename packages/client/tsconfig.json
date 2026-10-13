@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM"],
+    "types": [],
+    "noEmit": true,
+    "declaration": true,
+    "sourceMap": false,
+    "verbatimModuleSyntax": true,
+    "erasableSyntaxOnly": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src", "test"]
+}

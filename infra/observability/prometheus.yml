@@ -1,0 +1,29 @@
+# Prometheus scrape configuration for Talkivio (ADR 0004, docs/operations/alerts.md).
+# Scrape from inside the private network, or set METRICS_TOKEN on the services and the
+# `authorization` blocks below.
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+
+rule_files:
+  - alert-rules.yml
+
+scrape_configs:
+  - job_name: talkivio-api
+    metrics_path: /health/metrics
+    static_configs:
+      - targets: ['api:4000']
+        labels: { service: api }
+  - job_name: talkivio-gateway
+    metrics_path: /health/metrics
+    static_configs:
+      - targets: ['gateway:4001']
+        labels: { service: gateway }
+  - job_name: talkivio-worker
+    metrics_path: /health/metrics
+    static_configs:
+      - targets: ['worker:4010']
+        labels: { service: worker }
+    # authorization:
+    #   type: Bearer
+    #   credentials_file: /etc/prometheus/talkivio-metrics-token

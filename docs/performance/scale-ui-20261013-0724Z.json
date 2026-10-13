@@ -1,0 +1,108 @@
+{
+  "started_at": "2026-10-13T07:24:37.654Z",
+  "fixture": {
+    "visitors": 10000,
+    "messages": 10000,
+    "tenant_id": "2553ddce-55c5-4158-9635-956e41a00915",
+    "load_s": 6.293
+  },
+  "live_visitors": {
+    "first_rows_ms": 1012,
+    "loaded_rows": 10001,
+    "pages_loaded_by_scrolling": 99,
+    "page_load_ms": {
+      "n": 99,
+      "p50": 174,
+      "p95": 380,
+      "p99": 390,
+      "max": 390
+    },
+    "snapshot_api_ms": {
+      "n": 100,
+      "p50": 60.233000000000004,
+      "p95": 206.319,
+      "p99": 224.17499999999998,
+      "max": 319.576
+    },
+    "rendered_rows_in_dom": 18,
+    "long_tasks_while_loading_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    },
+    "sweep_frame_gap_ms": {
+      "n": 120,
+      "p50": 16.699999999254942,
+      "p95": 17.299999998882413,
+      "p99": 17.699999999254942,
+      "max": 19.90000000037253
+    },
+    "long_tasks_during_sweep_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    }
+  },
+  "transcript": {
+    "first_page_ms": 241,
+    "pages_loaded": 200,
+    "load_earlier_ms": {
+      "n": 199,
+      "p50": 91,
+      "p95": 135,
+      "p99": 154,
+      "max": 183
+    },
+    "first_vs_last_tenth_ms": {
+      "first": {
+        "n": 20,
+        "p50": 91,
+        "p95": 135,
+        "p99": 141,
+        "max": 141
+      },
+      "last": {
+        "n": 20,
+        "p50": 91,
+        "p95": 94,
+        "p99": 99,
+        "max": 99
+      }
+    },
+    "messages_api_ms": {
+      "n": 200,
+      "p50": 18.257,
+      "p95": 25.444000000000003,
+      "p99": 28.182,
+      "max": 30.069
+    },
+    "long_tasks_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    },
+    "dom_nodes_in_log": 4208,
+    "show_newer_ms": {
+      "n": 32,
+      "p50": 90,
+      "p95": 110,
+      "p99": 176,
+      "max": 176
+    },
+    "long_tasks_while_sliding_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    },
+    "dom_nodes_in_log_at_end": 4211
+  },
+  "cleanup_s": 0.761
+}

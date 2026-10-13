@@ -1,0 +1,93 @@
+{
+  "started_at": "2026-10-13T07:05:16.171Z",
+  "fixture": {
+    "visitors": 10000,
+    "messages": 10000,
+    "tenant_id": "e92c581c-e679-4efe-8c71-1bdfd0c7a1b5",
+    "load_s": 5.166
+  },
+  "live_visitors": {
+    "first_rows_ms": 1062,
+    "loaded_rows": 10001,
+    "pages_loaded_by_scrolling": 99,
+    "page_load_ms": {
+      "n": 99,
+      "p50": 389,
+      "p95": 410,
+      "p99": 649,
+      "max": 649
+    },
+    "snapshot_api_ms": {
+      "n": 102,
+      "p50": 217.603,
+      "p95": 307.49,
+      "p99": 353.14,
+      "max": 421.391
+    },
+    "rendered_rows_in_dom": 18,
+    "long_tasks_while_loading_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    },
+    "sweep_frame_gap_ms": {
+      "n": 120,
+      "p50": 16.600000001490116,
+      "p95": 17.5,
+      "p99": 17.700000001117587,
+      "max": 17.800000000745058
+    },
+    "long_tasks_during_sweep_ms": {
+      "n": 0,
+      "p50": null,
+      "p95": null,
+      "p99": null,
+      "max": null
+    }
+  },
+  "transcript": {
+    "first_page_ms": 305,
+    "pages_loaded": 200,
+    "load_earlier_ms": {
+      "n": 199,
+      "p50": 336,
+      "p95": 608,
+      "p99": 657,
+      "max": 666
+    },
+    "first_vs_last_tenth_ms": {
+      "first": {
+        "n": 20,
+        "p50": 105,
+        "p95": 162,
+        "p99": 222,
+        "max": 222
+      },
+      "last": {
+        "n": 20,
+        "p50": 608,
+        "p95": 657,
+        "p99": 666,
+        "max": 666
+      }
+    },
+    "messages_api_ms": {
+      "n": 200,
+      "p50": 22.913999999999998,
+      "p95": 36.989,
+      "p99": 110.878,
+      "max": 129.84199999999998
+    },
+    "long_tasks_ms": {
+      "n": 118,
+      "p50": 102,
+      "p95": 136,
+      "p99": 140,
+      "max": 177
+    },
+    "dom_nodes_in_log": 70009
+  },
+  "cleanup_s": 0.847
+}

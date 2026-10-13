@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Shop — Northwind Goods (demo)</title>
+  <link rel="stylesheet" href="/demo.css" />
+  <!-- Talkivio embed snippet (the loader tag itself is injected by /demo.js with the chosen site key) -->
+  <script>window.Talkivio = window.Talkivio || function () { (window.Talkivio.q = window.Talkivio.q || []).push(arguments); };</script>
+  <script src="/demo.js"></script>
+</head>
+<body>
+  <header class="site">
+    <a class="logo" href="/index.html">Northwind <span>Goods</span></a>
+    <nav class="site" aria-label="Main">
+      <a href="/index.html" aria-current="page">Shop</a>
+      <a href="/product.html">Product</a>
+      <a href="/pricing.html">Pricing</a>
+      <a href="/app.html">Account (SPA)</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <h1>Considered goods for everyday living.</h1>
+      <p>This is a fictional store used to try the chat widget. Browse around: the widget follows you between pages and SPA navigations.</p>
+    </section>
+    <section class="grid" aria-label="Products">
+        <article class="card"><div class="swatch" style="background:#e7dfd3"></div><h3>Linen throw</h3><p class="muted">$68</p></article>
+        <article class="card"><div class="swatch" style="background:#dfe6e9"></div><h3>Stoneware mug set</h3><p class="muted">$42</p></article>
+        <article class="card"><div class="swatch" style="background:#d9cbbd"></div><h3>Walnut desk tray</h3><p class="muted">$55</p></article>
+        <article class="card"><div class="swatch" style="background:#e3e1ea"></div><h3>Wool slippers</h3><p class="muted">$79</p></article>
+        <article class="card"><div class="swatch" style="background:#dde8df"></div><h3>Ceramic planter</h3><p class="muted">$36</p></article>
+        <article class="card"><div class="swatch" style="background:#ece4d1"></div><h3>Canvas tote</h3><p class="muted">$29</p></article>
+    </section>
+    <section class="console" aria-labelledby="console-title">
+      <h2 id="console-title">SDK console</h2>
+      <p class="muted">Calls <code>Talkivio(command, ...)</code> on this page. Events appear below.</p>
+      <div class="row">
+        <button type="button" data-sdk="open">open</button>
+        <button type="button" data-sdk="close">close</button>
+        <button type="button" data-sdk="hide">hide</button>
+        <button type="button" data-sdk="show">show</button>
+        <button type="button" data-sdk="identify" data-arg='{"name":"Pat Demo","email":"pat@example.com"}'>identify</button>
+        <button type="button" data-sdk="setTags" data-arg='["demo","vip"]'>setTags</button>
+        <button type="button" data-sdk="setCustomFields" data-arg='{"plan":"pro","cartValue":129}'>setCustomFields</button>
+        <button type="button" data-sdk="setLocale" data-arg='"ar"'>setLocale ar</button>
+        <button type="button" data-sdk="setLocale" data-arg='"en"'>setLocale en</button>
+        <button type="button" data-sdk="startChat" data-arg='{"message":"Hi! I have a question about my order."}'>startChat</button>
+        <button type="button" data-sdk="endChat">endChat</button>
+        <button type="button" data-sdk="getState">getState</button>
+        <button type="button" data-sdk="resetIdentity">resetIdentity</button>
+      </div>
+      <pre id="sdk-log" aria-live="off"></pre>
+    </section>
+  </main>
+</body>
+</html>

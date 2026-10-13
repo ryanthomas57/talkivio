@@ -1,0 +1,501 @@
+# Talkivio local environment (master prompt ch. 62).
+#
+#   docker compose up --build          # build, migrate, seed and start everything
+#   docker compose ps                  # health of every service
+#   docker compose logs -f api worker  # follow logs
+#   docker compose down                # stop (keeps data volumes)
+#   docker compose down -v             # DESTRUCTIVE: deletes database, objects, mail, scanner DB
+#
+# Host ports (all bound to 127.0.0.1 only):
+#   8080   reverse-proxy  dashboard + /api + /widget + /realtime + /health   (override: RD_HTTP_PORT)
+#   5173   reverse-proxy  demo storefront origin A  (Alpha: http://localhost:5173, Beta: http://127.0.0.1:5173)
+#   5174   reverse-proxy  demo storefront origin B  (Alpha: http://localhost:5174, Beta: http://127.0.0.1:5174)
+#   8025   mailpit        mail UI (every email the stack sends lands here)
+#   9001   minio          object storage console (verify uploads reach quarantine/clean buckets)
+#   4196   webhook-receiver  signed webhook test receiver (GET /events, POST /_control)
+#   55432  postgres       psql / smoke tests (override: RD_POSTGRES_PORT)
+# Everything else (api 4000, gateway 4001, dashboard 3000, redis, clamav, minio S3 API) is reachable
+# only on the internal `backend` network.
+#
+# Credentials below are LOCAL-ONLY defaults (prefix local-dev-only-). Override any of them with RD_*
+# variables in your shell or a git-ignored .env file. Production never uses this file: inject secrets
+# from a secret manager and keep the database/object store on private networks
+# (docs/operations/deployment.md).
+
+name: talkivio
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+# Non-root images, read-only root filesystem, no Linux capabilities, no privilege escalation.
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - 'no-new-privileges:true'
+  logging: *logging
+
+x-api-build: &api-build
+  context: .
+  dockerfile: infra/docker/api.Dockerfile
+  target: runtime
+  args:
+    GIT_SHA: ${GIT_SHA:-local}
+    BUILD_TIME: ${BUILD_TIME:-local}
+
+# Runtime configuration shared by api / gateway / worker. DATABASE_URL uses the RLS-bound
+# application role; DATABASE_OWNER_URL is deliberately absent (only the migrate job gets it).
+x-app-env: &app-env
+  NODE_ENV: development
+  BRAND_NAME: Talkivio
+  LOG_LEVEL: ${RD_LOG_LEVEL:-info}
+  HOST: 0.0.0.0
+  API_URL: http://localhost:${RD_HTTP_PORT:-8080}
+  APP_URL: http://localhost:${RD_HTTP_PORT:-8080}
+  CORS_ORIGINS: http://localhost:${RD_HTTP_PORT:-8080}
+  TRUST_PROXY: uniquelocal
+  COOKIE_SECURE: 'false'
+  GATEWAY_SEPARATE: 'true'
+  DATABASE_URL: postgresql://talkivio_app:${RD_APP_DB_PASSWORD:-local-dev-only-app-db}@postgres:5432/talkivio?schema=public
+  REDIS_URL: redis://:${RD_REDIS_PASSWORD:-local-dev-only-redis}@redis:6379/0
+  APP_SECRET: ${RD_APP_SECRET:-local-dev-only-app-secret-0123456789abcdef0123456789}
+  EMAIL_PROVIDER: smtp
+  EMAIL_FROM: 'Talkivio <no-reply@talkivio.local>'
+  SMTP_HOST: mailpit
+  SMTP_PORT: '1025'
+  SMTP_SECURE: 'false'
+  STORAGE_DRIVER: s3
+  S3_ENDPOINT: http://minio:9000
+  S3_REGION: us-east-1
+  S3_FORCE_PATH_STYLE: 'true'
+  S3_ACCESS_KEY_ID: ${RD_S3_APP_ACCESS_KEY:-talkivio-app}
+  S3_SECRET_ACCESS_KEY: ${RD_S3_APP_SECRET_KEY:-local-dev-only-s3-app-secret}
+  S3_BUCKET: talkivio-clean
+  S3_QUARANTINE_BUCKET: talkivio-quarantine
+  S3_CLEAN_BUCKET: talkivio-clean
+  S3_QUARANTINE_PREFIX: quarantine/
+  S3_CLEAN_PREFIX: clean/
+  # Export artifacts AND the privacy erasure ledger (exports/privacy-ledger/) live under this prefix.
+  S3_EXPORTS_PREFIX: exports/
+  # Stream downloads through the API (nosniff/CSP headers) so the MinIO S3 port stays internal;
+  # S3_PRESIGN_ENDPOINT is therefore not needed locally.
+  S3_DOWNLOAD_MODE: proxy
+  SCAN_MODE: clamav
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: '3310'
+  CLAMAV_TIMEOUT_MS: '30000'
+  UPLOAD_DAILY_QUOTA_MB: '2048'
+  UPLOAD_DAILY_QUOTA_FILES: '5000'
+  # Webhook TEST PATH ONLY (local stack + infra/webhook-receiver). Never set in production; the code also
+  # ignores it when NODE_ENV=production. The SSRF guard otherwise blocks private addresses; this
+  # allowlist lets the worker reach the local test receiver and nothing else.
+  TALKIVIO_WEBHOOK_ALLOW_PRIVATE: 'true'
+  TALKIVIO_WEBHOOK_ALLOW_PRIVATE_HOSTS: webhook-receiver:4196
+
+services:
+  # ─────────────────────────── Edge ───────────────────────────
+  reverse-proxy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - 'no-new-privileges:true'
+    logging: *logging
+    volumes:
+      - ./infra/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./apps/widget/demo:/srv/demo:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - '127.0.0.1:${RD_HTTP_PORT:-8080}:8080'
+      - '127.0.0.1:5173:5173'
+      - '127.0.0.1:5174:5174'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8080/proxy-health']
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      dashboard:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+      gateway:
+        condition: service_healthy
+    networks: [edge, backend]
+
+  dashboard:
+    <<: *hardened
+    build:
+      context: .
+      dockerfile: infra/docker/dashboard.Dockerfile
+      args:
+        API_INTERNAL_URL: http://api:4000
+        GIT_SHA: ${GIT_SHA:-local}
+        BUILD_TIME: ${BUILD_TIME:-local}
+    image: talkivio/dashboard:local
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /app/apps/dashboard/.next/cache:mode=1777
+    environment:
+      PORT: '3000'
+      HOSTNAME: 0.0.0.0
+      API_INTERNAL_URL: http://api:4000
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/',{redirect:'manual'}).then(r=>process.exit(r.status<500?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on:
+      api:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks: [backend]
+
+  # ─────────────────────────── Application (one image, three roles) ───────────────────────────
+  api:
+    <<: *hardened
+    build: *api-build
+    image: talkivio/api:local
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/main.js']
+    environment:
+      <<: *app-env
+      PORT: '4000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on: &app-deps
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_healthy
+      # Started, not healthy: first boot downloads signatures for minutes. Uploads stay in the
+      # scanning state (never downloadable) until clamd answers — the honest state machine.
+      clamav:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+    networks: [backend]
+
+  gateway:
+    <<: *hardened
+    build: *api-build
+    image: talkivio/api:local
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/gateway.js']
+    environment:
+      <<: *app-env
+      GATEWAY_PORT: '4001'
+      HEALTHCHECK_PORT: '4001'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4001/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks: [backend]
+
+  worker:
+    <<: *hardened
+    build: *api-build
+    image: talkivio/api:local
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/worker.js']
+    environment:
+      <<: *app-env
+      WORKER_HEALTH_PORT: '4010'
+    # The worker serves /health/live, /health/ready and /health/metrics on its own listener (ADR 0004).
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4010/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    depends_on: *app-deps
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+    networks: [backend]
+
+  # ─────────────────────────── One-shot jobs ───────────────────────────
+  migrate:
+    build:
+      context: .
+      dockerfile: infra/docker/api.Dockerfile
+      target: migrate
+    image: talkivio/migrate:local
+    restart: 'no'
+    logging: *logging
+    environment:
+      DATABASE_OWNER_URL: postgresql://talkivio_owner:${RD_OWNER_DB_PASSWORD:-local-dev-only-owner-db}@postgres:5432/talkivio?schema=public
+      TALKIVIO_APP_PASSWORD: ${RD_APP_DB_PASSWORD:-local-dev-only-app-db}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [backend]
+
+  # Idempotent demo fixtures (tenants Alpha/Beta). Credentials come from .env.example only;
+  # the seed refuses NODE_ENV=production.
+  seed:
+    <<: *hardened
+    build: *api-build
+    image: talkivio/api:local
+    restart: 'no'
+    command: ['node', '--enable-source-maps', 'dist/seed.js']
+    # Only the SEED_* values are read from this file (demo password, site keys).
+    volumes:
+      - ./.env.example:/run/talkivio/seed.env:ro
+    environment:
+      NODE_ENV: development
+      SEED_ENV_FILE: /run/talkivio/seed.env
+      DATABASE_URL: postgresql://talkivio_app:${RD_APP_DB_PASSWORD:-local-dev-only-app-db}@postgres:5432/talkivio?schema=public
+      APP_SECRET: ${RD_APP_SECRET:-local-dev-only-app-secret-0123456789abcdef0123456789}
+      SEED_PUBLIC_BASE_URL: http://localhost:${RD_HTTP_PORT:-8080}
+    healthcheck:
+      disable: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks: [backend]
+
+  minio-init:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: 'no'
+    logging: *logging
+    entrypoint: ['/bin/sh', '/init/init-buckets.sh']
+    volumes:
+      - ./infra/minio/init-buckets.sh:/init/init-buckets.sh:ro
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: ${RD_MINIO_ROOT_USER:-talkivio-minio-root}
+      MINIO_ROOT_PASSWORD: ${RD_MINIO_ROOT_PASSWORD:-local-dev-only-minio-root}
+      S3_APP_ACCESS_KEY_ID: ${RD_S3_APP_ACCESS_KEY:-talkivio-app}
+      S3_APP_SECRET_ACCESS_KEY: ${RD_S3_APP_SECRET_KEY:-local-dev-only-s3-app-secret}
+      S3_QUARANTINE_BUCKET: talkivio-quarantine
+      S3_CLEAN_BUCKET: talkivio-clean
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks: [backend]
+
+  # ─────────────────────────── Data & dependencies ───────────────────────────
+  postgres:
+    image: postgres:16.15-bookworm
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${RD_POSTGRES_SUPERUSER_PASSWORD:-local-dev-only-postgres}
+      TALKIVIO_DB: talkivio
+      TALKIVIO_OWNER_PASSWORD: ${RD_OWNER_DB_PASSWORD:-local-dev-only-owner-db}
+      TALKIVIO_APP_PASSWORD: ${RD_APP_DB_PASSWORD:-local-dev-only-app-db}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ./infra/postgres/sql:/talkivio-sql:ro
+    ports:
+      - '127.0.0.1:${RD_POSTGRES_PORT:-55432}:5432'
+    healthcheck:
+      # TCP probe against the app database: false until the init script has created it.
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-p', '5432', '-U', 'postgres', '-d', 'talkivio']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [edge, backend]
+
+  redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    logging: *logging
+    # AOF keeps BullMQ schedules across restarts; noeviction is required by BullMQ.
+    # Redis loss never loses messages (they are durable in PostgreSQL, ADR 0001).
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+      - --maxmemory-policy
+      - noeviction
+      - --requirepass
+      - ${RD_REDIS_PASSWORD:-local-dev-only-redis}
+    environment:
+      REDISCLI_AUTH: ${RD_REDIS_PASSWORD:-local-dev-only-redis}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  # Official minio/minio images are no longer published publicly (Docker Hub repository removed,
+  # quay.io/minio requires authentication as of 2026-10). pgsty/minio is a community rebuild of
+  # the AGPL MinIO source; replace with your organisation's mirror if you have one.
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    logging: *logging
+    command: ['server', '/data', '--console-address', ':9001']
+    environment:
+      MINIO_ROOT_USER: ${RD_MINIO_ROOT_USER:-talkivio-minio-root}
+      MINIO_ROOT_PASSWORD: ${RD_MINIO_ROOT_PASSWORD:-local-dev-only-minio-root}
+    volumes:
+      - minio_data:/data
+    ports:
+      - '127.0.0.1:9001:9001'
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:9000/minio/health/live']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks: [edge, backend]
+
+  # clamd on TCP 3310 (1.4 LTS, Debian variant: amd64 + arm64). First start downloads ~300 MB of signatures (needs internet via `edge`)
+  # and needs ~2-3 GB RAM; the health check stays "starting" until clamd answers PING.
+  clamav:
+    image: clamav/clamav:1.4.6-debian
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      CLAMAV_NO_MILTERD: 'true'
+    volumes:
+      - clamav_db:/var/lib/clamav
+    healthcheck:
+      test: ['CMD', 'clamdcheck.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 600s
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+    networks: [edge, backend]
+
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: '5000'
+    volumes:
+      - mailpit_data:/data
+    ports:
+      - '127.0.0.1:8025:8025'
+    healthcheck:
+      test: ['CMD', '/mailpit', 'readyz']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [edge, backend]
+
+  # Signed-webhook test receiver (infra/webhook-receiver, dependency-free Node server; see its README).
+  # Verifies X-Talkivio-Signature, de-duplicates by event id, can simulate 429/500 failures.
+  # Tests set the per-endpoint secret at runtime via POST /_control (Bearer CONTROL_TOKEN).
+  # Nothing depends on it, so the core stack starts even if it is stopped.
+  webhook-receiver:
+    <<: *hardened
+    image: node:22.23.3-alpine
+    user: node
+    restart: unless-stopped
+    command: ['node', '/app/server.mjs']
+    volumes:
+      - ./infra/webhook-receiver:/app:ro
+    environment:
+      HOST: 0.0.0.0
+      PORT: '4196'
+      CONTROL_TOKEN: ${RD_WEBHOOK_CONTROL_TOKEN:-local-dev-only-webhook-control}
+    ports:
+      - '127.0.0.1:4196:4196'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4196/health').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks: [edge, backend]
+
+networks:
+  # Service-to-service traffic only; no route to the internet or the host.
+  backend:
+    internal: true
+  # Published ports and the egress that clamav/freshclam needs.
+  edge: {}
+
+volumes:
+  pg_data:
+  redis_data:
+  minio_data:
+  clamav_db:
+  mailpit_data:
+  caddy_data:
+  caddy_config:

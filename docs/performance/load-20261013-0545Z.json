@@ -1,0 +1,162 @@
+{
+  "started_at": "2026-10-13T05:45:05.508Z",
+  "environment": {
+    "host": "Mac.home",
+    "cpu": "Apple M2",
+    "cores": 8,
+    "memory_gb": 8,
+    "node": "v22.23.1",
+    "api": "http://localhost:4000",
+    "topology": "single api (gateway in-process) + single worker, PostgreSQL 16, Redis 7, same host as the generator"
+  },
+  "config": {
+    "tenants": 20,
+    "agentsPerTenant": 9,
+    "visitors": 360,
+    "hotShare": 0.5,
+    "rampPerSec": 6,
+    "sustainS": 600,
+    "burstS": 120,
+    "msgIntervalMs": 7000,
+    "origin": "http://localhost:5173"
+  },
+  "counters": {
+    "visitorMessages": 44955,
+    "agentMessages": 44607,
+    "chatsAdmitted": 360,
+    "chatsAccepted": 360,
+    "socketDisconnects": 0
+  },
+  "throughput": {
+    "messages_per_s": 111.27446358350241
+  },
+  "latencies_ms": {
+    "agent_send_ack_ms": {
+      "n": 44607,
+      "p50": 13.454345703125,
+      "p95": 81.64794921875,
+      "p99": 369.8359375,
+      "max": 1350.752197265625
+    },
+    "agent_to_visitor_ms.tenant_hot": {
+      "n": 22131,
+      "p50": 16.775390625,
+      "p95": 202.752197265625,
+      "p99": 5186.923583984375,
+      "max": 6317.211181640625
+    },
+    "agent_to_visitor_ms.tenant_other": {
+      "n": 22119,
+      "p50": 16.77099609375,
+      "p95": 192.837646484375,
+      "p99": 5188.164794921875,
+      "max": 6353.2119140625
+    },
+    "rest_admission_ms": {
+      "n": 360,
+      "p50": 28.281982421875,
+      "p95": 38.263916015625,
+      "p99": 47.240234375,
+      "max": 73.02392578125
+    },
+    "rest_widget_session_ms": {
+      "n": 360,
+      "p50": 11.273681640625,
+      "p95": 15.587646484375,
+      "p99": 26.130859375,
+      "max": 57.966064453125
+    },
+    "time_to_accept_ms": {
+      "n": 360,
+      "p50": 60.825439453125,
+      "p95": 139.908447265625,
+      "p99": 186.568603515625,
+      "max": 290.541015625
+    },
+    "visitor_send_ack_ms": {
+      "n": 33009,
+      "p50": 6.841552734375,
+      "p95": 13.462158203125,
+      "p99": 48.18408203125,
+      "max": 312.167236328125
+    },
+    "visitor_send_ack_ms.burst": {
+      "n": 11946,
+      "p50": 11.24560546875,
+      "p95": 325.716796875,
+      "p99": 674.484130859375,
+      "max": 1180.88818359375
+    },
+    "visitor_to_agent_ms.tenant_hot": {
+      "n": 22490,
+      "p50": 9.915771484375,
+      "p95": 3251.22802734375,
+      "p99": 5652.626953125,
+      "max": 6310.025146484375
+    },
+    "visitor_to_agent_ms.tenant_other": {
+      "n": 22465,
+      "p50": 9.979248046875,
+      "p95": 2987.02783203125,
+      "p99": 5645.22998046875,
+      "max": 6301.86572265625
+    }
+  },
+  "errors": {
+    "accept:CAPACITY_EXCEEDED": 52,
+    "agent_send:CHAT_CLOSED": 348
+  },
+  "server_metrics": {
+    "before": {
+      "outboxLag": "relaydesk_outbox_oldest_unpublished_seconds{service=\"api\"} 0.014602",
+      "queue": "relaydesk_routing_queue_oldest_seconds{routable=\"true\",service=\"api\"} 0\nrelaydesk_routing_queue_oldest_seconds{routable=\"false\",service=\"api\"} 113595.059602"
+    },
+    "after": {
+      "outboxLag": "relaydesk_outbox_oldest_unpublished_seconds{service=\"api\"} 4.160893",
+      "queue": "relaydesk_routing_queue_oldest_seconds{routable=\"true\",service=\"api\"} 0\nrelaydesk_routing_queue_oldest_seconds{routable=\"false\",service=\"api\"} 114330.668893"
+    }
+  },
+  "processes_during_burst": {
+    "api": [
+      {
+        "pid": 25370,
+        "cpu": 70,
+        "rssMb": 242
+      }
+    ],
+    "worker": [
+      {
+        "pid": 25371,
+        "cpu": 49.7,
+        "rssMb": 149
+      }
+    ],
+    "postgres": 44,
+    "redis": [
+      {
+        "pid": 4300,
+        "cpu": 0,
+        "rssMb": 1
+      },
+      {
+        "pid": 4301,
+        "cpu": 5.8,
+        "rssMb": 19
+      }
+    ],
+    "other_busy": [
+      {
+        "pid": 422,
+        "cpu": 26,
+        "command": "WindowServer"
+      },
+      {
+        "pid": 1210,
+        "cpu": 24.9,
+        "command": "python"
+      }
+    ]
+  },
+  "generator_cpu_s": 34.875313,
+  "elapsed_s": 804.8746955566406
+}

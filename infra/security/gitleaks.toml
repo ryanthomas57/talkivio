@@ -1,0 +1,21 @@
+# gitleaks configuration used by .github/workflows/ci.yml (secret-scan job).
+# Extends the upstream default rule set; the allowlist only covers values that are deliberately
+# public, local-only placeholders. Real secrets never match these patterns.
+title = "Talkivio secret scanning"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Documented local/CI-only placeholders (docker-compose.yml, .env.example, CI service containers)"
+regexTarget = "match"
+regexes = [
+  '''local-dev-only-[A-Za-z0-9_-]+''',
+  '''ci-only-[A-Za-z0-9_-]+''',
+  '''talkivio_app_dev_password''',
+  '''talkivio-local-demo-2026''',
+  '''rds_(Alpha|Beta)LocalDemo[0-9]+''',
+]
+paths = [
+  '''pnpm-lock\.yaml''',
+]

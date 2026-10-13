@@ -1,0 +1,48 @@
+{
+  "name": "talkivio",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Real-time website live chat and customer engagement platform",
+  "packageManager": "pnpm@10.9.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @talkivio/contracts build && concurrently -k -n shared,api,worker,web,widget -c gray,cyan,magenta,green,yellow \"pnpm --filter @talkivio/contracts dev\" \"pnpm --filter @talkivio/api dev\" \"pnpm --filter @talkivio/api dev:worker\" \"pnpm --filter @talkivio/dashboard dev\" \"pnpm --filter @talkivio/widget dev\"",
+    "build": "pnpm --filter @talkivio/contracts build && pnpm --filter @talkivio/widget build && pnpm --filter @talkivio/api build && pnpm --filter @talkivio/dashboard build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "db:migration:new": "pnpm --filter @talkivio/api db:migration:new",
+    "db:drift": "pnpm --filter @talkivio/api db:drift",
+    "db:deploy": "pnpm --filter @talkivio/api prisma:deploy",
+    "db:seed": "pnpm --filter @talkivio/api seed",
+    "format": "prettier --write \"**/*.{ts,tsx,js,json,css,md}\"",
+    "db:prepare": "sh infra/postgres/migrate.sh",
+    "db:reset:local": "pnpm --filter @talkivio/api exec sh scripts/db-reset.sh",
+    "bootstrap:local": "pnpm install --frozen-lockfile && pnpm build && pnpm db:prepare && pnpm db:seed",
+    "test:integration": "node apps/api/test/smoke-v2.mjs",
+    "docker:up": "docker compose up --build -d",
+    "docker:down": "docker compose down",
+    "docker:destroy": "docker compose down -v --remove-orphans",
+    "verify:all": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.5",
+    "prettier": "3.9.10",
+    "typescript": "5.9.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "prisma",
+      "esbuild",
+      "@swc/core",
+      "@nestjs/core",
+      "@tailwindcss/oxide",
+      "sharp",
+      "msgpackr-extract"
+    ]
+  }
+}

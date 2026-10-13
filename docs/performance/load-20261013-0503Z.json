@@ -1,0 +1,150 @@
+{
+  "started_at": "2026-10-13T05:03:55.312Z",
+  "environment": {
+    "host": "Mac.home",
+    "cpu": "Apple M2",
+    "cores": 8,
+    "memory_gb": 8,
+    "node": "v22.23.1",
+    "api": "http://localhost:4000",
+    "topology": "single api (gateway in-process) + single worker, PostgreSQL 16, Redis 7, same host as the generator"
+  },
+  "config": {
+    "tenants": 20,
+    "agentsPerTenant": 9,
+    "visitors": 360,
+    "hotShare": 0.5,
+    "rampPerSec": 6,
+    "sustainS": 600,
+    "burstS": 120,
+    "msgIntervalMs": 7000,
+    "origin": "http://localhost:5173"
+  },
+  "counters": {
+    "visitorMessages": 43258,
+    "agentMessages": 41568,
+    "chatsAdmitted": 360,
+    "chatsAccepted": 360,
+    "socketDisconnects": 0
+  },
+  "throughput": {
+    "messages_per_s": 106.81337743695342
+  },
+  "latencies_ms": {
+    "agent_send_ack_ms": {
+      "n": 41568,
+      "p50": 13.35009765625,
+      "p95": 525.93017578125,
+      "p99": 2385.21630859375,
+      "max": 3363.506591796875
+    },
+    "agent_to_visitor_ms.tenant_hot": {
+      "n": 20049,
+      "p50": 15.1455078125,
+      "p95": 11095.49462890625,
+      "p99": 16752.538330078125,
+      "max": 18638.208984375
+    },
+    "agent_to_visitor_ms.tenant_other": {
+      "n": 20051,
+      "p50": 15.12939453125,
+      "p95": 11315.80859375,
+      "p99": 16769.3583984375,
+      "max": 18751.01220703125
+    },
+    "rest_admission_ms": {
+      "n": 360,
+      "p50": 30.245849609375,
+      "p95": 41.5498046875,
+      "p99": 49.507080078125,
+      "max": 53.52880859375
+    },
+    "rest_widget_session_ms": {
+      "n": 360,
+      "p50": 11.060302734375,
+      "p95": 17.01220703125,
+      "p99": 20.940673828125,
+      "max": 29.187744140625
+    },
+    "time_to_accept_ms": {
+      "n": 360,
+      "p50": 56.507080078125,
+      "p95": 129.52734375,
+      "p99": 215.1494140625,
+      "max": 235.40966796875
+    },
+    "visitor_send_ack_ms": {
+      "n": 32513,
+      "p50": 6.67529296875,
+      "p95": 10.1708984375,
+      "p99": 16.796630859375,
+      "max": 282.769775390625
+    },
+    "visitor_send_ack_ms.burst": {
+      "n": 10745,
+      "p50": 70.947998046875,
+      "p95": 2213.44287109375,
+      "p99": 2757.654541015625,
+      "max": 3182.023193359375
+    },
+    "visitor_to_agent_ms.tenant_hot": {
+      "n": 21333,
+      "p50": 8.595947265625,
+      "p95": 15237.58740234375,
+      "p99": 17841.883056640625,
+      "max": 18861.635498046875
+    },
+    "visitor_to_agent_ms.tenant_other": {
+      "n": 21329,
+      "p50": 8.619873046875,
+      "p95": 15259.8828125,
+      "p99": 17814.035888671875,
+      "max": 18764.206298828125
+    }
+  },
+  "errors": {
+    "accept:CAPACITY_EXCEEDED": 32,
+    "agent_send:CHAT_CLOSED": 1007
+  },
+  "server_metrics": {
+    "before": {
+      "outboxLag": "relaydesk_outbox_oldest_unpublished_seconds{service=\"api\"} 0",
+      "queue": "relaydesk_routing_queue_oldest_seconds{routable=\"true\",service=\"api\"} 0\nrelaydesk_routing_queue_oldest_seconds{routable=\"false\",service=\"api\"} 111126.578059"
+    },
+    "after": {
+      "outboxLag": "relaydesk_outbox_oldest_unpublished_seconds{service=\"api\"} 17.757427",
+      "queue": "relaydesk_routing_queue_oldest_seconds{routable=\"true\",service=\"api\"} 0\nrelaydesk_routing_queue_oldest_seconds{routable=\"false\",service=\"api\"} 111851.778427"
+    }
+  },
+  "processes_during_burst": {
+    "api": [
+      {
+        "pid": 10856,
+        "cpu": 52.4,
+        "rssMb": 233
+      }
+    ],
+    "worker": [
+      {
+        "pid": 10857,
+        "cpu": 35.2,
+        "rssMb": 218
+      }
+    ],
+    "postgres": 38,
+    "redis": [
+      {
+        "pid": 4300,
+        "cpu": 0,
+        "rssMb": 1
+      },
+      {
+        "pid": 4301,
+        "cpu": 4.5,
+        "rssMb": 19
+      }
+    ]
+  },
+  "generator_cpu_s": 34.169807,
+  "elapsed_s": 794.1514633789062
+}

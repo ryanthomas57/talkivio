@@ -1,0 +1,41 @@
+# Build context for infra/docker/*.Dockerfile (context = repository root).
+# Keep secrets, local state and host build output out of every image layer.
+
+# Secrets / local configuration (only the documented example may enter the context)
+**/.env
+**/.env.*
+!.env.example
+**/*.pem
+**/*.key
+**/id_rsa*
+
+# Dependencies and build output are produced inside the image from the lockfile
+**/node_modules
+**/dist
+**/.next
+**/out
+**/.build
+**/.turbo
+**/*.tsbuildinfo
+**/coverage
+
+# Local runtime state
+**/storage
+**/*.log
+**/test-results
+**/playwright-report
+
+# VCS, CI, editor and OS noise (macOS AppleDouble files on external volumes included)
+.git
+.github
+.vscode
+.idea
+**/.DS_Store
+**/._*
+
+# Not needed to build images
+docs
+docker
+infra/webhook-receiver
+README.md
+docker-compose*.yml

@@ -1,0 +1,297 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ───────────────────────── Talkivio design tokens (ch. 05) ─────────────────────────
+   Colours follow the Talkivio mark (docs/brand): a teal ribbon (#37e5e7 → #05b0bd → #036b7f) folded over a
+   violet underside (#6a44c9 → #3e2f93), on indigo-tinted neutrals. Solid fills use a deeper brand teal because
+   white text on the mark's #05b0bd is only 2.6:1. Every colour resolves through these semantic tokens; contrast
+   was checked on the real pairings — light: text 16.2:1, secondary 7.8:1, subdued 5.2:1 (5.0:1 on surface-3),
+   white on primary 5.2:1, primary on canvas 4.9:1 and on its tint 4.6:1, accent 7.1:1; dark: text 16.2:1,
+   secondary 9.2:1, subdued ≥ 5.6:1, primary-fg on primary 9.8:1, primary on surface 9.3:1, accent 5.8:1.
+   Subdued text is never used for critical state labels. */
+:root {
+  --canvas: #f5f7fb;
+  --surface: #ffffff;
+  --surface-2: #f8f9fd;
+  --surface-3: #eef1f8;
+  --text: #121a2d;
+  --text-2: #475369;
+  --text-3: #5b6880;
+  --border: #d8deea;
+  --border-subtle: #e6eaf3;
+  --primary: #07778a;
+  --primary-hover: #05606f;
+  --primary-tint: #e0f5f6;
+  --primary-fg: #ffffff;
+  --accent: #5b3fc4;
+  --accent-tint: #efebfc;
+  --accent-fg: #ffffff;
+  --brand-gradient: linear-gradient(135deg, #37e5e7 0%, #05b0bd 48%, #6a44c9 100%);
+  --danger: #b42318;
+  --danger-hover: #912018;
+  --danger-tint: #fff0ee;
+  --danger-fg: #ffffff;
+  --warning: #8a4b00;
+  --warning-tint: #fff5e6;
+  --success: #18734a;
+  --success-tint: #e8f5ee;
+  --info: #3b4fc2;
+  --info-tint: #eef0fc;
+  --note: #fff8e6;
+  --note-border: #ecd38f;
+  --note-fg: #6d4300;
+  --bubble-visitor: #eef1f8;
+  --nav: #ffffff;
+  --nav-active: #e0f5f6;
+  --nav-active-fg: #05606f;
+  --overlay: rgb(10 15 30 / 0.45);
+  --shadow-color: 228 35% 14%;
+  color-scheme: light;
+}
+
+.dark {
+  --canvas: #0a0f1e;
+  --surface: #11182b;
+  --surface-2: #161f35;
+  --surface-3: #1d2840;
+  --text: #e8ecf7;
+  --text-2: #b2bccf;
+  --text-3: #94a0b8;
+  --border: #2a3552;
+  --border-subtle: #212b45;
+  --primary: #2fd0d6;
+  --primary-hover: #62e2e6;
+  --primary-tint: #0e3440;
+  --primary-fg: #04161b;
+  --accent: #9b82f5;
+  --accent-tint: #251d4d;
+  --accent-fg: #0f0a26;
+  --brand-gradient: linear-gradient(135deg, #37e5e7 0%, #05b0bd 48%, #6a44c9 100%);
+  --danger: #f2877d;
+  --danger-hover: #f6a39b;
+  --danger-tint: #3a1a17;
+  /* Dark text on the light dark-mode danger fill (white fails WCAG AA there). */
+  --danger-fg: #2a0905;
+  --warning: #f0b45c;
+  --warning-tint: #33240f;
+  --success: #5cc995;
+  --success-tint: #12301f;
+  --info: #9aa8f5;
+  --info-tint: #1a2152;
+  --note: #2e2512;
+  --note-border: #5c4a1e;
+  --note-fg: #f3d18b;
+  --bubble-visitor: #1d2840;
+  --nav: #0d1324;
+  --nav-active: #0e3440;
+  --nav-active-fg: #8ff0ef;
+  --overlay: rgb(0 0 0 / 0.6);
+  --shadow-color: 228 45% 2%;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-fg: var(--text);
+  --color-fg-2: var(--text-2);
+  --color-fg-3: var(--text-3);
+  --color-line: var(--border);
+  --color-line-subtle: var(--border-subtle);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-tint: var(--primary-tint);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-hover: var(--danger-hover);
+  --color-danger-fg: var(--danger-fg);
+  --color-danger-tint: var(--danger-tint);
+  --color-warning: var(--warning);
+  --color-warning-tint: var(--warning-tint);
+  --color-success: var(--success);
+  --color-success-tint: var(--success-tint);
+  --color-info: var(--info);
+  --color-info-tint: var(--info-tint);
+  --color-note: var(--note);
+  --color-note-border: var(--note-border);
+  --color-note-fg: var(--note-fg);
+  --color-bubble-visitor: var(--bubble-visitor);
+  --color-nav: var(--nav);
+  --color-nav-active: var(--nav-active);
+  --color-nav-active-fg: var(--nav-active-fg);
+  --color-overlay: var(--overlay);
+
+  --font-sans: 'Inter Variable', Inter, Arial, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Type scale (ch. 05): secondary 12/16, base 14/20, body 16/24, H3 16/24, H2 20/28, H1 28/36. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 2.25rem;
+
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  --shadow-float: 0 0 0 1px hsl(var(--shadow-color) / 0.06), 0 8px 24px hsl(var(--shadow-color) / 0.14), 0 2px 6px hsl(var(--shadow-color) / 0.06);
+  --shadow-dialog: 0 0 0 1px hsl(var(--shadow-color) / 0.08), 0 24px 64px hsl(var(--shadow-color) / 0.24);
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --animate-fade-in: fade-in 140ms var(--ease-out-quint);
+  --animate-scale-in: scale-in 160ms var(--ease-out-quint);
+  --animate-slide-in-right: slide-in-right 200ms var(--ease-out-quint);
+  --animate-slide-in-left: slide-in-left 200ms var(--ease-out-quint);
+  --animate-message-in: message-in 160ms var(--ease-out-quint);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slide-in-right {
+  from { transform: translateX(24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes slide-in-left {
+  from { transform: translateX(-24px); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+@keyframes message-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes typing-dot {
+  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+  30% { opacity: 1; transform: translateY(-2px); }
+}
+@keyframes skeleton {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+  body {
+    background: var(--canvas);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Arabic (ch. 29): Inter keeps Latin glyphs; Arabic falls through to the platform UI faces (SF Arabic via
+     system-ui, Segoe UI, Geeza Pro, Tahoma) instead of Arial, with a little more line height for diacritics. */
+  :lang(ar) body,
+  body:lang(ar) {
+    font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', 'Geeza Pro', Tahoma, Arial, sans-serif;
+    line-height: 1.375rem;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--primary) 22%, transparent);
+  }
+  * {
+    border-color: var(--border);
+  }
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+  /* Focus ring (ch. 05): 2 px primary with 2 px offset on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+  /* Date and time inputs: Tab also visits the calendar button inside the control, where the input itself is not
+     :focus-visible — keep the ring on the whole control while any part of it has focus. */
+  input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week']):focus-within {
+    outline: 2px solid var(--primary);
+    outline-offset: 0;
+  }
+  h1 { font-size: 1.75rem; line-height: 2.25rem; font-weight: 650; letter-spacing: -0.01em; }
+  h2 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; }
+  h3 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+}
+
+@layer utilities {
+  .scroll-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .typing-dot {
+    animation: typing-dot 1.1s infinite;
+  }
+  .skeleton {
+    background: linear-gradient(90deg, var(--surface-3) 25%, var(--border-subtle) 37%, var(--surface-3) 63%);
+    background-size: 400% 100%;
+    animation: skeleton 1.4s ease infinite;
+  }
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .break-anywhere {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Forced colors (Windows High Contrast, ch. 05): the browser repaints every colour with system colours, so state
+   shown only by a coloured underline disappears. The selected tab keeps a Highlight underline and bold text. */
+@media (forced-colors: active) {
+  [role='tab'] {
+    forced-color-adjust: none;
+    color: CanvasText;
+    background-color: Canvas;
+    border-bottom-color: transparent;
+  }
+  [role='tab'][aria-selected='true'] {
+    color: Highlight;
+    border-bottom-color: Highlight;
+    font-weight: 700;
+  }
+  [role='tab']:focus-visible {
+    outline-color: Highlight;
+  }
+}

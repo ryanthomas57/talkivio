@@ -1,0 +1,1492 @@
+// Talkivio — database schema (Prisma mirror of the SQL migrations).
+// Authority: apps/api/prisma/migrations/*.sql (see docs/adr/0002). Tenant-owned
+// tables carry tenant_id and are protected by row level security.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = []
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────── Enumerations ───────────────────────────
+
+enum Role {
+  owner
+  admin
+  supervisor
+  agent
+  analyst
+}
+
+enum DesiredStatus {
+  online
+  away
+  invisible
+}
+
+enum TenantStatus {
+  active
+  suspended
+  deleting
+}
+
+enum TokenPurpose {
+  verify
+  reset
+  invite
+  recovery
+  oauth_state
+  mfa_challenge
+}
+
+enum RoutingMode {
+  manual
+  broadcast
+  assigned
+}
+
+enum ChatStatus {
+  queued
+  offered
+  active
+  closed
+}
+
+enum ParticipantRole {
+  primary
+  collaborator
+  visitor
+}
+
+enum ActorType {
+  visitor
+  agent
+  system
+}
+
+enum OfferMode {
+  broadcast
+  assigned
+  transfer
+}
+
+enum OfferStatus {
+  pending
+  accepted
+  declined
+  expired
+  withdrawn
+}
+
+enum MessageVisibility {
+  public
+  internal
+}
+
+enum MessageType {
+  text
+  attachment
+  system
+}
+
+enum AttachmentState {
+  initiated
+  uploading
+  uploaded
+  scanning
+  clean
+  rejected
+  expired
+}
+
+enum RatingValue {
+  good
+  bad
+}
+
+enum ScopeType {
+  tenant
+  department
+  personal
+}
+
+enum InvitationState {
+  eligible
+  displayed
+  accepted
+  dismissed
+  expired
+}
+
+enum ConsentPurpose {
+  service
+  analytics
+}
+
+enum ConsentState {
+  granted
+  denied
+  withdrawn
+}
+
+enum PageEventKind {
+  entered
+  left
+  visible
+  hidden
+}
+
+enum TagSource {
+  client
+  agent
+  trigger
+  integration
+}
+
+enum JobState {
+  queued
+  running
+  succeeded
+  failed
+  cancelled
+}
+
+enum ExportFormat {
+  txt
+  json
+  csv
+  pdf
+}
+
+enum PrivacyKind {
+  access
+  erase
+}
+
+enum PrivacyState {
+  pending_verification
+  queued
+  running
+  completed
+  failed
+}
+
+enum Plan {
+  starter
+  team
+  business
+  enterprise
+}
+
+// ─────────────────────────── Global identity ───────────────────────────
+
+model User {
+  id                  String    @id @default(uuid()) @db.Uuid
+  email               String    @unique
+  displayName         String    @map("display_name")
+  passwordHash        String?   @map("password_hash")
+  avatarUrl           String?   @map("avatar_url")
+  emailVerifiedAt     DateTime? @map("email_verified_at") @db.Timestamptz(3)
+  mfaSecretCiphertext String?   @map("mfa_secret_ciphertext")
+  mfaKeyVersion       Int?      @map("mfa_key_version")
+  mfaEnabledAt        DateTime? @map("mfa_enabled_at") @db.Timestamptz(3)
+  mfaRecoveryHashes   String[]  @default([]) @map("mfa_recovery_hashes")
+  /// Last TOTP time step accepted (RFC 6238 §5.2: a code is accepted at most once).
+  mfaLastTotpStep     BigInt?   @map("mfa_last_totp_step")
+  disabledAt          DateTime? @map("disabled_at") @db.Timestamptz(3)
+  lastLoginAt         DateTime? @map("last_login_at") @db.Timestamptz(3)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  sessions       AuthSession[]
+  memberships    Membership[]
+  oauthAccounts  OAuthAccount[]
+  trustedDevices TrustedDevice[]
+
+  @@map("users")
+}
+
+model AuthSession {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @map("user_id") @db.Uuid
+  tokenHash      String    @unique @map("token_hash")
+  csrfTokenHash  String    @map("csrf_token_hash")
+  activeTenantId String?   @map("active_tenant_id") @db.Uuid
+  mfaVerified    Boolean   @default(false) @map("mfa_verified")
+  recentAuthAt   DateTime  @default(now()) @map("recent_auth_at") @db.Timestamptz(3)
+  expiresAt      DateTime  @map("expires_at") @db.Timestamptz(3)
+  lastSeenAt     DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  revokedAt      DateTime? @map("revoked_at") @db.Timestamptz(3)
+  uaSummary      String?   @map("ua_summary")
+  ipHash         String?   @map("ip_hash")
+  locationLabel  String?   @map("location_label")
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, revokedAt, expiresAt])
+  @@map("auth_sessions")
+}
+
+model AuthToken {
+  id         String       @id @default(uuid()) @db.Uuid
+  userId     String?      @map("user_id") @db.Uuid
+  tenantId   String?      @map("tenant_id") @db.Uuid
+  purpose    TokenPurpose
+  tokenHash  String       @unique @map("token_hash")
+  payload    Json?
+  expiresAt  DateTime     @map("expires_at") @db.Timestamptz(3)
+  consumedAt DateTime?    @map("consumed_at") @db.Timestamptz(3)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@index([userId, purpose])
+  @@map("auth_tokens")
+}
+
+model OAuthAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  userId            String   @map("user_id") @db.Uuid
+  provider          String
+  providerAccountId String   @map("provider_account_id")
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("oauth_accounts")
+}
+
+model TrustedDevice {
+  id         String   @id @default(uuid()) @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  tokenHash  String   @unique @map("token_hash")
+  label      String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastUsedAt DateTime @default(now()) @map("last_used_at") @db.Timestamptz(3)
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("trusted_devices")
+}
+
+/// Outbound mail log; delivery state is tracked separately from acceptance.
+model OutboundEmail {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String?   @map("tenant_id") @db.Uuid
+  dedupeKey         String    @unique @map("dedupe_key")
+  recipient         String
+  subject           String
+  textBody          String    @map("text_body")
+  htmlBody          String    @map("html_body")
+  template          String
+  status            String    @default("queued")
+  providerMessageId String?   @map("provider_message_id")
+  attempts          Int       @default(0)
+  lastError         String?   @map("last_error")
+  acceptedAt        DateTime? @map("accepted_at") @db.Timestamptz(3)
+  deliveredAt       DateTime? @map("delivered_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([createdAt])
+  @@map("outbound_emails")
+}
+
+// ─────────────────────────── Tenancy & team ───────────────────────────
+
+model Tenant {
+  id                    String       @id @default(uuid()) @db.Uuid
+  slug                  String       @unique
+  name                  String
+  status                TenantStatus @default(active)
+  timezone              String       @default("UTC")
+  ownerUserId           String       @map("owner_user_id") @db.Uuid
+  retentionDays         Int          @default(180) @map("retention_days")
+  settings              Json         @default("{}")
+  plan                  Plan         @default(starter)
+  chatCounter           Int          @default(0) @map("chat_counter")
+  submissionCounter     Int          @default(0) @map("submission_counter")
+  onboardingState       Json         @default("{}") @map("onboarding_state")
+  onboardingCompletedAt DateTime?    @map("onboarding_completed_at") @db.Timestamptz(3)
+  deletedAt             DateTime?    @map("deleted_at") @db.Timestamptz(3)
+  createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version               Int          @default(1)
+
+  @@index([ownerUserId])
+  @@map("tenants")
+}
+
+model Membership {
+  id               String        @id @default(uuid()) @db.Uuid
+  tenantId         String        @map("tenant_id") @db.Uuid
+  userId           String        @map("user_id") @db.Uuid
+  role             Role          @default(agent)
+  enabled          Boolean       @default(true)
+  desiredStatus    DesiredStatus @default(online) @map("desired_status")
+  statusChangedAt  DateTime      @default(now()) @map("status_changed_at") @db.Timestamptz(3)
+  capacity         Int           @default(3)
+  displayName      String?       @map("display_name")
+  title            String?
+  preferences      Json          @default("{}")
+  lastAssignmentAt DateTime?     @map("last_assignment_at") @db.Timestamptz(3)
+  lastSeenAt       DateTime?     @map("last_seen_at") @db.Timestamptz(3)
+  archivedAt       DateTime?     @map("archived_at") @db.Timestamptz(3)
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version          Int           @default(1)
+
+  user        User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  departments DepartmentMember[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, userId])
+  @@index([tenantId, enabled, role, id])
+  @@index([userId])
+  @@map("memberships")
+}
+
+model AgentInvitation {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  email         String
+  role          Role      @default(agent)
+  departmentIds String[]  @default([]) @map("department_ids") @db.Uuid
+  capacity      Int       @default(3)
+  tokenHash     String    @unique @map("token_hash")
+  invitedById   String?   @map("invited_by_id") @db.Uuid
+  expiresAt     DateTime  @map("expires_at") @db.Timestamptz(3)
+  acceptedAt    DateTime? @map("accepted_at") @db.Timestamptz(3)
+  revokedAt     DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version       Int       @default(1)
+
+  @@index([tenantId, email])
+  @@map("agent_invitations")
+}
+
+model Department {
+  id                   String      @id @default(uuid()) @db.Uuid
+  tenantId             String      @map("tenant_id") @db.Uuid
+  name                 String
+  normalizedName       String      @map("normalized_name")
+  publicLabel          String      @map("public_label")
+  description          String?
+  enabled              Boolean     @default(true)
+  scheduleId           String?     @map("schedule_id") @db.Uuid
+  routingMode          RoutingMode @default(broadcast) @map("routing_mode")
+  queueLimit           Int         @default(1000) @map("queue_limit")
+  maxWaitSeconds       Int         @default(300) @map("max_wait_seconds")
+  fallbackDepartmentId String?     @map("fallback_department_id") @db.Uuid
+  archivedAt           DateTime?   @map("archived_at") @db.Timestamptz(3)
+  createdAt            DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version              Int         @default(1)
+
+  members DepartmentMember[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, enabled, id])
+  @@index([tenantId, fallbackDepartmentId])
+  @@index([tenantId, scheduleId])
+  @@map("departments")
+}
+
+model DepartmentMember {
+  tenantId     String   @map("tenant_id") @db.Uuid
+  departmentId String   @map("department_id") @db.Uuid
+  membershipId String   @map("membership_id") @db.Uuid
+  canServe     Boolean  @default(true) @map("can_serve")
+  canMonitor   Boolean  @default(false) @map("can_monitor")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  department Department @relation(fields: [tenantId, departmentId], references: [tenantId, id], onDelete: Cascade)
+  membership Membership @relation(fields: [tenantId, membershipId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, departmentId, membershipId])
+  @@index([tenantId, membershipId, departmentId])
+  @@map("department_members")
+}
+
+/// Serialization lock row per agent for capacity checks (ch. 30/31).
+model AgentCapacity {
+  tenantId     String   @map("tenant_id") @db.Uuid
+  membershipId String   @map("membership_id") @db.Uuid
+  revision     Int      @default(0)
+  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@id([tenantId, membershipId])
+  @@map("agent_capacity")
+}
+
+model AvailabilityInterval {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  membershipId String    @map("membership_id") @db.Uuid
+  status       String
+  startedAt    DateTime  @map("started_at") @db.Timestamptz(3)
+  endedAt      DateTime? @map("ended_at") @db.Timestamptz(3)
+  source       String
+
+  @@index([tenantId, membershipId, startedAt])
+  @@map("availability_intervals")
+}
+
+model Schedule {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  name            String
+  timezone        String
+  weeklyIntervals Json      @map("weekly_intervals")
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version         Int       @default(1)
+
+  exceptions ScheduleException[]
+
+  @@unique([tenantId, id])
+  @@map("schedules")
+}
+
+model ScheduleException {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  scheduleId String   @map("schedule_id") @db.Uuid
+  localDate  DateTime @map("local_date") @db.Date
+  intervals  Json
+  reason     String?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  schedule Schedule @relation(fields: [tenantId, scheduleId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, scheduleId, localDate])
+  @@map("schedule_exceptions")
+}
+
+model EmergencyClosure {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  siteId       String?   @map("site_id") @db.Uuid
+  departmentId String?   @map("department_id") @db.Uuid
+  startsAt     DateTime  @default(now()) @map("starts_at") @db.Timestamptz(3)
+  endsAt       DateTime? @map("ends_at") @db.Timestamptz(3)
+  reason       String
+  createdBy    String    @map("created_by") @db.Uuid
+  revokedAt    DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, startsAt, endsAt])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, siteId])
+  @@map("emergency_closures")
+}
+
+// ─────────────────────────── Sites & widget ───────────────────────────
+
+model Site {
+  id                       String    @id @default(uuid()) @db.Uuid
+  tenantId                 String    @map("tenant_id") @db.Uuid
+  name                     String
+  publicKey                String    @unique @map("public_key")
+  previousPublicKey        String?   @unique @map("previous_public_key")
+  previousKeyExpiresAt     DateTime? @map("previous_key_expires_at") @db.Timestamptz(3)
+  enabled                  Boolean   @default(true)
+  configRevision           Int       @default(0) @map("config_revision")
+  defaultDepartmentId      String?   @map("default_department_id") @db.Uuid
+  scheduleId               String?   @map("schedule_id") @db.Uuid
+  timezone                 String?
+  identitySecretCiphertext String?   @map("identity_secret_ciphertext")
+  identityKeyVersion       Int?      @map("identity_key_version")
+  installedAt              DateTime? @map("installed_at") @db.Timestamptz(3)
+  lastVerifiedAt           DateTime? @map("last_verified_at") @db.Timestamptz(3)
+  lastVerifiedOrigin       String?   @map("last_verified_origin")
+  archivedAt               DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt                DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version                  Int       @default(1)
+
+  origins SiteOrigin[]
+  configs WidgetConfigRevision[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, enabled, id])
+  @@index([tenantId, defaultDepartmentId])
+  @@index([tenantId, scheduleId])
+  @@map("sites")
+}
+
+model SiteOrigin {
+  tenantId    String    @map("tenant_id") @db.Uuid
+  siteId      String    @map("site_id") @db.Uuid
+  origin      String
+  patternType String    @default("exact") @map("pattern_type")
+  verifiedAt  DateTime? @map("verified_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  site Site @relation(fields: [tenantId, siteId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, siteId, origin])
+  @@index([tenantId, origin])
+  @@map("site_origins")
+}
+
+model WidgetConfigRevision {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  siteId      String    @map("site_id") @db.Uuid
+  revision    Int
+  config      Json
+  configHash  String    @map("config_hash")
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  createdBy   String?   @map("created_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  site Site @relation(fields: [tenantId, siteId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, siteId, revision])
+  @@index([tenantId, siteId, publishedAt(sort: Desc)])
+  @@map("widget_configs")
+}
+
+// ─────────────────────────── Automation ───────────────────────────
+
+model Trigger {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  name              String
+  description       String?
+  enabled           Boolean   @default(false)
+  priority          Int       @default(100)
+  eventType         String    @map("event_type")
+  currentRevision   Int       @default(1) @map("current_revision")
+  publishedRevision Int?      @map("published_revision")
+  lastMatchedAt     DateTime? @map("last_matched_at") @db.Timestamptz(3)
+  matchCount        Int       @default(0) @map("match_count")
+  errorCount        Int       @default(0) @map("error_count")
+  archivedAt        DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version           Int       @default(1)
+
+  revisions TriggerRevision[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, eventType, enabled, priority(sort: Desc), id])
+  @@map("triggers")
+}
+
+model TriggerRevision {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  triggerId   String    @map("trigger_id") @db.Uuid
+  revision    Int
+  dslVersion  Int       @default(1) @map("dsl_version")
+  definition  Json
+  publishedBy String?   @map("published_by") @db.Uuid
+  publishedAt DateTime? @map("published_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  trigger Trigger @relation(fields: [tenantId, triggerId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, triggerId, revision])
+  @@map("trigger_revisions")
+}
+
+model TriggerRun {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  triggerId        String   @map("trigger_id") @db.Uuid
+  triggerRevision  Int      @map("trigger_revision")
+  eventId          String   @map("event_id") @db.Uuid
+  eventType        String   @map("event_type")
+  visitorSessionId String?  @map("visitor_session_id") @db.Uuid
+  visitorId        String?  @map("visitor_id") @db.Uuid
+  chatId           String?  @map("chat_id") @db.Uuid
+  matched          Boolean
+  result           Json
+  causationId      String?  @map("causation_id") @db.Uuid
+  depth            Int      @default(0)
+  executedAt       DateTime @default(now()) @map("executed_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, triggerId, triggerRevision, eventId])
+  @@unique([tenantId, id], map: "trigger_runs_tenant_id_key")
+  @@index([tenantId, triggerId, executedAt(sort: Desc)])
+  @@index([tenantId, visitorSessionId, triggerId])
+  @@map("trigger_runs")
+}
+
+model TriggerEffect {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  runId       String    @map("run_id") @db.Uuid
+  actionIndex Int       @map("action_index")
+  actionType  String    @map("action_type")
+  status      String    @default("pending")
+  reason      String?
+  executedAt  DateTime? @map("executed_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, runId, actionIndex])
+  @@map("trigger_effects")
+}
+
+model CannedReply {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  scopeType  ScopeType @map("scope_type")
+  scopeId    String?   @map("scope_id") @db.Uuid
+  scopeKey   String    @map("scope_key")
+  slug       String
+  title      String
+  body       String
+  options    String[]  @default([])
+  tags       String[]  @default([])
+  enabled    Boolean   @default(true)
+  usageCount Int       @default(0) @map("usage_count")
+  createdBy  String?   @map("created_by") @db.Uuid
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version    Int       @default(1)
+
+  @@unique([tenantId, scopeKey, slug])
+  @@index([tenantId, scopeType, enabled, id])
+  @@map("canned_replies")
+}
+
+// ─────────────────────────── Visitors ───────────────────────────
+
+model Visitor {
+  id                 String    @id @default(uuid()) @db.Uuid
+  tenantId           String    @map("tenant_id") @db.Uuid
+  siteId             String    @map("site_id") @db.Uuid
+  anonymousLabel     String    @map("anonymous_label")
+  name               String?
+  emailCiphertext    String?   @map("email_ciphertext")
+  emailLookupHash    String?   @map("email_lookup_hash")
+  phoneCiphertext    String?   @map("phone_ciphertext")
+  verified           Boolean   @default(false)
+  customFields       Json      @default("{}") @map("custom_fields")
+  /// Provenance of each custom-field value: { key: { source: visitor|agent|trigger, by, at } } (cleared with the values).
+  customFieldSources Json      @default("{}") @map("custom_field_sources")
+  notes              String?
+  countryCode        String?   @map("country_code")
+  region             String?
+  city               String?
+  browser            String?
+  os                 String?
+  deviceCategory     String?   @map("device_category")
+  language           String?
+  timezone           String?
+  visitCount         Int       @default(0) @map("visit_count")
+  chatCount          Int       @default(0) @map("chat_count")
+  firstSeenAt        DateTime  @default(now()) @map("first_seen_at") @db.Timestamptz(3)
+  lastSeenAt         DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  erasedAt           DateTime? @map("erased_at") @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version            Int       @default(1)
+
+  tags VisitorTag[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, lastSeenAt(sort: Desc), id])
+  @@index([tenantId, emailLookupHash])
+  @@index([tenantId, siteId])
+  @@map("visitors")
+}
+
+/// Browser credential for an anonymous visitor identity (one per browser); hashed bearer.
+model VisitorCredential {
+  id        String    @id @default(uuid()) @db.Uuid
+  tenantId  String    @map("tenant_id") @db.Uuid
+  visitorId String    @map("visitor_id") @db.Uuid
+  siteId    String    @map("site_id") @db.Uuid
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  revokedAt DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, visitorId])
+  @@map("visitor_credentials")
+}
+
+model VisitorIdentity {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  visitorId          String   @map("visitor_id") @db.Uuid
+  issuerId           String   @map("issuer_id") @db.Uuid
+  subjectHash        String   @map("subject_hash")
+  verificationMethod String   @map("verification_method")
+  linkedAt           DateTime @default(now()) @map("linked_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, issuerId, subjectHash])
+  @@index([tenantId, visitorId])
+  @@map("visitor_identities")
+}
+
+model VisitorSession {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  visitorId        String    @map("visitor_id") @db.Uuid
+  siteId           String    @map("site_id") @db.Uuid
+  sessionKeyHash   String    @unique @map("session_key_hash")
+  startedAt        DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  lastSeenAt       DateTime  @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  endedAt          DateTime? @map("ended_at") @db.Timestamptz(3)
+  analyticsConsent String    @default("unknown") @map("analytics_consent")
+  currentUrl       String?   @map("current_url")
+  currentTitle     String?   @map("current_title")
+  referrerOrigin   String?   @map("referrer_origin")
+  landingUrl       String?   @map("landing_url")
+  utm              Json?
+  deviceCategory   String?   @map("device_category")
+  browser          String?
+  os               String?
+  country          String?
+  city             String?
+  pageViewCount    Int       @default(0) @map("page_view_count")
+  isPreview        Boolean   @default(false) @map("is_preview")
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, siteId, lastSeenAt(sort: Desc), id])
+  @@index([tenantId, visitorId, startedAt(sort: Desc)])
+  @@map("visitor_sessions")
+}
+
+model PageEvent {
+  id            String        @id @default(uuid()) @db.Uuid
+  tenantId      String        @map("tenant_id") @db.Uuid
+  sessionId     String        @map("session_id") @db.Uuid
+  clientEventId String        @map("client_event_id")
+  receivedAt    DateTime      @default(now()) @map("received_at") @db.Timestamptz(3)
+  clientAt      DateTime?     @map("client_at") @db.Timestamptz(3)
+  kind          PageEventKind
+  sanitizedUrl  String        @map("sanitized_url")
+  title         String?
+  dwellMs       BigInt?       @map("dwell_ms")
+
+  @@unique([tenantId, sessionId, clientEventId])
+  @@index([tenantId, sessionId, receivedAt, id])
+  @@index([tenantId, receivedAt])
+  @@map("page_events")
+}
+
+model ConsentRecord {
+  id            String         @id @default(uuid()) @db.Uuid
+  tenantId      String         @map("tenant_id") @db.Uuid
+  visitorId     String?        @map("visitor_id") @db.Uuid
+  sessionId     String?        @map("session_id") @db.Uuid
+  purpose       ConsentPurpose
+  state         ConsentState
+  policyVersion String         @map("policy_version")
+  source        String
+  recordedAt    DateTime       @default(now()) @map("recorded_at") @db.Timestamptz(3)
+
+  @@index([tenantId, visitorId, purpose, recordedAt(sort: Desc)])
+  @@index([tenantId, sessionId])
+  @@map("consent_records")
+}
+
+model Tag {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  slug       String
+  label      String
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, slug])
+  @@index([tenantId, archivedAt, slug])
+  @@map("tags")
+}
+
+model VisitorTag {
+  tenantId  String    @map("tenant_id") @db.Uuid
+  visitorId String    @map("visitor_id") @db.Uuid
+  tagId     String    @map("tag_id") @db.Uuid
+  source    TagSource
+  addedBy   String?   @map("added_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  visitor Visitor @relation(fields: [tenantId, visitorId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, visitorId, tagId])
+  @@index([tenantId, tagId, visitorId])
+  @@map("visitor_tags")
+}
+
+model CustomFieldDefinition {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  key              String
+  label            String
+  dataType         String    @map("data_type")
+  publicWritable   Boolean   @default(false) @map("public_writable")
+  visibleToVisitor Boolean   @default(false) @map("visible_to_visitor")
+  validation       Json      @default("{}")
+  archivedAt       DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version          Int       @default(1)
+
+  @@unique([tenantId, key])
+  @@map("custom_field_definitions")
+}
+
+model IdentityHandoff {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @map("tenant_id") @db.Uuid
+  nonceHash         String    @unique @map("nonce_hash")
+  visitorId         String    @map("visitor_id") @db.Uuid
+  sourceSiteId      String    @map("source_site_id") @db.Uuid
+  destinationSiteId String    @map("destination_site_id") @db.Uuid
+  destinationOrigin String    @map("destination_origin")
+  expiresAt         DateTime  @map("expires_at") @db.Timestamptz(3)
+  redeemedAt        DateTime? @map("redeemed_at") @db.Timestamptz(3)
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([expiresAt])
+  @@index([tenantId, visitorId])
+  @@index([tenantId, destinationSiteId])
+  @@index([tenantId, sourceSiteId])
+  @@map("identity_handoffs")
+}
+
+model Ban {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @map("tenant_id") @db.Uuid
+  siteId      String?   @map("site_id") @db.Uuid
+  visitorId   String?   @map("visitor_id") @db.Uuid
+  ipMatchHash String?   @map("ip_match_hash")
+  ipMasked    String?   @map("ip_masked")
+  reason      String
+  expiresAt   DateTime? @map("expires_at") @db.Timestamptz(3)
+  revokedAt   DateTime? @map("revoked_at") @db.Timestamptz(3)
+  createdBy   String    @map("created_by") @db.Uuid
+  revokedBy   String?   @map("revoked_by") @db.Uuid
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, visitorId, revokedAt, expiresAt])
+  @@index([tenantId, ipMatchHash])
+  @@index([tenantId, siteId])
+  @@map("bans")
+}
+
+// ─────────────────────────── Chats ───────────────────────────
+
+model Chat {
+  id                      String     @id @default(uuid()) @db.Uuid
+  tenantId                String     @map("tenant_id") @db.Uuid
+  number                  Int
+  siteId                  String     @map("site_id") @db.Uuid
+  visitorId               String     @map("visitor_id") @db.Uuid
+  sessionId               String?    @map("session_id") @db.Uuid
+  departmentId            String?    @map("department_id") @db.Uuid
+  acquisitionDepartmentId String?    @map("acquisition_department_id") @db.Uuid
+  ownerMembershipId       String?    @map("owner_membership_id") @db.Uuid
+  status                  ChatStatus @default(queued)
+  startedBy               String     @default("visitor") @map("started_by")
+  routeReason             String?    @map("route_reason")
+  priority                Int        @default(50)
+  requestedAt             DateTime   @default(now()) @map("requested_at") @db.Timestamptz(3)
+  firstAssignedAt         DateTime?  @map("first_assigned_at") @db.Timestamptz(3)
+  firstResponseAt         DateTime?  @map("first_response_at") @db.Timestamptz(3)
+  closedAt                DateTime?  @map("closed_at") @db.Timestamptz(3)
+  closeReason             String?    @map("close_reason")
+  closedByActor           String?    @map("closed_by_actor")
+  closedById              String?    @map("closed_by_id") @db.Uuid
+  nextSeq                 BigInt     @default(1) @map("next_seq")
+  lastMessageAt           DateTime   @default(now()) @map("last_message_at") @db.Timestamptz(3)
+  lastMessagePreview      String     @default("") @map("last_message_preview")
+  lastPublicSenderType    ActorType? @map("last_public_sender_type")
+  lastVisitorMessageAt    DateTime?  @map("last_visitor_message_at") @db.Timestamptz(3)
+  lastAgentReplyAt        DateTime?  @map("last_agent_reply_at") @db.Timestamptz(3)
+  visitorDisconnectedAt   DateTime?  @map("visitor_disconnected_at") @db.Timestamptz(3)
+  pageUrl                 String?    @map("page_url")
+  isPreview               Boolean    @default(false) @map("is_preview")
+  createdAt               DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version                 Int        @default(1)
+
+  participants ChatParticipant[]
+  messages     Message[]
+  offers       AssignmentOffer[]
+  tags         ChatTag[]
+  rating       ChatRating?
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, number])
+  @@index([tenantId, status, departmentId, priority(sort: Desc), requestedAt, id])
+  @@index([tenantId, visitorId, requestedAt(sort: Desc), id])
+  @@index([tenantId, ownerMembershipId, status])
+  @@index([tenantId, requestedAt, id])
+  @@index([tenantId, updatedAt])
+  @@index([tenantId, sessionId])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, siteId])
+  @@index([tenantId, acquisitionDepartmentId])
+  @@map("chats")
+}
+
+model ChatParticipant {
+  id               String          @id @default(uuid()) @db.Uuid
+  tenantId         String          @map("tenant_id") @db.Uuid
+  chatId           String          @map("chat_id") @db.Uuid
+  actorType        ActorType       @map("actor_type")
+  visitorId        String?         @map("visitor_id") @db.Uuid
+  membershipId     String?         @map("membership_id") @db.Uuid
+  role             ParticipantRole
+  joinedAt         DateTime        @default(now()) @map("joined_at") @db.Timestamptz(3)
+  leftAt           DateTime?       @map("left_at") @db.Timestamptz(3)
+  lastReadSeq      BigInt          @default(0) @map("last_read_seq")
+  lastDeliveredSeq BigInt          @default(0) @map("last_delivered_seq")
+
+  chat Chat @relation(fields: [tenantId, chatId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, id])
+  @@index([tenantId, chatId, leftAt])
+  @@index([tenantId, membershipId, leftAt])
+  @@index([tenantId, visitorId])
+  @@map("chat_participants")
+}
+
+model AssignmentOffer {
+  id                 String      @id @default(uuid()) @db.Uuid
+  tenantId           String      @map("tenant_id") @db.Uuid
+  chatId             String      @map("chat_id") @db.Uuid
+  membershipId       String?     @map("membership_id") @db.Uuid
+  fromMembershipId   String?     @map("from_membership_id") @db.Uuid
+  targetDepartmentId String?     @map("target_department_id") @db.Uuid
+  mode               OfferMode
+  status             OfferStatus @default(pending)
+  note               String?
+  expiresAt          DateTime    @map("expires_at") @db.Timestamptz(3)
+  decidedAt          DateTime?   @map("decided_at") @db.Timestamptz(3)
+  decisionReason     String?     @map("decision_reason")
+  createdAt          DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  version            Int         @default(1)
+
+  chat Chat @relation(fields: [tenantId, chatId], references: [tenantId, id], onDelete: Cascade)
+
+  @@index([tenantId, membershipId, status, expiresAt])
+  @@index([tenantId, status, expiresAt])
+  @@index([tenantId, chatId, status])
+  @@index([tenantId, targetDepartmentId])
+  @@map("assignment_offers")
+}
+
+model AssignmentHistory {
+  id                   String   @id @default(uuid()) @db.Uuid
+  tenantId             String   @map("tenant_id") @db.Uuid
+  chatId               String   @map("chat_id") @db.Uuid
+  previousOwnerId      String?  @map("previous_owner_id") @db.Uuid
+  nextOwnerId          String?  @map("next_owner_id") @db.Uuid
+  previousDepartmentId String?  @map("previous_department_id") @db.Uuid
+  nextDepartmentId     String?  @map("next_department_id") @db.Uuid
+  reason               String
+  routeRevision        Int      @default(0) @map("route_revision")
+  decision             Json     @default("{}")
+  occurredAt           DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([tenantId, chatId, occurredAt, id])
+  @@index([tenantId, nextOwnerId, occurredAt])
+  @@map("assignment_history")
+}
+
+model Message {
+  id                 String            @id @default(uuid()) @db.Uuid
+  tenantId           String            @map("tenant_id") @db.Uuid
+  chatId             String            @map("chat_id") @db.Uuid
+  seq                BigInt
+  clientMessageId    String?           @map("client_message_id")
+  senderType         ActorType         @map("sender_type")
+  senderMembershipId String?           @map("sender_membership_id") @db.Uuid
+  senderVisitorId    String?           @map("sender_visitor_id") @db.Uuid
+  senderNameSnapshot String            @map("sender_name_snapshot")
+  automated          Boolean           @default(false)
+  visibility         MessageVisibility @default(public)
+  type               MessageType       @default(text)
+  body               String?
+  systemEvent        Json?             @map("system_event")
+  options            String[]          @default([])
+  replyId            String?           @map("reply_id") @db.Uuid
+  sentAt             DateTime          @default(now()) @map("sent_at") @db.Timestamptz(3)
+  editedAt           DateTime?         @map("edited_at") @db.Timestamptz(3)
+  redactedAt         DateTime?         @map("redacted_at") @db.Timestamptz(3)
+
+  chat        Chat                @relation(fields: [tenantId, chatId], references: [tenantId, id], onDelete: Cascade)
+  attachments MessageAttachment[]
+
+  @@unique([tenantId, id])
+  @@unique([tenantId, chatId, seq])
+  @@unique([tenantId, chatId, clientMessageId])
+  @@index([tenantId, sentAt])
+  @@index([tenantId, senderVisitorId])
+  @@index([tenantId, senderMembershipId])
+  @@map("messages")
+}
+
+model MessageAttachment {
+  tenantId     String @map("tenant_id") @db.Uuid
+  messageId    String @map("message_id") @db.Uuid
+  attachmentId String @map("attachment_id") @db.Uuid
+  ordinal      Int
+
+  message    Message    @relation(fields: [tenantId, messageId], references: [tenantId, id], onDelete: Cascade)
+  attachment Attachment @relation(fields: [tenantId, attachmentId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, messageId, attachmentId])
+  @@unique([tenantId, messageId, ordinal])
+  @@index([tenantId, attachmentId])
+  @@map("message_attachments")
+}
+
+model Attachment {
+  id              String          @id @default(uuid()) @db.Uuid
+  tenantId        String          @map("tenant_id") @db.Uuid
+  chatId          String?         @map("chat_id") @db.Uuid
+  uploadedByActor ActorType       @map("uploaded_by_actor")
+  uploadedById    String          @map("uploaded_by_id") @db.Uuid
+  objectKey       String          @unique @map("object_key")
+  thumbnailKey    String?         @map("thumbnail_key")
+  originalName    String          @map("original_name")
+  declaredMime    String          @map("declared_mime")
+  detectedMime    String?         @map("detected_mime")
+  sizeBytes       BigInt          @map("size_bytes")
+  sha256          String?
+  state           AttachmentState @default(initiated)
+  scanResult      String?         @map("scan_result")
+  rejectReason    String?         @map("reject_reason")
+  expiresAt       DateTime?       @map("expires_at") @db.Timestamptz(3)
+  deletedAt       DateTime?       @map("deleted_at") @db.Timestamptz(3)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  messages MessageAttachment[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, chatId, state, id])
+  @@index([state, updatedAt])
+  @@map("attachments")
+}
+
+model ChatRating {
+  id            String      @id @default(uuid()) @db.Uuid
+  tenantId      String      @map("tenant_id") @db.Uuid
+  chatId        String      @map("chat_id") @db.Uuid
+  visitorId     String      @map("visitor_id") @db.Uuid
+  rating        RatingValue
+  comment       String?
+  submittedAt   DateTime    @default(now()) @map("submitted_at") @db.Timestamptz(3)
+  revisedAt     DateTime?   @map("revised_at") @db.Timestamptz(3)
+  revisionCount Int         @default(0) @map("revision_count")
+
+  chat Chat @relation(fields: [tenantId, chatId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, chatId])
+  @@index([tenantId, rating, submittedAt, id])
+  @@index([tenantId, visitorId])
+  @@map("chat_ratings")
+}
+
+model ChatTag {
+  tenantId  String    @map("tenant_id") @db.Uuid
+  chatId    String    @map("chat_id") @db.Uuid
+  tagId     String    @map("tag_id") @db.Uuid
+  source    TagSource
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  chat Chat @relation(fields: [tenantId, chatId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([tenantId, chatId, tagId])
+  @@index([tenantId, tagId, chatId])
+  @@map("chat_tags")
+}
+
+model CampaignInvitation {
+  id             String          @id @default(uuid()) @db.Uuid
+  tenantId       String          @map("tenant_id") @db.Uuid
+  campaignId     String          @map("campaign_id") @db.Uuid
+  sessionId      String          @map("session_id") @db.Uuid
+  visitorId      String          @map("visitor_id") @db.Uuid
+  occurrenceKey  String          @map("occurrence_key")
+  state          InvitationState @default(eligible)
+  message        String
+  attribution    String
+  departmentId   String?         @map("department_id") @db.Uuid
+  displayedAt    DateTime?       @map("displayed_at") @db.Timestamptz(3)
+  acceptedChatId String?         @map("accepted_chat_id") @db.Uuid
+  dismissedAt    DateTime?       @map("dismissed_at") @db.Timestamptz(3)
+  expiresAt      DateTime        @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  version        Int             @default(1)
+
+  @@unique([tenantId, sessionId, occurrenceKey])
+  @@index([tenantId, campaignId, createdAt])
+  @@index([tenantId, visitorId, dismissedAt])
+  @@index([tenantId, displayedAt])
+  @@index([tenantId, acceptedChatId])
+  @@map("invitations")
+}
+
+model OfflineSubmission {
+  id               String    @id @default(uuid()) @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  siteId           String    @map("site_id") @db.Uuid
+  visitorId        String?   @map("visitor_id") @db.Uuid
+  sessionId        String?   @map("session_id") @db.Uuid
+  departmentId     String?   @map("department_id") @db.Uuid
+  reference        String
+  name             String?
+  emailCiphertext  String?   @map("email_ciphertext")
+  emailLookupHash  String    @map("email_lookup_hash")
+  message          String
+  customFields     Json      @default("{}") @map("custom_fields")
+  sourceChatId     String?   @map("source_chat_id") @db.Uuid
+  conversionReason String?   @map("conversion_reason")
+  status           String    @default("received")
+  handledAt        DateTime? @map("handled_at") @db.Timestamptz(3)
+  handledById      String?   @map("handled_by_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version          Int       @default(1)
+
+  @@unique([tenantId, reference])
+  @@unique([tenantId, id], map: "offline_submissions_tenant_id_key")
+  @@index([tenantId, createdAt(sort: Desc), id])
+  @@index([tenantId, visitorId])
+  @@index([tenantId, departmentId])
+  @@index([tenantId, siteId])
+  @@map("offline_submissions")
+}
+
+// ─────────────────────────── Platform plumbing ───────────────────────────
+
+model OutboxEvent {
+  seq              BigInt    @id @default(autoincrement())
+  eventId          String    @map("event_id") @db.Uuid
+  tenantId         String    @map("tenant_id") @db.Uuid
+  aggregateType    String    @map("aggregate_type")
+  aggregateId      String    @map("aggregate_id") @db.Uuid
+  aggregateVersion Int       @map("aggregate_version")
+  eventType        String    @map("event_type")
+  schemaVersion    Int       @default(1) @map("schema_version")
+  scopeKind        String    @map("scope_kind")
+  scopeId          String    @map("scope_id")
+  audience         String    @default("staff")
+  payload          Json
+  causationId      String?   @map("causation_id") @db.Uuid
+  occurredAt       DateTime  @default(now()) @map("occurred_at") @db.Timestamptz(3)
+  publishedAt      DateTime? @map("published_at") @db.Timestamptz(3)
+  attemptCount     Int       @default(0) @map("attempt_count")
+  availableAt      DateTime  @default(now()) @map("available_at") @db.Timestamptz(3)
+  /// W3C traceparent of the request that wrote the event (null when tracing is off); the publisher continues it.
+  traceParent      String?   @map("trace_parent") @db.VarChar(128)
+
+  @@unique([eventId, scopeKind, scopeId, audience])
+  @@index([tenantId, scopeKind, scopeId, seq])
+  @@index([publishedAt, seq])
+  @@index([occurredAt])
+  @@map("outbox_events")
+}
+
+model CommandIdempotency {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @map("tenant_id") @db.Uuid
+  actorScope     String   @map("actor_scope")
+  routeKey       String   @map("route_key")
+  keyHash        String   @map("key_hash")
+  requestHash    String   @map("request_hash")
+  state          String   @default("processing")
+  responseStatus Int?     @map("response_status")
+  responseBody   Json?    @map("response_body")
+  expiresAt      DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, actorScope, routeKey, keyHash])
+  @@index([expiresAt])
+  @@map("command_idempotency")
+}
+
+model Job {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  kind          String
+  dedupeKey     String    @map("dedupe_key")
+  state         JobState  @default(queued)
+  payload       Json      @default("{}")
+  result        Json?
+  progress      Int?
+  attempts      Int       @default(0)
+  runAfter      DateTime  @default(now()) @map("run_after") @db.Timestamptz(3)
+  leaseUntil    DateTime? @map("lease_until") @db.Timestamptz(3)
+  lastErrorCode String?   @map("last_error_code")
+  requestedBy   String?   @map("requested_by") @db.Uuid
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz(3)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, kind, dedupeKey])
+  @@unique([tenantId, id], map: "jobs_tenant_id_key")
+  @@index([state, runAfter, id])
+  @@map("jobs")
+}
+
+model Export {
+  id               String       @id @default(uuid()) @db.Uuid
+  tenantId         String       @map("tenant_id") @db.Uuid
+  requestedBy      String?      @map("requested_by") @db.Uuid
+  visitorGrantHash String?      @map("visitor_grant_hash")
+  format           ExportFormat
+  filters          Json         @default("{}")
+  includeInternal  Boolean      @default(false) @map("include_internal")
+  timezone         String       @default("UTC")
+  jobId            String       @map("job_id") @db.Uuid
+  objectKey        String?      @map("object_key")
+  sha256           String?
+  sizeBytes        BigInt?      @map("size_bytes")
+  itemCount        Int?         @map("item_count")
+  expiresAt        DateTime     @map("expires_at") @db.Timestamptz(3)
+  erasedAt         DateTime?    @map("erased_at") @db.Timestamptz(3)
+  createdAt        DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, requestedBy, createdAt(sort: Desc), id])
+  @@index([tenantId, jobId])
+  @@map("exports")
+}
+
+model IntegrationCredential {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @map("tenant_id") @db.Uuid
+  kind       String    @default("api_token")
+  name       String
+  prefix     String
+  secretHash String    @unique @map("secret_hash")
+  scopes     String[]
+  enabled    Boolean   @default(true)
+  createdBy  String?   @map("created_by") @db.Uuid
+  expiresAt  DateTime  @map("expires_at") @db.Timestamptz(3)
+  lastUsedAt DateTime? @map("last_used_at") @db.Timestamptz(3)
+  revokedAt  DateTime? @map("revoked_at") @db.Timestamptz(3)
+  rotatedAt  DateTime? @map("rotated_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, kind, enabled, id])
+  @@map("integration_credentials")
+}
+
+model WebhookEndpoint {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @map("tenant_id") @db.Uuid
+  url                   String
+  description           String?
+  signingKeyCiphertext  String    @map("signing_key_ciphertext")
+  keyVersion            Int       @default(1) @map("key_version")
+  previousKeyCiphertext String?   @map("previous_key_ciphertext")
+  previousKeyExpiresAt  DateTime? @map("previous_key_expires_at") @db.Timestamptz(3)
+  eventTypes            String[]  @map("event_types")
+  enabled               Boolean   @default(true)
+  lastSuccessAt         DateTime? @map("last_success_at") @db.Timestamptz(3)
+  failureCount          Int       @default(0) @map("failure_count")
+  createdAt             DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  version               Int       @default(1)
+
+  deliveries WebhookDelivery[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, enabled, id])
+  @@map("webhook_endpoints")
+}
+
+model WebhookDelivery {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @map("tenant_id") @db.Uuid
+  endpointId      String    @map("endpoint_id") @db.Uuid
+  eventId         String    @map("event_id") @db.Uuid
+  eventType       String    @map("event_type")
+  payload         Json
+  status          String    @default("pending")
+  attempts        Int       @default(0)
+  nextAttemptAt   DateTime  @default(now()) @map("next_attempt_at") @db.Timestamptz(3)
+  responseStatus  Int?      @map("response_status")
+  responseExcerpt String?   @map("response_excerpt")
+  lastError       String?   @map("last_error")
+  durationMs      Int?      @map("duration_ms")
+  deliveredAt     DateTime? @map("delivered_at") @db.Timestamptz(3)
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  endpoint WebhookEndpoint @relation(fields: [tenantId, endpointId], references: [tenantId, id], onDelete: Cascade)
+
+  @@unique([tenantId, endpointId, eventId])
+  @@index([status, nextAttemptAt, id])
+  @@map("webhook_deliveries")
+}
+
+model AuditEvent {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String   @map("tenant_id") @db.Uuid
+  actorType  String   @map("actor_type")
+  actorId    String?  @map("actor_id") @db.Uuid
+  actorName  String?  @map("actor_name")
+  action     String
+  objectType String   @map("object_type")
+  objectId   String?  @map("object_id")
+  outcome    String   @default("success")
+  safeDiff   Json?    @map("safe_diff")
+  requestId  String?  @map("request_id")
+  ipHash     String?  @map("ip_hash")
+  occurredAt DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([tenantId, occurredAt(sort: Desc), id])
+  @@index([tenantId, action])
+  @@map("audit_events")
+}
+
+model Notification {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  membershipId String    @map("membership_id") @db.Uuid
+  type         String
+  title        String
+  body         String
+  link         String?
+  readAt       DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, membershipId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model MetricChatFact {
+  tenantId          String       @map("tenant_id") @db.Uuid
+  chatId            String       @map("chat_id") @db.Uuid
+  siteId            String       @map("site_id") @db.Uuid
+  departmentId      String?      @map("department_id") @db.Uuid
+  requestedAt       DateTime     @map("requested_at") @db.Timestamptz(3)
+  firstAssignedAt   DateTime?    @map("first_assigned_at") @db.Timestamptz(3)
+  firstResponseAt   DateTime?    @map("first_response_at") @db.Timestamptz(3)
+  closedAt          DateTime?    @map("closed_at") @db.Timestamptz(3)
+  closeReason       String?      @map("close_reason")
+  served            Boolean      @default(false)
+  missed            Boolean      @default(false)
+  abandoned         Boolean      @default(false)
+  rating            RatingValue?
+  ownerMembershipId String?      @map("owner_membership_id") @db.Uuid
+  startedBy         String       @default("visitor") @map("started_by")
+  dimensionSnapshot Json         @default("{}") @map("dimension_snapshot")
+  sourceVersion     Int          @map("source_version")
+  updatedAt         DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@id([tenantId, chatId])
+  @@index([tenantId, requestedAt, chatId])
+  @@map("metric_chat_facts")
+}
+
+model PrivacyRequest {
+  id             String       @id @default(uuid()) @db.Uuid
+  tenantId       String       @map("tenant_id") @db.Uuid
+  visitorId      String?      @map("visitor_id") @db.Uuid
+  kind           PrivacyKind
+  requestedBy    String?      @map("requested_by") @db.Uuid
+  state          PrivacyState @default(pending_verification)
+  proofReference String?      @map("proof_reference")
+  verifiedAt     DateTime?    @map("verified_at") @db.Timestamptz(3)
+  completedAt    DateTime?    @map("completed_at") @db.Timestamptz(3)
+  report         Json         @default("{}")
+  createdAt      DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([tenantId, state, createdAt, id])
+  @@index([tenantId, visitorId])
+  @@map("privacy_requests")
+}
+
+/// Erasure ledger replayed after backup restore (ch. 53). Pseudonymous subject hashes only.
+model SubjectTombstone {
+  id               String   @id @default(uuid()) @db.Uuid
+  tenantId         String   @map("tenant_id") @db.Uuid
+  subjectHash      String   @map("subject_hash")
+  erasureRequestId String   @map("erasure_request_id") @db.Uuid
+  erasedAt         DateTime @default(now()) @map("erased_at") @db.Timestamptz(3)
+
+  @@index([tenantId, subjectHash])
+  @@map("subject_tombstones")
+}
+
+/// Record of a destroyed tenant (ch. 41 tenant deletion). Deliberately NOT tenant-owned: no
+/// tenant FK (it outlives the cascade) and no RLS. No personal data: the tenant id, an HMAC of
+/// the slug, the deletion job id, timestamps and row/object counts only.
+model TenantTombstone {
+  tenantId      String    @id @map("tenant_id") @db.Uuid
+  slugHash      String    @map("slug_hash")
+  deletionJobId String    @map("deletion_job_id") @db.Uuid
+  startedAt     DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  /// Set in the same transaction that removes the tenant's rows.
+  deletedAt     DateTime? @map("deleted_at") @db.Timestamptz(3)
+  /// Set once the post-delete object-storage and Redis passes confirmed nothing remains.
+  completedAt   DateTime? @map("completed_at") @db.Timestamptz(3)
+  counts        Json      @default("{}")
+
+  @@index([completedAt])
+  @@map("tenant_tombstones")
+}
+
+model IntegrationMapping {
+  id                 String   @id @default(uuid()) @db.Uuid
+  tenantId           String   @map("tenant_id") @db.Uuid
+  provider           String
+  sourceType         String   @map("source_type")
+  sourceId           String   @map("source_id") @db.Uuid
+  externalId         String   @map("external_id")
+  lastSyncedRevision Int?     @map("last_synced_revision")
+  status             String   @default("active")
+  createdAt          DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([tenantId, provider, sourceType, sourceId])
+  @@map("integration_mappings")
+}
+
+// ─────────────────────────── Optional billing (feature flag BILLING) ───────────────────────────
+
+model BillingAccount {
+  tenantId               String    @id @map("tenant_id") @db.Uuid
+  providerCustomerId     String?   @unique @map("provider_customer_id")
+  state                  String    @default("active")
+  plan                   Plan      @default(starter)
+  seats                  Int       @default(10)
+  providerSubscriptionId String?   @unique @map("provider_subscription_id")
+  currentPeriodEnd       DateTime? @map("current_period_end") @db.Timestamptz(3)
+  cancelAtPeriodEnd      Boolean   @default(false) @map("cancel_at_period_end")
+  trialEndsAt            DateTime? @map("trial_ends_at") @db.Timestamptz(3)
+  graceEndsAt            DateTime? @map("grace_ends_at") @db.Timestamptz(3)
+  providerRevision       BigInt    @default(0) @map("provider_revision")
+  updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@map("billing_accounts")
+}
+
+model BillingEvent {
+  id         String    @id @default(uuid()) @db.Uuid
+  provider   String
+  eventId    String    @map("event_id")
+  type       String
+  tenantId   String?   @map("tenant_id") @db.Uuid
+  receivedAt DateTime  @default(now()) @map("received_at") @db.Timestamptz(3)
+  appliedAt  DateTime? @map("applied_at") @db.Timestamptz(3)
+
+  @@unique([provider, eventId])
+  @@map("billing_events")
+}

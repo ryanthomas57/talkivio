@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>SDK host (test page)</title>
+    <!--
+      Host page for apps/dashboard/e2e/widget-sdk.spec.ts. Query parameters:
+        key=<site key>        written into the real embed snippet below
+        loaders=1|2           how many loader tags (idempotency)
+        css=hostile           global !important rules aimed at div/iframe (isolation)
+        pre=open              a call queued before the loader runs (stub queue replay)
+      Every documented SDK event is recorded in window.__events; DOMContentLoaded marks what existed before the loader.
+    -->
+    <script>
+      (function () {
+        var q = new URLSearchParams(location.search);
+        window.__events = [];
+        window.__marks = {};
+        window.Talkivio = window.Talkivio || function () { (window.Talkivio.q = window.Talkivio.q || []).push(arguments); };
+        ['ready', 'opened', 'closed', 'connection.changed', 'availability.changed', 'unread.changed', 'chat.requested', 'chat.started', 'chat.ended', 'message.received', 'rating.changed', 'offline.submitted', 'identity.changed', 'invitation.displayed', 'invitation.accepted', 'error'].forEach(function (n) {
+          Talkivio('on', n, function (p) { window.__events.push([n, p]); });
+        });
+        if (q.get('pre') === 'open') Talkivio('open');
+        if (q.get('css') === 'hostile') {
+          document.write(
+            '<style>' +
+              '* { box-sizing: border-box !important; font-family: "Comic Sans MS", cursive !important; color: rgb(255, 0, 0) !important; }' +
+              'div { position: relative !important; display: none !important; width: 10px !important; height: 10px !important; z-index: 0 !important; overflow: visible !important; }' +
+              'iframe { display: none !important; width: 1px !important; height: 1px !important; border: 7px solid red !important; visibility: hidden !important; }' +
+              '</style>',
+          );
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+          window.__marks.dcl = performance.now();
+          window.__marks.loaderRanAtDcl = typeof window.Talkivio.version === 'string';
+          window.__marks.globalsAtDcl = Object.keys(window);
+          window.__marks.sheetsAtDcl = document.styleSheets.length;
+        });
+        var key = (q.get('key') || '').replace(/[^\w-]/g, '');
+        var api = q.get('api') || 'http://localhost:4000';
+        for (var i = 0; i < Number(q.get('loaders') || 1); i++) {
+          // The documented snippet, verbatim: an async script tag carrying the site key.
+          document.write('<script async src="' + api + '/widget/loader.js" data-site-key="' + key + '"><\/script>');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <main>
+      <h1>Host storefront</h1>
+      <p>Products and prices.</p>
+    </main>
+  </body>
+</html>

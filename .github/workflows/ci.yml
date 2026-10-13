@@ -1,0 +1,869 @@
+# Talkivio CI (master prompt ch. 63).
+#
+# Every PR / push: lockfile integrity + compose validation, format (changed files), typecheck, unit tests,
+# build, integration (PostgreSQL 16 + Redis 7 + api + worker + every e2e suite in apps/api/test), secret scan,
+# dependency audit. On push to main: container builds, image labels/non-root check, Trivy gate, SBOMs,
+# and a full docker-compose stack smoke test.
+#
+# Supply chain: third-party actions are pinned to full commit SHAs (tag in the trailing comment,
+# resolved with `gh api repos/<owner>/<repo>/commits/<tag>` on 2026-10-12). Default token is read-only;
+# jobs request extra scopes only where needed. Forks never receive secrets (pull_request, not _target).
+# No required gate is allowed to soft-fail (no step- or job-level failure suppression).
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  NODE_VERSION: '22.23.3'
+  CHECKPOINT_DISABLE: '1'
+  PRISMA_HIDE_UPDATE_MESSAGE: '1'
+  NEXT_TELEMETRY_DISABLED: '1'
+
+jobs:
+  # ───────────────────────────── Static gates ─────────────────────────────
+  lockfile:
+    name: Lockfile integrity & config validation
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0 (version from package.json "packageManager")
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install exactly what the lockfile pins
+        run: pnpm install --frozen-lockfile
+      - name: Lockfile unchanged by install
+        run: git diff --exit-code -- pnpm-lock.yaml
+      - name: Toolchain pins are consistent
+        run: |
+          pm=$(node -p "require('./package.json').packageManager")
+          test "$pm" = "pnpm@$(pnpm --version)" || { echo "packageManager=$pm but pnpm $(pnpm --version) is active"; exit 1; }
+          grep -q "PNPM_VERSION=${pm#pnpm@}" infra/docker/api.Dockerfile || { echo "api.Dockerfile PNPM_VERSION differs from $pm"; exit 1; }
+          grep -q "PNPM_VERSION=${pm#pnpm@}" infra/docker/dashboard.Dockerfile || { echo "dashboard.Dockerfile PNPM_VERSION differs from $pm"; exit 1; }
+      - name: docker compose config is valid
+        run: docker compose -f docker-compose.yml config --quiet
+      - name: Shell scripts parse
+        run: for f in infra/postgres/migrate.sh infra/postgres/init/10-talkivio.sh infra/minio/init-buckets.sh apps/api/scripts/db-reset.sh; do sh -n "$f"; done
+
+  format:
+    name: Format (changed files)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: prettier --check on files changed by this PR / push
+        # Ratchet: the existing tree predates the formatter gate (prettier reports ~278 files), so only
+        # touched files are enforced until a repo-wide format commit lands. Then switch to `prettier --check .`.
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "${BASE_SHA:-}" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            BASE_SHA=$(git rev-parse HEAD~1)
+          fi
+          mapfile -t files < <(git diff --name-only --diff-filter=ACMR "$BASE_SHA"...HEAD -- '*.ts' '*.tsx' '*.js' '*.mjs' '*.cjs' '*.json' '*.css' '*.md' '*.yml' '*.yaml' | grep -v -e '^pnpm-lock.yaml$' -e '/\._' || true)
+          if [ "${#files[@]}" -eq 0 ]; then echo "No formattable files changed."; exit 0; fi
+          pnpm exec prettier --check "${files[@]}"
+
+  typecheck:
+    name: Typecheck (all packages)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build shared contracts (type declarations consumed by apps)
+        run: pnpm --filter @talkivio/contracts build
+      - name: Generate Prisma client
+        run: pnpm --filter @talkivio/api prisma:generate
+      - name: Typecheck
+        run: pnpm -r typecheck
+      - name: Dead-control gate (every button, menu item and link has an action or a destination)
+        run: node apps/dashboard/scripts/dead-controls.mjs
+      - name: Error-handling gate (every dashboard write has its failure handled on some path)
+        run: node apps/dashboard/scripts/unhandled-writes.mjs
+      - name: Localization gate (no hard-coded dashboard copy; catalogs are tested in the unit job)
+        run: node apps/dashboard/scripts/i18n-scan.mjs --max 0
+      - name: Audit coverage gate (every API write route records an audit event or is exempt with a reason)
+        run: node apps/api/scripts/audit-coverage.mjs
+      - name: Traceability gate (every cited file exists and every quoted check is still in its test)
+        run: node scripts/ledger-check.mjs
+
+  unit:
+    name: Unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @talkivio/contracts build
+      - run: pnpm --filter @talkivio/api prisma:generate
+      - name: pnpm -r test (every workspace package, JUnit report)
+        # Runs each package's own `test` script (and vitest config); extra args add a JUnit reporter.
+        # --no-bail runs all packages and still fails the step if any package fails.
+        run: pnpm -r --no-bail test --reporter=default --reporter=junit --outputFile.junit=test-results/junit.xml
+      - name: Collect reports
+        if: always()
+        run: |
+          mkdir -p reports/unit
+          for d in packages/* apps/*; do
+            if [ -f "$d/test-results/junit.xml" ]; then cp "$d/test-results/junit.xml" "reports/unit/$(basename "$d")-junit.xml"; fi
+          done
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: unit-test-reports-${{ github.sha }}
+          path: reports/unit
+          if-no-files-found: warn
+          retention-days: 30
+
+  build:
+    name: Build (shared, widget, api, dashboard)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: pnpm build
+        env:
+          API_INTERNAL_URL: http://api:4000
+        run: pnpm build
+      - name: Widget bundle budget report
+        run: pnpm --filter @talkivio/widget size | tee widget-size.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: widget-dist-${{ github.sha }}
+          path: |
+            apps/widget/dist
+            widget-size.txt
+          retention-days: 30
+
+  # ───────────────────────────── Integration ─────────────────────────────
+  integration:
+    name: Integration (PostgreSQL 16 + Redis 7 + ClamAV, api + worker, e2e suites)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    services:
+      # Official ClamAV image; the runner waits for clamd to answer PING (first signature download).
+      clamav:
+        image: clamav/clamav:1.4.6-debian
+        ports:
+          - 3310:3310
+        options: >-
+          --health-cmd "clamdcheck.sh"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 40
+          --health-start-period 60s
+      postgres:
+        image: postgres:16.15-bookworm
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-only-postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7.4.11-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      PORT: '4000'
+      API_URL: http://localhost:4000
+      APP_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      GATEWAY_SEPARATE: 'false'
+      # The owner role runs the bootstrap/migrate steps and gives the e2e scripts read access for
+      # verification (BYPASSRLS). api/worker only ever receive DATABASE_URL (RLS-bound talkivio_app).
+      DATABASE_OWNER_URL: postgresql://talkivio_owner:ci-only-owner-db@localhost:5432/talkivio_ci?schema=public
+      DATABASE_URL: postgresql://talkivio_app:ci-only-app-db@localhost:5432/talkivio_ci?schema=public
+      CI_SUPERUSER_URL: postgresql://postgres:ci-only-postgres@localhost:5432/talkivio_ci
+      REDIS_URL: redis://localhost:6379/0
+      APP_SECRET: ci-only-app-secret-not-used-outside-this-job-0123456789
+      # console = rows are stored and marked accepted (files.e2e asserts accepted, never "delivered").
+      # The SMTP-outage path of offline.e2e (OFF01, unreachable SMTP) is not exercised here.
+      EMAIL_PROVIDER: console
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_DIR: ${{ github.workspace }}/apps/api/storage
+      # Real ClamAV (service container above). A later step restarts the worker against the clamd stub
+      # that files.e2e starts on 13310 to exercise the scanner-outage path.
+      SCAN_MODE: clamav
+      CLAMAV_HOST: 127.0.0.1
+      CLAMAV_PORT: '3310'
+      # integrations.e2e: private webhook targets allowed for the local receiver only (refused in production).
+      TALKIVIO_WEBHOOK_ALLOW_PRIVATE: 'true'
+      TALKIVIO_WEBHOOK_ALLOW_PRIVATE_HOSTS: 127.0.0.1:4196
+      TALKIVIO_WEBHOOK_RETRY_SCHEDULE_MS: 0,1000,2000,500,500,500,500,500
+      # tenant-deletion.e2e: observable destruction window (test-only; refused when NODE_ENV=production).
+      TENANT_DELETION_GRACE_SECONDS: '15'
+      LOG_LEVEL: warn
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: CLI tools used by the e2e scripts (psql, pg_dump/pg_restore, redis-cli)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends redis-tools
+          psql --version; pg_dump --version; pg_restore --version; redis-cli --version
+          mkdir -p reports/integration
+      - name: Build shared, widget and api
+        run: pnpm --filter @talkivio/contracts build && pnpm --filter @talkivio/widget build && pnpm --filter @talkivio/api build
+      - name: Bootstrap database roles (superuser, once per cluster)
+        run: |
+          psql "postgresql://postgres:ci-only-postgres@localhost:5432/postgres" -X -v ON_ERROR_STOP=1 \
+            -v owner_password=ci-only-owner-db -v app_password=ci-only-app-db -v db_name=talkivio_ci \
+            -f infra/postgres/sql/00-roles-and-database.sql
+      - name: Migrate as the owner role (role contract check + prisma migrate deploy)
+        run: sh infra/postgres/migrate.sh 2>&1 | tee reports/integration/migrate.log
+      - name: Re-running migrations is a no-op
+        run: |
+          sh infra/postgres/migrate.sh > reports/integration/migrate-rerun.log 2>&1
+          cat reports/integration/migrate-rerun.log
+          grep -q "No pending migrations" reports/integration/migrate-rerun.log
+      - name: Schema drift gate (migrations from empty vs schema.prisma; migrated DB vs fresh replay incl. RLS/policies/grants)
+        # The superuser only creates/drops the throwaway database (OWNER talkivio_owner); migrations run as the owner.
+        env:
+          DRIFT_ADMIN_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: node apps/api/scripts/schema-drift.mjs --compare-url "$DATABASE_OWNER_URL" --report reports/integration 2>&1 | tee reports/integration/schema-drift.log; test "${PIPESTATUS[0]}" = 0
+        shell: bash
+      - name: App role cannot bypass RLS (default deny without tenant context)
+        run: |
+          out=$(psql "${DATABASE_URL%%\?*}" -X -At -c "SELECT count(*) FROM tenants")
+          test "$out" = "0"
+          if psql "${DATABASE_URL%%\?*}" -X -At -c "INSERT INTO tenants (id, slug, name, owner_user_id, updated_at) VALUES (gen_random_uuid(), 'rls-probe', 'x', gen_random_uuid(), now())" 2>reports/integration/rls-probe.txt; then
+            echo "app role inserted a tenant without tenant context"; exit 1
+          fi
+          grep -q "row-level security" reports/integration/rls-probe.txt
+      - name: Seed demo fixtures twice (idempotency, production refusal)
+        run: |
+          counts() {
+            psql "${DATABASE_OWNER_URL%%\?*}" -X -At -c "SELECT (SELECT count(*) FROM users)||' '||(SELECT count(*) FROM tenants)||' '||(SELECT count(*) FROM memberships)||' '||(SELECT count(*) FROM departments)||' '||(SELECT count(*) FROM sites)||' '||(SELECT count(*) FROM site_origins)||' '||(SELECT count(*) FROM schedules)||' '||(SELECT count(*) FROM schedule_exceptions)||' '||(SELECT count(*) FROM tags)||' '||(SELECT count(*) FROM canned_replies)||' '||(SELECT count(*) FROM custom_field_definitions)||' '||(SELECT count(*) FROM chats)||' '||(SELECT count(*) FROM messages)"
+          }
+          NODE_ENV=development node apps/api/dist/seed.js | tee reports/integration/seed-run1.log
+          first=$(counts)
+          NODE_ENV=development node apps/api/dist/seed.js | tee reports/integration/seed-run2.log
+          second=$(counts)
+          echo "run1: $first" | tee reports/integration/seed-counts.txt
+          echo "run2: $second" | tee -a reports/integration/seed-counts.txt
+          test "$first" = "$second"
+          if NODE_ENV=production node apps/api/dist/seed.js; then echo "seed must refuse NODE_ENV=production"; exit 1; fi
+      - name: Start api (:4000), api without the private-webhook exception (:4107) and worker
+        id: start
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR"
+          nohup node --enable-source-maps apps/api/dist/main.js > reports/integration/api.log 2>&1 &
+          TALKIVIO_WEBHOOK_ALLOW_PRIVATE=false PORT=4107 API_URL=http://localhost:4107 \
+            nohup node --enable-source-maps apps/api/dist/main.js > reports/integration/api-no-private.log 2>&1 &
+          nohup node --enable-source-maps apps/api/dist/worker.js > reports/integration/worker.log 2>&1 &
+          for port in 4000 4107; do
+            ready=0
+            for i in $(seq 1 60); do
+              if curl -fsS "http://localhost:$port/health/ready" > /dev/null; then ready=1; break; fi
+              sleep 1
+            done
+            if [ "$ready" != 1 ]; then echo "api on :$port never became ready"; tail -n 100 reports/integration/api*.log; exit 1; fi
+          done
+      - name: 'e2e: smoke v2 (identity, chat slice, isolation)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/smoke-v2.mjs 2>&1 | tee reports/integration/smoke-v2.log
+      - name: 'e2e: seed fixtures through the API'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node infra/test/seed-fixtures.mjs 2>&1 | tee reports/integration/seed-fixtures.log
+      - name: 'e2e: shortcuts (SHORT01)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/shortcuts.e2e.mjs 2>&1 | tee reports/integration/shortcuts.log
+      - name: 'e2e: triggers + invitations (TRIG01-03, INV01-02)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/triggers.e2e.mjs 2>&1 | tee reports/integration/triggers.log
+      - name: 'e2e: schedules, closures, offline forms (OFF01 without SMTP outage)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/offline.e2e.mjs 2>&1 | tee reports/integration/offline.log
+      - name: 'e2e: analytics, monitor, notifications'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/analytics.e2e.mjs 2>&1 | tee reports/integration/analytics.log
+      - name: 'e2e: visitors, identity, consent, bans'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/visitors.e2e.mjs 2>&1 | tee reports/integration/visitors.log
+      - name: 'e2e: team administration, re-scoping, suspension requeue, widget draft etags'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/team.e2e.mjs 2>&1 | tee reports/integration/team.log
+      - name: 'e2e: realtime protocol conformance (capability expiry, ack shape, presence.set, unsubscribe, queue.updated, chat.started, message.redacted)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/protocol.e2e.mjs 2>&1 | tee reports/integration/protocol.log
+      - name: 'e2e: auth (reset, sessions, MFA with single-use TOTP/recovery codes, challenge nonce, trusted devices, recent auth)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/auth.e2e.mjs 2>&1 | tee reports/integration/auth.log
+      - name: 'e2e: routing (global capacity under concurrency, queue order + aging, tie breaking, offers)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/routing.e2e.mjs 2>&1 | tee reports/integration/routing.log
+      - name: 'e2e: transfers (offer/decline/expiry, full targets, forced + department transfers, close races, withdrawals)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/transfers.e2e.mjs 2>&1 | tee reports/integration/transfers.log
+      - name: 'e2e: receipts (delivered vs read, typing, seq gaps behind notes, replay cursors and the 24 h window)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/receipts.e2e.mjs 2>&1 | tee reports/integration/receipts.log
+      - name: 'e2e: tenant deletion (staged destruction, cancel window, export, crash resume) + GET /jobs/{id}'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/tenant-deletion.e2e.mjs 2>&1 | tee reports/integration/tenant-deletion.log
+      - name: 'e2e: security (IDOR, roles, CSRF, sessions, privileged writes, XSS, SQLi, SSRF, sockets, headers)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # :4107 runs without the test-only private-webhook exception, so SSRF is asserted under the strict policy.
+        env:
+          API_URL: http://localhost:4107
+        run: node apps/api/test/security.e2e.mjs 2>&1 | tee reports/integration/security.log
+      - name: 'e2e: role matrix (every guarded route × owner/admin/supervisor/agent/analyst, handler-level checks)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/roles.e2e.mjs 2>&1 | tee reports/integration/roles.log
+      - name: 'e2e: injected serialization failures and deadlocks during accept (retry, one owner, no partial state)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: node apps/api/test/faults.e2e.mjs 2>&1 | tee reports/integration/faults.log
+      - name: 'e2e: lifecycle edges (key rotation overlap, fallback cycles, consent scope, site-bound visitors, notes, collaborators, ratings, reconnect grace, silent connections)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/lifecycle.e2e.mjs 2>&1 | tee reports/integration/lifecycle.log
+      - name: 'e2e: every audited category written straight through the API carries its request id; no secret reaches the audit trail (AUD-72-16)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/audit.e2e.mjs 2>&1 | tee reports/integration/audit.log
+      - name: 'e2e: history search across the 23- and 25-hour London DST days equals the raw rows, list and full-text, owner and department-scoped agent (HIST01)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: node apps/api/test/history.e2e.mjs 2>&1 | tee reports/integration/history.log
+      - name: 'e2e: slow consumer — a stalled reader is cut off once, others unaffected, the queue is released and the client resumes without loss (WS04)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: node apps/api/test/backpressure.e2e.mjs 2>&1 | tee reports/integration/backpressure.log
+      - name: 'e2e: 100 concurrent requests, 10 agents × capacity 3, two API processes and two workers — no double ownership or capacity violation (ROUTE01)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        env:
+          BUILD_DIR: dist
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/routing-scale.e2e.mjs 2>&1 | tee reports/integration/routing-scale.log
+      - name: 'Contracts: OpenAPI/AsyncAPI/client regenerate from the built API without drift'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          pnpm --filter @talkivio/api contracts 2>&1 | tee reports/integration/contracts-generate.log
+          git diff --exit-code -- contracts packages/client/src/generated
+      - name: 'e2e: live contract test (strict OpenAPI/AsyncAPI validation of REST, socket frames, acks, outbox)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/contracts.e2e.mjs 2>&1 | tee reports/integration/contracts.log
+      - name: 'e2e: graceful drain (separate instance: readiness 503, in-flight completes, transport close, exit 0)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: node apps/api/test/drain.e2e.mjs 2>&1 | tee reports/integration/drain.log
+      - name: 'e2e: chaos — SIGKILL api/worker, Redis restart (AOF) and flush (FAIL01, AUD-72-04)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # Isolated stack: its own database, redis-server on :6390 and api/worker from dist/. policy-rc.d keeps
+        # the apt package from starting a system redis on 6379 (the service container already uses it).
+        env:
+          BUILD_DIR: dist
+          DATABASE_OWNER_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: |
+          printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d > /dev/null && sudo chmod +x /usr/sbin/policy-rc.d
+          sudo apt-get install -y -qq --no-install-recommends redis-server
+          sudo rm -f /usr/sbin/policy-rc.d
+          node apps/api/test/chaos.e2e.mjs 2>&1 | tee reports/integration/chaos.log
+      - name: 'e2e: SMTP delivery, 451 retry and 550 final failure against an in-test SMTP server (AUD-72-19)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # Isolated stack like chaos (database talkivio_smtp, redis-server on :6391, api :4160) with EMAIL_PROVIDER=smtp.
+        env:
+          BUILD_DIR: dist
+          DATABASE_OWNER_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: |
+          if ! command -v redis-server > /dev/null; then
+            printf '#!/bin/sh\nexit 101\n' | sudo tee /usr/sbin/policy-rc.d > /dev/null && sudo chmod +x /usr/sbin/policy-rc.d
+            sudo apt-get install -y -qq --no-install-recommends redis-server
+            sudo rm -f /usr/sbin/policy-rc.d
+          fi
+          node apps/api/test/smtp.e2e.mjs 2>&1 | tee reports/integration/smtp.log
+      - name: 'e2e: dependency outages — database, object store, scanner, SMTP cut and restored; alert rules and runbooks (FAIL02, AUD-72-28)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # Isolated stack (database talkivio_outage reached through an in-test TCP proxy, redis-server on :6392, api :4170).
+        # Runs as the unprivileged runner user: the storage outage is a chmod 000 that root would ignore.
+        env:
+          BUILD_DIR: dist
+          DATABASE_OWNER_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: node apps/api/test/outage.e2e.mjs 2>&1 | tee reports/integration/outage.log
+      - name: 'e2e: message-lifecycle trace across api → outbox → worker → socket fan-out, no content in spans (AUD-72-27)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # Isolated stack (database talkivio_trace, redis-server on :6394, api :4185) exporting OTLP/JSON to an in-test receiver.
+        env:
+          BUILD_DIR: dist
+          DATABASE_OWNER_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: node apps/api/test/tracing.e2e.mjs 2>&1 | tee reports/integration/tracing.log
+      - name: 'e2e: files + exports against real ClamAV (FILE01, EXPORT01)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        env:
+          SCAN_MODE: clamav
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/files.e2e.mjs 2>&1 | tee reports/integration/files-clamav.log
+      - name: 'e2e: integrations + privacy + tombstone replay (HOOK01, PRIV01, PRIV02)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        env:
+          API_URL_NO_PRIVATE: http://localhost:4107
+          BUILD_DIR: dist
+          RECEIVER_PORT: '4196'
+          # CREATE DATABASE + pg_restore for the backup-restore drill need a superuser (throwaway CI cluster only).
+          DATABASE_OWNER_URL: ${{ env.CI_SUPERUSER_URL }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/integrations.e2e.mjs 2>&1 | tee reports/integration/integrations.log
+      - name: Restart the worker against the clamd stub port (scanner-outage path)
+        id: stubworker
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          pkill -f "apps/api/dist/worker.js" || true
+          sleep 2
+          CLAMAV_PORT=13310 nohup node --enable-source-maps apps/api/dist/worker.js > reports/integration/worker-stub.log 2>&1 &
+          sleep 5
+          pgrep -f "apps/api/dist/worker.js" > /dev/null
+      - name: 'e2e: files with clamd stub (scanner outage keeps files pending, then recovers)'
+        if: ${{ !cancelled() && steps.stubworker.outcome == 'success' }}
+        env:
+          SCAN_MODE: clamav
+          CLAMD_STUB_PORT: '13310'
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/files.e2e.mjs 2>&1 | tee reports/integration/files-stub.log
+      - name: Stop processes
+        if: always()
+        run: pkill -f "apps/api/dist/(main|worker).js" || true
+      - name: Log hygiene gate (no secrets, cookies, tokens, card numbers, bodies or emails in api/worker logs)
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: node apps/api/scripts/log-scan.mjs reports/integration/api.log reports/integration/api-no-private.log reports/integration/worker.log --report reports/integration/log-scan.json
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: integration-reports-${{ github.sha }}
+          path: reports/integration
+          retention-days: 30
+
+  browser:
+    name: Browser e2e + axe (Playwright on Chrome; dashboard, widget demo, api + worker)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16.15-bookworm
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci-only-postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7.4.11-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      NODE_ENV: test
+      PORT: '4000'
+      API_URL: http://localhost:4000
+      APP_URL: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000
+      GATEWAY_SEPARATE: 'false'
+      DATABASE_OWNER_URL: postgresql://talkivio_owner:ci-only-owner-db@localhost:5432/talkivio_ci?schema=public
+      DATABASE_URL: postgresql://talkivio_app:ci-only-app-db@localhost:5432/talkivio_ci?schema=public
+      REDIS_URL: redis://localhost:6379/0
+      APP_SECRET: ci-only-app-secret-not-used-outside-this-job-0123456789
+      EMAIL_PROVIDER: console
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_DIR: ${{ github.workspace }}/apps/api/storage
+      # Browser journeys do not depend on the scanner (real ClamAV runs in the integration job).
+      SCAN_MODE: dev_unscanned
+      LOG_LEVEL: warn
+      # Playwright drives the runner's installed Google Chrome (channel "chrome"); no browser download.
+      PW_CHANNEL: chrome
+      DASHBOARD_URL: http://localhost:3000
+      WIDGET_DEMO_URL: http://localhost:5173
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: CLI tools (psql, redis-cli) and Chrome
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends redis-tools
+          google-chrome --version
+          mkdir -p reports/browser
+      - name: Build shared, widget, api and dashboard
+        run: |
+          pnpm --filter @talkivio/contracts build && pnpm --filter @talkivio/widget build && pnpm --filter @talkivio/api build
+          NODE_ENV=production pnpm --filter @talkivio/dashboard build
+      - name: Bootstrap roles and migrate
+        run: |
+          psql "postgresql://postgres:ci-only-postgres@localhost:5432/postgres" -X -v ON_ERROR_STOP=1 \
+            -v owner_password=ci-only-owner-db -v app_password=ci-only-app-db -v db_name=talkivio_ci \
+            -f infra/postgres/sql/00-roles-and-database.sql
+          sh infra/postgres/migrate.sh > reports/browser/migrate.log 2>&1
+      - name: Start api + worker (:4000), dashboard (:3000) and the widget demo storefront (:5173)
+        id: start
+        run: |
+          mkdir -p "$STORAGE_LOCAL_DIR"
+          nohup node --enable-source-maps apps/api/dist/main.js > reports/browser/api.log 2>&1 &
+          nohup node --enable-source-maps apps/api/dist/worker.js > reports/browser/worker.log 2>&1 &
+          NODE_ENV=production nohup pnpm --filter @talkivio/dashboard start > reports/browser/dashboard.log 2>&1 &
+          nohup pnpm --filter @talkivio/widget exec vite --config vite.demo.config.ts > reports/browser/widget-demo.log 2>&1 &
+          for url in http://localhost:4000/health/ready http://localhost:4010/health/ready http://localhost:3000/login http://localhost:5173/; do
+            ready=0
+            for i in $(seq 1 90); do
+              if curl -fsS "$url" > /dev/null; then ready=1; break; fi
+              sleep 1
+            done
+            if [ "$ready" != 1 ]; then echo "$url never became ready"; tail -n 60 reports/browser/*.log; exit 1; fi
+          done
+      - name: 'Playwright: keyboard, axe (light/dark/RTL), responsive, states, outages, tab leadership, realtime faults, widget'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        # scale.spec is opt-in (SCALE=1, a 10 000-visitor fixture) and reports itself as skipped.
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          pnpm --filter @talkivio/dashboard e2e 2>&1 | tee reports/browser/playwright.log
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: browser-reports-${{ github.sha }}
+          path: |
+            reports/browser
+            apps/dashboard/e2e-results
+          retention-days: 30
+
+  # ───────────────────────────── Supply chain ─────────────────────────────
+  secret-scan:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Required only when the repository belongs to an organization (free license at gitleaks.io).
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITLEAKS_CONFIG: infra/security/gitleaks.toml
+          GITLEAKS_ENABLE_COMMENTS: 'false'
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: 'true'
+          GITLEAKS_ENABLE_SUMMARY: 'true'
+
+  dependency-audit:
+    name: Dependency audit (high/critical)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: pnpm audit --audit-level=high (report + gate)
+        run: |
+          mkdir -p reports/audit
+          set +e
+          pnpm audit --audit-level=high > reports/audit/pnpm-audit.txt 2>&1
+          status=$?
+          pnpm audit --json > reports/audit/pnpm-audit.json 2>/dev/null
+          set -e
+          {
+            echo "### pnpm audit (fails on high or critical)"
+            echo '```'
+            tail -n 60 reports/audit/pnpm-audit.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: dependency-audit-${{ github.sha }}
+          path: reports/audit
+          retention-days: 30
+
+  # ───────────────────────────── main only: images, SBOM, scan ─────────────────────────────
+  images:
+    name: Image ${{ matrix.name }} (build, labels, Trivy gate, SBOM)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [lockfile, format, typecheck, unit, build, integration, secret-scan, dependency-audit]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: api
+            file: infra/docker/api.Dockerfile
+            target: runtime
+            scan: true
+          - name: dashboard
+            file: infra/docker/dashboard.Dockerfile
+            target: runtime
+            scan: true
+          - name: migrate
+            file: infra/docker/api.Dockerfile
+            target: migrate
+            scan: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Build metadata
+        id: meta
+        run: echo "build_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+      - name: Build image (no push; registry not configured yet)
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: ${{ matrix.file }}
+          target: ${{ matrix.target }}
+          load: true
+          push: false
+          provenance: false
+          tags: talkivio/${{ matrix.name }}:${{ github.sha }}
+          build-args: |
+            GIT_SHA=${{ github.sha }}
+            BUILD_TIME=${{ steps.meta.outputs.build_time }}
+            VERSION=${{ github.sha }}
+            SOURCE_URL=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.name }}
+      - name: Image carries commit SHA label and runs as non-root
+        run: |
+          img=talkivio/${{ matrix.name }}:${{ github.sha }}
+          rev=$(docker image inspect "$img" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')
+          user=$(docker image inspect "$img" --format '{{ .Config.User }}')
+          echo "revision=$rev user=$user"
+          test "$rev" = "${{ github.sha }}"
+          test -n "$user" && test "$user" != "root" && test "$user" != "0"
+      - name: SBOM (SPDX JSON)
+        if: matrix.scan
+        uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
+        with:
+          image: talkivio/${{ matrix.name }}:${{ github.sha }}
+          format: spdx-json
+          output-file: sbom-${{ matrix.name }}.spdx.json
+          upload-artifact: false
+      - name: Trivy report (HIGH + CRITICAL, informational)
+        if: matrix.scan
+        # Verify this SHA against Aqua's March 2026 tag-compromise advisory before bumping it.
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: talkivio/${{ matrix.name }}:${{ github.sha }}
+          version: v0.70.0
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+          format: json
+          output: trivy-${{ matrix.name }}.json
+      - name: Trivy gate (fails on fixable CRITICAL)
+        if: matrix.scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: talkivio/${{ matrix.name }}:${{ github.sha }}
+          version: v0.70.0
+          skip-setup-trivy: true
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          format: table
+          output: trivy-${{ matrix.name }}.txt
+      - name: Trivy gate findings
+        if: always() && matrix.scan
+        run: if [ -f "trivy-${{ matrix.name }}.txt" ]; then cat "trivy-${{ matrix.name }}.txt"; fi
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always() && matrix.scan
+        with:
+          name: image-${{ matrix.name }}-${{ github.sha }}
+          path: |
+            trivy-${{ matrix.name }}.txt
+            trivy-${{ matrix.name }}.json
+            sbom-${{ matrix.name }}.spdx.json
+          if-no-files-found: warn
+          retention-days: 90
+      # TODO(release): push to the registry by digest, then sign (cosign keyless) and attest build
+      # provenance + SBOM (actions/attest-build-provenance). Needs `packages: write`, `id-token: write`,
+      # `attestations: write` on this job only, and a registry decision. Promote the SAME digest to
+      # staging and production (ch. 63) — never rebuild from a branch.
+
+  compose-stack:
+    name: Docker Compose stack (migrate, seed, smoke v2 through the proxy)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [integration]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install test client dependencies (socket.io-client for smoke v2)
+        run: pnpm install --frozen-lockfile --filter @talkivio/api
+      - name: Start the stack
+        env:
+          GIT_SHA: ${{ github.sha }}
+        # depends_on conditions gate startup (migrate/minio-init must complete, data services healthy);
+        # then poll readiness through the proxy. First run downloads ClamAV signatures.
+        run: |
+          docker compose up -d --build reverse-proxy webhook-receiver
+          for i in $(seq 1 180); do
+            if curl -fsS http://localhost:8080/health/ready; then echo; exit 0; fi
+            sleep 5
+          done
+          docker compose ps -a; docker compose logs --no-color --tail 100; exit 1
+      - name: Seed (one-shot, twice for idempotency)
+        run: |
+          mkdir -p reports/compose
+          docker compose run --rm seed | tee reports/compose/seed-run1.log
+          docker compose run --rm seed | tee reports/compose/seed-run2.log
+          grep -q "already present" reports/compose/seed-run2.log
+      - name: Smoke v2 through the reverse proxy
+        env:
+          API_URL: http://localhost:8080
+          DATABASE_OWNER_URL: postgresql://talkivio_owner:local-dev-only-owner-db@localhost:55432/talkivio
+        run: node apps/api/test/smoke-v2.mjs 2>&1 | tee reports/compose/smoke-v2.log
+      - name: Seed fixtures through the proxy
+        env:
+          API_URL: http://localhost:8080
+        run: node infra/test/seed-fixtures.mjs 2>&1 | tee reports/compose/seed-fixtures.log
+      - name: Mail reached Mailpit (real SMTP path)
+        run: |
+          total=$(curl -fsS http://localhost:8025/api/v1/messages | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).total))")
+          echo "mailpit messages: $total" | tee reports/compose/mailpit.txt
+          test "$total" -gt 0
+      - name: Collect state and logs
+        if: always()
+        run: |
+          mkdir -p reports/compose
+          docker compose ps -a > reports/compose/ps.txt 2>&1 || true
+          docker compose logs --no-color --timestamps > reports/compose/compose.log 2>&1 || true
+      - name: Tear down
+        if: always()
+        run: docker compose down -v --remove-orphans
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: compose-stack-${{ github.sha }}
+          path: reports/compose
+          retention-days: 30

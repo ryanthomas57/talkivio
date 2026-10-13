@@ -1,0 +1,88 @@
+{
+  "started_at": "2026-10-13T06:43:51.975Z",
+  "environment": {
+    "cpu": "Apple M2",
+    "cores": 8,
+    "memory_gb": 8,
+    "node": "v22.23.1",
+    "note": "API, worker, PostgreSQL 16, Redis and the generator on one machine; project on an external volume"
+  },
+  "fixture": {
+    "tenant_id": "58404c99-25dc-4abf-9dbb-5acb513b9769",
+    "messages": 1000000,
+    "visitors": 10000,
+    "long_chat_messages": 10000,
+    "bulk_load_s": 67.03712377929688
+  },
+  "latencies_ms": {
+    "transcript_page_100": {
+      "n": 101,
+      "p50": 12.0185546875,
+      "p95": 17.12060546875,
+      "p99": 18.580322265625,
+      "max": 197.771484375
+    },
+    "transcript_pages": 101,
+    "history_search_fts": {
+      "n": 40,
+      "p50": 94.9267578125,
+      "p95": 117.6748046875,
+      "p99": 250.688232421875,
+      "max": 250.688232421875
+    },
+    "history_search_fts_rare": {
+      "n": 20,
+      "p50": 26.953369140625,
+      "p95": 55.15673828125,
+      "p99": 65.09130859375,
+      "max": 65.09130859375
+    },
+    "rare_terms_found": "20/20",
+    "history_search_fts_no_match": {
+      "n": 10,
+      "p50": 7.84228515625,
+      "p95": 8.974365234375,
+      "p99": 8.974365234375,
+      "max": 8.974365234375
+    },
+    "history_list_unfiltered": {
+      "n": 20,
+      "p50": 80.262939453125,
+      "p95": 104.48291015625,
+      "p99": 105.91552734375,
+      "max": 105.91552734375
+    },
+    "visitor_directory_page_100": {
+      "n": 100,
+      "p50": 13.58056640625,
+      "p95": 16.7255859375,
+      "p99": 19.004150390625,
+      "max": 43.5986328125
+    },
+    "visitors_paged": 10000
+  },
+  "search_paging": {
+    "term": "warranty",
+    "matching_chats": 10000,
+    "paged_chats": 10000,
+    "pages": 100,
+    "ordered_without_duplicates": true,
+    "filtered_all_rejected": {
+      "requests": 2,
+      "items": 0,
+      "terminated": true
+    }
+  },
+  "budgets": {
+    "search_p95_ms": 500,
+    "rest_p95_ms": 300,
+    "rest_p99_ms": 1000
+  },
+  "plans": {
+    "transcript_page": "BEGIN\nSET\nSET\nLimit  (cost=0.55..403.01 rows=101 width=370) (actual time=0.858..0.947 rows=101 loops=1)\n  Buffers: shared hit=4 read=8\n  ->  Result  (cost=0.55..25411.14 rows=6377 width=370) (actual time=0.857..0.935 rows=101 loops=1)\n        One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n        Buffers: shared hit=4 read=8\n        ->  Index Scan Backward using messages_tenant_id_chat_id_seq_key on messages  (cost=0.55..25411.14 rows=6377 width=370) (actual time=0.840..0.882 rows=101 loops=1)\n              Index Cond: ((tenant_id = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid) AND (chat_id = 'd8d8b443-966b-4f99-ae5f-41acf87aa0b4'::uuid) AND (seq < 5000))\n              Buffers: shared hit=4 read=8\nPlanning:\n  Buffers: shared hit=316 read=58 dirtied=2\nPlanning Time: 4.728 ms\nExecution Time: 1.284 ms\nROLLBACK",
+    "fts_candidates_common": "BEGIN\nSET\nLimit  (cost=0.86..8329.91 rows=500 width=24) (actual time=0.146..17.594 rows=500 loops=1)\n  Buffers: shared hit=4203\n  ->  Nested Loop Semi Join  (cost=0.86..151689.40 rows=9106 width=24) (actual time=0.145..17.549 rows=500 loops=1)\n        Buffers: shared hit=4203\n        ->  Index Scan Backward using chats_tenant_id_requested_at_id_idx on chats c  (cost=0.43..3943.38 rows=9998 width=40) (actual time=0.021..0.210 rows=500 loops=1)\n              Index Cond: ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND (requested_at >= (now() - '30 days'::interval)) AND (requested_at < now()))\n              Filter: (NOT is_preview)\n              Buffers: shared hit=30\n        ->  Index Scan using messages_tenant_id_chat_id_client_message_id_key on messages m  (cost=0.44..61.53 rows=7 width=32) (actual time=0.034..0.034 rows=1 loops=500)\n              Index Cond: ((tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid) AND (chat_id = c.id))\n              Filter: ((redacted_at IS NULL) AND (to_tsvector('simple'::regconfig, COALESCE(body, ''::text)) @@ '''warranty'''::tsquery))\n              Rows Removed by Filter: 4\n              Buffers: shared hit=4173\nPlanning:\n  Buffers: shared hit=618 read=37\nPlanning Time: 9.738 ms\nExecution Time: 17.707 ms\nROLLBACK",
+    "fts_candidates_rare": "BEGIN\nSET\nLimit  (cost=4718.08..4719.09 rows=407 width=24) (actual time=13.554..13.556 rows=1 loops=1)\n  Buffers: shared hit=770 read=157\n  ->  Sort  (cost=4718.08..4719.09 rows=407 width=24) (actual time=13.554..13.555 rows=1 loops=1)\n        Sort Key: c.requested_at DESC, c.id DESC\n        Sort Method: quicksort  Memory: 25kB\n        Buffers: shared hit=770 read=157\n        ->  Hash Join  (cost=3499.68..4700.44 rows=407 width=24) (actual time=11.739..13.526 rows=1 loops=1)\n              Hash Cond: (c.id = m.chat_id)\n              Buffers: shared hit=764 read=157\n              ->  Seq Scan on chats c  (cost=0.00..1169.99 rows=9998 width=40) (actual time=3.892..9.763 rows=10000 loops=1)\n                    Filter: ((NOT is_preview) AND (requested_at < now()) AND (requested_at >= (now() - '30 days'::interval)) AND (tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid))\n                    Rows Removed by Filter: 3171\n                    Buffers: shared hit=709\n              ->  Hash  (cost=3492.99..3492.99 rows=535 width=32) (actual time=3.068..3.069 rows=1 loops=1)\n                    Buckets: 1024  Batches: 1  Memory Usage: 9kB\n                    Buffers: shared hit=55 read=157\n                    ->  HashAggregate  (cost=3487.64..3492.99 rows=535 width=32) (actual time=3.062..3.065 rows=1 loops=1)\n                          Group Key: m.tenant_id, m.chat_id\n                          Batches: 1  Memory Usage: 49kB\n                          Buffers: shared hit=55 read=157\n                          ->  Bitmap Heap Scan on messages m  (cost=488.49..3484.96 rows=536 width=32) (actual time=2.768..3.047 rows=99 loops=1)\n                                Recheck Cond: (to_tsvector('simple'::regconfig, COALESCE(body, ''::text)) @@ '''10002'''::tsquery)\n                                Filter: ((redacted_at IS NULL) AND (tenant_id = (NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid))\n                                Heap Blocks: exact=99\n                                Buffers: shared hit=55 read=157\n                                ->  Bitmap Index Scan on messages_body_fts_idx  (cost=0.00..488.36 rows=752 width=0) (actual time=2.754..2.754 rows=99 loops=1)\n                                      Index Cond: (to_tsvector('simple'::regconfig, COALESCE(body, ''::text)) @@ '''10002'''::tsquery)\n                                      Buffers: shared hit=1 read=112\nPlanning:\n  Buffers: shared hit=655\nPlanning Time: 1.727 ms\nExecution Time: 13.652 ms\nROLLBACK",
+    "fts_rls_scoped_rare": "BEGIN\nSET\nSET\nUnique  (cost=436301.06..436303.74 rows=524 width=16) (actual time=2877.645..2877.655 rows=1 loops=1)\n  Buffers: shared hit=3944 read=22806\n  ->  Sort  (cost=436301.06..436302.40 rows=536 width=16) (actual time=2877.644..2877.650 rows=99 loops=1)\n        Sort Key: chat_id\n        Sort Method: quicksort  Memory: 27kB\n        Buffers: shared hit=3944 read=22806\n        ->  Result  (cost=13232.89..436276.77 rows=536 width=16) (actual time=60.790..2877.582 rows=99 loops=1)\n              One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n              Buffers: shared hit=3941 read=22806\n              ->  Bitmap Heap Scan on messages m  (cost=13232.89..436276.77 rows=536 width=16) (actual time=60.782..2877.556 rows=99 loops=1)\n                    Recheck Cond: (tenant_id = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n                    Filter: (to_tsvector('simple'::regconfig, COALESCE(body, ''::text)) @@ '''10002'''::tsquery)\n                    Rows Removed by Filter: 999901\n                    Heap Blocks: exact=25950\n                    Buffers: shared hit=3941 read=22806\n                    ->  Bitmap Index Scan on messages_tenant_id_sender_membership_id_idx  (cost=0.00..13232.74 rows=1005375 width=0) (actual time=25.927..25.931 rows=1000000 loops=1)\n                          Index Cond: (tenant_id = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n                          Buffers: shared read=797\nPlanning:\n  Buffers: shared hit=317\nPlanning Time: 1.580 ms\nExecution Time: 2877.750 ms\nROLLBACK",
+    "visitor_directory": "BEGIN\nSET\nSET\nLimit  (cost=0.73..35.33 rows=101 width=478) (actual time=0.042..0.080 rows=101 loops=1)\n  Buffers: shared hit=16\n  ->  Incremental Sort  (cost=0.73..3423.64 rows=9990 width=478) (actual time=0.042..0.076 rows=101 loops=1)\n        Sort Key: last_seen_at DESC, id DESC\n        Presorted Key: last_seen_at\n        Full-sort Groups: 4  Sort Method: quicksort  Average Memory: 33kB  Peak Memory: 33kB\n        Buffers: shared hit=16\n        ->  Result  (cost=0.41..2981.65 rows=9990 width=478) (actual time=0.014..0.036 rows=102 loops=1)\n              One-Time Filter: ((NULLIF(current_setting('app.tenant_id'::text, true), ''::text))::uuid = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n              Buffers: shared hit=7\n              ->  Index Scan using visitors_tenant_id_last_seen_at_id_idx on visitors  (cost=0.41..2981.65 rows=9990 width=478) (actual time=0.008..0.023 rows=102 loops=1)\n                    Index Cond: (tenant_id = '58404c99-25dc-4abf-9dbb-5acb513b9769'::uuid)\n                    Filter: (erased_at IS NULL)\n                    Buffers: shared hit=7\nPlanning:\n  Buffers: shared hit=268 read=28\nPlanning Time: 2.771 ms\nExecution Time: 0.105 ms\nROLLBACK"
+  }
+}

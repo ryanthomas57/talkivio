@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "noEmit": true,
+    "sourceMap": false,
+    "types": [],
+    "skipLibCheck": true,
+    "useDefineForClassFields": true
+  },
+  "include": ["src", "test"],
+  "exclude": ["**/._*", "node_modules", "dist"]
+}

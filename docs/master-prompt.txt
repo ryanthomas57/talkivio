@@ -1,0 +1,1364 @@
+Talkivio Claude Code Master Prompt
+Complete production implementation specification
+Build a working multi tenant live chat platform with the functional breadth of classic Zendesk Chat and Zopim from the 2019 to 2021 era, expressed through an original Talkivio identity. This document is the prompt: copy its full text into Claude Code, or give Claude Code access to an extracted text version and instruct it to execute all requirements.
+The deliverable is deployable end to end software. Every customer facing action must persist, authorize, validate, report errors, and work across real browsers and independent sessions. Screenshots, static prototypes, hardcoded analytics, local only chat simulators, and decorative controls do not satisfy this specification.
+Core scope is mandatory. Billing, custom domains, advanced white label branding, SAML, and optional provider adapters are explicitly identified extensions. Optional features must never conceal unfinished core capabilities. Implement core first and retain clear feature boundaries.
+Use the numbered requirements, API and event contracts, data definitions, test fixtures, and audit checklist as the implementation authority. Preserve this file as the replacement master prompt. Do not depend on the earlier Word document.
+Edition 1   |   12 October 2026
+
+Master prompt navigation
+The complete prompt begins with chapter 01 and continues through the final numbered chapter. All chapters are implementation instructions, including the acceptance criteria, audit requirements and contract clarifications. Click a chapter below or use Word navigation to find it. Copy the full document to preserve all contracts.
+01  Execution mandate and completion standard
+02  Scope and product boundaries
+03  Architecture and repository contract
+04  Tenant isolation and permission model
+05  Design tokens and component system
+06  Responsive shell and global interactions
+07  Authentication and account lifecycle
+08  Onboarding sites and widget installation
+09  Agent roster roles and presence
+10  Departments and queue configuration
+11  Visitor monitoring and live visitor detail
+12  Inbox queue and chat workspace
+13  Messaging ordering delivery and reconnect
+14  Typing unread notifications and attention
+15  Transfers collaboration and internal notes
+16  Chat ending ratings and post chat experience
+17  History search tags and visitor records
+18  Canned replies and shortcut expansion
+19  File upload scanning and download security
+20  Transcript export and delivery
+21  Proactive invitations and campaign controls
+22  Operating hours holidays and availability
+23  Offline forms and overflow handling
+24  Bans abuse limits and visitor safety
+25  Visitor identity and session semantics
+
+26  Cross domain tracking and consent
+27  Widget loader iframe and browser security
+28  Widget SDK commands and events
+29  Widget interface states and localization
+30  Routing eligibility and deterministic selection
+31  Routing transaction and overflow pseudocode
+32  Trigger DSL conditions and action grammar
+33  Trigger precedence execution and simulation
+34  Database conventions constraints and migration policy
+35  Account and configuration tables
+36  Team schedules and automation tables
+37  Visitor and browsing tables
+38  Chats assignments messages and files tables
+39  Operations exports integrations and analytics tables
+40  REST conventions and shared resource shapes
+41  Authentication and tenant REST endpoints
+42  Team departments schedules and sites REST endpoints
+43  Visitor history and metadata REST endpoints
+44  Chat commands attachments exports and replies REST endpoints
+45  Automation analytics integration and privacy REST endpoints
+46  Public widget REST endpoints
+47  WebSocket handshake envelope and replay
+48  WebSocket event catalog and client reducers
+49  Monitoring dashboard and supervisor tools
+50  Analytics definitions and attribution
+
+51  Analytics interface export and reconciliation
+52  Security threat model and controls
+53  Privacy GDPR tooling and retention
+54  Audit logs administration and operational permissions
+55  Webhooks integration tokens and connector framework
+56  Email support tickets CRM and optional adapters
+57  Optional billing plans and entitlement enforcement
+58  Optional white label branding and custom domains
+59  Accessibility and inclusive interaction matrix
+60  Performance budgets capacity and SLOs
+61  Observability alerts and incident response
+62  Docker local environment and seed data
+63  CI pipeline supply chain and delivery artifacts
+64  Production rollout migrations and recovery
+65  Functional and authorization test matrix
+66  Realtime routing and automation test matrix
+67  Accessibility security resilience and release test matrix
+68  Phased implementation gates one through four
+69  Phased implementation gates five through eight
+70  Autonomous implementation loop and task ledger
+71  Core product audit checklist
+72  Data security and release audit checklist
+73  End to end demonstration and deliverable manifest
+74  Reference sources and implementation authority
+75  Configuration schemas and state transition guards
+76  Representative API event and error payloads
+77  Socket command parity and reconciliation rules
+01  Execution mandate and completion standard
+Instruction to Claude Code
+You are the lead engineer, product designer, security engineer, and release owner for Talkivio. Inspect the repository, applicable instructions, runtime constraints, and existing implementation before modifying anything. Then implement this complete specification. Make routine decisions autonomously, record architectural decisions, and continue until all mandatory acceptance criteria have evidence. Ask only for genuinely unavailable credentials, mutually incompatible requirements, or authorization for a destructive external action. Lack of a commercial credential is not a reason to stop local end to end delivery: supply a real local mail server, object store, scanner, and webhook receiver.
+Non negotiable output
+Deliver source code, migrations, generated OpenAPI and AsyncAPI contracts, reproducible seed data, unit and integration tests, browser tests, Docker images and Compose environment, CI pipelines, operational runbooks, backups and recovery procedures, threat model, accessibility evidence, and a requirements traceability ledger. Every advertised feature must have a functional implementation or an explicit optional disabled state. No TODO driven handlers, simulated successful requests, fake socket deliveries, seeded values masquerading as live analytics, or unconnected UI controls.
+Completion evidence
+For each requirement create an ID, implementation location, test name, latest test outcome, and evidence path in docs/traceability.csv. Distinguish implemented, verified, blocked, optional disabled, and failed. Never relabel failed or blocked work as complete. A release is ready only after two tenants, two agents, and visitors on two separate origins exchange messages through actual services, routing and triggers operate, exports download, erasure removes personal data, and a deployment smoke test passes.
+Autonomous continuity
+Write durable progress to docs/implementation-status.md after each phase. On context exhaustion or restart, reread this specification, architecture decisions, ledger, failing test output, and repository state. Resume the first unmet dependency. Do not restart completed phases or remove a requirement to make tests pass. Preserve useful work when a third party is unavailable and state the exact blocked adapter separately.
+02  Scope and product boundaries
+Mandatory classic chat scope
+Implement agent dashboard, visitor monitoring, real time chats, manual and automatic assignment, broadcast routing, departments, availability and capacity, agent collaboration, transfers, notes, typing indicators, unread and delivery state, attachments, chat ratings, history and search, transcript export and email, canned replies, tags, bans, proactive invitations, deterministic triggers, operating hours, offline contact forms, embeddable widget, visitor tracking and identity, analytics, tenant administration, role permissions, integration webhooks, account security, retention, and audit logs.
+Original visual identity
+Use Talkivio naming and its own navigation, components, typography, iconography, copy, and palette. Functional scope is the benchmark; do not copy Zendesk logos, proprietary assets, marketing text, source code, or pixel identical screens. Do not import modern messaging or AI bot behavior into the classic live session model by accident. Closed live chats stay closed; a new visitor request creates a new chat linked to the same visitor identity.
+Core and extension split
+Core includes email password authentication, password reset, TOTP, REST integration tokens, inbound visitor API, outbound signed webhooks, and local SMTP. Optional modules: payment provider billing, SAML/OIDC enterprise identity, custom widget domains, full white label, CRM connectors, support ticket connectors, skills based routing, and external data warehouse export. Provide connector architecture and local contract tests even when paid adapters are disabled. Do not claim an adapter is operational without credentials and a tested provider round trip.
+Explicit defaults
+English is default; all copy is localizable. UTC is database time; account display timezone defaults to UTC until chosen. Default plan has 10 enabled agents, capacity 3 chats per agent, file limit 10 MiB, 180 day transcript retention, 30 day raw page event retention, and no proactive tracking before the configured consent condition. These are Talkivio product defaults, not claims about historical Zendesk settings. All thresholds are configuration with documented bounds.
+03  Architecture and repository contract
+Reference stack
+Use a TypeScript monorepo: React with Vite for dashboard and widget UI; a small separately bundled loader; Node LTS with Fastify for REST and WebSocket gateway; PostgreSQL for durable truth; Redis for ephemeral presence, rate limits and work coordination; durable PostgreSQL outbox plus worker queues; S3 compatible object storage; SMTP mail provider; ClamAV attachment scanner. Pin supported versions and exact lockfiles at implementation time. Generate runtime validators from shared schemas. Alternative stack requires a recorded equivalent design and complete contract coverage.
+Package responsibilities
+apps/dashboard owns agent and administration surfaces. apps/widget owns isolated iframe UI. apps/api owns authentication, authorization and command transactions. apps/gateway owns authenticated transport and replay. apps/worker owns outbox, scans, analytics aggregation, email, exports and retention. packages/contracts owns schemas, enums and generated clients. packages/ui owns tokens and accessible primitives. packages/routing and packages/triggers contain pure deterministic decision logic. infra contains Compose, Dockerfiles, reverse proxy, CI and production examples. docs contains evidence and runbooks.
+Transactions and delivery
+A command transaction validates permissions and row versions, writes domain rows and an outbox event, then commits. A worker publishes committed outbox events. Delivery is at least once; client and consumer deduplication gives one observable result. Never send a socket success before persistence. Redis loss must not destroy messages, reservations, routing decisions, or trigger action uniqueness. Worker claims use durable leases and retry schedules. A gateway restart must support snapshot plus cursor recovery.
+Boundary verification
+Browser tests use HTTP and sockets against Compose, not bypass database fixtures for the main journey. A process kill after commit but before publish must replay the outbox. Split API and gateway replicas share no required in process state. Access the object store only through scoped upload and download grants. No browser bundle includes administrative, billing or signing secrets.
+04  Tenant isolation and permission model
+Tenant resolution
+Every authenticated request resolves active tenant membership server side. Tenant IDs from request bodies are never authority. Widget bootstrap maps public site key plus validated origin to a tenant and site. Agent sockets bind tenant and membership at handshake; visitor sockets bind site, visitor and session. A principal cannot subscribe to arbitrary tenant, visitor, or chat IDs. Set transaction local database tenant context on every database operation and reset pooled connections safely.
+Roles and scope
+Owner manages ownership, billing, tenant destruction, secrets and all settings. Admin manages agents, departments, triggers, sites, retention and integrations but cannot transfer ownership or reveal payment secrets. Supervisor monitors assigned departments, views their history and analytics, transfers chats, and coaches agents. Agent serves eligible departments, sees assigned chats plus department queues, uses shared replies, and edits limited visitor metadata. Analyst views permitted aggregate analytics only; transcript access requires a separate permission. Custom roles are optional; explicit server permissions remain required.
+Database defense
+Use PostgreSQL RLS with both USING and WITH CHECK for tenant owned tables. Application role must not own tables or have BYPASSRLS; FORCE ROW LEVEL SECURITY where applicable. Use composite foreign keys including tenant_id so cross tenant references fail even if application validation is wrong. Public entry points use narrow dedicated operations, never a broad tenant bypass. Maintenance jobs select an explicit tenant scope and generate audited operations.
+Acceptance criteria
+Tenant A cannot read, write, search, export, attach to, subscribe to, or infer existence of tenant B objects. Test guessed UUIDs in paths, filters, socket subscriptions, upload IDs, batch APIs and signed downloads. Missing or unauthorized objects return the same 404 shape. Revocation of membership closes active sockets and invalidates sessions within 60 seconds. RLS tests run as the actual non owner application role.
+05  Design tokens and component system
+Visual tokens
+Use Inter when licensed and bundled, with Arial and system sans fallbacks. Colors: canvas #F4F7FA, surface #FFFFFF, strong text #17222E, secondary text #4C5D70, subdued text #627286, border #D5DEE8, primary #176B73, primary hover #10515A, primary tint #E5F3F2, danger #B42318, danger tint #FFF0EE, warning #8A4B00, success #18734A. Test contrast on actual combinations. Do not use subdued colors for critical state labels. Use text and icons with color for every presence and severity state.
+Layout and typography
+Spacing scale 4, 8, 12, 16, 20, 24, 32, 40, 48 px. Base UI text 14 px with 20 px line height; secondary 12/16; body 16/24 for forms and widget; H1 28/36 weight 650; H2 20/28 weight 600; H3 16/24 weight 600. Dashboard panels use 24 px padding desktop and 16 px compact. Cards have 12 px radius, controls 8 px, pills 999 px. Border 1 px; focus ring 2 px #176B73 with 2 px offset. Shadow only for floating menus, dialogs and widget, never every row.
+Control dimensions and states
+Inputs and buttons default 40 px high; touch targets at least 44 by 44 px. Input padding 12 px horizontal and 10 px vertical. States: idle, hover, focused, filled, invalid, disabled, read only and submitting. Invalid inputs have icon, text below and aria-describedby. Disabled controls explain dependencies when useful. Primary action loading retains width and label context. Menus use 8 px inset and 36 px item minimum; keyboard arrows, Home, End, typeahead and Escape work. Tooltips appear after 500 ms and are never the sole label.
+Reusable components
+Build button, text input, password input, textarea, select, combobox, switch, checkbox, radio group, badge, avatar, tabs, data table, virtual list, drawer, dialog, toast, banner, calendar, timezone picker, empty state, skeleton, file tile, message bubble and connection indicator. Each has documented props, keyboard behavior, accessible name, error example and responsive story. Do not substitute custom clickable divs for native semantic controls.
+06  Responsive shell and global interactions
+Breakpoints and regions
+Use mobile below 640 px; compact 640 to 1023; desktop 1024 to 1439; wide 1440 and above. Desktop sidebar 224 px, topbar 64 px, content gap 24 px. Compact sidebar collapses to 64 px icons with accessible labels. Mobile navigation becomes a modal drawer with 56 px topbar. Chat workspace on wide screens has 280 px queue, flexible conversation minimum 400 px, 320 px visitor panel. Below 1200 px visitor panel is a drawer; below 900 px queue and chat use separate routes with a back action. Never shrink the composer below usable width.
+Navigation and persistence
+Sidebar routes: Overview, Visitors, Inbox, History, Monitor, Analytics, Shortcuts, Team, Settings. Hide routes by permission while preserving direct route authorization. Browser back and forward restore filters, selected chat and scroll position. Persist table column preferences per membership, saved filters per tenant or personal scope, and drafts per chat per agent browser. Tenant switching closes old sockets, clears caches and drafts from visible context, and resubscribes only after fresh authorization.
+Global states
+Initial load uses skeletons shaped like the final layout. Partial errors stay in the failing panel with Retry. Empty lists explain the current filter and provide a meaningful action. A persistent connection banner shows connecting, live, reconnecting and offline. Toasts do not carry the sole evidence of failed writes. Confirmation dialogs state the object name and consequence; dangerous actions require explicit confirm, not browser alerts. Unsaved settings prompt on navigation, with Save, Discard and Cancel.
+Acceptance criteria
+At widths 320, 375, 768, 1024 and 1440 px and 200 percent zoom, controls remain operable and no page has unintended horizontal overflow. Modals trap focus and return focus to their opener. Escape dismisses overlays without deleting drafts. Routes load by direct URL and survive refresh. A session expiry prompts login and preserves unsent drafts securely without sending them automatically after reauthentication.
+07  Authentication and account lifecycle
+Required behavior
+Support tenant signup, verification email, invite acceptance, login, logout, password reset, TOTP enrollment and recovery codes. Require verification before inviting other agents. Password minimum 12 characters and maximum 128; permit paste and password managers. Store Argon2id hashes, never reversible passwords. Reset and invitation tokens are random, hashed in storage, single use, and expire after 30 minutes and 7 days respectively. Account enumeration responses are generic. Revoke all sessions on password reset; require recent reauthentication for owner transfer and credential changes.
+Interface and interaction
+Login card max width 420 px with 24 px padding, email above password, explicit Show password and inline validation. Verify and reset success pages provide one clear next action. TOTP setup presents QR plus manual key, requires a valid code before activation, and displays recovery codes once with download and copy. Recovery uses single use codes. Session list includes browser, approximate location, last active time, and revoke action.
+Implementation contract
+Use HttpOnly Secure SameSite=Lax session cookies for dashboard, rotate session ID on login and privilege change, and require CSRF token on cookie authenticated mutations. Enforce rate limits by account hash and network. No bearer token in localStorage for dashboard. TOTP secrets are encrypted with key version. Save authentication audit events without passwords, OTPs or raw tokens.
+Acceptance criteria
+Given a used reset link, a second submission fails safely and does not log the user in. Given five bad attempts, rate limits apply without locking every user behind one shared IP. Given revoked membership, both REST and existing sockets reject operations. Login CSRF, reset token replay, MFA brute force and session fixation tests pass.
+08  Onboarding sites and widget installation
+Required behavior
+Create tenant, choose display timezone, add first site and allowed origins, configure first department and install code. Site public key identifies a site but grants no administrative access. Origin entries are exact scheme plus host plus optional port; HTTPS required outside localhost. Wildcards are optional only as explicit subdomain patterns with public suffix protection. Publish settings as immutable versioned snapshots. Installation check confirms a real bootstrap event from an allowed origin and displays last verified time.
+Interface and interaction
+A five step onboarding flow has progress, Back and resumable saved state. Installation panel shows copyable loader snippet, allowed domain list, preview, installation test, and checklist. Preview uses isolated test mode with a visible Preview label and cannot pollute production analytics. Empty department picker links to create a department if permitted. Invalid origin text identifies the exact field.
+Implementation contract
+Persist sites and widget configuration revisions; use If-Match revision checks. Public bootstrap returns only widget safe settings, enabled departments and effective availability. Cache config by site and version with ETag; origin validation always occurs before returning tokens. Serve the loader with long cache lifetime under a content hash and a short cached version manifest.
+Acceptance criteria
+Installing on an approved demo origin renders the widget and creates a real session. An unapproved origin receives no configuration or visitor token. Rotating a site key invalidates the old key after configurable overlap. Refresh during onboarding resumes the saved step. Preview sessions remain excluded from all production counts.
+09  Agent roster roles and presence
+Required behavior
+Invite agents by email, assign departments and roles, enable or suspend access, set per agent chat capacity from 1 to 20. Agent status is online, away or invisible; connected is a separate transport property. Online plus live heartbeat plus available capacity makes an agent eligible. Away keeps existing chats but receives no new offers. Invisible is unavailable and appears offline to visitors while preserving authorized dashboard access. Account suspension revokes all sessions and requeues pending offers; active chats transfer or queue according to policy.
+Interface and interaction
+Team table columns: name, role, departments, status, active chats, capacity and last seen. Status menu in topbar explains each state; show transport interruption beside status. Agent drawer separates profile, membership, departments and capacity. Dirty edits remain until saved. Last owner cannot be removed or demoted; explain the required ownership transfer.
+Implementation contract
+Heartbeat every 15 seconds, expire connection after 45; aggregate presence from live connections and declared status. Store durable desired status and ephemeral connections separately. Reservations count toward capacity. Record availability intervals from authoritative server transitions for utilization analytics; do not infer work time from page focus.
+Acceptance criteria
+Two browser tabs for one agent consume one capacity pool. Losing all agent heartbeats makes new assignment stop within 45 seconds. Closing one tab does not mark the agent offline while another valid connection remains. Suspending the last eligible agent moves new requests to offline or overflow state according to site policy.
+10  Departments and queue configuration
+Required behavior
+A department has name, description, enabled flag, public display label, members, schedule, routing mode, capacity override and overflow policy. Agent memberships may span departments, but total agent capacity is global. Disable a department to stop new chats; existing chats continue. Deleting a department with active chats is rejected; archive instead. A visitor selected department stays explicit unless a routing trigger overrides it before assignment and that override is recorded.
+Interface and interaction
+Department list shows enabled state, eligible agents, queued chats and schedule state. Detail page tabs: General, Agents, Routing, Hours. Multi select membership search supports keyboard and pending changes. Queue fallback options are leave queued, overflow to another department, or offer offline form. Validate fallback graph for cycles. Widget only exposes enabled public departments and truthful availability.
+Implementation contract
+Use unique active normalized department names per tenant; store stable IDs independent of labels. Queue settings are versioned and snapshotted on routing decisions. Validate changes server side against active memberships and tenant IDs. Derive public availability from schedule, live eligible capacity and queue acceptance policy, not declared status alone.
+Acceptance criteria
+A full sales agent who belongs to support cannot receive a fourth chat through support. Archived departments remain named in historical transcripts. A fallback graph A to B to A cannot be saved. A request for a disabled department produces a recoverable widget choice rather than silently discarding the message.
+11  Visitor monitoring and live visitor detail
+Required behavior
+Show live consenting visitor sessions grouped as incoming, currently served, browsing and idle. Display anonymous label or verified identity, current sanitized URL, referrer origin, time on site, current page dwell, country when available, device category, session count, tags, assigned department and chat status. Approximate location is optional and never represented as exact. Presence idle after 60 seconds without interaction; session disconnected after heartbeat expiry and grace. Hide tracking details when consent forbids collection.
+Interface and interaction
+Desktop visitor table supports search, filters by site, department, country, activity and tag, sort by arrival or queue age, and row selection. List updates preserve selected row and do not jump scroll position. Detail drawer shows visitor summary, page timeline, prior chats and Start chat action. High load mode lists incoming and served chats only, with explicit notice that browsing visitors are omitted.
+Implementation contract
+Ingest bounded heartbeat, navigation and interaction events; server receipt time governs dwell calculations with clamp rules. Strip URL fragments and sensitive query parameters by default. Never collect DOM content, keystrokes outside widget, passwords or full form values. Persist only needed history; publish coalesced visitor list deltas every second rather than one event per mouse movement.
+Acceptance criteria
+A visitor navigating an SPA updates page state without creating a new chat. Concurrent tabs appear as one visitor with distinct sessions and a most recently active page marker. Pagination or virtualization keeps 10000 sessions usable. A visitor who withdraws analytics consent disappears from browsing views within 60 seconds while an explicitly requested service chat remains available.
+12  Inbox queue and chat workspace
+Required behavior
+Provide Unassigned, Mine, Department and All permitted chat views. Incoming cards show initial message preview, department, wait duration, visitor name and route reason. Accept reserves and assigns atomically. Active chat layout shows participant names, server ordered transcript, connection status, tags, visitor panel, composer and end action. Multiple chats have accessible tabs with unread counts; inactive chats can notify without stealing focus. Chat status is requested, queued, offered, active, ending or closed; offline submissions are separate records.
+Interface and interaction
+Queue rows are at least 72 px with 16 px inset, wait timer and explicit Accept. Conversation header is 64 px; transcript padding 20 px, bubble max width 76 percent and 680 px. Composer minimum height 96 px and maximum 240 px. Enter sends by default; Shift Enter inserts newline, with preference to invert. Disable send only for empty input, denied permission or an unresolved terminal state. Offline transport permits an unsent draft with explicit retry, not false delivery.
+Implementation contract
+Chat commands use expected version, idempotency key and actor scope. Maintain chat owner and participant membership separately. Admission creates the initial message and chat in one transaction. Chat snapshots include last sequence and paginated messages; socket replay begins after that cursor. Queue wait starts at request receipt and does not reset on requeue or transfer.
+Acceptance criteria
+A visitor on browser A sends a message and an agent on browser B sees persisted text in order. Two agents pressing Accept simultaneously yield one owner and one conflict response. Ending a chat is visible to every participant and prevents further writes. Refresh rehydrates transcript and draft without auto sending the draft.
+13  Messaging ordering delivery and reconnect
+Required behavior
+Text messages support Unicode, line breaks, safe links and emoji; maximum 8000 Unicode code points and 32 KiB encoded payload. No raw HTML rendering. A client creates client_message_id before sending. Server assigns monotonically increasing chat seq in the command transaction. Sent means durable acknowledgment; delivered means a recipient transport acknowledgment; read means the recipient displayed the message in a focused visible conversation. Read receipts are configurable and never inferred from network delivery.
+Interface and interaction
+Own pending bubble shows Sending; durable success shows Sent; transport confirmation Delivered; permitted read receipt Read. Failure shows Failed with Retry and Copy text. Retry uses the same client ID. A reconnect banner describes recovering messages; preserve transcript and composer. Date separators follow viewer timezone with absolute timestamps available on focus or hover. Long URLs wrap; quoted plain text never becomes executable.
+Implementation contract
+Enforce UNIQUE(tenant_id, chat_id, client_message_id). ACK contains message_id, seq and committed_at. Use transaction locked next_seq on chat; rollback leaves no visible event. Reconnect requests durable cursor; snapshot on cursor expiry. Gap recovery uses REST, not indefinite buffering. Client applies snapshot before newer events, and deduplicates event IDs as well as message IDs.
+Acceptance criteria
+Dropping a socket after persistence but before ack and then retrying creates one message. Delivering socket frames out of order renders messages by seq and detects gaps. Browser reload after 100 messages recovers all 100 with no duplicate. A closed chat send receives CHAT_CLOSED and preserves unsent text. An internal note never appears on a visitor socket.
+14  Typing unread notifications and attention
+Required behavior
+Typing is ephemeral, not transcript data. Publish typing start once, refresh at most every 2 seconds, and stop on send, blur or 5 seconds inactivity. Show agent typing to visitor only for public reply mode. Visitor typing preview text is disabled by default; only boolean typing is core. Unread counts advance from per participant last_read_seq; own messages and internal notes invisible to that participant do not inflate visitor unread counts. Notification preference controls audio, desktop alerts and badge behavior.
+Interface and interaction
+Typing occupies a reserved 20 px row to avoid composer jumps. Unread separator marks first unread visible message. Title badge and chat tabs show count capped visually at 99 plus while accessible label exposes full count. Request desktop permission only after user clicks Enable notifications. Provide sound preview, mute for one hour and per chat mute. Alerts use generic text if privacy mode is enabled.
+Implementation contract
+Coalesce ephemeral events and drop them before durable message events under backpressure. Use BroadcastChannel for dashboard tab notification leader; elect a replacement on leader expiry. Record read cursor monotonically with max(existing,new). Reject read cursors beyond last visible sequence. Notifications omit full transcript from service worker cache and operating system previews unless explicitly enabled.
+Acceptance criteria
+A visitor never sees agent private note typing. Switching away keeps unread until the chat is visible and focused. A stale typing event disappears after 5 seconds even if stop is lost. Muting sound does not hide the visual incoming queue. Notifications are not duplicated by two tabs for the same agent.
+15  Transfers collaboration and internal notes
+Required behavior
+Owner can transfer to an eligible agent or department, invite a second agent, leave a collaboration, and add private notes. A direct transfer creates a 30 second offer; current owner keeps responsibility until acceptance. Decline or expiry leaves ownership unchanged and records reason. Department transfer closes pending offers and requeues with original request time and a transfer marker; release capacity only when ownership is relinquished transactionally. Supervisors may force transfer with reason; no silent ownership overwrite.
+Interface and interaction
+Transfer dialog shows eligible agent load, department availability and optional private handoff note. Confirm button identifies destination. Chat header shows primary owner and collaborators. Reply versus Note switch is persistent and clearly labeled; note composer uses amber tint and a Private to team label. Switching mode preserves separate drafts. An agent leaving the last active ownership path must transfer or end the chat.
+Implementation contract
+Persist participant role, joined_at, left_at and visibility. Offers have durable state and expiry. Transfer action, capacity counters and outbox events commit together. Notes are messages with visibility=internal and are filtered at query, event and export layers. Record previous and next owner in assignment history for workload attribution.
+Acceptance criteria
+A transfer to a now full agent fails atomically while current owner remains. An invited collaborator consumes configurable collaboration capacity, default one slot, and cannot accidentally become primary owner. Private notes appear in agent history but never visitor transcript export. Concurrent end and transfer produce one terminal consistent outcome.
+16  Chat ending ratings and post chat experience
+Required behavior
+Visitor or agent may end a chat. Agent end requires confirmation if the visitor is still connected; visitor end presents clear finality. Transport disconnect alone does not immediately end chat: hold for 5 minutes reconnection grace, configurable from 1 to 30. Agent can close abandoned chat sooner with a reason. Terminal close writes one closed_at, close_reason and closed_by. Ratings are good or bad with optional comment up to 2000 characters, available during active chat or for 24 hours after close through a scoped grant.
+Interface and interaction
+Closed transcript remains readable with a Chat ended separator and New chat action. Rating controls use labeled thumbs with selected state and accessible pressed attribute. Changing rating updates the same record within the allowed window and shows saved state. Email transcript request appears after close; visitor enters or confirms email. Do not force a rating before allowing exit.
+Implementation contract
+Use chat version lock to finalize. Stop pending routing and timers, release reservations and capacity, append close event, and enqueue analytics plus optional ticket export. Keep rating history auditable but report latest rating at metric cutoff. Redact rating text during erasure. Closing due to inactivity is attributed separately from an agent explicitly resolving the conversation.
+Acceptance criteria
+Two end commands produce one close transition and idempotent acknowledgment. A visitor returning within grace resumes the same chat; returning after close creates a new chat. A forged rating token for another chat is rejected. Repeated rating changes do not multiply CSAT denominator. Ended chats remain searchable subject to retention.
+17  History search tags and visitor records
+Required behavior
+History lists closed and active chats with date, visitor, agents, department, duration, tags and rating. Search permitted public message text and private notes only for roles allowed to read notes; filter by site, agent, department, rating, tag, status and inclusive date input converted to half open UTC bounds. Visitor profile has verified and unverified identity fields distinguished, editable name, contact email, tags, custom fields and previous chats. Merge requires admin review and verified identity proof; never merge solely by matching email text.
+Interface and interaction
+History uses 48 px rows, 50 per page and cursor pagination. Filter chips can be removed individually and saved. Search text is debounced 300 ms; result snippets highlight matched text safely. Detail opens as a route with transcript and metadata tabs. Tag picker offers existing tags before new creation, with normalized lower case slug max 64 and display label max 80. Empty search shows Clear filters.
+Implementation contract
+PostgreSQL full text index uses explicit text search config; filter tenant and permission scope before ranking. Use stable cursor(created_at,id), cap search result window and query length 256. Keep tags relational rather than an unbounded JSON string array. Custom fields have schema, type, validation and public visibility flag; deny arbitrary nested object injection.
+Acceptance criteria
+Search yields no other tenant or unauthorized department data, including snippets and count. Deleting a tag removes future association while retaining audited historical snapshot when policy allows. A 23 hour daylight saving day filters correctly. Changing a visitor display name does not rewrite historical sender snapshots.
+18  Canned replies and shortcut expansion
+Required behavior
+Provide tenant shared, department scoped and personal canned replies. A reply has unique scope plus shortcut slug, title, body, tags and enabled state. Slash shortcut inserts text into composer but never sends automatically. Supported placeholders: visitor.name, agent.display_name, department.name, site.name. Missing values use a defined fallback or highlight unresolved token and block send until resolved. No executable template expressions. Sharing and editing require permissions; agents may manage personal replies.
+Interface and interaction
+Composer slash opens searchable suggestion menu with shortcut, title and body preview; arrows navigate, Enter inserts, Escape dismisses. Shortcut manager includes list, preview, create, duplicate, archive, bulk import and CSV export. Body editor is plain text, max 8000 code points. Preview allows sample visitor values and clearly shows unresolved variables. Preserve cursor position on insertion.
+Implementation contract
+Resolve variables using allowlisted deterministic interpolation and escaped output. Record optional reply_id on sent message for adoption analytics, not the entire editor event stream. UNIQUE(tenant_id,scope_key,slug). Imports validate duplicates and capacity limits. Version conflict surfaces a reload or merge choice rather than overwriting another editor silently.
+Acceptance criteria
+Typing /refund and selecting a reply inserts a draft without sending. A removed shared reply disappears after configuration refresh. A placeholder containing HTML renders as plain text. Personal replies are inaccessible to another agent even by ID. CSV imports show valid and rejected rows before atomic commit.
+19  File upload scanning and download security
+Required behavior
+Support JPEG, PNG, WebP, PDF, plain text and safe office documents by default; reject executables, scripts, HTML, SVG, archives and macro enabled documents. Max 10 MiB per file, 5 files per message and tenant configurable daily quota. Upload state: initiated, uploading, uploaded, scanning, clean, rejected or expired. Files remain unavailable until clean scan. Allow retry and cancel; do not send a message referencing unverified files. Server inspects magic bytes and validates MIME versus extension.
+Interface and interaction
+Attachment tray shows filename, size, progress, cancel, scan status and accessible error. Clean images show thumbnails with alt text based on filename and open a safe viewer; documents show Download. Drag and drop has keyboard file picker equivalent. Rejected file explains type, size or security failure without scanner internals. Mobile chooser works without drag interactions.
+Implementation contract
+Presign PUT scoped to generated private object key, expected size and content type, lifetime 5 minutes. Finalize checks stored size and checksum then enqueues scan. Quarantine and clean buckets are private. Downloads are disposition attachment with nosniff; image thumbnails are generated by sandboxed decoder. Attachment FK binds tenant and chat. Retention deletes original, thumbnails and orphan uploads; scanner outage keeps pending and surfaces status.
+Acceptance criteria
+Oversized uploads fail before full object storage transfer when possible. Renamed executable fails magic byte validation. EICAR test file is quarantined. A stolen object key cannot bypass tenant or chat authorization. Removing a membership revokes new download grants; grants expire in 60 seconds. Export never includes quarantined bytes.
+20  Transcript export and delivery
+Required behavior
+Agent export supports TXT, JSON, CSV and PDF; visitor export supports public TXT or PDF. Include chat ID, site, department, timestamps with timezone, public participants, message sequence, ratings where appropriate, attachment metadata and a redaction notice. Agent permission may include private notes only through explicit Include internal notes option; visitor grants never do. Bulk export is asynchronous and limited by role, date range and tenant quotas. Email recipients are verified or visitor confirmed; throttle to prevent abuse.
+Interface and interaction
+Export dialog selects format, timezone and private note policy; defaults exclude notes. Job drawer shows queued, running, ready, failed or expired, progress and expiry. Download persists for 24 hours by default through an authorized short signed grant. Email action shows delivery accepted separately from delivered; retry does not create multiple emails. Bulk history export previews count before queueing.
+Implementation contract
+Snapshot export authorization and query scope at creation and recheck at download. Jobs read current erasure state before rendering. PDF renderer uses local fonts and disallows remote resource fetching. Use deterministic message ordering, RFC3339 times and RFC4180 CSV quoting. Store job outputs in private storage with expiry, checksum and audit event. Email jobs use idempotent delivery keys and provider callbacks for delivery status.
+Acceptance criteria
+A public transcript contains no private notes, internal audit events, IP addresses or secret custom fields. JSON retains exact message IDs and Unicode. CSV neutralizes cells beginning with =, +, - or @ to prevent spreadsheet formula injection. An erasure invalidates existing export artifacts. A failed mail provider does not report delivered.
+21  Proactive invitations and campaign controls
+Required behavior
+A proactive invitation is an automated visitor visible prompt before visitor requests chat. Conditions include allowed path, referrer origin, country if permitted, page dwell, site time, repeat visit and tag. Respect consent, hours, department availability, visitor dismissals and frequency caps. Default cap one invitation per session and no repeat for 24 hours after dismissal. Invitation accept starts an ordinary chat; merely displaying an invitation must not count as a chat request. Multiple campaigns resolve by priority then stable ID.
+Interface and interaction
+Invitation appears as a small card above launcher, max 280 px width, with message, agent or team attribution, Start chat and Dismiss. It never steals focus, plays sound by default, or blocks host page controls. Campaign editor has audience, timing, message, availability guard, cap and preview. Simulator explains which condition matched and why a prompt was suppressed.
+Implementation contract
+Store invitation decision and display acknowledgment separately. Server evaluates time based conditions from trusted session state, not arbitrary client dwell values. Use unique session campaign occurrence keys. Client receives a versioned invitation grant with expiry; acceptance validates current availability and creates chat transactionally. Report eligibility, display, accept and resulting served chat as separate funnel stages.
+Acceptance criteria
+A browsing visitor on /pricing for 30 seconds sees one eligible invitation; dismiss and navigate does not show it again within cap. Offline departments suppress invitations. Accepting creates one chat despite double click. Campaign display and accept counts are deduplicated by invitation ID. Non consenting visitors receive no behavior targeted campaign.
+22  Operating hours holidays and availability
+Required behavior
+Each schedule has IANA timezone, weekly local intervals, dated exceptions and holiday closures. Intervals are half open [start,end); overnight hours are represented explicitly across dates. Department schedule overrides site schedule, otherwise tenant default applies. Manual emergency closure overrides all schedules with reason and optional expiry. Effective acceptance also depends on eligible agents and capacity or permitted queue admission. Existing chats continue after closing time; new requests follow after hours policy.
+Interface and interaction
+Hours editor uses weekday rows, add interval, closed checkbox, timezone selector and calendar exceptions. Preview lists next seven UTC boundaries and local labels, highlighting daylight saving transitions. Widget distinguishes Offline, Busy and Available with appropriate copy. A schedule change that immediately closes service presents an admin impact warning but saves only after normal confirmation.
+Implementation contract
+Compute boundaries using a tested timezone library and current tzdata; persist timezone name, not numeric offset. Snapshot schedule version in admission decisions. Validate non overlapping intervals and timezone identifiers. Timer workers recompute schedule changes on revision, not only midnight. All displayed next opening times include timezone, and API returns RFC3339 instant plus human local representation.
+Acceptance criteria
+At exact closing second a new request is offline while already active chat continues. Spring forward nonexistent local boundary resolves to the first valid instant after gap; fall back ambiguous opening chooses earlier instant and closing chooses later instant. Test both rules explicitly. Emergency closure expiry restores scheduled behavior without requiring browser refresh.
+23  Offline forms and overflow handling
+Required behavior
+Offline form collects name, email, message, optional department and allowed custom fields. Email required by default; message 1 to 8000 code points. Require consent acknowledgment only where configured and keep service submission separate from analytics consent. Create durable offline submission, send confirmation when enabled, notify configured team recipients, and optionally create external support ticket. Offline submissions do not consume agent capacity or increment chat served metrics. Queue overflow offers a form after configured wait, default 5 minutes, without losing the original draft.
+Interface and interaction
+Widget offline header explains hours or busy condition and next opening if known. Form fields use visible labels, inline errors and preserved values after failure. Submit shows progress, then reference number and New message action. Honeypot is hidden from assistive technology; accessible challenge fallback exists if abuse requires CAPTCHA. Do not show a green confirmation until storage commit.
+Implementation contract
+Use idempotency key, site and visitor session scope; validate fields server side against published schema. Rate limit 5 submissions per hour per visitor plus network limits, configurable. Email content escapes all fields; no user supplied headers. Queue conversion commits cancellation plus offline row together. Worker retries notifications and external tickets independently without duplicate records.
+Acceptance criteria
+An SMTP outage still creates a submission and shows saved reference while delivery retries. Double submit produces one record. An invalid department offers current choices. Choosing offline during queue wait atomically withdraws chat request and creates submission with clear recorded conversion reason. Visitor can retry failed validation without retyping.
+24  Bans abuse limits and visitor safety
+Required behavior
+Admins and permitted supervisors can ban a visitor identity or IP CIDR within a tenant and site scope, optionally until expiry. Visitor bans prevent new chat and offline submission and close active chat with policy reason if chosen. IP bans carry collateral impact warning and require reason. Anonymous browser identity bans are best effort and may be bypassed by cleared storage; never promise permanent identity enforcement. Provide audit history, unban and false positive review.
+Interface and interaction
+Ban dialog displays selected scope, expiry, reason and effect on active chats. Visitors see neutral Service unavailable copy, not internal accusations or agent notes. Ban list supports scope, source, expiry and search with masked IP except privileged reveal. Message rate limit informs visitors to wait and preserves draft. Agents can mute nuisance notification separately from a ban.
+Implementation contract
+Normalize IP only from trusted proxy chain; do not trust X Forwarded For from public clients. Store raw IP encrypted only when policy permits and use keyed hashes for matching exact addresses; CIDR matching requires controlled protected network data. Implement tenant fair token buckets and websocket message limits. Apply public admission limits before costly operations and record aggregated abuse metrics without full malicious payloads.
+Acceptance criteria
+Expired ban stops applying without manual cleanup. One tenant ban never affects another tenant. CIDR validation rejects overly broad values outside configured policy. A visitor flooding typing events cannot delay durable chat delivery for other tenants. Unban is audited and allows a subsequent bootstrap.
+25  Visitor identity and session semantics
+Three distinct objects
+Visitor is a tenant scoped durable identity. Session is one site browser browsing episode with a unique session ID. Connection is one transport on one tab or device. A visitor may have many sessions and connections, and a chat may survive a connection loss. Anonymous visitor IDs are generated by cryptographic random source and stored first party by the host loader when allowed. Session ends after 30 minutes inactivity, while an active chat may reconnect through its scoped resume grant. Define started_at, last_seen_at and ended_at using server time.
+Verified identification
+SDK identify with name or email marks fields unverified and only prepopulates forms. Verified identity requires a short lived JWT generated by the customer backend with tenant configured secret or asymmetric key. Claims: iss customer integration ID, aud talkivio visitor, tenant_id, site_id or allowed site set, sub stable customer ID, iat, exp no more than 5 minutes, jti, optional name and email. Bind claim to site authorization and prevent identity switching during active chat without explicit reset. Matching verified external ID can join browser identities through audited association; matching email alone cannot.
+Storage and logout
+Keep anonymous identity under talkivio:<siteKey>:visitor with version and expiry; default 180 days if consent permits. Session ID uses sessionStorage with coordinated duplicate tab behavior; each tab has its own connection ID. No cookies that assume third party storage access. Host app logout invokes resetIdentity: close transport, clear personalized caches, replace anonymous ID and prevent prior transcript display to next user. Do not erase server records merely because a browser logs out.
+Acceptance criteria
+Two users sharing a device see no prior user transcript after reset. A forged identify email cannot access verified customer history. A valid external ID on a second browser can see only chats permitted by that authenticated visitor policy. Disabled localStorage and private browsing still support an in memory service chat with documented inability to resume after full reload. Visitor identity associations never cross tenants.
+26  Cross domain tracking and consent
+Cross origin limitations
+Different unrelated domains cannot safely share first party localStorage or a universal cookie. Implement cross domain continuity through the same verified external customer ID on each origin, or an explicit consented one time handoff issued by the customer backend. Do not claim anonymous identity magically persists across unrelated domains, use fingerprinting, or depend on third party cookies. Related subdomains may use an explicitly configured parent domain cookie only if the tenant proves control and accepts its wider access exposure.
+Handoff protocol
+A server generated handoff has source site, destination site and exact origin, visitor association, nonce, expiry 60 seconds and purpose resume. Exchange once through POST, require destination origin, then bind a new visitor session token. Prefer backend exchange over URL tokens. If a redirect carries a short code, immediately redeem, replace browser URL to remove it and set no referrer leakage; the code contains no PII. Do not transfer active chat ownership to an untrusted domain. Recheck allowed origin and consent at redemption.
+Consent states
+Consent is unknown, granted, denied or withdrawn with separate service and analytics purposes. Prior to analytics grant, loader must not create persistent browsing identity, emit navigation or referrer events, or display behavior based invitations. Explicit visitor request may establish a short lived service session needed for the requested chat. Store consent policy version, timestamp, source and purpose. Withdrawal stops optional events immediately, clears optional storage and schedules deletion according to policy; it does not falsely report erasure complete before durable workers finish.
+Event collection
+SDK navigation accepts URL and title; sanitize server side and default to path plus origin, query allowlist empty, fragments removed, title max 200. Track visibility, page load, safe interaction signal and heartbeat without scraping host page text. Aggregate dwell across visible tabs without double counting overlapping intervals. Handle bfcache pageshow, SPA history changes, offline networks and pagehide best effort. Tests cover Safari storage partitioning, incognito, blocked third party storage and consent withdrawal mid chat.
+27  Widget loader iframe and browser security
+Loader contract
+Expose one global Talkivio callable queue before async loader loads. Loader is at most 30 KiB gzip target; widget UI loads only after eligible display or open. A second install detects existing instance and returns a diagnostic rather than opening duplicate transports. Accept siteKey, locale, position, consent provider and optional initial settings. Defaults bottom right with 20 px offset desktop and 12 px mobile. Loader creates a dedicated iframe from controlled widget origin and adds only scoped host styles for launcher and frame positioning.
+Isolation and messaging
+Use sandboxed cross origin iframe with the minimal features needed for scripts, forms and controlled downloads. Review allow-same-origin implications for the cross origin host boundary. postMessage validates exact event.origin, source window, instance nonce, version, operation allowlist and schema. Host never accepts arbitrary CSS, JavaScript, navigation or DOM selectors from widget configuration. Widget cannot inspect host DOM. Configure CSP for scripts, styles, images, connect sources and frame ancestors; widget origin frame ancestors allowlist is generated from approved site origins.
+Installation example
+The generated install snippet creates window.Talkivio=function(){queue.push(arguments)}, attaches queue and config, and inserts async content hashed loader with crossorigin. Supply complete documented copyable source in the implementation README, with dev and production URLs. No private tenant secret in snippet. Origin validation prevents unintended embedding but is not a substitute for authorization because a non browser client can spoof Origin; rate limits and scoped capabilities still apply.
+Failure and lifecycle
+If bootstrap fails, show discreet recoverable launcher error only after interaction; never crash the host app. destroy removes iframe, event listeners, timers and injected styles. hide changes display only; it must not end active chat or stop required service transport. Suppressed consent mode avoids network collection except static code loading when configured. Slow or blocked widget assets must not delay host page interactivity. Test CSP restrictive hosts, repeated script installation and host style collision.
+28  Widget SDK commands and events
+Method signatures
+Implement Talkivio("init", {siteKey, locale?, position?}); open():Promise<void>; close():void; show():void; hide():void; destroy():void; identify({name?,email?,externalIdToken?}):Promise<IdentityResult>; resetIdentity():Promise<void>; setDepartment(departmentId|null):Promise<void>; setTags(string[]):Promise<void>; setCustomFields(record):Promise<void>; setLocale(locale):Promise<void>; updateSettings(allowedPatch):Promise<Config>; trackPage({url,title?}):Promise<void>; setConsent({analytics:boolean,service?:boolean,policyVersion}):Promise<void>; startChat({message?,departmentId?}):Promise<Chat>; endChat():Promise<void>; on(event,handler):unsubscribeFunction; getState():readonly Snapshot.
+Validation and authority
+Commands before ready are queued in order; init must be first and executes once. Void display commands can coalesce; write commands retain order and reject with typed errors on failed init. setTags and custom fields only write allowlisted public fields and never grant VIP priority or privileged routing directly. Signed verified fields are separate from client supplied attributes. setDepartment affects next request only after active chat starts. updateSettings permits presentation labels and appearance within published policy, never secret or permission changes.
+Public events
+Emit ready {siteId,configVersion}; opened/closed {source}; availability.changed {state,departmentId,nextOpenAt}; connection.changed {state,reason?}; identity.changed {verified,visitorId}; chat.requested {chatId}; chat.started {chatId}; message.received {chatId,messageId,type}; unread.changed {count}; chat.ended {chatId,reason}; rating.changed {chatId,rating}; invitation.displayed {invitationId}; invitation.accepted {invitationId,chatId}; offline.submitted {reference}; error {code,message,retryable}. Never expose internal notes, raw IP, socket token, agent email or full secret metadata to host events.
+Acceptance criteria
+Publish TypeScript declarations, API documentation and an executable plain HTML integration demo. Unsubscribe prevents future callbacks; destroy prevents queued callbacks firing. Unsupported locale falls back deterministically with a warning event. Exceptions in a customer handler do not terminate widget processing. Promise resolves only at its documented durable or presentation completion point. Test all methods before ready, during reconnect and after destroy.
+29  Widget interface states and localization
+State machine
+States are launcher, invitation, prechat, queued, active, reconnecting, ended, rating, offline form and offline success. Connection is an orthogonal state and must not reset form or transcript. Launcher shows accessible label and unread badge; opening focuses heading or first form field without sending anything. Prechat optional name, email and department use configured required flags; consent uses explicit wording. Queued view shows real queue status; only show position if server can provide a meaningful stable approximation labeled accordingly.
+Widget dimensions
+Desktop frame 380 px wide by min(640 px, viewport height minus 96 px), header 64 px, composer at least 88 px, transcript flexible with overflow. Frame radius 16 px and shadow 0 16 48 rgba(23,34,46,.18). Mobile below 640 px uses full viewport width and dynamic viewport height, honors safe area insets and keyboard inset. Launcher 56 by 56 px with 24 px icon. Close target 44 by 44. Messages 14/20 px, input 16 px to avoid mobile zoom. Visitor own bubbles primary tint, agent bubbles light neutral; sender labels precede first bubble in a group.
+Language and direction
+Externalize all visible copy, validation and timestamps. Locale selection precedence SDK override, published site locale, browser language match, English. Initial supported locales English and Arabic; design supports translation expansion. RTL mirrors directional layout but preserves message text bidi isolation, numerals, file names and URLs. Localize plural messages and time formatting with Intl. Export retains canonical UTC plus selected human timezone. Never localize machine enum values or IDs.
+Acceptance criteria
+All states work at 320 px width with onscreen keyboard. 200 percent zoom preserves send and close controls. Keyboard can open, interact, end and close widget; focus returns to host launcher. Screen reader announces new messages politely without rereading transcript, reconnect state and form errors. Reduced motion removes sliding transitions. A long translated label and mixed Arabic English message do not overflow.
+30  Routing eligibility and deterministic selection
+Eligibility order
+Inside routing transaction: reject terminal chat; check tenant and site acceptance; apply selected department and validated pre assignment trigger override; resolve schedule and emergency closure; filter enabled live online agents with department membership; subtract active ownership, capacity counted collaborations and unexpired reservations from global capacity; exclude agents who declined that request during 60 second cooldown. Skills matching is optional and occurs only after mandatory eligibility. No eligible agent leaves request queued or invokes configured overflow; never assigns an unavailable agent to satisfy a demo.
+Modes and priorities
+Core modes: manual pickup; broadcast offer where all eligible agents see the request but one wins acceptance; assigned offer where one candidate is chosen. Assigned selection defaults least normalized load (active plus reservations divided by capacity), then earliest last_assignment_at, then agent UUID ascending. Round robin optional uses durable department cursor and skips ineligible agents. Request priority is server trusted integer 0 to 100, default 50; order by priority descending then requested_at ascending then chat UUID. Client tags do not raise priority without trusted rule.
+Fairness and reservations
+Use durable assignment offers as reservations. Offer duration 30 seconds; agent acceptance transitions offer and chat atomically while counting capacity. Decline or timeout releases reservation and retries next candidate. Apply aging: effective priority=min(100,base+floor(wait_seconds/60)), but freeze request ordering within a routing cycle for determinism. Cross department capacity checks lock membership capacity state in consistent UUID order. Broadcast does not reserve every agent; winner acquisition must test capacity at accept time.
+Acceptance criteria
+One queued chat has at most one primary owner and assigned mode at most one live single target offer. Two simultaneous requests cannot exceed capacity. A worker crash releases reservations only after durable expiry. Equal load tie breaking is reproducible. Test 100 requests with 10 agents at capacity 3, random accepts/declines, two routing workers and agent disconnects; assert no lost queue rows, double ownership or negative capacity.
+31  Routing transaction and overflow pseudocode
+Contract example
+route(chatId):
+  begin tenant transaction
+  chat = SELECT chat FOR UPDATE
+  if chat.state not in {queued, offered}: return currentState
+  expire old offers and audit expirations
+  config = load published routing revision
+  candidates = eligibleAgents(chat, config)
+  if candidates empty: applyQueuePolicy(chat); commit; return
+  agent = deterministicSelect(candidates)
+  lock agent capacity row; recompute eligibility and free slots
+  if no slot: rollback and bounded retry with jitter
+  insert offer with expires_at = databaseNow + 30 seconds
+  update chat state offered, version = version + 1
+  append assignment.offered outbox event
+  commit
+accept(offerId, expectedVersion, key):
+  begin; verify membership and command idempotency
+  lock chat then capacity rows in documented consistent order
+  verify offer pending, unexpired and assigned to actor
+  verify current eligibility and global capacity
+  expire competing offers; add owner participant
+  set owner, state active, first_assigned_at if absent
+  append assignment history and outbox events; commit
+Overflow behavior
+Queue policy has max waiting count default 1000 per department and max wait default 300 seconds; both configurable. Admission over count does not discard request: return capacity decision and offer offline submission before creating chat, or create a clearly overflowed request if tenant policy specifies. At max wait, notify visitor with options continue waiting or offline form; default no silent closure. Department fallback applies once per configured edge and records visited departments to prevent loops. Overflow does not reset requested_at or increase metrics denominator twice.
+Revalidation and contention
+Use lock ordering consistently across route, accept, transfer and close to prevent deadlocks. SELECT FOR UPDATE SKIP LOCKED is suitable for queue worker claims, not a substitute for chat and capacity integrity. Retry serialization or deadlock failures at most 3 times, retain idempotency key and return retryable conflict after exhaustion. Agents transitioning away cause unaccepted offers to expire or withdraw; active ownership remains unless separate transfer policy fires.
+Verification
+Inject a scheduling barrier between capacity read and reservation write to test races. Expired offers must never be accepted even if client UI is stale. Kill worker mid transaction and prove rollback; kill after commit and prove outbox recovery. Preserve every route decision with candidate count, chosen reason, configuration revision and causation ID for supervisor explanations.
+32  Trigger DSL conditions and action grammar
+Versioned language
+Implement declarative JSON DSL version 1, never eval or arbitrary JavaScript. Trigger contains id, name, enabled, priority integer 0 to 1000, event, all conditions, any conditions, actions, stopProcessing, cooldownSeconds and version. Events: visitor.session.started, visitor.page.changed, visitor.timer.elapsed, chat.requested, message.created where actor=visitor, chat.queued, chat.closed and offline.submitted. An empty all group is true; empty any group is ignored. Condition evaluation requires every all and at least one any when any is nonempty.
+Conditions
+Fields allowlist: site.id, department.id, visitor.verified, visitor.country, visitor.tags, visitor.returning, page.path, referrer.origin, session.time_on_site_seconds, page.visible_dwell_seconds, chat.wait_seconds, chat.status, message.text, schedule.is_open, eligible_agent_count and trusted custom fields. Operators are eq, neq, contains, starts_with, ends_with, in, not_in, gt, gte, lt, lte, exists and missing. Strings max 2000; numeric operands finite. Missing field fails normal operators, including neq; use missing explicitly. Country only available when permitted. Regex is optional with RE2 compatible bounded pattern engine, never unbounded native regex.
+Actions
+Allow set_department, set_priority, add_tag, remove_tag, send_public_message, display_invitation, set_visitor_field, notify_department, create_webhook_job and block_admission. Validate action permissions, field visibility and target IDs on publish. set_department and set_priority only before assignment. A public message action has declared attribution automated team and plain text. Notifications do not consume chat capacity. No direct owner manipulation, secret access, arbitrary HTTP target, filesystem operation or code execution.
+Contract example
+{"dsl_version":1,"event":"chat.requested","priority":100,
+ "all":[{"field":"page.path","op":"starts_with","value":"/pricing"},
+        {"field":"schedule.is_open","op":"eq","value":true}],
+ "any":[],"actions":[{"type":"set_department","department_id":"<sales-id>"},
+ {"type":"add_tag","tag":"pricing"}],"stop_processing":true,
+ "cooldown_seconds":0}
+Validation
+Editor and API share grammar validation; reject unknown keys, invalid enum values, illegal operator types, cross tenant references and action arrays over 20. Max 50 total conditions, nesting only one group depth in v1. Reject conflicting writes within one trigger unless explicit action order resolves them. Persist full validated revision for deterministic replay.
+33  Trigger precedence execution and simulation
+Evaluation order
+Triggers evaluate highest priority first, then creation time ascending, then ID. Each event gets one immutable snapshot of visitor, chat, schedule, site and authoritative time. Matching does not change for later triggers due to earlier actions. Collect actions from matches until stopProcessing on a matched trigger. Conflicting set_department or set_priority uses first winning action. add/remove tag follows collected action order. Terminal block_admission wins over admission and suppresses later visitor messages; configured audit trace explains suppression. Do not let a lower priority trigger silently reroute a previously won department.
+Idempotency and recursion
+Create trigger_run unique on tenant,event_id,trigger_id,revision. Action effect unique on run_id,action_index. Execute durable effects in a transaction or outbox job with effect key; retry cannot send a duplicate greeting. System generated messages do not emit the visitor message event. Propagated causation_id plus depth limit 3 prevents cycles; repeated ancestor trigger action is rejected. Cooldown is scoped to trigger and visitor session by default; campaign dismissal cap is an additional guard. Timer events are durable scheduled jobs, not browser setTimeout authority.
+Interface
+Trigger builder lists enabled state, event, priority, last matched and error count. Condition rows have field, operator and type appropriate value editor; all and any visually labeled. Reorder through accessible Move up and Move down buttons as well as drag. Simulator accepts safe sample visitor and chat data, returns matched triggers, condition truth values, collected effects and suppressed actions. Publish requires valid draft and version check. Revision history can restore a previous version as a new revision.
+Acceptance criteria
+Pricing and generic greetings matching the same event produce configured single invitation, not two popups. Retry same event produces same effect once. Missing country does not satisfy neq country. A trigger trying to reroute an active chat is rejected or records action skipped with reason. Simulator and production engine share the exact interpreter. Test stop processing, priority ties, cooldown expiry, recursive events, disabled revision and concurrent publish.
+34  Database conventions constraints and migration policy
+Scalar types and defaults
+Use UUID generated by database or validated server generator, timestamptz for instants, text for bounded strings enforced with CHECK, bigint for sequence and byte counts, integer for small counts and priorities, boolean for flags, numeric(12,2) for money only when billing enabled, inet for protected network data if retained, and jsonb for validated configuration snapshots. All tables have explicit primary key. Unless stated optional, fields are NOT NULL. All tenant owned rows have tenant_id UUID FK tenants(id), created_at timestamptz default now(), updated_at timestamptz default now(), version integer default 1 CHECK(version>0).
+Relationship convention
+For tenant owned entities add UNIQUE(tenant_id,id); children reference (tenant_id,parent_id) to parent(tenant_id,id). Table entries below list business fields in addition to these common fields. Composite junction primary keys include tenant_id and both referenced IDs. Optional timestamps and text are marked ?. Enumerated text has CHECK with values listed in the domain contracts. No unconstrained status string. Use soft archive for configuration referenced by history, hard erase for personal payload under retention. Audit tombstones must not retain erased PII.
+Indexes and deletion
+Every tenant scoped list index begins tenant_id and includes sort tie breaker id. Add indexes for FK lookups used by deletes and joins. Partial unique indexes enforce active configuration uniqueness where archived_at IS NULL. Avoid global unique emails in visitor records; membership email belongs to global user account identity, not visitor identity. Explicit ON DELETE policies: tenant cascade through owned data only in approved destruction job; configuration references RESTRICT; deleted participant identity SET NULL only with preserved non personal system marker. Never cascade from tag or department to chats.
+Migrations
+SQL migrations are ordered, immutable after release, transactional when possible and tested from empty database and prior release snapshot. Expand contract: add nullable field or new table, deploy dual compatible code, backfill bounded batches, verify, enforce constraint, remove old column in later release. Indexes on large live tables use concurrent operation outside transaction as required. Capture schema version at startup, reject incompatible deployment, and document data rollback rather than pretending all migrations are reversible.
+35  Account and configuration tables
+Schema definitions
+tenants — id uuid PK; slug text unique; name text 1..120; status text active|suspended|deleting; timezone text IANA; owner_user_id uuid FK users; retention_days int 1..3650 default 180; settings jsonb schema bounded; deleted_at timestamptz?
+Constraints and indexes: UNIQUE lower(slug); CHECK slug matches [a-z0-9-]{3,63}; owner must have enabled owner membership enforced by service transaction plus invariant test. Index(status,id).
+users — id uuid PK global; email text normalized; display_name text 1..120; password_hash text; email_verified_at timestamptz?; mfa_secret_ciphertext bytea?; mfa_key_version int?; disabled_at timestamptz?
+Constraints and indexes: UNIQUE lower(email); password_hash never serialized. User is global, tenant access only through membership. Identity deletion handles other tenant memberships explicitly.
+memberships — user_id uuid FK users; role text owner|admin|supervisor|agent|analyst; enabled bool default true; desired_status text online|away|invisible; capacity int default 3; last_assignment_at timestamptz?; archived_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,user_id); CHECK capacity between 1 and 20; INDEX(tenant_id,enabled,role,id). Persist permission overrides only via validated schema if introduced.
+auth_sessions — user_id uuid; membership_id uuid?; token_hash bytea; expires_at timestamptz; last_seen_at timestamptz; revoked_at timestamptz?; ua_summary text?; ip_hash bytea?
+Constraints and indexes: UNIQUE token_hash; INDEX(user_id,revoked_at,expires_at); no raw session cookie persisted. This table is global auth scope; membership linkage checked on every active tenant request.
+auth_tokens — user_id uuid?; tenant_id uuid?; purpose text reset|verify|invite|recovery; token_hash bytea; expires_at timestamptz; consumed_at timestamptz?; payload_ciphertext bytea?
+Constraints and indexes: UNIQUE token_hash; INDEX(expires_at); purpose and target validated during consume under row lock. Token consumption and resulting mutation commit together.
+sites — public_key text; name text 1..120; enabled bool; config_revision int; archived_at timestamptz?; default_department_id uuid?; timezone text?
+Constraints and indexes: UNIQUE public_key; INDEX(tenant_id,enabled,id); department composite FK. Public key is random 128 bit or greater and not an authorization secret.
+site_origins — site_id uuid; origin text normalized; pattern_type text exact|subdomain; verified_at timestamptz?
+Constraints and indexes: PK(tenant_id,site_id,origin); no path or credentials; reject public suffix wildcard. INDEX(tenant_id,origin).
+widget_configs — site_id uuid; revision int; published_at timestamptz?; config jsonb; config_hash text; created_by uuid membership
+Constraints and indexes: UNIQUE(tenant_id,site_id,revision); INDEX(tenant_id,site_id,published_at DESC); immutable published revisions; validate full widget schema before insert.
+36  Team schedules and automation tables
+Schema definitions
+departments — name text; normalized_name text; public_label text; enabled bool; schedule_id uuid?; routing_mode text manual|broadcast|assigned; queue_limit int; max_wait_seconds int; fallback_department_id uuid?; archived_at timestamptz?
+Constraints and indexes: Partial UNIQUE(tenant_id,normalized_name) WHERE archived_at IS NULL; CHECK queue_limit>0,max_wait_seconds>=0; reject fallback cycle in service; INDEX(tenant_id,enabled,id).
+department_members — department_id uuid; membership_id uuid; can_serve bool; can_monitor bool
+Constraints and indexes: PK(tenant_id,department_id,membership_id); composite FKs to department and membership; INDEX(tenant_id,membership_id,department_id).
+agent_capacity — membership_id uuid; revision int; updated_at timestamptz
+Constraints and indexes: PK(tenant_id,membership_id). Use row as serialization lock; derive durable active and reserved counts from chats and offers or maintain counters transactionally with periodic reconciliation. Counters never authoritative without reconciliation.
+agent_connections — connection_id uuid; membership_id uuid; connected_at timestamptz; last_heartbeat_at timestamptz; disconnected_at timestamptz?; client_instance_id text
+Constraints and indexes: Ephemeral Redis mirror with TTL; optional durable intervals rather than every heartbeat. INDEX(tenant_id,membership_id,last_heartbeat_at). No unbounded heartbeat row growth.
+availability_intervals — membership_id uuid; status text; started_at timestamptz; ended_at timestamptz?; source text
+Constraints and indexes: CHECK ended_at>=started_at when set; exclusion or transactional invariant prevents overlapping intervals per agent; INDEX(tenant_id,membership_id,started_at).
+schedules — name text; timezone text; weekly_intervals jsonb; archived_at timestamptz?
+Constraints and indexes: Schema validates seven days and bounded half open intervals. INDEX(tenant_id,id); timezone valid through library and configuration validator.
+schedule_exceptions — schedule_id uuid; local_date date; intervals jsonb; reason text?
+Constraints and indexes: UNIQUE(tenant_id,schedule_id,local_date); empty intervals means closure. Exceptions replace weekly intervals for that local date.
+emergency_closures — site_id uuid?; department_id uuid?; starts_at timestamptz; ends_at timestamptz?; reason text; created_by uuid
+Constraints and indexes: CHECK only valid tenant/site/department scope; CHECK ends_at>starts_at; INDEX(tenant_id,starts_at,ends_at).
+triggers — name text; enabled bool; priority int; current_revision int; event_type text; archived_at timestamptz?
+Constraints and indexes: CHECK priority 0..1000; INDEX(tenant_id,event_type,enabled,priority DESC,id); revision references immutable trigger_revisions.
+trigger_revisions — trigger_id uuid; revision int; dsl_version int; definition jsonb; published_by uuid; published_at timestamptz
+Constraints and indexes: UNIQUE(tenant_id,trigger_id,revision); validate grammar and target scope; do not mutate past definition.
+trigger_runs — trigger_id uuid; trigger_revision int; event_id uuid; visitor_session_id uuid?; matched bool; result jsonb; causation_id uuid; executed_at timestamptz
+Constraints and indexes: UNIQUE(tenant_id,trigger_id,trigger_revision,event_id); INDEX(tenant_id,trigger_id,executed_at DESC); retain compact trace, redact sample personal text.
+37  Visitor and browsing tables
+Schema definitions
+visitors — anonymous_label text; name text?; email_ciphertext bytea?; email_lookup_hash bytea?; verified bool default false; external_subject_hash bytea?; custom_fields jsonb; first_seen_at timestamptz; last_seen_at timestamptz; erased_at timestamptz?
+Constraints and indexes: INDEX(tenant_id,last_seen_at DESC,id); external identities are in separate table to support multiple issuers. No UNIQUE unverified email. PII encrypted with key version metadata.
+visitor_identities — visitor_id uuid; issuer_id uuid; subject_hash bytea; verification_method text; linked_at timestamptz
+Constraints and indexes: UNIQUE(tenant_id,issuer_id,subject_hash); composite visitor FK; identity merge is explicit transaction with audit. No client writable verification flag.
+visitor_sessions — visitor_id uuid; site_id uuid; session_key_hash bytea; started_at timestamptz; last_seen_at timestamptz; ended_at timestamptz?; consent_id uuid?; current_page_id uuid?; device_category text?; country text?; is_preview bool
+Constraints and indexes: UNIQUE session_key_hash; INDEX(tenant_id,site_id,last_seen_at DESC,id); CHECK ended_at>=started_at; country ISO twoletter or null, not fabricated.
+visitor_connections — session_id uuid; connection_id uuid; origin text; issued_at timestamptz; expires_at timestamptz; revoked_at timestamptz?
+Constraints and indexes: Durable capability issuance record if needed; active transport state in Redis TTL. UNIQUE connection_id; INDEX(tenant_id,session_id,expires_at). Token hash, not bearer value.
+page_events — session_id uuid; client_event_id uuid; received_at timestamptz; client_at timestamptz?; kind text entered|left|visible|hidden; sanitized_url text; title text?; dwell_ms bigint?
+Constraints and indexes: UNIQUE(tenant_id,session_id,client_event_id); INDEX(tenant_id,session_id,received_at,id); partition by received_at when volume requires; CHECK dwell_ms>=0 and bounded.
+consent_records — visitor_id uuid?; session_id uuid?; purpose text service|analytics; state text granted|denied|withdrawn; policy_version text; recorded_at timestamptz; source text
+Constraints and indexes: Append only; INDEX(tenant_id,visitor_id,purpose,recorded_at DESC); at least session or visitor reference required; no raw page content.
+tags — slug text; label text; archived_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,slug); slug1..64 normalized; label1..80. INDEX(tenant_id,archived_at,slug).
+visitor_tags — visitor_id uuid; tag_id uuid; source text client|agent|trigger|integration; added_by uuid?
+Constraints and indexes: PK(tenant_id,visitor_id,tag_id); INDEX(tenant_id,tag_id,visitor_id); trusted source stored separately and cannot be forged by SDK.
+custom_field_definitions — key text; label text; data_type text string|number|boolean|date|enum; public_writable bool; visible_to_visitor bool; validation jsonb; archived_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,key); key allowlisted pattern max 64; validation bounded and no executable code; config schema validates enum option set.
+identity_handoffs — nonce_hash bytea; visitor_id uuid; source_site_id uuid; destination_site_id uuid; destination_origin text; expires_at timestamptz; redeemed_at timestamptz?
+Constraints and indexes: UNIQUE nonce_hash; expiry<=60 seconds after creation; INDEX(expires_at); redemption under lock verifies exact destination.
+38  Chats assignments messages and files tables
+Schema definitions
+chats — site_id uuid; visitor_id uuid; session_id uuid; department_id uuid?; owner_membership_id uuid?; status text; requested_at timestamptz; first_assigned_at timestamptz?; first_response_at timestamptz?; closed_at timestamptz?; close_reason text?; closed_by_actor text?; priority int default 50; next_seq bigint default 1; is_preview bool
+Constraints and indexes: CHECK priority 0..100,next_seq>0; INDEX(tenant_id,status,department_id,priority DESC,requested_at,id); INDEX(tenant_id,visitor_id,requested_at DESC,id); CHECK terminal timestamp matches closed state. Owner FK scoped to tenant.
+chat_participants — chat_id uuid; actor_type text visitor|agent; visitor_id uuid?; membership_id uuid?; role text primary|collaborator|visitor; joined_at timestamptz; left_at timestamptz?; last_read_seq bigint default 0
+Constraints and indexes: CHECK exactly one identity consistent with actor_type; partial unique active primary per chat; UNIQUE active participant per identity; CHECK last_read_seq>=0; INDEX(tenant_id,chat_id,left_at).
+assignment_offers — chat_id uuid; membership_id uuid?; mode text broadcast|assigned|transfer; status text pending|accepted|declined|expired|withdrawn; expires_at timestamptz; decided_at timestamptz?; decision_reason text?
+Constraints and indexes: Partial unique live assigned/transfer target per chat enforced by chat lock plus index where pending mode appropriate; INDEX(tenant_id,membership_id,status,expires_at); INDEX(tenant_id,status,expires_at).
+assignment_history — chat_id uuid; previous_owner_id uuid?; next_owner_id uuid?; previous_department_id uuid?; next_department_id uuid?; reason text; route_revision int; occurred_at timestamptz; decision jsonb
+Constraints and indexes: INDEX(tenant_id,chat_id,occurred_at,id); snapshot contains safe selection reason and counts, not all agent personal metadata.
+messages — chat_id uuid; seq bigint; client_message_id uuid?; sender_type text visitor|agent|system; sender_id uuid?; sender_name_snapshot text; visibility text public|internal; type text text|attachment|system; body text?; attachment_ids jsonb?; sent_at timestamptz; edited_at timestamptz?; redacted_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,chat_id,seq); UNIQUE(tenant_id,chat_id,client_message_id) for nonnull values; CHECK seq>0 and body length bound; FTS index on permitted text with tenant filtered query. Prefer relational message_attachments junction over json for FK integrity.
+message_attachments — message_id uuid; attachment_id uuid; ordinal int
+Constraints and indexes: PK(tenant_id,message_id,attachment_id); UNIQUE(tenant_id,message_id,ordinal); enforce same chat through scoped relation/service transaction; CHECK ordinal0..4.
+attachments — chat_id uuid; uploaded_by_actor text; uploaded_by_id uuid; object_key text; original_name text; declared_mime text; detected_mime text?; size_bytes bigint; sha256 text?; state text; scan_result text?; expires_at timestamptz?; deleted_at timestamptz?
+Constraints and indexes: UNIQUE object_key; CHECK size_bytes>0 and <= configured bound validated service; INDEX(tenant_id,chat_id,state,id); object key never public. File state enum from upload contract.
+chat_ratings — chat_id uuid; visitor_id uuid; rating text good|bad; comment text?; submitted_at timestamptz; revised_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,chat_id); CHECK comment length<=2000; INDEX(tenant_id,rating,submitted_at,id).
+chat_tags — chat_id uuid; tag_id uuid; source text
+Constraints and indexes: PK(tenant_id,chat_id,tag_id); INDEX(tenant_id,tag_id,chat_id). Tags do not substitute for message visibility or authorization.
+delivery_receipts — message_id uuid; participant_id uuid; delivered_at timestamptz?; read_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,message_id,participant_id); check read implies valid visible participant; indexes participant/message for batching; no separate row per repeated socket acknowledgment.
+39  Operations exports integrations and analytics tables
+Schema definitions
+canned_replies — scope_type text tenant|department|personal; scope_id uuid?; scope_key text; slug text; title text; body text; enabled bool; archived_at timestamptz?
+Constraints and indexes: UNIQUE(tenant_id,scope_key,slug); INDEX(tenant_id,scope_type,enabled,id); validate scope entity tenant and body<=8000 codepoints.
+invitations — campaign_id uuid; session_id uuid; occurrence_key text; state text eligible|displayed|accepted|dismissed|expired; displayed_at timestamptz?; accepted_chat_id uuid?; expires_at timestamptz
+Constraints and indexes: UNIQUE(tenant_id,session_id,occurrence_key); INDEX(tenant_id,campaign_id,created_at); campaign configuration can be a trigger revision plus invitation action.
+offline_submissions — site_id uuid; visitor_id uuid?; department_id uuid?; reference text; name text?; email_ciphertext bytea; message text; custom_fields jsonb; source_chat_id uuid?; status text received|exported|erased
+Constraints and indexes: UNIQUE(tenant_id,reference); INDEX(tenant_id,created_at DESC,id); message length bounded; idempotency through command table. Encrypted payload or envelope encryption required for sensitive text.
+bans — site_id uuid?; visitor_id uuid?; ip_match_hash bytea?; cidr_ciphertext bytea?; reason text; expires_at timestamptz?; revoked_at timestamptz?; created_by uuid
+Constraints and indexes: CHECK exactly one match scope; INDEX(tenant_id,visitor_id,revoked_at,expires_at); protected address data not exported to ordinary agents.
+outbox_events — aggregate_type text; aggregate_id uuid; aggregate_version int; event_type text; schema_version int; payload jsonb; occurred_at timestamptz; published_at timestamptz?; attempt_count int default 0; available_at timestamptz
+Constraints and indexes: INDEX(available_at,id) WHERE published_at IS NULL; unique aggregate version/event discriminator; immutable payload redacted by retention/erasure workflow. Publication lease explicit if multiple workers.
+command_idempotency — actor_scope text; route_key text; key_hash bytea; request_hash bytea; response_status int?; response_body jsonb?; state text processing|complete; expires_at timestamptz
+Constraints and indexes: UNIQUE(tenant_id,actor_scope,route_key,key_hash); request hash mismatch yields409; INDEX(expires_at); protect any PII in stored responses and scrub on erasure.
+jobs — kind text; dedupe_key text; state text queued|running|succeeded|failed|cancelled; payload jsonb; attempts int; run_after timestamptz; lease_until timestamptz?; last_error_code text?
+Constraints and indexes: UNIQUE(tenant_id,kind,dedupe_key); INDEX(state,run_after,id); safe error details, bounded retry and dead letter visibility.
+exports — requested_by uuid?; visitor_grant_hash bytea?; format text txt|json|csv|pdf; filters jsonb; include_internal bool; job_id uuid; object_key text?; expires_at timestamptz; erased_at timestamptz?
+Constraints and indexes: INDEX(tenant_id,requested_by,created_at DESC,id); authorization recheck at download; object key private and scrubbed when invalidated.
+integration_credentials — kind text; name text; secret_ciphertext bytea; key_version int; scopes jsonb; enabled bool; rotated_at timestamptz?
+Constraints and indexes: Only privileged service decrypts; INDEX(tenant_id,kind,enabled,id); no returning original secret through GET.
+webhook_endpoints — url text; signing_key_ciphertext bytea; key_version int; event_types jsonb; enabled bool; last_success_at timestamptz?
+Constraints and indexes: HTTPS and SSRF validator; INDEX(tenant_id,enabled,id); secrets masked; key rotation overlap bounded.
+webhook_deliveries — endpoint_id uuid; event_id uuid; status text; attempts int; next_attempt_at timestamptz; response_status int?; response_excerpt text?
+Constraints and indexes: UNIQUE(tenant_id,endpoint_id,event_id); INDEX(status,next_attempt_at,id); response excerpt max 1000 and sanitized, never store authorization headers.
+audit_events — actor_type text; actor_id uuid?; action text; object_type text; object_id uuid?; safe_diff jsonb; request_id text; occurred_at timestamptz; integrity_hash text?
+Constraints and indexes: INDEX(tenant_id,occurred_at DESC,id); append only permission; redact PII in diff; external append only sink optional.
+metric_chat_facts — chat_id uuid; requested_at timestamptz; first_assigned_at timestamptz?; first_response_at timestamptz?; closed_at timestamptz?; served bool; missed bool; rating text?; dimension_snapshot jsonb; source_version int
+Constraints and indexes: UNIQUE(tenant_id,chat_id); update by greater source_version only; INDEX(tenant_id,requested_at,chat_id); erasure retains non identifying aggregates only under policy.
+metric_daily — local_date date; timezone text; dimension_key text; measure_key text; numerator numeric; denominator numeric; distribution jsonb?; computed_through timestamptz
+Constraints and indexes: UNIQUE(tenant_id,local_date,timezone,dimension_key,measure_key); percentile merge uses raw durations or mergeable sketch, never average percentiles.
+privacy_requests — visitor_id uuid?; kind text access|erase; requested_by uuid?; state text pending_verification|queued|running|completed|failed; verified_at timestamptz?; completed_at timestamptz?; report jsonb
+Constraints and indexes: INDEX(tenant_id,state,created_at,id); proof of identity separate protected artifact with short retention. Report counts and safe statuses, no erased text.
+40  REST conventions and shared resource shapes
+Base paths and authentication
+Agent API is /api/v1 with active tenant derived from session or tenant scoped integration token. Public widget API is /widget/v1 with siteKey bootstrap and subsequent visitor capability. Admin must not reuse widget credentials. REST JSON uses snake_case; SDK wraps camelCase deliberately. UUID path IDs validated before lookup. OpenAPI 3.1 is generated from runtime schemas; reject unknown input fields. TLS required; JSON content type mandatory for JSON writes. CORS permits exact approved origins and never wildcard with credentials.
+Responses and errors
+Single success: {data:Resource,meta:{request_id}}. List: {data:Resource[],page:{next_cursor,has_more},meta:{request_id}}. Error: {error:{code,message,field_errors?,retryable},meta:{request_id}}. Default page size50, maximum100. Opaque cursor encodes sort keys and scope, signed or validated; reject cursor for another filter. GET200, create201 with Location, accepted async202, no body204, invalid schema422, unauthenticated401, permitted known scope but forbidden action403, hidden object404, version/idempotency/state conflict409, rate limit 429 with Retry-After. Sensitive object existence is always404.
+Shared resources
+Chat: id,site_id,visitor_id,department_id,status,owner_membership_id,requested_at,first_assigned_at,closed_at,priority,version,last_seq. Message: id,chat_id,seq,client_message_id,sender:{type,id,display_name},visibility,type,body,attachments[],sent_at. Visitor: id,display_name,verified,allowed_contact_fields,tags[],custom_fields,first_seen_at,last_seen_at. Offer: id,chat_id,mode,target_membership_id,expires_at,status,version. Job: id,kind,state,progress?,created_at,completed_at?,error_code?,expires_at?. Timestamp fields RFC3339 UTC. Never return internal fields on public shapes.
+Writes and limits
+All create and command POSTs accept Idempotency-Key UUID or random 16 to128 character key. Hash request canonically and scope by principal, tenant and route. Same key different payload returns409; identical retry returns original status and resource for 24 hours. PATCH and destructive configuration commands use If-Match entity version; missing precondition428 and stale409. Message unique client ID is permanent beyond command cache expiry. Request body limit 256 KiB except streamed uploads. Numeric limits, enum values, array bounds and error examples exist in OpenAPI.
+41  Authentication and tenant REST endpoints
+Endpoint contracts
+POST /auth/signup
+Authority: Public rate limited. Input: {email,password,tenant_name,timezone}. Result and behavior: 201 {user_id,tenant_id,verification_required}; atomic owner membership plus verification job; duplicate email generic recovery guidance.
+POST /auth/login
+Authority: Public rate limited. Input: {email,password,totp_code?}. Result and behavior: 200 session cookie plus memberships; MFA challenge has short lived nonce and no authenticated session until code verifies.
+POST /auth/logout
+Authority: Session CSRF. Input: {}. Result and behavior: 204 revoke current session and disconnect its sockets; idempotent.
+POST /auth/password/reset-request
+Authority: Public. Input: {email}. Result and behavior: 202 generic accepted regardless of account existence; per account/network throttling.
+POST /auth/password/reset
+Authority: Reset grant. Input: {token,new_password}. Result and behavior: 204 consume grant under lock, replace hash and revoke sessions.
+POST /auth/verify-email
+Authority: Verification grant. Input: {token}. Result and behavior: 204 one time consume; no implicit privileged login.
+GET /auth/sessions
+Authority: Authenticated user. Input: none. Result and behavior: 200 active sessions without tokens or exact raw IP.
+DELETE /auth/sessions/{id}
+Authority: Session owner CSRF. Input: none. Result and behavior: 204 revoke specified session, hide other users session IDs.
+POST /auth/mfa/enroll
+Authority: Recent auth. Input: {}. Result and behavior: 201 provisional secret and enrollment grant; key visible once.
+POST /auth/mfa/confirm
+Authority: Recent auth. Input: {enrollment_id,code}. Result and behavior: 200 activate secret and return recovery codes once.
+DELETE /auth/mfa
+Authority: Recent auth plus valid factor. Input: {code}. Result and behavior: 204 disable and audit; issue new session.
+GET /tenants/current
+Authority: Member. Input: none. Result and behavior: 200 permitted tenant settings and current membership.
+PATCH /tenants/current
+Authority: Admin or owner. Input: {name?,timezone?,settings?}. Result and behavior: 200 versioned allowed settings; owner only fields rejected for admin.
+POST /tenants/current/ownership-transfer
+Authority: Owner recent auth. Input: {target_membership_id,reason}. Result and behavior: 200 transfer only to enabled verified member and audit both roles atomically.
+POST /tenants/current/deletion-requests
+Authority: Owner recent auth. Input: {confirm_slug}. Result and behavior: 202 privacy safe staged destruction job with export and cancellation window policy.
+POST /tenants/switch
+Authority: Member. Input: {tenant_id}. Result and behavior: 200 rotates active context and returns fresh membership; invalidates old subscriptions without revoking other memberships.
+42  Team departments schedules and sites REST endpoints
+Endpoint contracts
+GET /agents
+Authority: Team view. Input: cursor,role,enabled,department_id. Result and behavior: 200 roster with authorized presence and capacity.
+POST /agents/invitations
+Authority: Admin. Input: {email,role,department_ids,capacity}. Result and behavior: 201 invitation record; deliver asynchronously and expose mail failure through job.
+POST /agents/invitations/accept
+Authority: Invitation grant. Input: {token,display_name,password?}. Result and behavior: 201 user/membership association; existing user authenticates before linking.
+PATCH /agents/{id}
+Authority: Admin or self restricted. Input: {display_name?,role?,enabled?,capacity?}. Result and behavior: 200 server field permission checks and last owner safeguard.
+PUT /agents/me/presence
+Authority: Agent. Input: {status}. Result and behavior: 200 desired and effective state; withdraw offers on away.
+PUT /agents/{id}/departments
+Authority: Admin. Input: {department_ids}. Result and behavior: 200 replaces memberships atomically, preserving active chat policy.
+GET /departments
+Authority: Member. Input: enabled?,cursor. Result and behavior: 200 scoped departments with queue summaries.
+POST /departments
+Authority: Admin. Input: {name,public_label,routing_mode,schedule_id?,queue_policy}. Result and behavior: 201 validates all referenced IDs and fallback graph.
+PATCH /departments/{id}
+Authority: Admin. Input: allowed department patch. Result and behavior: 200 versioned update; archived department rejects new requests.
+POST /departments/{id}/archive
+Authority: Admin. Input: {}. Result and behavior: 200 stops new admission and retains historical name.
+GET /schedules
+Authority: Admin or supervisor. Input: cursor. Result and behavior: 200 schedules with timezone and exception count.
+POST /schedules
+Authority: Admin. Input: {name,timezone,weekly_intervals}. Result and behavior: 201 valid IANA and non overlapping intervals.
+PATCH /schedules/{id}
+Authority: Admin. Input: schedule patch. Result and behavior: 200 versioned update and recompute next boundaries.
+PUT /schedules/{id}/exceptions/{date}
+Authority: Admin. Input: {intervals,reason}. Result and behavior: 200 date specific replacement; empty intervals closed.
+GET /schedules/{id}/preview
+Authority: Admin. Input: from,days<=31. Result and behavior: 200 local/UTC intervals with DST resolution notes.
+POST /emergency-closures
+Authority: Admin. Input: {site_id?,department_id?,ends_at?,reason}. Result and behavior: 201 immediate effective closure event.
+DELETE /emergency-closures/{id}
+Authority: Admin. Input: none. Result and behavior: 204 revoke emergency closure and recalculate availability.
+GET /sites
+Authority: Admin or supervisor. Input: cursor. Result and behavior: 200 site list without integration secrets.
+POST /sites
+Authority: Admin. Input: {name,origins,default_department_id?}. Result and behavior: 201 site and public key.
+PATCH /sites/{id}
+Authority: Admin. Input: site patch. Result and behavior: 200 versioned enabled/origin settings.
+POST /sites/{id}/key-rotation
+Authority: Admin recent auth. Input: {overlap_seconds<=86400}. Result and behavior: 201 new public key and retire schedule for old key.
+GET /sites/{id}/widget-config
+Authority: Admin. Input: revision?. Result and behavior: 200 current draft or published config.
+PUT /sites/{id}/widget-config
+Authority: Admin. Input: {config}. Result and behavior: 200 validated saved draft.
+POST /sites/{id}/widget-config/publish
+Authority: Admin. Input: {revision}. Result and behavior: 200 immutable published snapshot; reject stale publish.
+GET /sites/{id}/installation-status
+Authority: Admin. Input: none. Result and behavior: 200 last real approved origin bootstrap and diagnostic.
+43  Visitor history and metadata REST endpoints
+Endpoint contracts
+GET /visitors/live
+Authority: Agent scoped departments. Input: site_id?,status?,tag?,cursor. Result and behavior: 200 live snapshot with snapshot_cursor and as_of; browsing subset depends on consent.
+GET /visitors/{id}
+Authority: Agent allowed scope. Input: none. Result and behavior: 200 permitted visitor fields and session summary.
+PATCH /visitors/{id}
+Authority: Agent allowed fields. Input: {display_name?,email?,custom_fields?}. Result and behavior: 200 marks manually entered identity unverified unless existing proof retained separately.
+GET /visitors/{id}/sessions
+Authority: Agent scoped. Input: cursor. Result and behavior: 200 sanitized session timeline, no disallowed raw telemetry.
+GET /visitors/{id}/chats
+Authority: Agent history permission. Input: cursor. Result and behavior: 200 scoped prior chats; server checks every result.
+POST /visitors/merge-requests
+Authority: Admin. Input: {source_id,target_id,proof_reference,reason}. Result and behavior: 202 reviewed association job; forbid unverified email only merge.
+PUT /visitors/{id}/tags
+Authority: Agent. Input: {tag_ids}. Result and behavior: 200 replace allowed tags with source attribution.
+GET /tags
+Authority: Member. Input: q?,cursor. Result and behavior: 200 searchable normalized tags.
+POST /tags
+Authority: Agent or configured tag permission. Input: {slug,label}. Result and behavior: 201 tag or409 duplicate normalized slug.
+POST /tags/{id}/archive
+Authority: Admin. Input: {}. Result and behavior: 200 archive choice; existing history association retained.
+GET /custom-fields
+Authority: Member. Input: none. Result and behavior: 200 role scoped definitions.
+POST /custom-fields
+Authority: Admin. Input: {key,label,data_type,validation,public_writable,visible_to_visitor}. Result and behavior: 201 validated definition; never executable.
+PATCH /custom-fields/{id}
+Authority: Admin. Input: allowed patch. Result and behavior: 200 disallow destructive type change while populated unless migration supplied.
+GET /chats/history
+Authority: History permission. Input: q?,from?,to?,agent_id?,department_id?,rating?,tag?,cursor. Result and behavior: 200 filtered list and safe snippets; max range365 days default 30.
+GET /chats/{id}
+Authority: Participant or supervisor scope. Input: none. Result and behavior: 200 chat snapshot plus last_seq and allowed metadata.
+GET /chats/{id}/messages
+Authority: Same chat read permission. Input: after_seq?,before_seq?,limit<=100. Result and behavior: 200 ascending sequence, only visible messages, has_more and last_seq.
+PUT /chats/{id}/tags
+Authority: Chat metadata permission. Input: {tag_ids}. Result and behavior: 200 assignment and audit event; no privileged routing after assignment.
+POST /bans
+Authority: Supervisor ban permission. Input: {visitor_id?|ip_or_cidr?,site_id?,expires_at?,reason}. Result and behavior: 201 ban and optional active close policy; exact one target.
+GET /bans
+Authority: Ban permission. Input: active?,cursor. Result and behavior: 200 masked targets and reasons.
+DELETE /bans/{id}
+Authority: Ban permission. Input: none. Result and behavior: 204 unban audit; idempotent.
+44  Chat commands attachments exports and replies REST endpoints
+Endpoint contracts
+GET /chats/queue
+Authority: Agent eligible scope. Input: department_id?,cursor. Result and behavior: 200 queued/offered chats ordered by effective priority snapshot.
+POST /chats/{id}/accept
+Authority: Eligible agent. Input: {offer_id?,expected_version}. Result and behavior: 200 owner and accepted offer;409 ownership or capacity conflict.
+POST /offers/{id}/decline
+Authority: Offered agent. Input: {reason?}. Result and behavior: 200 release reservation and cooldown.
+POST /chats/{id}/messages
+Authority: Authorized participant. Input: {client_message_id,type,visibility,body?,attachment_ids?}. Result and behavior: 201 committed Message; public visitor path disallows internal; same ID retry returns prior Message.
+PUT /chats/{id}/read-cursor
+Authority: Participant. Input: {last_read_seq}. Result and behavior: 200 monotonic visible cursor; reject seq beyond snapshot.
+POST /chats/{id}/transfers
+Authority: Owner or supervisor. Input: {target_agent_id?|target_department_id?,note?,expected_version}. Result and behavior: 201 transfer offer or queued state; one destination.
+POST /chats/{id}/collaborators
+Authority: Owner or supervisor. Input: {membership_id}. Result and behavior: 201 authorized participant plus capacity allocation.
+DELETE /chats/{id}/collaborators/{membership_id}
+Authority: Owner supervisor or departing self. Input: none. Result and behavior: 204 release collaboration slot; primary owner must use transfer.
+POST /chats/{id}/close
+Authority: Owner or permitted participant. Input: {reason,expected_version}. Result and behavior: 200 terminal snapshot and close event.
+POST /attachments/uploads
+Authority: Chat write permission. Input: {chat_id,name,size_bytes,mime,sha256?}. Result and behavior: 201 upload_id,private presigned URL,required headers,expires_at.
+POST /attachments/{id}/finalize
+Authority: Upload owner. Input: {sha256}. Result and behavior: 202 verify stored object and enqueue scan; idempotent.
+DELETE /attachments/{id}
+Authority: Upload owner or admin. Input: none. Result and behavior: 204 cancel unattached upload; attached deletion requires policy redaction.
+GET /attachments/{id}/download
+Authority: Chat read permission. Input: none. Result and behavior: 200 short download grant only if clean, not erased and authorized.
+POST /exports
+Authority: Export permission. Input: {chat_ids?|filters?,format,timezone,include_internal:false}. Result and behavior: 202 Export job; private notes require extra permission.
+GET /exports/{id}
+Authority: Job owner or permitted admin. Input: none. Result and behavior: 200 state and expiry; no raw object key.
+GET /exports/{id}/download
+Authority: Rechecked export permission. Input: none. Result and behavior: 200 short signed download grant;410 expired for authorized owner.
+POST /chats/{id}/transcript-email
+Authority: Permitted agent. Input: {recipient,format,include_internal:false}. Result and behavior: 202 mail job with auditable recipient and rate limit.
+GET /shortcuts
+Authority: Member. Input: q?,scope?,cursor. Result and behavior: 200 accessible shared/department/personal replies.
+POST /shortcuts
+Authority: Scope edit permission. Input: {slug,title,body,scope_type,scope_id?}. Result and behavior: 201 validates allowed placeholders.
+PATCH /shortcuts/{id}
+Authority: Scope edit permission. Input: reply patch. Result and behavior: 200 versioned update.
+POST /shortcuts/{id}/archive
+Authority: Scope edit permission. Input: {}. Result and behavior: 200 removes from active suggestions.
+POST /shortcuts/import-preview
+Authority: Admin. Input: {csv_text}. Result and behavior: 200 row diagnostics and preview token; no writes.
+POST /shortcuts/import-commit
+Authority: Admin. Input: {preview_token}. Result and behavior: 201 atomic validated import, reject changed draft.
+45  Automation analytics integration and privacy REST endpoints
+Endpoint contracts
+GET /triggers
+Authority: Admin or supervisor read. Input: event?,cursor. Result and behavior: 200 trigger summaries and current revision.
+POST /triggers
+Authority: Admin. Input: {name,definition}. Result and behavior: 201 disabled draft initially.
+PUT /triggers/{id}/draft
+Authority: Admin. Input: {definition}. Result and behavior: 200 full validated DSL and revision.
+POST /triggers/{id}/simulate
+Authority: Admin. Input: {event,snapshot}. Result and behavior: 200 truth trace and predicted effects without writes.
+POST /triggers/{id}/publish
+Authority: Admin. Input: {revision,enabled}. Result and behavior: 200 published revision and activation event.
+GET /triggers/{id}/runs
+Authority: Admin or scoped supervisor. Input: from?,to?,cursor. Result and behavior: 200 safe condition/effect trace.
+GET /monitor
+Authority: Supervisor scoped. Input: department_id?,site_id?. Result and behavior: 200 current counters, as_of, freshness and stale flag.
+GET /analytics/chats
+Authority: Analyst scope. Input: from,to,timezone,group_by,filters. Result and behavior: 200 defined measures with numerator,denominator,null policy and freshness.
+GET /analytics/agents
+Authority: Supervisor or permitted analyst. Input: from,to,timezone,department_id?. Result and behavior: 200 attributed agent intervals and response metrics.
+GET /analytics/invitations
+Authority: Analyst. Input: from,to,site_id?,campaign_id?. Result and behavior: 200 eligible/displayed/accepted/served funnel with distinct IDs.
+POST /analytics/exports
+Authority: Analyst export permission. Input: {report,filters,format:csv}. Result and behavior: 202 aggregate export job; no transcript bypass.
+GET /offline-submissions
+Authority: Offline read permission. Input: department_id?,cursor. Result and behavior: 200 scoped submissions with controlled PII.
+POST /integration-tokens
+Authority: Admin recent auth. Input: {name,scopes,expires_at}. Result and behavior: 201 token visible once plus metadata.
+DELETE /integration-tokens/{id}
+Authority: Admin. Input: none. Result and behavior: 204 revoke and audit within 60 seconds.
+POST /webhooks
+Authority: Admin recent auth. Input: {url,event_types}. Result and behavior: 201 endpoint and signing secret visible once; SSRF validation.
+PATCH /webhooks/{id}
+Authority: Admin. Input: {url?,event_types?,enabled?}. Result and behavior: 200 revalidate changed URL.
+POST /webhooks/{id}/test
+Authority: Admin. Input: {}. Result and behavior: 202 safe sample event job without real PII.
+GET /webhooks/{id}/deliveries
+Authority: Admin. Input: cursor. Result and behavior: 200 safe attempt history.
+POST /webhook-deliveries/{id}/retry
+Authority: Admin. Input: {}. Result and behavior: 202 retry same event ID with new delivery attempt.
+POST /privacy/requests
+Authority: Privacy admin. Input: {kind,visitor_id,proof_reference}. Result and behavior: 202 verified or pending verification request.
+GET /privacy/requests/{id}
+Authority: Privacy admin. Input: none. Result and behavior: 200 progress and safe erasure/access report.
+GET /audit-events
+Authority: Audit permission. Input: from?,to?,actor_id?,action?,cursor. Result and behavior: 200 safe append only audit records.
+GET /jobs/{id}
+Authority: Job owner or admin. Input: none. Result and behavior: 200 worker status without private payload.
+GET /health/live
+Authority: Infrastructure. Input: none. Result and behavior: 200 process responsiveness; no secrets.
+GET /health/ready
+Authority: Infrastructure restricted. Input: none. Result and behavior: 200 required deps ready,503 otherwise; socket drain reports not ready.
+46  Public widget REST endpoints
+Endpoint contracts
+POST /widget/v1/bootstrap
+Authority: SiteKey plus approved Origin. Input: {site_key,client_instance_id,consent,locale?}. Result and behavior: 200 public config,availability,service capability when permitted,config_version; no administrative fields.
+POST /widget/v1/sessions
+Authority: Public bootstrap grant. Input: {anonymous_id?,consent,client_instance_id}. Result and behavior: 201 visitor/session scoped capability; ignore unauthorized visitor IDs.
+POST /widget/v1/identity
+Authority: Visitor capability. Input: {name?,email?,verified_token?}. Result and behavior: 200 verified status and safe current identity; no prior history without proof.
+POST /widget/v1/identity/reset
+Authority: Visitor capability. Input: {}. Result and behavior: 200 new anonymous context, revokes old connection and clears personalized grants.
+POST /widget/v1/identity/handoff
+Authority: Customer backend token. Input: {destination_site_id,destination_origin,visitor_subject}. Result and behavior: 201 single use code expires60 seconds; backend scope required.
+POST /widget/v1/identity/redeem
+Authority: Approved destination. Input: {handoff_code,site_key}. Result and behavior: 200 destination scoped capability after atomic consume.
+PUT /widget/v1/consent
+Authority: Visitor or bootstrap context. Input: {purpose,state,policy_version}. Result and behavior: 200 consent effective state and collection policy.
+POST /widget/v1/events
+Authority: Visitor analytics capability. Input: {events:[{id,kind,url?,title?,client_at?}]}. Result and behavior: 202 bounded batch<=20 after consent check; deduplicate client event IDs.
+GET /widget/v1/availability
+Authority: Site capability. Input: department_id?. Result and behavior: 200 available|busy|offline, next_open_at,admission_policy,as_of.
+POST /widget/v1/chats
+Authority: Visitor service capability. Input: {client_request_id,message,department_id?,fields?}. Result and behavior: 201 Chat and initial Message; current admission and trigger checks atomic.
+GET /widget/v1/chats/{id}
+Authority: Visitor chat grant. Input: none. Result and behavior: 200 public snapshot and last visible seq only.
+GET /widget/v1/chats/{id}/messages
+Authority: Visitor chat grant. Input: after_seq?,limit<=100. Result and behavior: 200 public messages; internal seq gaps are legitimate and not leaked as private text.
+POST /widget/v1/chats/{id}/messages
+Authority: Visitor chat write grant. Input: {client_message_id,body?,attachment_ids?}. Result and behavior: 201 public Message, no visibility override.
+POST /widget/v1/chats/{id}/close
+Authority: Visitor chat grant. Input: {reason:visitor_ended}. Result and behavior: 200 close snapshot, identical retry returns same closure.
+PUT /widget/v1/chats/{id}/rating
+Authority: Scoped rating grant. Input: {rating,comment?}. Result and behavior: 200 current rating within 24hour window.
+POST /widget/v1/chats/{id}/exports
+Authority: Scoped transcript grant. Input: {format:txt|pdf}. Result and behavior: 202 public export only.
+POST /widget/v1/chats/{id}/transcript-email
+Authority: Scoped transcript grant. Input: {email,format:txt|pdf}. Result and behavior: 202 public transcript mail request with abuse limits.
+POST /widget/v1/uploads
+Authority: Visitor active chat grant. Input: upload descriptor. Result and behavior: 201 presigned quarantine upload; finalize uses same visitor grant.
+POST /widget/v1/uploads/{id}/finalize
+Authority: Visitor upload owner. Input: {sha256}. Result and behavior: 202 scan pending; scope and state checked.
+POST /widget/v1/invitations/{id}/accept
+Authority: Visitor invitation grant. Input: {client_request_id}. Result and behavior: 201 real chat once;409 invitation expired or current availability changed.
+POST /widget/v1/invitations/{id}/dismiss
+Authority: Visitor invitation grant. Input: {}. Result and behavior: 204 durable dismissal cap.
+POST /widget/v1/offline-submissions
+Authority: Visitor service or bootstrap grant. Input: {client_request_id,name?,email,message,department_id?,fields?}. Result and behavior: 201 reference and notification job states; reject disallowed fields.
+POST /widget/v1/socket-ticket
+Authority: Visitor capability. Input: {last_cursor?}. Result and behavior: 201 single use socket ticket expires30 seconds; never query string bearer.
+POST /api/v1/socket-ticket
+Authority: Agent session CSRF. Input: {last_cursor?}. Result and behavior: 201 tenant/membership scoped single use ticket for gateway.
+47  WebSocket handshake envelope and replay
+Handshake
+Gateway path /realtime/v1. Mint single use 30 second ticket through authenticated REST; send as first auth frame over TLS within 5 seconds. Validate browser Origin against dashboard or site allowlist before accepting. Do not place long lived bearer credentials in URL, logs or subprotocol text. Ticket binds tenant, principal, site, session and scopes. Server auth.ok includes connection_id, heartbeat_interval_ms=15000, capability_expiry, and resumable scopes. Refresh capability before expiry or close with explicit authentication reason.
+Envelope
+Durable server frame: {v:1,event_id:uuid,type:string,tenant_id:uuid,scope:{kind:chat|queue|visitor|config,id:uuid},cursor:string,occurred_at:RFC3339,aggregate_version:int,causation_id:uuid,payload:object}. Client command: {v:1,command_id:uuid,type:string,scope:{kind,id},expected_version?:int,payload:object}. Server command.ack: {command_id,result:{resource_id,seq?,version?},committed_at}; command.error: {command_id,code,message,retryable}. Tenant field is server supplied and is not accepted as client authority. Ephemeral frames contain expires_at and no replay cursor.
+Subscription and recovery
+Client sends subscribe {scopes,last_cursor?}; server validates every scope and returns subscription.ok with snapshot_cursor. Durable cursor is opaque and monotonic within subscribed stream; do not assume Redis PubSub persistence. Store event replay for24 hours by default and use safe retention consistent with erasure. On cursor expired respond snapshot.required; client fetches snapshot and resubscribes after its cursor using a race safe barrier. Resume buffers live events until replay is complete. Visibility filtering must not reveal private note content; public stream cursors are opaque and public visible seq gaps are valid.
+Reliability and limits
+Delivery is at least once; clients deduplicate event_id and aggregate version. Ping/pong every15 seconds and close after 45 seconds missed heartbeat. Max frame64 KiB, max client commands10persecond sustained with burst20, typing at most one per2 seconds. Outbound buffer maximum1 MiB or1000events; drop ephemeral first, then close slow client with resumable overload reason. Use jittered reconnect 0.5,1,2,4,8 seconds capped30. REST writes remain fallback authority; an SDK must not send the same command concurrently through REST and WS without the same idempotency identity.
+48  WebSocket event catalog and client reducers
+Event contracts
+chat.requested — Durable queue
+Payload: {chat:Chat,initial_message:Message,route_reason}. Audience and effect: Eligible queue subscribers and scoped supervisor; visitor only own public snapshot.
+chat.updated — Durable chat
+Payload: {chat_id,status,department_id,owner_public_profile?,version,last_seq}. Audience and effect: Permitted agents and own visitor, omit internal selection trace.
+assignment.offered — Durable agent
+Payload: {offer:Offer,chat_preview,expires_at}. Audience and effect: Only target agent or eligible broadcast scope; not all tenant agents.
+assignment.accepted — Durable queue/chat
+Payload: {chat_id,offer_id,owner_membership_id,version}. Audience and effect: Withdraw competing offers; visitor gets public chat.started projection.
+assignment.withdrawn — Durable offer
+Payload: {offer_id,chat_id,reason}. Audience and effect: Offered agents remove actionable button immediately.
+chat.transferred — Durable chat
+Payload: {chat_id,previous_owner,next_owner,department_id,version}. Audience and effect: Visitor projection uses names without private handoff note.
+participant.joined — Durable chat
+Payload: {chat_id,participant_public_profile,role,joined_at}. Audience and effect: Only visible role and profile projection.
+participant.left — Durable chat
+Payload: {chat_id,participant_id,left_at,reason}. Audience and effect: Do not leak suspension internal reason to visitor.
+message.created — Durable chat
+Payload: {message:Message}. Audience and effect: Internal visibility requires note permission and never reaches public scope.
+message.redacted — Durable chat
+Payload: {chat_id,message_id,seq,reason:redacted}. Audience and effect: Remove cached body and attachment grants; preserve safe tombstone.
+message.delivered — Durable/coalesced chat
+Payload: {chat_id,participant_id,through_seq,at}. Audience and effect: Monotonic visible delivery cursor; identity limited by role.
+message.read — Durable/coalesced chat
+Payload: {chat_id,participant_id,through_seq,at}. Audience and effect: Only if read receipts enabled; no view event analytics leak.
+typing.changed — Ephemeral chat
+Payload: {chat_id,actor_public_id,is_typing,expires_at}. Audience and effect: Suppress private note typing on visitor scopes.
+chat.closed — Durable chat
+Payload: {chat_id,closed_at,public_reason,version}. Audience and effect: Stop composer sends; preserve unsent draft and display terminal state.
+rating.updated — Durable chat
+Payload: {chat_id,rating,comment?,submitted_at}. Audience and effect: Visitor sees own rating, permitted agents see comment.
+attachment.updated — Durable upload/chat
+Payload: {attachment_id,state,size_bytes,mime,error_code?}. Audience and effect: No presigned object key or scanner output.
+visitor.updated — Coalesced monitoring
+Payload: {visitor_id,allowed_patch,as_of}. Audience and effect: Department scoped and consent limited.
+visitor.session.left — Coalesced monitoring
+Payload: {visitor_id,session_id,last_seen_at}. Audience and effect: Remove expired browsing entry but keep live chat.
+presence.updated — Ephemeral team
+Payload: {membership_id,effective_status,active_count,capacity,as_of}. Audience and effect: Role scoped roster projection.
+queue.updated — Coalesced queue
+Payload: {department_id,waiting_count,oldest_requested_at,as_of}. Audience and effect: No other department or tenant counts.
+availability.changed — Public config
+Payload: {site_id,department_id?,state,next_open_at,config_version}. Audience and effect: Origin scoped; update offline/prechat state truthfully.
+invitation.offered — Durable visitor
+Payload: {invitation_id,message,attribution,expires_at}. Audience and effect: Exactly target visitor session; no forced focus.
+config.published — Durable site/admin
+Payload: {site_id,config_version,etag}. Audience and effect: Refetch allowed configuration; do not send secret config.
+export.ready — Durable job
+Payload: {export_id,expires_at}. Audience and effect: Only requester/permitted admin, download reauth required.
+privacy.updated — Durable privacy
+Payload: {request_id,state,completed_at?}. Audience and effect: Privacy administrators only.
+access.revoked — Control
+Payload: {reason,relogin_required}. Audience and effect: Close tenant subscriptions and wipe visible cached data.
+monitor.updated — Coalesced supervisor
+Payload: {snapshot,as_of,stale}. Audience and effect: Snapshot field definitions from metric chapter; refresh at<=5 seconds.
+Reducer acceptance
+Generate AsyncAPI schemas and typed reducers. Event schema version supports additive optional fields; breaking changes use new version or event type and dual support during rollout. Test unknown event types safely ignored with diagnostics, malformed payload rejected, duplicate event id ignored, stale aggregate version ignored, interleaved chats ordered independently and snapshot/replay overlap deduplicated. Backpressure tests prove durable replay after reconnect. Public event fixtures must contain no internal message bodies.
+49  Monitoring dashboard and supervisor tools
+Required behavior
+Monitor real time queued chats, oldest wait, active chats, available agents, offered reservations, response backlog, current satisfaction and busy departments. Provide agent grid with status, capacity, active ownership and oldest unanswered visitor message. Supervisors can open a permitted chat, add internal coaching note, join collaboration or transfer with reason. Monitoring is scoped to their departments; aggregate counts must not reveal hidden departments. Provide high load mode without browsing telemetry.
+Interface and interaction
+Top metrics use 4 columns above1200 px, 2 between 640 and 1199, 1 below640. Cards show label, value, units, as of and stale indicator. Queue age thresholds default warning60 seconds and critical180 seconds with text and icon. Agent grid sortable by load and response backlog; changes do not reset scroll. Chart empty state distinguishes no data from unavailable service. Do not hide stale status behind a tooltip.
+Implementation contract
+Derive counters from durable chat and offer state with coalesced events; periodically reconcile Redis cached snapshot against PostgreSQL. Snapshot includes as_of, source watermark and freshness_ms. Mark stale after 15 seconds without refresh. Define response backlog as active chats whose latest public visitor message has no subsequent human agent public reply; automated messages and private notes do not clear backlog.
+Acceptance criteria
+An accepted chat moves queued down1 and active up1 within 5 seconds, once. Monitor and queue list reconcile after gateway restart. A supervisor with one department never sees tenant global counts accidentally. Scanner or mail outage appears in operational admin health, not as an agent performance failure.
+50  Analytics definitions and attribution
+Chat population
+Report requested chats by requested_at in the selected half open UTC interval; exclude preview chats. Served chat is one with at least one human agent public message. Assigned is one with first_assigned_at, which is not equivalent to served. Missed is closed without human public response after an admitted request, excluding visitor cancellation within 10 seconds when configured and separately disclosed. Abandoned is visitor ended or grace expired before first assignment; missed and abandoned may overlap, so never add them as mutually exclusive without explicit partition definition. Offline submissions are separate population.
+Durations and rates
+Wait to assignment = first_assigned_at minus requested_at. First response time = first human agent public message timestamp minus requested_at, including queue time; service response time subtracts first_assigned_at separately. Chat duration = closed_at minus requested_at for closed chats; handling duration per owner interval excludes queue. Response time between turns starts at first visitor message in a contiguous visitor burst and ends at next human public reply. Automated greetings and private notes never stop response timer. Missing reply yields null duration, not zero. Use count, median, p90 and p95 with explicit sample count.
+Quality and utilization
+CSAT = latest good ratings divided by latest good plus bad ratings for chats in cohort, expressed percentage; unrated excluded and response rate separately equals rated divided by served. Agent utilization = capacity slot seconds occupied divided by available capacity slot seconds during online eligible intervals; cap only for reporting correction and flag invariant violations. Multiple chats may overlap, so wall clock summed handling time cannot be divided by wall clock availability without accounting capacity. Transfers attribute replies to actual author and ownership duration to interval owner; distinct chats handled per agent can exceed unique tenant chats.
+Cohorts and freshness
+Default cohorts group by requested_at, display timezone chosen by user with timezone label. Daily bucket boundaries derive from IANA timezone and may span23 or 25 hours. Department acquisition dimension snapshots department at initial admission; current department is separate filter. Include requested, assigned, served, missed, abandoned, ratings, invitation displays/accepts and offline counts. Late rating and transfer updates revise facts idempotently. Report updated_at and source watermark; no event yet means zero count, unavailable aggregator means unavailable, percentile with no samples means null.
+51  Analytics interface export and reconciliation
+Required behavior
+Reports include volume over time, wait and first reply distributions, chat duration, missed and abandoned rates, satisfaction, agent activity, department outcomes, site and invitation funnel. Filters by date, timezone, site, department, agent and trusted tag. Document population in help next to each metric. Comparison period is equal duration immediately preceding range unless user chooses custom. Show percent change only when previous denominator nonzero; otherwise label new or not comparable.
+Interface and interaction
+Date control presets Today, Yesterday, Last7 days, Last30 days and Custom. Timezone remains visible above charts. Line charts use sparse readable labels, accessible data table and pattern/label distinctions; avoid color only. Metric cards show absolute counts and units. Export control queues CSV with current filters and exact definitions. A freshness banner appears when aggregation lags over60 seconds.
+Implementation contract
+Build materialized facts and rollups from outbox with source versions and recomputable jobs. Keep a query path for exact raw reconciliation. Percentiles use ordered durations or documented mergeable sketches with accuracy tolerance; never average bucket medians. Cap synchronous date ranges and queue large exports. Cache key contains tenant, permission scope, filters, timezone and watermark. No report is seeded constant in production.
+Acceptance criteria
+Fixture A has3requested,2assigned,1served,1good rating and1offline submission; report shows served1,CSAT100 percent,n1,offline1 separately. A chat assigned but never replied is not served. Dates spanning DST reconcile to raw rows. Changing a rating updates numerator once. Aggregate export totals equal visible report for same watermark.
+52  Security threat model and controls
+Threat inventory
+Document attacker classes: anonymous spammer, malicious visitor, malicious agent, compromised tenant admin, stolen session, hostile embedding origin, compromised webhook destination and infrastructure operator. Assets: transcripts, visitor identity, authentication material, integration secrets, attachments, tenant configuration and billing. Map entry points and trust boundaries for browser loader, iframe, REST, sockets, database, queue, object store, email and provider callbacks. For each threat list control, test and residual risk.
+Application controls
+Validate schemas and permissions on every command including sockets. Escape text output, sanitize permitted links to http/https/mailto, reject javascript/data links, and use noopener for external links. Parameterize SQL; never interpolate sort fields without allowlist. CSRF for cookie writes, exact Origin for websocket, CORS allowlist, secure cookie flags and content security policy. Limit requests and tenant quotas before expensive work. Secrets stored encrypted with key version, resolved server side and redacted from logs. Rotate signing keys with a bounded overlap and reject retired keys.
+Infrastructure controls
+TLS1.2orhigher externally; service credentials least privilege; production database and object store private network. Nonroot containers, read only root filesystem where feasible, dropped capabilities, resource limits and separate service accounts. Dependency scanning, secret scanning, SBOM and signed build provenance in CI. Restrict administrative operational endpoints. Cloud credentials use workload identity when available rather than static keys in images. No production secrets in seed fixtures, build args or source map uploads.
+Security acceptance
+Run integration tests for IDOR, cross tenant access, CSRF, session fixation, reset replay, malicious HTML message, dangerous URL, SQL injection filters, socket origin spoof, malformed frames, oversized payloads, SSRF webhook, malicious file and privilege escalation. Perform a documented manual review of authorization paths and exports; automated scanner passing is insufficient. No known exploitable critical/high finding can remain without owner accepted release exception and compensating controls. Produce security.md and incident response playbook.
+53  Privacy GDPR tooling and retention
+Privacy implementation
+Implement data minimization, per purpose consent records, configurable retention, access export, erasure, auditability, processor documentation support and tenant data export. Provide privacy settings for browsing collection, IP retention, location enrichment, transcripts, page events, attachments and exports. Privacy defaults favor minimum data. Do not claim legal certification from implemented controls. Deployment owner must configure lawful basis, notices, processor agreements, regional hosting and request handling deadlines for its jurisdiction.
+Access and erasure workflows
+A verified access request queues a full subject export including identities, sessions, chats, ratings, custom fields and relevant consent records, without other visitors or private staff notes unless policy requires authorized review. Erasure enumerates database payloads, FTS vectors, object originals and thumbnails, cached snapshots, pending jobs, export files, integration delivery payloads and analytics identifiers. Mark request running, block new identity linkage, redact public transcript personal text according to tenant policy, invalidate download grants and record safe counts. Emit completion only after all configured active stores confirm removal or a documented failed target remains.
+Backups and downstream systems
+Immutable backups cannot usually edit individual records. Maintain erasure tombstone ledger outside restored backup scope with pseudonymous identifiers and replay erasures before a restored environment accepts traffic. Expire backups according to policy and prevent erased exports from restoration. Downstream connectors receive deletion events and track confirmation; do not pretend a third party is erased if it only accepted a request. Legal holds are privileged, reasoned, scoped and visible in privacy report, with allowed access restriction.
+Acceptance criteria
+Seed a distinctive visitor string across message text, search, attachments, exports, jobs and logs, then erase and verify it is inaccessible in all active stores and scoped caches. Another visitor in the same chat relation is not accidentally erased. Restore a pre erasure backup and prove tombstone replay removes the string before readiness. Retention jobs respect holds and process bounded batches; dry run reports targets before destructive production execution. Record request verification evidence with separate short retention.
+54  Audit logs administration and operational permissions
+Events and safe diffs
+Audit login failures, invite and role changes, suspensions, ownership transfer, tenant settings, site origins, widget publish, department membership, schedule changes, routing overrides, trigger publish, bans, exports, token creation/revocation, webhook configuration, privacy actions and billing changes. Event includes tenant, actor, action, object ID, server time, request/causation ID and safe before/after diff. Never record plaintext passwords, bearer tokens, MFA keys, full chat text, private attachments or personal field values when a field name/change marker suffices.
+Interface
+Admin audit table has time, actor, action, object, outcome and expandable safe diff. Filters use date, actor, action and object type; CSV export follows same permission and privacy rules. Settings sections: Account, Sites, Widget, Team, Departments, Hours, Routing, Triggers, Shortcuts, Integrations, Security, Privacy and optional Billing/Branding. Each settings screen has explanatory copy, effective value, default and inline constraints. Changes show saved revision; concurrent edit conflict provides Reload and manual reconcile.
+Integrity and separation
+Application database role may append audit events but cannot alter or delete except tightly scoped retention service. Consider external append only log sink or hash chain for tamper evidence, but do not describe hash chain as preventing privileged deletion. Infrastructure operator access is separately logged. Privacy erasure may redact personal audit fields while preserving safe action and object tombstone. Member viewing audit has no route to decrypt secrets.
+Acceptance criteria
+Invoking settings write directly through API without UI still emits the same audit. Failed authorization records safe security telemetry without revealing other tenant objects to caller. Export and token creation are visible to audit role. An audit retention failure appears in operations monitor. Last owner safeguards run server side, and tenant suspend does not delete historical data.
+55  Webhooks integration tokens and connector framework
+Outbound event contract
+Support chat.requested, chat.started, chat.closed, rating.updated, offline.submitted and privacy.erased. Body {id,type,version,occurred_at,tenant_id,data}; id is stable event ID across retries. Headers X-Talkivio-Event-Id, X-Talkivio-Timestamp and X-Talkivio-Signature v1=<hex HMAC SHA256(secret,timestamp+"."+raw_body)>. Receiver verifies raw bytes and timestamp within 5 minutes, deduplicates event ID and returns2xx. Delivery guarantee at least once; no assumption of global ordering.
+Retry and SSRF
+Attempts at approximately0,10 seconds,1minute,5 minutes,30 minutes,2 hours,8 hours,24 hours with jitter then dead letter. Retry408,429 and 5xx; most other4xx require correction. Respect bounded Retry-After. HTTP timeout10 seconds, response body cap64 KiB; no redirects by default. Resolve URL and block loopback, private, link local, cloud metadata and nonHTTP schemes at save and at every dispatch to resist DNS rebinding. Egress proxy allowlist recommended. Endpoint test uses safe sample body.
+Integration credentials
+Tenant scoped API tokens have allowlisted scopes such as chats:read, chats:write, visitors:write, analytics:read and webhooks:manage. Show secret once, store hash for incoming API keys; outbound secrets encrypted. Token expires by default 90 days and supports revoke, last used timestamp and rotation. Token cannot exceed creator permissions. Provider adapters implement authenticate, healthCheck, createTicket, updateTicket, exportChat and eraseSubject as appropriate, with retry classification and external idempotency mapping.
+Acceptance criteria
+Local webhook receiver verifies signatures, simulates429 and 500, deduplicates retries and records final success. URL to127.0.0.1 or169.254.169.254 is rejected in production configuration, with an explicit test environment exception for local receiver only. A token revoked while socket active loses access within 60 seconds. Contract tests exercise every adapter success, retry, permanent failure, invalid credentials and subject deletion without making false external success claims.
+56  Email support tickets CRM and optional adapters
+Core email implementation
+Compose includes Mailpit or equivalent real SMTP inbox. Send verification, invites, resets, offline confirmation, team offline notification and transcript deliveries through templates with plaintext and HTML alternatives. Encode user text safely; no user supplied mail header fields. Unique dedupe key per semantic send and recipient. Store accepted, delivered, bounced and failed separately. Provider callback signature required in production. Bounces appear in job status without exposing private mail content in logs.
+Support ticket adapter
+Optional Zendesk Support or another ticket provider creates a ticket from closed chat or offline submission. Map subject, public transcript, requester verified/unverified flag, site, department, tags and attachment references according to permission. Internal notes are excluded by default; privileged explicit mapping required. External ticket ID persists in a tenant scoped integration mapping table with UNIQUE(provider,tenant,source_type,source_id). Retrying create returns or finds same mapped ticket. Sync loop suppression uses origin and external revision fields.
+CRM and business integrations
+Optional CRM adapter associates only verified external identities; email lookup ambiguity prompts admin review, not automatic merge. External contacts never overwrite verified identity without authority. Optional Slack or Teams notification is configured by admin and sends minimal safe event metadata and deep link, not full private transcript by default. Optional analytics warehouse export includes pseudonymous facts and erasure feed. Document adapter scopes and exact fields transmitted.
+Local acceptance and credential limits
+Deliver mock provider servers only as test doubles for adapter contract testing, visibly marked test mode; never use them to satisfy core chat behavior. Core mail must go through real local SMTP and appear in mailbox. Third party connectors disabled until configured and health checked, with honest status in UI. Provider API version and current official documentation must be checked at implementation time and recorded in docs/integrations.md. Unavailable credentials affect only the respective adapter release evidence.
+57  Optional billing plans and entitlement enforcement
+Plan behavior
+If billing is enabled, support trial, active, past_due, grace, suspended and cancelled states. Plans specify enabled agent seats, sites, monthly chat allowance if used, storage quota, retention range and branding entitlements. Default core without billing is one configured entitlement bundle. Enforcement is server side at invite/enable, site creation, upload initiation and optional feature invocation. Never terminate an ongoing live chat mid sentence because a usage boundary was crossed; warn and restrict future admissions according to grace policy.
+Provider authority
+Use hosted checkout and customer portal; never handle raw card numbers. Provider signed webhook is payment source of truth. Persist webhook ID unique, original event timestamp, applied object revision and reconciliation state. Checkout success redirect is informative only, not proof of payment. Implement delayed, duplicate and out of order provider event handling plus nightly reconciliation. Seat changes show prorated estimate only from provider quote, label taxes and currency clearly; do not hardcode actual pricing or tax rules.
+Schema and endpoints
+billing_accounts: tenant_id unique,provider_customer_id unique,state,trial_ends_at,grace_ends_at. subscriptions: tenant_id,provider_subscription_id unique,plan_key,seats,current_period_start,end,cancel_at_period_end,provider_revision. billing_events: provider,event_id unique,type,received_at,applied_at,payload_encrypted. usage_counters: tenant_id,period_start,measure,value with unique period and measure. Endpoints POST /billing/checkout {plan_key,seats}; POST /billing/portal {}; GET /billing/subscription; GET /billing/usage; POST /billing/provider-webhook raw signed payload. Owner only for customer actions; provider callback has dedicated signature authority.
+Acceptance criteria
+Duplicate invoice event cannot double enable seats or increment usage. Out of order cancellation cannot override newer active state without provider reconciliation. Trial expiration enters defined grace and preserves existing data. Downgrade below active seat count asks owner which agents to disable and does not silently choose. Failed provider configuration leaves billing disabled and core entitlement explicit. No payment secret or card information appears in browser bundles, logs or exports.
+58  Optional white label branding and custom domains
+Brand configuration
+Allow tenant brand name, logo, colors, launcher placement, greeting, offline copy and email display name. Core widget customization is included; removal of Talkivio mark and fully custom domains are optional entitlements. Validate color contrast against text and surface; preview must flag inaccessible combinations and require safe fallback. Logos are sanitized raster assets, not raw SVG scripts. Configuration cannot inject HTML, JavaScript, external tracking pixels or arbitrary CSS.
+Domain lifecycle
+Custom domain state: pending_verification, verified, certificate_pending, active, failed, retired. Verify domain ownership by random DNS TXT token and confirm desired CNAME before certificate request. Automated TLS certificate issuance, renewal, expiry alarms and tenant host resolution required. Never map arbitrary Host header to tenant. Removed domain detaches mappings and tokens before other tenant can claim; apply cooldown and fresh verification to prevent dangling domain takeover.
+Schema and contracts
+brands: tenant_id,site_id?,name,logo_attachment_id?,colors jsonb,public_copy jsonb,remove_platform_mark bool,revision. custom_domains: tenant_id,hostname unique,state,verification_token_hash,verified_at?,certificate_ref?,certificate_expires_at?,last_error_code?,retired_at?. Endpoints GET/PATCH /branding; POST /custom-domains {hostname}; POST /custom-domains/{id}/verify {}; GET /custom-domains/{id}; DELETE /custom-domains/{id}. Secret DNS verification value shown only when issued and protected by admin recent auth.
+Acceptance criteria
+An unverified hostname never serves another tenant configuration. Certificate failure leaves existing default platform domain usable. Bad contrast produces safe fallback and clear admin error. Brand settings update across widget after published revision without replacing live conversation. DNS rebinding, subdomain takeover and cross tenant Host tests pass. Custom email sending domain uses actual SPF/DKIM provider workflow and does not claim authenticated sender before verification.
+59  Accessibility and inclusive interaction matrix
+Target
+Implement WCAG2.2AA for dashboard and widget. Use semantic headings, landmarks, forms, lists and tables. All controls have visible names or meaningful accessible names. Focus order follows visual reading order and must not jump on incoming chat. Use keyboard operable dialogs, menus, comboboxes, tabs, transfer selection, trigger reordering and attachment controls. Do not rely on pointer hover, color, sound or drag alone. Provide error summary linked to fields for multi field forms.
+Chat accessibility
+Transcript is an accessible log with polite announcements of newly received visible messages; historical loading must not announce hundreds of old messages. Sender, time and state have concise labels. Typing announcements are throttled and optional, not every keystroke. Unread status announced when selecting chat. Focus remains in composer after send. Widget open returns focus predictably; close returns to host launcher. Queued and reconnect states use status regions; urgent error only uses assertive announcement when appropriate.
+Visual and motion requirements
+Minimum contrast4.5 to 1 for normal text and3 to 1 for large text and nontext active indicators. Test chosen token pairs including disabled explanatory text. Focus not obscured by sticky header or composer. Touch controls44 px target default, minimum standards respected for dense areas with spacing. Support200 percent text zoom and400 percent reflow where applicable. prefers-reduced-motion removes animations; no flashing. RTL reading order and text bidi isolation must be tested with Arabic and English mixed content.
+Verification
+Automated axe checks on every main route and widget state plus manual keyboard journey, screen reader testing on VoiceOver/Safari and NVDA/Firefox or available equivalent, zoom, high contrast mode, reduced motion and touch. Track violations by requirement and severity. Passing automation does not prove compliance. Include evidence for form errors, transcript live region, trigger builder, file upload, transfer, confirmation and account MFA. No release with keyboard unreachable core function.
+60  Performance budgets capacity and SLOs
+Reference workload
+Baseline performance environment documented with CPU, RAM, region and service replica counts. Target100tenants,1000connected agents,10000connected visitor sessions,1000simultaneous active chats,100durable messages persecond sustained and200persecond5minute burst. Test tenant skew where one tenant produces50 percenttraffic without blocking others. These are initial engineering targets, not verified capacity until measured. Provide measured headroom and bottleneck report.
+Budgets
+Same region REST non export p95<=300ms and p99<=1second under baseline. Durable message commit to connected recipient p95<=500ms and p99<=2 seconds, excluding offline recipient. Routing offer creation p95<=1second with eligible capacity. Monitor freshness<=5 seconds95 percent. Widget loader<=30 KiBgzip, lazy widget code<=200 KiBgzip target excluding optional translations; dashboard initial route<=300 KiBgzip target. Public loader must introduce no host long task over50ms in reference mobile device profile. Server search p95<=500ms for1 millionmessages scoped fixture.
+Service objectives
+Monthly successful authorized chat admission and send operations99.9 percent, excluding explicit validation, authorization and client rate limit denials; include dependency/server failures. Persisted message loss objective zero; duplicate observable public message objective zero after client dedupe. Export completion95 percentunder 60 seconds for100chats and attachments metadata only. Recovery objectives RPO<=5 minutes via continuous WAL archive and RTO<=60 minutes, subject to actual restore drill. Availability99.9 percent implies approximately43.2 minutes budget in30 days; report measured budget by actual window.
+Load and resource acceptance
+Run k6 or equivalent websocket and REST mix with real auth and tenant scope, warmup10 minutes, sustained30 minutes and5minburst. Record latency histograms, errors, connection churn, CPU, memory, database locks, query plans, queue lag and object store throughput. Load generator itself must not saturate. Test10000row visitor list virtual scrolling and10000 message transcript paging. Define backpressure and tenant fairness; no unbounded in memory queue. Performance failures block claiming target achieved.
+61  Observability alerts and incident response
+Telemetry
+Emit structured JSON logs with timestamp,level,service,environment,request_id,trace_id,tenant pseudonymous reference,action,result,error_code and duration. PII and secrets are redacted before transport; chat bodies never logged by default. OpenTelemetry traces cover request to database to outbox to worker to gateway, preserving causation without exposing content. Metrics use bounded cardinality labels, not visitor/chat IDs. Provide dashboards for send latency, admission success, routing age, sockets, reconnects, outbox age, job failures, scan time and database saturation.
+Alerts
+Page on error budget burn multiwindow, message publish lag>30 seconds5 minutes, oldest routable queued chat>180 seconds, readiness loss, database disk>85 percent, replication/archive lag threateningRPO, scanner queue>5 minutes, certificate expiry<14 days and stuck erasure jobs. Email delivery and external webhook failures have differentiated warning and critical thresholds. Alerts include runbook link, scope, first occurrence and safe evidence; never include full customer message text.
+Runbooks
+Document response for API outage, socket outage, Redis loss, database unavailable, slow routing, scanner outage, object store loss, SMTP outage, provider outage, leaked token, tenant data exposure and failed deployment. Each runbook states diagnosis queries, mitigation, verification, rollback, owner and escalation. Isolation incident disables affected capability, preserves audit evidence, revokes tokens and follows customer communication process. Do not delete evidence while cleaning leaked credentials.
+Acceptance criteria
+Inject one dependency fault at a time and prove alert plus actionable runbook. Correlate a test message through commit, outbox, delivery and replay using trace IDs without body text. A Redis restart causes temporary presence uncertainty and reconnection, not transcript loss. Monitor stale data marked within 15 seconds. Recovery verifies durable counters and queue state before restoring ready status.
+62  Docker local environment and seed data
+Compose topology
+Provide services reverse-proxy, dashboard, widget-assets, api, gateway, worker, postgres, redis, minio, clamav, mailpit and webhook-test-receiver. Use health checks and dependency readiness rather than only startup order. Separate migrations init job from app replicas. Pin image versions or digests, named data volumes, internal network and only required exposed dev ports. Production examples replace local credentials with secret injection and private networks. Loader demo served on two explicit origins to test cross origin behavior.
+Command contract
+Document pnpm install --frozen-lockfile; pnpm contracts:generate; pnpm lint; pnpm typecheck; pnpm test; pnpm test:integration; pnpm test:e2e; pnpm test:load; docker compose up --build; pnpm db:migrate; pnpm db:seed; pnpm verify:all. Scripts may adapt to chosen stack but README must provide exact working commands. One documented bootstrap command prepares local dependencies and seeds only after schema ready. No manual clicking in database required.
+Fixtures
+Seed tenant Alpha and Beta with different site keys, owners, departments and allowed origins. Alpha has Sales and Support, two agents capacity 1 and 2, supervisor and analyst; Beta has an agent and private transcript canary. Provide online and offline schedules, DST test schedule, pricing invitation, queue apology trigger, canned reply with placeholders, sample tags, permitted and denied custom fields. Use explicit demo credentials from .env.example only in local mode and require change outside dev.
+Acceptance criteria
+Fresh machine with required runtime and Docker can launch, log in, install demo widget and chat without commercial services. Mail appears in Mailpit; uploaded file actually reaches MinIO and scanner; webhook receiver gets signed real event; database persists after container restart. Rebuild from lockfile produces same dependencies. Seed idempotency avoids duplicate tenants; seed refuses production. Document port conflicts, health failures and how to reset local demo data with explicit destructive warning.
+63  CI pipeline supply chain and delivery artifacts
+Required stages
+On every PR: lockfile integrity, format, lint, typecheck, schema generation drift check, unit tests, PostgreSQL RLS integration tests, API/event contract tests, migration tests, end to end critical path, accessibility automation, secret scan and dependency scan. On release: container build, SBOM, image scanning, provenance/signature, staging deploy, smoke tests, selected load regression and backup/restore validation according to release risk. Store artifacts and test reports with commitSHA.
+Build discipline
+Multi stage Dockerfiles use locked package installation and nonroot runtime. Separate public dashboard build variables from server secrets; public prefix makes risk explicit. No secret in build args or layers. Cache depends on lockfile; pin toolchains in repo config. CI forks do not receive production credentials. Reusable workflows have least privilege permissions; third party actions pinned to immutable commit. Generated OpenAPI, AsyncAPI and clients must match committed schemas.
+Artifacts
+Produce versioned API/gateway/worker/dashboard/widget images, schema bundle, migrations, static widget hashed assets, source maps in restricted storage, SBOM, test reports, traceability ledger and release notes. Docker image labels contain commitSHA and build time. Publish only after all required gates pass. Do not hide flaky failing tests with unconditional continue-on-error; quarantine requires tracked issue, owner and restricted release implications.
+Acceptance criteria
+CI can start isolated two tenant stack and run browser journeys without developer machine state. Missing required secret fails its explicit stage, not a false pass. A generated schema changed without regenerating clients fails drift check. Vulnerable critical image fails configured security gate. Staging artifact is exactly the artifact promoted to production, never rebuilt from mutable branch.
+64  Production rollout migrations and recovery
+Deployment sequence
+Provision TLS, database backups, private object storage, Redis, SMTP and secrets; validate environment; run expand migrations once with lock; deploy workers/API/gateway supporting old schema; upload hashed widget assets; release config manifest; deploy dashboard; warm caches; run smoke; progressively shift traffic; monitor error budget and route/send latency. Drain old gateways with reconnect notice and replay support. Rolling release must support old/new client schemas concurrently for documented compatibility window.
+Rollback
+Rollback immutable app images and manifests to previous digest when compatible. Do not automatically reverse destructive database migration. Stop rollout on increased send errors, tenant isolation failure, stuck routing or migration lock impact. Contract migration after stable rollout only. If data transformation already applied, use documented forward fix or restore with clearly stated data loss risk. Configuration rollback creates a new revision pointing to safe prior content.
+Backups and disaster recovery
+PostgreSQL base backup plus WAL archive encrypted with protected keys; object storage versioning or durable replication under privacy retention policy. Backup schedule and retention configurable; default daily base and continuousWAL. Restore drill starts fresh isolated environment, restores database and objects, replays erasure ledger, checks schema, counts and attachment checksums, verifies canary chats, then runs actual send/reconnect. Measure achievedRPO/RTO and record deviations.
+Acceptance criteria
+A gateway rolling restart with active chats loses no persisted messages and reconnects clients. A database failover test recovers outbox without duplicate observable delivery. Backup restoration has proof, not merely configured cron. Production readiness checklist includes domains, keys, mail authentication, retention jobs, alert routing, capacity evidence, support ownership and incident communication. No production launch is declared complete if required access or infrastructure is still absent.
+65  Functional and authorization test matrix
+Cases and expected evidence
+AUTH01 — Signup, verification, invite acceptance, login, MFA, recovery and logout
+Pass condition: Real SMTP and stored token hashes; replay consumed token fails.
+AUTH02 — Password reset while multiple sessions and sockets active
+Pass condition: Old sessions invalidated within 60 seconds; draft remains unsent.
+TEN01 — A/B tenant guessedIDs across every REST entity
+Pass condition: 404 uniform and no writes, counts or snippets from other tenant.
+TEN02 — Socket subscription guesses other tenant chat/queue
+Pass condition: Denied scope and no event payload leakage.
+TEN03 — Actual app DB role runs RLS select/insert/update/delete with absent or wrong scope
+Pass condition: Default deny including composite FK cross tenant attempt.
+ROLE01 — Agent calls owner, admin, export-private and analyst routes
+Pass condition: 403 or hidden404; UI route hide is not sole control.
+SITE01 — Install widget on approved and unapproved origins
+Pass condition: Only approved origin receives scoped capability and public settings.
+VIS01 — SPA navigation, visible dwell, bfcache, duplicate tabs
+Pass condition: Sanitized pages, no duplicate dwell and distinct connections.
+VIS02 — Verified subject on two origins, unverified matching email, forgedJWT
+Pass condition: Only verified identity associates; unrelated anonymous origin stays separate.
+VIS03 — Host logout then different user login on same browser
+Pass condition: No old identity or transcript visible after reset.
+CONS01 — Unknown/denied analytics consent, explicit service request
+Pass condition: No optional page tracking; service chat works with short lived scope.
+CONS02 — Withdraw analytics consent during active chat
+Pass condition: Collection stops and optional storage clears; service conversation continues.
+CHAT01 — Visitor A and agent B independent browsers send Unicode and multiline text
+Pass condition: Durable roundtrip, order, visible delivery state and safe rendering.
+CHAT02 — Two agents accept same queue item
+Pass condition: Exactly one owner and no capacity overrun.
+CHAT03 — Two assigned departments share same full agent
+Pass condition: Global capacity prevents double allocation.
+CHAT04 — Transfer expiry, decline, force transfer and concurrent close
+Pass condition: Owner retained until acceptance; terminal state consistent.
+NOTE01 — Private note viaREST,WS,history,export,SDK
+Pass condition: Visible only to permitted staff, never public projection.
+FILE01 — CleanPNG/PDF, oversized file, renamedEXE, EICAR, scanner down
+Pass condition: Correct state machine and zero unsafe download grants.
+EXPORT01 — Visitor and staffTXT/JSON/CSV/PDF and email
+Pass condition: Correct visibility, ordering, encoding and spreadsheet injection defense.
+RATE01 — Rating changes within and after window
+Pass condition: One current rating, no inflated denominator, expired grant rejected.
+OFF01 — Offline form duplicate submit plus SMTP outage
+Pass condition: One saved submission, clear reference and retriable notification.
+SHORT01 — Slash selection, missing placeholder, scoped reply permissions
+Pass condition: Insert only, safe interpolation and no personal reply disclosure.
+BAN01 — Visitor/IP ban, expiry and unban
+Pass condition: Tenant scoped enforcement and safe public copy.
+HIST01 — FTS search with department restrictions and DST bounds
+Pass condition: No leaks and exact raw row reconciliation.
+Test method
+Use deterministic clocks for timer, schedule and retention logic; real PostgreSQL, Redis, storage, scanner and SMTP for integration; independent browser contexts for roles, tenants and visitors. Do not mock the transport or persistence in critical end to end tests. Fault injection is isolated from production and reproducible by seeded random sequence. Every case maps to traceability ledger with evidence and latest commit SHA. Optional tests are explicitly skipped only when respective module disabled, never silently omitted.
+66  Realtime routing and automation test matrix
+Cases and expected evidence
+WS01 — Drop afterDB commit before ACK; retry same client ID
+Pass condition: One message row, original server ID, observable bubble once.
+WS02 — Deliver duplicate and reversed event frames, reconnect with gap
+Pass condition: Reducer dedupe, stable order and REST gap recovery.
+WS03 — Replay cursor expired, snapshot concurrent with new messages
+Pass condition: Snapshot barrier prevents missing or duplicate visible content.
+WS04 — Slow consumer floods outbound buffer
+Pass condition: Ephemeral dropped first, resumable close, no server memory growth.
+WS05 — Origin mismatch, reusedticket, expiredticket, malformedframe
+Pass condition: Auth rejection, bounded safe error and rate limit.
+WS06 — Two tabs notification leadership and one tab close
+Pass condition: Single desktop notification; agent remains online if another connection alive.
+ROUTE01 — 100 requests,10 agents,capacity 3,two workers
+Pass condition: No double ownership, no capacity violation, all requests accounted.
+ROUTE02 — Equal normalized load, assignment recency tie and UUID tie
+Pass condition: Deterministic ordering identical in repeated runs.
+ROUTE03 — Agent disconnect/away during offer and stale accept
+Pass condition: Revalidated eligibility; reservation released exactly once.
+ROUTE04 — Fallback graph, max queue and maximum wait
+Pass condition: No cycles, explicit offline option and requested_at unchanged.
+ROUTE05 — Deadlock orserialization injected during accept
+Pass condition: Bounded retry retains idempotency and returns truthful failure.
+TRIG01 — Priority conflicts and stopProcessing with matching all/any
+Pass condition: First winner, immutable snapshot and simulator parity.
+TRIG02 — Missing field withneq, numeric type error and unknownoperator
+Pass condition: Explicit semantics, validation rejection and no accidental match.
+TRIG03 — Outbox duplicate, recursive systemmessage and cooldown
+Pass condition: Unique effect, no auto reply loop and stable trigger run trace.
+INV01 — Pricing dwell30 seconds then dismissal then navigation
+Pass condition: One invitation, dismissal cap respected and no false chat count.
+INV02 — Invitation acceptance double click and department now offline
+Pass condition: One admission or recoverable availability conflict.
+HOURS01 — DSTgap/fold, overnight, holiday, exact closing boundary
+Pass condition: Defined timezone resolution and existing chats preserved.
+MET01 — Assigned butunserved chat, late rating and transferred reply
+Pass condition: Metric definitions and author/owner attribution correct.
+MET02 — 23/25hour localday and no sample percentiles
+Pass condition: Correct buckets, null duration and visible sample size.
+JOB01 — Worker crash before/after lease and after external acceptance
+Pass condition: Atleast once retry and external dedupe key preserve one result.
+HOOK01 — Webhook429/500, duplicate delivery and DNS rebinding
+Pass condition: Bounded retry, sameevent ID, SSRF blocked and dead letter visible.
+Test method
+Use deterministic clocks for timer, schedule and retention logic; real PostgreSQL, Redis, storage, scanner and SMTP for integration; independent browser contexts for roles, tenants and visitors. Do not mock the transport or persistence in critical end to end tests. Fault injection is isolated from production and reproducible by seeded random sequence. Every case maps to traceability ledger with evidence and latest commit SHA. Optional tests are explicitly skipped only when respective module disabled, never silently omitted.
+67  Accessibility security resilience and release test matrix
+Cases and expected evidence
+A11Y01 — Keyboard only full visitor and agent journeys
+Pass condition: All controls reached, focus restored, no trap outside modal.
+A11Y02 — Screen reader transcript load and new message
+Pass condition: Historical silence and concise polite new message announcement.
+A11Y03 — 320/375/768/1024/1440 widths,200 percentzoom,RTL
+Pass condition: No inaccessible composer, clipping or unreadable directional text.
+A11Y04 — Axe on all routes/states, contrast, reduced motion, high contrast
+Pass condition: Automated report plus manual evidence and tracked issues.
+SEC01 — MessageHTML, script URL, filename XSS, malicious PDF
+Pass condition: Safe text/link handling, file quarantine and renderer isolation.
+SEC02 — CSRF, session fixation, brute force and reset replay
+Pass condition: Cookie security, token consume, rate limit and sessions revoke.
+SEC03 — Clientsetsverified/VIP/role/priority or internalvisibility
+Pass condition: Schema rejects privileged write; server authority unchanged.
+SEC04 — Upload ID,object key,export ID and grants from other tenant
+Pass condition: Scoped rejection atinit/finalize/download without info leak.
+PRIV01 — Erasure seeded canary inDB/FTS/cache/jobs/exports/objects
+Pass condition: Inaccessible everywhere active and safe progressreport.
+PRIV02 — Restorebackup before erasure
+Pass condition: Tombstone replay before traffic and no resurrected subject data.
+PERF01 — Reference sustained/burst/skew workload
+Pass condition: Measured p95/p99, errors and fairness within budgets.
+PERF02 — 10000 visitors,10000 messagepaging and millionmessageFTS
+Pass condition: UI responsiveness and query plan evidence.
+FAIL01 — Kill gateway/api/worker and restart Redis
+Pass condition: No persisted message loss, replay and capacity reconciliation.
+FAIL02 — DB/objectstore/scanner/mail provider outage
+Pass condition: Honest UI and job failure states, retries, alerts and recovery.
+DEPLOY01 — Fresh Compose plus migrations plus seed
+Pass condition: Actual chat, file, email and webhook end to end.
+DEPLOY02 — Rolling upgrade old/new client and schema
+Pass condition: Compatible operations and zero message loss.
+DEPLOY03 — Backup restore and failover drill
+Pass condition: Recorded achievedRPO/RTO plus attachment checksums.
+BILL01 — Optional billing duplicate/out of order signed events
+Pass condition: No falsepaidstatus, seatgrace consistent and no card handling.
+BRAND01 — Optional domain verification/certificate failure/Host spoof
+Pass condition: No unintendedtenant mapping, default domain remainsusable.
+Test method
+Use deterministic clocks for timer, schedule and retention logic; real PostgreSQL, Redis, storage, scanner and SMTP for integration; independent browser contexts for roles, tenants and visitors. Do not mock the transport or persistence in critical end to end tests. Fault injection is isolated from production and reproducible by seeded random sequence. Every case maps to traceability ledger with evidence and latest commit SHA. Optional tests are explicitly skipped only when respective module disabled, never silently omitted.
+68  Phased implementation gates one through four
+Gate one foundation
+Inspect and document repo state. Establish workspace, toolchain lock, contracts, design tokens, reusable accessible components and Compose services. Implement migrations, tenant context and RLS, sessions, verified signup, invites, role permissions and settings shell. Seed Alpha/Beta. Exit evidence: clean launch, actual email delivery, MFA/reset, role rejection and cross tenant DB/API tests. Do not start polishing analytics before identity and tenant integrity exist.
+Gate two chat vertical slice
+Implement site origin validation, public bootstrap, service visitor session, isolated widget loader and prechat, chat admission, agent queue, message persistence/outbox, authenticated sockets and replay, composer, public transcript, end action and basic history. Exit evidence: visitor and agent independent browsers exchange and resume durable messages after gateway restart; two accept race and internal visibility tests pass. This is the first complete working product slice.
+Gate three team and service operations
+Add departments, capacity locking, availability aggregation, manual/broadcast/assigned modes, reservations, transfers, collaboration, private notes, typing, unread, notification leadership, schedules, holidays, offline submissions, tags, custom fields and bans. Exit evidence: two routing workers handle concurrency without lost requests; DST and exact closing behavior tested; offline email arrives; no visitor receives note content.
+Gate four widget and visitor experience
+Add SDK method/event catalog, verified identity, reset, cross domain handoff, consent gating, SPA tracking, monitoring list, responsive widget states, Arabic/RTL, invitation UI, ratings, uploads with scanner, visitor transcript export and canned replies. Exit evidence: clean and rejected files, host CSP, blockedstorage, reset identity, consent withdrawal and all SDK methods tested. Do not treat attachment metadata alone as a working file upload.
+69  Phased implementation gates five through eight
+Gate five automation and data
+Implement DSL validation, interpreter, immutable snapshots, precedence, idempotent effects, durable timers, cooldown, simulation and revision publish. Add full history search, safe export jobs, monitor metrics, exact chat facts, rollups and analytics UI with definitions and freshness. Exit evidence: trigger conflict/retry tests, metric canary totals, raw reconciliation, all formats downloaded and no hardcoded metrics.
+Gate six privacy and integrations
+Implement retention, subject access/erasure, attachment/export invalidation, backup tombstone replay, audit administration, integration tokens, signed webhooks, real SMTP templates and connector framework. Optional provider adapters require explicit enabled configuration and contract tests. Exit evidence: canary erased across stores, webhook retries verified, audit covers direct API changes and all secret response paths masked.
+Gate seven production readiness
+Complete browser, contract, security, accessibility, performance and chaos matrix. Implement CI, SBOM, deployment scripts, health checks, alerts, backups, restore drill, rollout/rollback and docs. Resolve failed mandatory acceptance criteria. Exit evidence: reproducible release candidate, staged smoke, measured capacity, real restore and complete traceability. Report target misses precisely; do not silently weaken SLOs to claim passing.
+Gate eight optional commercial features
+Implement billing, full white label, custom domains, enterpriseSSO and provider specific connectors only after core gates hold, or if explicitly selected as priority. Keep entitlement and auth architecture extensible from foundation. Optional features have migrations, contracts, security and tests like core. Exit evidence: provider roundtrip or honest disabled status. Final package includes enabled features manifest and separately listed credential/deployment blockers. Continue until all authorized mandatory work is implemented and verified.
+70  Autonomous implementation loop and task ledger
+Loop instruction
+At the beginning of every working session inspect git status, requirements ledger and failing tests. Select the highest dependency unmet mandatory requirement. Write a small plan with expected user behavior, affected tables/contracts and pass condition. Implement full vertical slice through UI, API, authorization, persistence, events and worker if needed. Run targeted verification. Fix actual defects, then run affected regression set. Update ledger with evidence, commit coherent work when repository policy permits, and continue to next item. Never stop after presenting a plan or generating an outline.
+Decision and blocking policy
+Make reversible routine choices and record them in docs/adr. If an API contract conflicts with security invariants, implement the safe equivalent preserving required behavior and document exact difference. If information genuinely missing, ask one focused question while continuing independent work. A credential blocker must name adapter, expected variable, user action and already completed local evidence. Do not wait for paid billing credentials before completing core. Production deployment, ownership transfer or destructive live data operation follows user authorization and repository policy.
+Ledger fields
+requirement_id, chapter, mandatory_or_optional, feature_flag, description, acceptance_test, implementation_paths, status, evidence_path, last_verified_commit, known_issue, dependency_ids. Requirement IDs granular enough to distinguish uploadinit, scan and download, or routeeligibility, offer and accept. One catchall feature row cannot imply all its component states passed. Save execution-status with current phase, completed work, remaining list, exact failing commands and next action. Store no credentials in progress documents.
+Final engineer response
+Report implemented features, enabled optional modules, tests passed with counts and report paths, performance measured environment, deployment URL if actually deployed, migration state, restore result and any unresolved blocker. Provide startup instructions and demo access only from local fixture configuration. Never declare production grade based only on compile or screenshots. The completion standard is operational evidence tied to every mandatory requirement.
+71  Core product audit checklist
+Release signoff
+Record PASS, FAIL, BLOCKED or OPTIONAL DISABLED beside each item in docs/release-audit.md, with test/evidence path, commit SHA and reviewer. Blank is not pass. A checklist claim must be backed by reproducible evidence. Failed mandatory items remain blockers until corrected; optional disabled items identify their feature flag.
+Audit items
+AUD-71-01  [ ] Tenant signup and verification create real owner membership and mail jobs.
+AUD-71-02  [ ] Password reset and MFA are usable and tested, including revocation and recovery.
+AUD-71-03  [ ] Server enforces every role regardless of hidden UI routes.
+AUD-71-04  [ ] Tenant context is server derived; RLS tests use non owner application role.
+AUD-71-05  [ ] Sites validate origins and rotate public keys with documented overlap.
+AUD-71-06  [ ] Widget loader is async, isolated, idempotent and removable.
+AUD-71-07  [ ] Prechat, queue, active, reconnect, closed, rating and offline states all work.
+AUD-71-08  [ ] SDK methods return documented completion results and public events are safe.
+AUD-71-09  [ ] Verified identity cannot be forged through a name/email identify call.
+AUD-71-10  [ ] Reset removes previous user context on shared device.
+AUD-71-11  [ ] Cross domain behavior uses verified association or secure handoff.
+AUD-71-12  [ ] Consent gates optional tracking and withdrawals stop collection.
+AUD-71-13  [ ] Visitor monitoring has real data, scoped details, sanitized URLs and high load mode.
+AUD-71-14  [ ] Agent presence separates desired state, connection and capacity.
+AUD-71-15  [ ] Department memberships and global capacity prevent over allocation.
+AUD-71-16  [ ] Queue ordering, tie breaking, offer expiry and aging are deterministic.
+AUD-71-17  [ ] Simultaneous Accept yields one owner and truthful conflict.
+AUD-71-18  [ ] Transfer decline and timeout retain original owner; forced transfer is audited.
+AUD-71-19  [ ] Collaborators and private notes have explicit permissions and capacity.
+AUD-71-20  [ ] Messages persist before ACK, deduplicate permanently and recover with replay.
+AUD-71-21  [ ] Read/unread and delivery are distinguishable, typing expires and note typing stays private.
+AUD-71-22  [ ] Notification tab leadership prevents duplicate alerts.
+AUD-71-23  [ ] End and reconnect grace yield consistent terminal behavior.
+AUD-71-24  [ ] Ratings have one current record and scoped limited grant.
+AUD-71-25  [ ] History search obeys tenant and department permissions in snippets and counts.
+AUD-71-26  [ ] Tags and custom fields have definitions, provenance and write visibility.
+AUD-71-27  [ ] Canned reply insertion never sends automatically or executes templates.
+AUD-71-28  [ ] Files reach private storage, are scanned and remain blocked until clean.
+AUD-71-29  [ ] Download grants are scoped, short lived and invalidated by erasure.
+AUD-71-30  [ ] TXT,JSON,CSV,PDF and email exports have correct visibility and safe encoding.
+AUD-71-31  [ ] Proactive invitation caps, dismissal, availability and consent guards work.
+AUD-71-32  [ ] Schedules handle overnight, exceptions, exact boundaries and DST.
+AUD-71-33  [ ] Offline forms persist, dedupe and distinguish saved from email delivered.
+AUD-71-34  [ ] Bans expire, unban works and enforcement stays tenant scoped.
+AUD-71-35  [ ] Every visible action is connected to actual behavior and error handling.
+72  Data security and release audit checklist
+Release signoff
+Record PASS, FAIL, BLOCKED or OPTIONAL DISABLED beside each item in docs/release-audit.md, with test/evidence path, commit SHA and reviewer. Blank is not pass. A checklist claim must be backed by reproducible evidence. Failed mandatory items remain blockers until corrected; optional disabled items identify their feature flag.
+Audit items
+AUD-72-01  [ ] Every relation has explicit types, nullability, bounds, constraints and indexes.
+AUD-72-02  [ ] Composite foreign keys prevent cross tenant references.
+AUD-72-03  [ ] Migrations run from empty and previous release schemas.
+AUD-72-04  [ ] Outbox, jobs and command idempotency survive process kills.
+AUD-72-05  [ ] Trigger grammar is validated and never uses eval or arbitrary HTTP action.
+AUD-72-06  [ ] Trigger snapshot, precedence, stopProcessing and effect uniqueness match simulation.
+AUD-72-07  [ ] Analytics measures include population, units, null rules and sample sizes.
+AUD-72-08  [ ] Late events, transfers and ratings revise facts once.
+AUD-72-09  [ ] Monitor and analytics show stale/unavailable states truthfully.
+AUD-72-10  [ ] Security tests cover IDOR,CSRF,XSS,SQLinjection,SSRF and socket boundaries.
+AUD-72-11  [ ] Logs exclude secrets, bodies and unnecessary PII.
+AUD-72-12  [ ] Retention deletes database payloads, search data, objects, exports and caches.
+AUD-72-13  [ ] Erasure workflow completes only after active stores confirm removal.
+AUD-72-14  [ ] Backup restoration replays erasure ledger before traffic.
+AUD-72-15  [ ] Access export excludes other subjects and private data without permission.
+AUD-72-16  [ ] Audit events cover direct API writes and secrets remain masked.
+AUD-72-17  [ ] API tokens are scoped, expiring and revocable.
+AUD-72-18  [ ] Webhooks are signed, deduplicable and SSRF protected at dispatch.
+AUD-72-19  [ ] SMTP delivers actual local emails and retries with no false delivery claims.
+AUD-72-20  [ ] Provider connectors have tests and honest enabled/disabled state.
+AUD-72-21  [ ] Optional billing verifies provider events and server entitlements.
+AUD-72-22  [ ] Optional custom domains prove ownership and prevent Host tenant confusion.
+AUD-72-23  [ ] Accessibility includes keyboard, screen reader, contrast, zoom and RTL evidence.
+AUD-72-24  [ ] All breakpoints preserve composer and touch interaction.
+AUD-72-25  [ ] Load tests document environment, p95/p99, fairness and bottlenecks.
+AUD-72-26  [ ] Health checks reflect dependency readiness and graceful drain.
+AUD-72-27  [ ] Observability traces actual message lifecycle without content leaks.
+AUD-72-28  [ ] Alerts link to tested runbooks and meaningful thresholds.
+AUD-72-29  [ ] Docker environment launches fresh with real database/storage/scanner/mail.
+AUD-72-30  [ ] CI has schema drift, contracts, RLS,browser and security gates.
+AUD-72-31  [ ] Images are immutable, nonroot and include SBOM/provenance.
+AUD-72-32  [ ] Staging smoke tests use exact artifact promoted to production.
+AUD-72-33  [ ] Rollback and expand/contract migrations are documented and rehearsed.
+AUD-72-34  [ ] Backup/restore and failover drills measure achievedRPO/RTO.
+AUD-72-35  [ ] Traceability links every mandatory behavior to current evidence.
+AUD-72-36  [ ] No mock success, fake metrics, dead controls or unexplained skipped core tests remain.
+73  End to end demonstration and deliverable manifest
+Required recorded journey
+Start a fresh local stack and seed Alpha/Beta. Alpha owner installs widget on demo originA, invites agent and assignsSales. Visitor grants analytics consent, browses pricing30 seconds and receives one invitation. Visitor accepts, enters prechat, agent accepts real offer, both exchange text, agent expands canned reply, adds private note, uploads clean image and receives rejected unsafe file feedback. Transfer to second agent succeeds, visitor disconnects and resumes without duplicate, visitor gives good rating, agent closes and visitor downloads public PDF and receives email. Verify note absent from public transcript.
+Second journey and isolation
+CloseSales through operating hours exception; visitor on originB submits offline form, mail arrives and signed webhook retries after simulated500. Analyst views real counts with definitions; supervisor sees queue/agent load. Beta remains isolated and canary transcript never appears in Alpha. Alpha privacyadmin verifies subject request, exports permitted data then erases; downloads/search/cache no longer reveal canary. Restore backup in isolated environment, replay tombstones and validate no resurrection. Demonstrate mobile keyboard, RTL and keyboard only widget operation.
+Repository deliverables
+README with exact startup, test and deployment commands; .env.example with no real secrets; source and contracts; migrations; seed fixtures; Dockerfiles andCompose; OpenAPI andAsyncAPI plus typed clients; UI component stories; ERdiagram; metrics dictionary; adapterdocs; threatmodel; privacyinventory; retention/erasureprocedures; operationsdashboards; alertrules; runbooks; deployment/rollback; backuprestoreevidence; testmatrixreports; performance report; accessibility report; traceabilityledger; releaseaudit; enabledfeaturesmanifest; ADRs and implementationstatus.
+Final completion instruction
+Continue implementation until this demonstration and every mandatory audit item pass. Never substitute a video of a static UI for a real service journey. If external production access is absent, deliver verified deployable local code plus staging/production instructions and name the missing access precisely. Do not describe a local demonstration as a production deployment. The requested outcome is fully functioning end to end code with reproducible verification, not another outline.
+74  Reference sources and implementation authority
+Historical scope reference
+Zendesk official classic dashboard and visitor documentation describe the older agent interface, visitor list, chat serving and operational surfaces. Use these to check functional breadth, while implementing the explicit Talkivio contracts in this prompt. Current Zendesk documentation can include later revisions; do not assume every current detail was present in 2019 to 2021. The dated Chat Routing guide provides historical grounding; skills based routing is treated here as an optional extension.
+Official product references
+Zendesk classic dashboard: https://support.zendesk.com/hc/en-us/articles/4408843434778-Introduction-to-the-Chat-dashboard
+Classic visitor list: https://support.zendesk.com/hc/en-us/articles/4408821265178-Browsing-your-site-s-visitors-for-live-chat
+Serving chats: https://support.zendesk.com/hc/en-us/articles/4408824240026-Serving-chats-in-the-Chat-dashboard
+Trigger developer reference: https://support.zendesk.com/hc/en-us/articles/4408886111130-Chat-triggers-reference-for-developers
+Trigger conditions and actions: https://support.zendesk.com/hc/en-us/articles/4408842880282-Zendesk-live-chat-triggers-conditions-and-actions-reference
+Historical routing guide: https://zen-marketing-zopim.s3.amazonaws.com/PMM/Getting_Started_with_Chat_Routing.pdf
+Classic widget Chat API: https://developer.zendesk.com/api-reference/widget/chat-api/
+Classic widget Core API: https://developer.zendesk.com/api-reference/widget/core/
+Engineering references
+PostgreSQL row security: https://www.postgresql.org/docs/17/ddl-rowsecurity.html
+OWASP WebSocket Security: https://cheatsheetseries.owasp.org/cheatsheets/WebSocket_Security_Cheat_Sheet.html
+WCAG2.2: https://www.w3.org/TR/WCAG22/
+GDPR official text for deployment owner review: https://eur-lex.europa.eu/eli/reg/2016/679/oj
+Contract authority
+All capacities, schema choices, timing defaults, APIs, event names, DSL semantics, design tokens and completion gates in this document are normative Talkivio design decisions. They do not promise wire compatibility with Zendesk or historical parity for undocumented implementation details. Claude Code must verify current versions and provider documentation when coding integrations, preserve original Talkivio branding and resolve changes through a documented equivalent decision without dropping required outcomes.
+75  Configuration schemas and state transition guards
+Widget configuration schema
+config_version integer>0; locale enum en|ar; position enum bottom_right|bottom_left; appearance {primary_color hexRGB,surface_color hexRGB,logo_attachment_id uuid|null,launcher_label localizedMap}; prechat {enabled boolean,fields array of {key,type enum text|email|select,required:boolean,label:localizedMap,options?:array},department_required boolean}; offline {enabled boolean,email_required boolean,confirmation_enabled boolean,team_recipient_ids uuid[]}; availability {admit_queue_when_full boolean,max_queue_length integer 1..10000,max_wait_seconds integer 0..3600}; invitations {enabled boolean,session_cap integer 0..10,dismiss_cooldown_seconds integer 0..604800}; chat {read_receipts boolean,reconnect_grace_seconds integer 60..1800,allow_files boolean}; tracking {analytics_consent_required boolean,query_allowlist string[] max 20,retain_ip boolean,location_enabled boolean}; labels localizedMap dictionary of allowlisted copy keys. Reject additional fields and validate all referenced objects in same tenant.
+Chat transition table
+requested to queued after admitted request persistence; queued to offered when assigned offer created; queued/offered to active only on valid accept transaction; offered to queued on withdrawal/expiry when no active owner; active to active on direct owner transfer or collaborator changes; active to queued on explicit department handoff relinquishing ownership; queued/offered/active to ending when an authorized close command obtains lock, then closed in same committed operation; closed is terminal. ending need not be externally observable if closure is one transaction. Queue to offline submission conversion closes request with converted_offline reason in same transaction as submission. Each transition defines audit/event, capacity effect and expected version.
+Other transition guards
+File clean and rejected are terminal scan decisions except privileged rescan; uploaded cannot skip scanning. Offer pending can become accepted,declined,expired,withdrawn only; decision terminal. Export queued to running to ready or failed; ready to expired/erased revokes grant. Privacy pending_verification to queued only after proof; queued to running to completed or failed, with explicit resume on safe retry. Trigger draft revision to published immutable; restore creates another draft. Illegal transitions 409 with current safe state, not500.
+Schema gaps and referential integrity
+Do not use polymorphic sender_id as sole unconstrained identity relationship. Implement messages sender_membership_id uuid nullable and sender_visitor_id uuid nullable with composite foreign keys and CHECK ensuring agent has membership only, visitor has visitor only, system has neither; sender display snapshot is safe and redacted on erasure. Integration mappings table includes provider,source_type,source_id,external_id,last_synced_revision,status, with UNIQUE(tenant_id,provider,source_type,source_id) and provider scoped external uniqueness. Subject tombstone table includes tenant,protected subject hashes,erasure_request_id,erased_at and ledger checkpoint; keep outside restorable active database scope as documented.
+76  Representative API event and error payloads
+Contract example
+POST /widget/v1/chats
+Idempotency-Key: 6130a8bc-6b19-4af6-86a1-fb018ae5e859
+{"client_request_id":"6130a8bc-6b19-4af6-86a1-fb018ae5e859",
+ "message":"Can you help with a refund?",
+ "department_id":"c4b6a077-cbc8-489c-a03e-d949ca970e96"}
+201 response.data = {chat:Chat,initial_message:Message}
+
+POST /api/v1/chats/{chat_id}/messages
+{"client_message_id":"b21fbe8e-b113-43c2-a2ac-dc62a4573fe8",
+ "type":"text","visibility":"public","body":"I can help."}
+
+message.created payload = {"message":{
+ "id":"253eef74-f9b9-4f2a-ae8a-d809c95e6eec",
+ "chat_id":"02650625-54bd-4d56-89e3-374b455ea474",
+ "seq":2,"client_message_id":"b21fbe8e-b113-43c2-a2ac-dc62a4573fe8",
+ "sender":{"type":"agent","id":"9dd03ac6-717a-484e-8402-7a8410c4975b",
+ "display_name":"Amina"},"visibility":"public","type":"text",
+ "body":"I can help.","attachments":[],"sent_at":"2026-10-12T08:00:01Z"}}
+
+409 response = {"error":{"code":"CAPACITY_EXCEEDED",
+ "message":"Your chat capacity is full.","retryable":false},
+ "meta":{"request_id":"req-2f77"}}
+422 response = {"error":{"code":"VALIDATION_FAILED",
+ "message":"Check the highlighted fields.","retryable":false,
+ "field_errors":{"email":["Enter a valid email address."]}},
+ "meta":{"request_id":"req-98bc"}}
+Chat create return shape
+For admission endpoint explicitly return a data object containing chat and initial_message, not Chat alone; subsequent GET uses data Chat. Invitation accept with no initial visitor message returns data {chat,initial_message:null}; a public automated invitation message retains system attribution. Bulk create imports return committed items and error preview according to endpoint atomicity, never partial success disguised as201. Each generated OpenAPI schema must describe these variants and their example responses.
+Error code inventory
+AUTH_REQUIRED, MFA_REQUIRED, TOKEN_EXPIRED, TOKEN_USED, VALIDATION_FAILED, ORIGIN_NOT_ALLOWED, CONSENT_REQUIRED, PERMISSION_DENIED, NOT_FOUND, VERSION_CONFLICT, IDEMPOTENCY_MISMATCH, CHAT_CLOSED, CAPACITY_EXCEEDED, OFFER_EXPIRED, OFFER_WITHDRAWN, DEPARTMENT_UNAVAILABLE, QUEUE_FULL, FILE_TOO_LARGE, FILE_TYPE_BLOCKED, FILE_SCAN_PENDING, FILE_REJECTED, EXPORT_EXPIRED, RATE_LIMITED, CURSOR_EXPIRED, SERVICE_UNAVAILABLE and INTEGRATION_UNAVAILABLE. Machine codes stay stable; human messages localize; retryable only means retry may help, not permission to duplicate a command with a new identity.
+77  Socket command parity and reconciliation rules
+Allowlisted client commands
+auth {ticket}; subscribe {scopes,last_cursor?}; unsubscribe {scope_ids}; heartbeat {connection_id}; message.send {chat_id,client_message_id,type,visibility?,body?,attachment_ids?}; message.read {chat_id,last_read_seq}; typing.set {chat_id,is_typing,mode:reply|note}; offer.accept {offer_id,chat_id,expected_version}; offer.decline {offer_id,reason?}; chat.close {chat_id,expected_version,reason}; presence.set {status}; invitation.ack {invitation_id,displayed_at_client?}; invitation.dismiss {invitation_id}. All mutation commands reuse REST command service and permissions; no independent socket business logic. Widget cannot invoke agent command types or internal visibility. Explicit display ACK marks invitation displayed using server receipt time; eligibility alone never counts as display.
+REST fallback coverage
+Add POST /widget/v1/invitations/{id}/displayed {} for display acknowledgment; PUT /widget/v1/chats/{id}/read-cursor {last_read_seq}; GET /widget/v1/uploads/{id} for scan state; GET /widget/v1/attachments/{id}/download for scoped clean grant; GET /widget/v1/exports/{id} and GET /widget/v1/exports/{id}/download for own export job. Add GET/PATCH /shortcuts/{id}; GET/PATCH /triggers/{id} for metadata; DELETE /triggers/{id} archives; GET/DELETE /webhooks/{id}; POST /webhooks/{id}/rotate-secret with bounded overlap. All inherit base authorization, version, idempotency and error contracts; widgets only ever receive public fields.
+Sequence and visibility
+Public users see message seq values that may skip private note sequence numbers. Gaps in public seq must not trigger endless missing-message fetch: REST page response includes through_seq, the aggregate cursor covered, plus visible messages and has_more. Client advances coverage to through_seq even when there are no visible messages in that interval. Agent with full scope uses same rule for redacted rows. Resume uses opaque event stream cursor, not message seq as a substitute. Tests specifically cover a public message, private note and next public message sequence1,2,3 with visitor seeing1 and 3 without leak or infinite retry.
+Conflict and reconnection policy
+After state conflict refetch authoritative snapshot before enabling stale offer or close action. Retry network ambiguity using same command_id/client_message_id; retry validation only after edits with a new command identity. Outbox replay cannot resurrect a locally redacted body; apply newer aggregate and privacy versions. Clear principal scoped caches on access revocation and tenant switch. A socket reconnect never automatically sends a stored draft unless a previously submitted command is still awaiting acknowledgment, and then only with its original idempotency identity.

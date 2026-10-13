@@ -1,0 +1,27 @@
+{
+  "name": "@talkivio/widget",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Embeddable Talkivio chat widget (loader + isolated iframe app)",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -k -n frame,loader,demo \"vite build --watch --mode development\" \"vite build --watch --mode development --config vite.loader.config.ts\" \"vite --config vite.demo.config.ts\"",
+    "build": "vite build && vite build --config vite.loader.config.ts && node scripts/check-loader.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "size": "node scripts/size.mjs"
+  },
+  "dependencies": {
+    "@talkivio/contracts": "workspace:*",
+    "preact": "10.29.8",
+    "socket.io-client": "4.8.4"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "2.10.6",
+    "concurrently": "9.2.5",
+    "typescript": "5.9.3",
+    "vite": "7.3.7",
+    "vitest": "3.2.7"
+  }
+}
