@@ -1,0 +1,28 @@
+# Overlay for the CI staging rehearsal (`staging-rehearsal` job): the production bundle, unchanged, plus what a
+# test environment needs and production must not have. Never use it on a real server.
+#   - mailpit stands in for the SMTP provider (TALKIVIO_SMTP_HOST=mailpit, port 1025);
+#   - PostgreSQL is published on loopback so the end-to-end tests can read verification e-mails' tokens;
+#   - the backup job reaches an "off-server" bucket on the runner (a separate MinIO outside this project).
+services:
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    environment:
+      MP_MAX_MESSAGES: '5000'
+    ports:
+      - '127.0.0.1:8025:8025'
+    networks: [backend, edge]
+
+  worker:
+    depends_on:
+      mailpit:
+        condition: service_started
+
+  postgres:
+    ports:
+      - '127.0.0.1:55432:5432'
+    networks: [backend, edge]
+
+  backup:
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'

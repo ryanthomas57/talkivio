@@ -24,3 +24,10 @@ apps/api/.build/
 reports/
 apps/dashboard/e2e/.auth/
 apps/dashboard/e2e-results/
+
+# Production deploy bundle: server-local secrets, pinned releases and backups never enter git
+deploy/talkivio.env
+deploy/release*.env
+deploy/releases.log
+deploy/backups/
+deploy/.caddy-root.crt

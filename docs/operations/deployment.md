@@ -21,7 +21,10 @@ RPO/RTO, deviations) belongs in `docs/traceability.csv` (DEPLOY02, DEPLOY03, PRI
 
 Rules: images are referenced **by digest**; the digest that passed staging is the digest promoted to
 production (never rebuilt from a branch); images carry `org.opencontainers.image.revision` = commit SHA.
-Signing and provenance attestations are a TODO in CI until a registry is chosen.
+On every push to `main`, after the Trivy gate, CI publishes `ghcr.io/<owner>/talkivio-{api,dashboard,migrate}`
+tagged with the commit SHA, with a signed SLSA build-provenance attestation (and the SPDX SBOM for api and
+dashboard) stored next to the image. Before promoting a digest, verify it came from this repository's CI:
+`gh attestation verify oci://ghcr.io/<owner>/talkivio-api@sha256:<digest> --repo <owner>/talkivio`.
 
 ## 2. Configuration and secrets
 
@@ -121,12 +124,18 @@ Never in one release: rename a column used by running code, drop anything the pr
 add `NOT NULL` without a default on a large table, take long `ACCESS EXCLUSIVE` locks. Every new
 tenant-owned table needs `ENABLE`/`FORCE ROW LEVEL SECURITY`, the `tenant_isolation` policy, the
 `(tenant_id) → tenants(id)` FK and composite FKs for parents. CI applies all migrations from empty on
-every PR; a "from previous release schema" migration test is still to be added (AUD-72-03).
+every PR. On every push to `main`, the `upgrade-rehearsal` job upgrades from the previous `main` commit
+(AUD-72-03, DEPLOY02): the previous release is seeded and serves live chat traffic, this release's migrations
+run while it still serves, worker → gateway → api → dashboard are replaced one at a time (each healthy before
+the next), the previous application is rolled back onto the new schema, and the new one rolled forward again.
+It passes only if no message was lost or duplicated (`apps/api/test/rolling-upgrade.mjs`), the previous
+release's data is still served, and the database matches this release's schema exactly (drift gate).
 
 ## 6. Rollback
 
 - **Application:** redeploy the previous image **digests** (api, gateway, worker, dashboard) — safe
-  because the schema only expanded. Keep the previous digests recorded in the release ticket.
+  because the schema only expanded. Keep the previous digests recorded in the release ticket. This exact
+  step (previous application on the new schema, under traffic) is rehearsed on every push to `main` (§5).
 - **Database:** destructive migrations are **never** reversed automatically. If a forward change is
   wrong: ship a forward-fix migration. If data was transformed incorrectly and cannot be repaired
   forward, restore (§8) with an explicitly stated data-loss window approved by the IC.

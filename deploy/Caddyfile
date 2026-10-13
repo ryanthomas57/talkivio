@@ -1,0 +1,54 @@
+# Talkivio production edge (deploy/compose.yaml). Automatic HTTPS: certificates for {$TALKIVIO_DOMAIN} and
+# files.{$TALKIVIO_DOMAIN} from Let's Encrypt (TALKIVIO_TLS = your e-mail), renewed automatically; HTTP
+# redirects to HTTPS. TALKIVIO_TLS=internal uses a private CA instead (the CI staging rehearsal).
+{
+	admin off
+	persist_config off
+}
+
+# Dashboard, REST API, widget assets and the realtime gateway on one origin, so session cookies stay
+# first-party and the gateway can validate an exact Origin.
+{$TALKIVIO_DOMAIN} {
+	tls {$TALKIVIO_TLS}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+
+	# Prometheus scrapes the services on the private network (with METRICS_TOKEN); never from outside.
+	@metrics path /health/metrics
+	respond @metrics 404
+
+	handle /realtime/* {
+		reverse_proxy gateway:4001
+	}
+
+	@backend path /api/* /widget/* /health/*
+	handle @backend {
+		reverse_proxy api:4000
+	}
+
+	handle {
+		reverse_proxy dashboard:3000
+	}
+}
+
+# Browser uploads: presigned PUTs straight into the private MinIO buckets (the signature covers this host).
+# Downloads never use this name — they stream through the API with nosniff/CSP headers.
+files.{$TALKIVIO_DOMAIN} {
+	tls {$TALKIVIO_TLS}
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
+	request_body {
+		max_size 25MB
+	}
+	reverse_proxy minio:9000
+}
+
+# Container health check only (not published).
+:8081 {
+	respond /proxy-health "ok" 200
+}

@@ -1,0 +1,380 @@
+# Talkivio production stack for a single server (docker compose). See deploy/README.md.
+#
+#   cd deploy
+#   ./scripts/init-env.sh                  # once: creates talkivio.env with generated secrets
+#   $EDITOR talkivio.env                   # domain, ACME email, SMTP provider, backup bucket
+#   ./scripts/deploy.sh <commit-sha>       # first install and every upgrade (signed GHCR images by digest)
+#
+# Differences from the local docker-compose.yml: NODE_ENV=production, HTTPS with automatic certificates,
+# secrets from talkivio.env (no defaults), images pulled by digest from GHCR (release.env, written by
+# deploy.sh), no seed / demo storefront / mail sink / webhook test receiver, nothing but 80/443 published.
+# Uploads go straight from the browser to MinIO at https://files.<domain> (presigned PUTs), so both
+# <domain> and files.<domain> must resolve to this server.
+
+name: talkivio
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '20m'
+    max-file: '5'
+
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp
+  cap_drop:
+    - ALL
+  security_opt:
+    - 'no-new-privileges:true'
+  logging: *logging
+
+# Runtime configuration shared by api / gateway / worker. DATABASE_URL uses the RLS-bound application
+# role; the owner credentials go to the migrate job only.
+x-app-env: &app-env
+  NODE_ENV: production
+  BRAND_NAME: ${TALKIVIO_BRAND_NAME:-Talkivio}
+  LOG_LEVEL: ${TALKIVIO_LOG_LEVEL:-info}
+  HOST: 0.0.0.0
+  API_URL: https://${TALKIVIO_DOMAIN:?set TALKIVIO_DOMAIN in talkivio.env}
+  APP_URL: https://${TALKIVIO_DOMAIN}
+  CORS_ORIGINS: https://${TALKIVIO_DOMAIN}
+  # Caddy, on the private Docker network, is the only proxy hop.
+  TRUST_PROXY: uniquelocal
+  COOKIE_SECURE: 'true'
+  GATEWAY_SEPARATE: 'true'
+  DATABASE_URL: postgresql://talkivio_app:${TALKIVIO_APP_DB_PASSWORD:?}@postgres:5432/talkivio?schema=public
+  REDIS_URL: redis://:${TALKIVIO_REDIS_PASSWORD:?}@redis:6379/0
+  APP_SECRET: ${TALKIVIO_APP_SECRET:?}
+  METRICS_TOKEN: ${TALKIVIO_METRICS_TOKEN:?}
+  EMAIL_PROVIDER: smtp
+  EMAIL_FROM: ${TALKIVIO_EMAIL_FROM:?set TALKIVIO_EMAIL_FROM in talkivio.env}
+  SMTP_HOST: ${TALKIVIO_SMTP_HOST:?set TALKIVIO_SMTP_HOST in talkivio.env}
+  SMTP_PORT: ${TALKIVIO_SMTP_PORT:-587}
+  SMTP_USER: ${TALKIVIO_SMTP_USER:-}
+  SMTP_PASSWORD: ${TALKIVIO_SMTP_PASSWORD:-}
+  SMTP_SECURE: ${TALKIVIO_SMTP_SECURE:-false}
+  STORAGE_DRIVER: s3
+  S3_ENDPOINT: http://minio:9000
+  S3_PRESIGN_ENDPOINT: https://files.${TALKIVIO_DOMAIN}
+  S3_REGION: us-east-1
+  S3_FORCE_PATH_STYLE: 'true'
+  S3_ACCESS_KEY_ID: talkivio-app
+  S3_SECRET_ACCESS_KEY: ${TALKIVIO_S3_APP_SECRET:?}
+  S3_BUCKET: talkivio-clean
+  S3_QUARANTINE_BUCKET: talkivio-quarantine
+  S3_CLEAN_BUCKET: talkivio-clean
+  S3_QUARANTINE_PREFIX: quarantine/
+  S3_CLEAN_PREFIX: clean/
+  S3_EXPORTS_PREFIX: exports/
+  S3_DOWNLOAD_MODE: proxy
+  SCAN_MODE: clamav
+  CLAMAV_HOST: clamav
+  CLAMAV_PORT: '3310'
+  CLAMAV_TIMEOUT_MS: '30000'
+  GOOGLE_CLIENT_ID: ${TALKIVIO_GOOGLE_CLIENT_ID:-}
+  GOOGLE_CLIENT_SECRET: ${TALKIVIO_GOOGLE_CLIENT_SECRET:-}
+  GITHUB_CLIENT_ID: ${TALKIVIO_GITHUB_CLIENT_ID:-}
+  GITHUB_CLIENT_SECRET: ${TALKIVIO_GITHUB_CLIENT_SECRET:-}
+  SENTRY_DSN: ${TALKIVIO_SENTRY_DSN:-}
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${TALKIVIO_OTEL_EXPORTER_OTLP_ENDPOINT:-}
+
+services:
+  # ─────────────────────────── Edge: HTTPS for <domain> and files.<domain> ───────────────────────────
+  caddy:
+    image: caddy:2.11.7-alpine
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - 'no-new-privileges:true'
+    logging: *logging
+    environment:
+      TALKIVIO_DOMAIN: ${TALKIVIO_DOMAIN}
+      # An e-mail address for Let's Encrypt, or `internal` for a private CA (staging rehearsal only).
+      TALKIVIO_TLS: ${TALKIVIO_TLS:?set TALKIVIO_TLS (your e-mail for Let's Encrypt) in talkivio.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://127.0.0.1:8081/proxy-health']
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    networks: [edge, backend]
+
+  dashboard:
+    <<: *hardened
+    image: ${TALKIVIO_DASHBOARD_IMAGE:?run scripts/deploy.sh}
+    restart: unless-stopped
+    tmpfs:
+      - /tmp
+      - /app/apps/dashboard/.next/cache:mode=1777
+    environment:
+      PORT: '3000'
+      HOSTNAME: 0.0.0.0
+      API_INTERNAL_URL: http://api:4000
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/',{redirect:'manual'}).then(r=>process.exit(r.status<500?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks: [backend]
+
+  # ─────────────────────────── Application (one image, three roles) ───────────────────────────
+  api:
+    <<: *hardened
+    image: ${TALKIVIO_API_IMAGE:?run scripts/deploy.sh}
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/main.js']
+    environment:
+      <<: *app-env
+      PORT: '4000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4000/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+    # `egress`: OAuth sign-in and other outbound HTTPS calls.
+    networks: [backend, egress]
+
+  gateway:
+    <<: *hardened
+    image: ${TALKIVIO_API_IMAGE:?run scripts/deploy.sh}
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/gateway.js']
+    environment:
+      <<: *app-env
+      GATEWAY_PORT: '4001'
+      HEALTHCHECK_PORT: '4001'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4001/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    networks: [backend]
+
+  worker:
+    <<: *hardened
+    image: ${TALKIVIO_API_IMAGE:?run scripts/deploy.sh}
+    restart: unless-stopped
+    command: ['node', '--enable-source-maps', 'dist/worker.js']
+    environment:
+      <<: *app-env
+      WORKER_HEALTH_PORT: '4010'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:4010/health/ready').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 768m
+    # `egress`: the SMTP provider and customers' webhook endpoints.
+    networks: [backend, egress]
+
+  # ─────────────────────────── One-shot jobs (run by scripts/deploy.sh) ───────────────────────────
+  migrate:
+    image: ${TALKIVIO_MIGRATE_IMAGE:?run scripts/deploy.sh}
+    restart: 'no'
+    logging: *logging
+    profiles: [jobs]
+    environment:
+      DATABASE_OWNER_URL: postgresql://talkivio_owner:${TALKIVIO_OWNER_DB_PASSWORD:?}@postgres:5432/talkivio?schema=public
+      TALKIVIO_APP_PASSWORD: ${TALKIVIO_APP_DB_PASSWORD:?}
+    networks: [backend]
+
+  minio-init:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: 'no'
+    logging: *logging
+    profiles: [jobs]
+    entrypoint: ['/bin/sh', '/init/init-buckets.sh']
+    volumes:
+      - ../infra/minio/init-buckets.sh:/init/init-buckets.sh:ro
+    environment:
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ROOT_USER: talkivio-minio-root
+      MINIO_ROOT_PASSWORD: ${TALKIVIO_MINIO_ROOT_PASSWORD:?}
+      S3_APP_ACCESS_KEY_ID: talkivio-app
+      S3_APP_SECRET_ACCESS_KEY: ${TALKIVIO_S3_APP_SECRET:?}
+      S3_QUARANTINE_BUCKET: talkivio-quarantine
+      S3_CLEAN_BUCKET: talkivio-clean
+    networks: [backend]
+
+  # Backups and restores (scripts/backup.sh, scripts/restore.sh): pg_dump/pg_restore + MinIO client.
+  backup:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: 'no'
+    logging: *logging
+    profiles: [jobs]
+    entrypoint: ['/bin/sh']
+    environment:
+      MC_CONFIG_DIR: /tmp/.mc
+      MINIO_ROOT_PASSWORD: ${TALKIVIO_MINIO_ROOT_PASSWORD:?}
+      BACKUP_S3_ENDPOINT: ${TALKIVIO_BACKUP_S3_ENDPOINT:-}
+      BACKUP_S3_ACCESS_KEY: ${TALKIVIO_BACKUP_S3_ACCESS_KEY:-}
+      BACKUP_S3_SECRET_KEY: ${TALKIVIO_BACKUP_S3_SECRET_KEY:-}
+      BACKUP_S3_BUCKET: ${TALKIVIO_BACKUP_S3_BUCKET:-}
+    volumes:
+      - ./backups:/backups
+      - ./scripts/object-backup.sh:/object-backup.sh:ro
+    networks: [backend, egress]
+
+  # ─────────────────────────── Data & dependencies (private network only) ───────────────────────────
+  postgres:
+    image: postgres:16.15-bookworm
+    restart: unless-stopped
+    logging: *logging
+    shm_size: 256m
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${TALKIVIO_POSTGRES_PASSWORD:?}
+      TALKIVIO_DB: talkivio
+      TALKIVIO_OWNER_PASSWORD: ${TALKIVIO_OWNER_DB_PASSWORD:?}
+      TALKIVIO_APP_PASSWORD: ${TALKIVIO_APP_DB_PASSWORD:?}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+      - ../infra/postgres/init:/docker-entrypoint-initdb.d:ro
+      - ../infra/postgres/sql:/talkivio-sql:ro
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-h', '127.0.0.1', '-p', '5432', '-U', 'postgres', '-d', 'talkivio']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    networks: [backend]
+
+  redis:
+    image: redis:7.4.11-alpine
+    restart: unless-stopped
+    logging: *logging
+    # AOF keeps BullMQ schedules across restarts; noeviction is required by BullMQ. Messages are durable
+    # in PostgreSQL, so losing Redis never loses a message (ADR 0001).
+    command:
+      - redis-server
+      - --appendonly
+      - 'yes'
+      - --maxmemory-policy
+      - noeviction
+      - --requirepass
+      - ${TALKIVIO_REDIS_PASSWORD:?}
+    environment:
+      REDISCLI_AUTH: ${TALKIVIO_REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli ping | grep -q PONG']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks: [backend]
+
+  minio:
+    image: pgsty/minio:RELEASE.2026-08-04T00-00-00Z
+    restart: unless-stopped
+    logging: *logging
+    command: ['server', '/data']
+    environment:
+      MINIO_ROOT_USER: talkivio-minio-root
+      MINIO_ROOT_PASSWORD: ${TALKIVIO_MINIO_ROOT_PASSWORD:?}
+      MINIO_BROWSER: 'off'
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://127.0.0.1:9000/minio/health/live']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    networks: [backend]
+
+  # clamd (1.4 LTS). First start downloads ~300 MB of signatures and needs ~2-3 GB RAM; freshclam inside the
+  # container keeps them current. Uploads wait in "scanning" (never downloadable) until clamd answers.
+  clamav:
+    image: clamav/clamav:1.4.6-debian
+    restart: unless-stopped
+    logging: *logging
+    environment:
+      CLAMAV_NO_MILTERD: 'true'
+    volumes:
+      - clamav_db:/var/lib/clamav
+    healthcheck:
+      test: ['CMD', 'clamdcheck.sh']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 600s
+    deploy:
+      resources:
+        limits:
+          memory: 3g
+    networks: [backend, egress]
+
+networks:
+  # Service-to-service traffic; no route to the internet.
+  backend:
+    internal: true
+  # Inbound 80/443 (Caddy) and the ACME certificate exchange.
+  edge: {}
+  # Outbound internet for the services that need it (SMTP, webhooks, OAuth, signature updates, backups).
+  egress: {}
+
+volumes:
+  pg_data:
+  redis_data:
+  minio_data:
+  clamav_db:
+  caddy_data:
+  caddy_config:

@@ -1069,3 +1069,133 @@ jobs:
           name: upgrade-rehearsal-${{ github.sha }}
           path: reports/upgrade
           retention-days: 30
+
+  # Staging rehearsal (AUD-72-32, AUD-72-29, DEPLOY01, DEPLOY03): the production bundle in deploy/ on a fresh
+  # machine, running the images the `images` job just published and attested for this commit — the exact
+  # artifacts a production deploy of this commit runs, fetched and verified by the same scripts/deploy.sh.
+  # HTTPS through Caddy with a private CA; mailpit stands in for the SMTP provider (deploy/staging-rehearsal.yaml).
+  # Then the disaster drill: back up to an off-server bucket, destroy every volume and the local backups,
+  # reinstall, restore, and require the same data, byte for byte.
+  staging-rehearsal:
+    name: Staging rehearsal — production bundle with the published images over HTTPS; backup → destroy → restore
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [images]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 75
+    permissions:
+      contents: read
+      packages: read
+      attestations: read
+    env:
+      COMPOSE_FILE: compose.yaml:staging-rehearsal.yaml
+      DOMAIN: staging.talkivio.test
+      TALKIVIO_REQUIRE_ATTESTATIONS: '1'
+      GH_TOKEN: ${{ github.token }}
+      OFFSITE_SECRET: ci-only-offsite-bucket-secret
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+      - name: Install test client dependencies
+        run: pnpm install --frozen-lockfile --filter @talkivio/api
+      - name: Log in to GHCR (read)
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Staging settings (generated secrets, private CA, mailpit as SMTP, an off-server backup bucket)
+        run: |
+          mkdir -p reports/staging
+          echo "127.0.0.1 $DOMAIN files.$DOMAIN" | sudo tee -a /etc/hosts
+          # The "off-server" bucket lives outside the Compose project, so destroying the stack leaves it intact.
+          docker run -d --name offsite-s3 --network host -e MINIO_ROOT_USER=offsite -e MINIO_ROOT_PASSWORD="$OFFSITE_SECRET" \
+            pgsty/minio:RELEASE.2026-08-04T00-00-00Z server /offsite --address :19000
+          for i in $(seq 1 30); do if curl -fsS http://127.0.0.1:19000/minio/health/live; then break; fi; sleep 1; done
+          docker run --rm --network host --entrypoint sh pgsty/minio:RELEASE.2026-08-04T00-00-00Z -c \
+            "mc alias set o http://127.0.0.1:19000 offsite $OFFSITE_SECRET > /dev/null && mc mb o/talkivio-offsite"
+          cd deploy
+          ./scripts/init-env.sh
+          sed -i -e "s/^TALKIVIO_DOMAIN=.*/TALKIVIO_DOMAIN=$DOMAIN/" -e 's/^TALKIVIO_TLS=.*/TALKIVIO_TLS=internal/' \
+            -e "s/^TALKIVIO_EMAIL_FROM=.*/TALKIVIO_EMAIL_FROM=Talkivio Staging <no-reply@$DOMAIN>/" \
+            -e 's/^TALKIVIO_SMTP_HOST=.*/TALKIVIO_SMTP_HOST=mailpit/' -e 's/^TALKIVIO_SMTP_PORT=.*/TALKIVIO_SMTP_PORT=1025/' \
+            -e 's|^TALKIVIO_BACKUP_S3_ENDPOINT=.*|TALKIVIO_BACKUP_S3_ENDPOINT=http://host.docker.internal:19000|' \
+            -e 's/^TALKIVIO_BACKUP_S3_BUCKET=.*/TALKIVIO_BACKUP_S3_BUCKET=talkivio-offsite/' \
+            -e 's/^TALKIVIO_BACKUP_S3_ACCESS_KEY=.*/TALKIVIO_BACKUP_S3_ACCESS_KEY=offsite/' \
+            -e "s/^TALKIVIO_BACKUP_S3_SECRET_KEY=.*/TALKIVIO_BACKUP_S3_SECRET_KEY=$OFFSITE_SECRET/" talkivio.env
+          ./scripts/check-env.sh
+      - name: Deploy this commit's published images (scripts/deploy.sh — digests, revision labels, signed provenance)
+        working-directory: deploy
+        run: ./scripts/deploy.sh "$GITHUB_SHA" 2>&1 | tee ../reports/staging/deploy.log
+      - name: Wait for the virus scanner (its first start downloads the signatures)
+        working-directory: deploy
+        run: bash -c 'source scripts/lib.sh && wait_healthy clamav 900'
+      - name: End to end over HTTPS — sign-up e-mail, chat and realtime, files with real ClamAV
+        env:
+          API_URL: https://staging.talkivio.test
+          NODE_EXTRA_CA_CERTS: ${{ github.workspace }}/deploy/.caddy-root.crt
+          SCAN_MODE: clamav
+        run: |
+          owner_pw=$(grep '^TALKIVIO_OWNER_DB_PASSWORD=' deploy/talkivio.env | cut -d= -f2)
+          export DATABASE_OWNER_URL="postgresql://talkivio_owner:$owner_pw@localhost:55432/talkivio"
+          node apps/api/test/smoke-v2.mjs 2>&1 | tee reports/staging/smoke-v2.log
+          node apps/api/test/files.e2e.mjs 2>&1 | tee reports/staging/files.log
+          total=$(curl -fsS http://localhost:8025/api/v1/messages | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>console.log(JSON.parse(s).total))")
+          echo "e-mails delivered over SMTP: $total" | tee reports/staging/mail.txt
+          test "$total" -gt 0
+      - name: Disaster drill — off-server backup, destroy the server, reinstall, restore, same data byte for byte
+        working-directory: deploy
+        run: |
+          source scripts/lib.sh
+          q() { dc exec -T postgres psql -X -A -t -U postgres -d talkivio -c "$1"; }
+          fingerprint() {
+            echo "rows: $(q "SELECT (SELECT count(*) FROM tenants) || '/' || (SELECT count(*) FROM chats) || '/' || (SELECT count(*) FROM messages) || '/' || (SELECT count(*) FROM attachments WHERE state = 'clean')")"
+            echo "messages: $(q "SELECT md5(string_agg(id::text || ':' || coalesce(body, ''), ',' ORDER BY id)) FROM messages")"
+            echo "attachments: $(q "SELECT md5(string_agg(id::text || ':' || sha256, ',' ORDER BY id)) FROM attachments WHERE state = 'clean'")"
+            # shellcheck disable=SC2016 # $MINIO_ROOT_PASSWORD expands inside the backup container
+            echo "objects: $(dc --profile jobs run --rm -T backup -c 'mc alias set l http://minio:9000 talkivio-minio-root "$MINIO_ROOT_PASSWORD" > /dev/null && mc ls -r --json l/talkivio-clean' | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const o=s.trim().split('\n').filter(Boolean).map(JSON.parse).map(x=>x.key+':'+x.size+':'+x.etag).sort();console.log(o.length+' '+require('crypto').createHash('md5').update(o.join(',')).digest('hex'))})")"
+          }
+          fingerprint | tee ../reports/staging/before.txt
+          ./scripts/backup.sh 2>&1 | tee ../reports/staging/backup.log
+          dump=$(find backups -maxdepth 1 -name 'talkivio-*.dump' -exec basename {} \; | sort | tail -n 1)
+          note "destroying the server: every volume (database, files, Redis, certificates) and the local backups"
+          dc --profile jobs down -v --remove-orphans
+          rm -rf backups
+          ./scripts/deploy.sh "$GITHUB_SHA" 2>&1 | tee ../reports/staging/reinstall.log
+          ./scripts/restore.sh "$dump" --yes-replace-all-data 2>&1 | tee ../reports/staging/restore.log
+          fingerprint | tee ../reports/staging/after.txt
+          diff ../reports/staging/before.txt ../reports/staging/after.txt
+          cp backups/replay-*.json ../reports/staging/ 2> /dev/null || true
+      - name: The restored server works — chat over HTTPS after the restore
+        env:
+          API_URL: https://staging.talkivio.test
+          NODE_EXTRA_CA_CERTS: ${{ github.workspace }}/deploy/.caddy-root.crt
+        run: |
+          owner_pw=$(grep '^TALKIVIO_OWNER_DB_PASSWORD=' deploy/talkivio.env | cut -d= -f2)
+          export DATABASE_OWNER_URL="postgresql://talkivio_owner:$owner_pw@localhost:55432/talkivio"
+          node apps/api/test/smoke-v2.mjs 2>&1 | tee reports/staging/smoke-after-restore.log
+      - name: Collect state and logs
+        if: always()
+        working-directory: deploy
+        run: |
+          mkdir -p ../reports/staging
+          docker compose --env-file talkivio.env --env-file release.env ps -a > ../reports/staging/ps.txt 2>&1 || true
+          docker compose --env-file talkivio.env --env-file release.env logs --no-color --timestamps > ../reports/staging/compose.log 2>&1 || true
+          cp release.env releases.log ../reports/staging/ 2> /dev/null || true
+      - name: Tear down
+        if: always()
+        working-directory: deploy
+        run: |
+          docker compose --env-file talkivio.env --env-file release.env --profile jobs down -v --remove-orphans || true
+          docker rm -f offsite-s3 || true
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: staging-rehearsal-${{ github.sha }}
+          path: reports/staging
+          retention-days: 30
