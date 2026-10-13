@@ -56,7 +56,7 @@ Use your own database, Redis DB index, port and build directory so you never dis
 ```bash
 cd apps/api
 set -a; . ../../.env; set +a
-export DATABASE_OWNER_URL=postgresql://khurramsyedzada@localhost:5432/talkivio_<name>?schema=public
+export DATABASE_OWNER_URL=postgresql://<you>@localhost:5432/talkivio_<name>?schema=public
 export DATABASE_URL=postgresql://talkivio_app:talkivio_app_dev_password@localhost:5432/talkivio_<name>?schema=public
 export REDIS_URL=redis://127.0.0.1:6379/<n>   # 1..15, unique per developer
 export PORT=<4100+n> API_URL=http://localhost:<4100+n>

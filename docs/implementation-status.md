@@ -6,7 +6,7 @@ gate `scripts/ledger-check.mjs`). Sign-off: `docs/release-audit.md`._
 > The working tree is not yet a git repository, so evidence below is recorded against the working tree, not
 > commit SHAs. Release-audit rows stay `NOT ASSESSED` until evidence is reproduced at a commit.
 >
-> **Working copy.** On 2026-10-13 the external exFAT volume (`/Volumes/Khurram`) zeroed files written while the
+> **Working copy.** On 2026-10-13 the external exFAT volume holding the original copy zeroed files written while the
 > machine was short of memory — twice, the second time even after a full fsync. From 17:10 the work continued in an
 > APFS copy at `~/Talkivio-APFS/Live Chat` (same tree, `node_modules` from the local pnpm store). Every change since
 > is there; `~/Talkivio-APFS/sync-to-volume.sh` copies it back once the volume is repaired.
