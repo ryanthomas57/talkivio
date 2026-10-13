@@ -3,6 +3,11 @@
 - `prometheus.yml` — scrape config for api (`:4000`), gateway (`:4001`) and worker (`:4010`) at `/health/metrics`.
 - `alert-rules.yml` — Prometheus recording + alert rules generated from `docs/operations/alerts.md` (runbook ids
   refer to `docs/operations/runbooks.md`).
+- `alert-rules.test.yml` — promtool unit tests: each alert stays quiet before its condition and its `for:` window,
+  then fires with its exact labels and summary (`promtool test rules infra/observability/alert-rules.test.yml`).
+- `alertmanager.yml` — routing: `severity: page` → the paging receiver, `severity: ticket` → the ticket receiver;
+  receiver webhook URLs are read from mounted secret files. `alertmanager-routes.test.sh` proves every alert reaches
+  the receiver its severity names (runs in CI with `amtool`).
 - `grafana-talkivio-health.json` — Grafana dashboard (import; choose your Prometheus data source).
 
 Metric names, labels and semantics: ADR 0004 and `docs/operations/alerts.md`. These files are not part of the

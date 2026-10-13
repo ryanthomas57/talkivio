@@ -8,6 +8,12 @@ global:
 rule_files:
   - alert-rules.yml
 
+# Routing and receivers: alertmanager.yml (page → on-call, ticket → work queue).
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 scrape_configs:
   - job_name: talkivio-api
     metrics_path: /health/metrics

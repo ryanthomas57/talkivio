@@ -1,0 +1,37 @@
+# Alertmanager routing for the rules in alert-rules.yml (docs/operations/alerts.md).
+# `severity: page` wakes the on-call engineer; `severity: ticket` opens a work item. Receiver endpoints are read
+# from files mounted as secrets (no URLs or tokens in the repository) — point them at the paging / ticketing
+# integration's incoming webhook (PagerDuty, Opsgenie, incident.io, Slack, …).
+#
+# Verified in CI: `amtool check-config` and infra/observability/alertmanager-routes.test.sh (every alert in
+# alert-rules.yml reaches exactly the receiver its severity names).
+route:
+  receiver: ticket
+  group_by: [alertname, service]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    - matchers: ['severity="page"']
+      receiver: page
+      group_wait: 10s
+      group_interval: 2m
+      repeat_interval: 1h
+    - matchers: ['severity="ticket"']
+      receiver: ticket
+
+inhibit_rules:
+  # While the database-derived gauges are absent the snapshot query is failing; the page for that is the
+  # actionable one, so the gauges' own threshold alerts (stale or missing values) stay quiet meanwhile.
+  - source_matchers: ['alertname="TalkivioOperationalSignalsAbsent"']
+    target_matchers: ['alertname=~"TalkivioMessagePublishLag|TalkivioRoutingQueueAge|TalkivioScanBacklog"']
+
+receivers:
+  - name: page
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/page-webhook-url
+        send_resolved: true
+  - name: ticket
+    webhook_configs:
+      - url_file: /etc/alertmanager/secrets/ticket-webhook-url
+        send_resolved: true
