@@ -37,10 +37,10 @@ export const privacy = {
   'privacy.label.search': 'Search index',
   'privacy.label.started': 'Starting',
   'privacy.label.collecting': 'Collecting data',
-  'privacy.store.transcripts': 'Database — transcripts',
-  'privacy.store.searchIndex': 'Database — search index',
-  'privacy.store.profile': 'Database — visitor profile',
-  'privacy.store.derivedPayloads': 'Database — derived payloads (jobs, outbox, webhooks)',
+  'privacy.store.transcripts': 'Database: transcripts',
+  'privacy.store.searchIndex': 'Database: search index',
+  'privacy.store.profile': 'Database: visitor profile',
+  'privacy.store.derivedPayloads': 'Database: derived payloads (jobs, outbox, webhooks)',
   'privacy.store.objectStorage': 'File storage (originals and thumbnails)',
   'privacy.store.redis': 'Realtime cache',
   'privacy.store.tombstoneLedger': 'Erasure tombstone ledger (outside backups)',
@@ -50,15 +50,18 @@ export const privacy = {
   'privacy.subject.fallback': 'Visitor {id}',
 
   'privacy.view.noAccessTitle': 'You don’t have access to privacy tools',
-  'privacy.view.noAccessBody': 'Privacy requests and retention are managed by workspace admins with the privacy permission.',
+  'privacy.view.noAccessBody':
+    'Privacy requests and retention are managed by workspace admins with the privacy permission.',
   'privacy.view.title': 'Privacy',
   'privacy.view.description':
-    'Handle visitors’ requests to see or delete their data, and control how long data is kept. These tools support your obligations; they don’t certify legal compliance — you decide lawful basis, notices and response deadlines for your jurisdiction.',
+    'Handle visitors’ requests to see or delete their data, and control how long data is kept. These tools support your obligations; they don’t certify legal compliance. You decide lawful basis, notices and response deadlines for your jurisdiction.',
   'privacy.view.newRequest': 'New request',
   'privacy.view.legalHoldTitle': 'Legal holds are not available',
-  'privacy.view.legalHoldBody': 'This release can’t place records on legal hold. Verified erasure requests and retention remove data without exception.',
+  'privacy.view.legalHoldBody':
+    'This release can’t place records on legal hold. Verified erasure requests and retention remove data without exception.',
   'privacy.list.title': 'Data subject requests',
-  'privacy.list.description': 'Access requests produce a downloadable export. Erasure requests remove the visitor’s personal data from every store and report what was confirmed.',
+  'privacy.list.description':
+    'Access requests produce a downloadable export. Erasure requests remove the visitor’s personal data from every store and report what was confirmed.',
   'privacy.list.state': 'State',
   'privacy.list.allStates': 'All states',
   'privacy.list.type': 'Type',
@@ -69,7 +72,8 @@ export const privacy = {
   'privacy.list.emptyFilteredTitle': 'No requests match these filters',
   'privacy.list.emptyFilteredBody': 'Clear the filters to see every request.',
   'privacy.list.emptyTitle': 'No privacy requests yet',
-  'privacy.list.emptyBody': 'When a visitor asks for a copy of their data or to be forgotten, record it here.',
+  'privacy.list.emptyBody':
+    'When a visitor asks for a copy of their data or to be forgotten, record it here.',
   'privacy.list.clearFilters': 'Clear filters',
   'privacy.list.refreshFailed': 'Refresh failed: {error}',
   'privacy.list.colSubject': 'Subject',
@@ -80,19 +84,22 @@ export const privacy = {
   'privacy.list.needsVerification': 'Needs identity verification',
   'privacy.list.doneAt': 'Done {relative}',
   'privacy.list.stopped': 'Stopped',
-  'privacy.list.failedResume': '{reason} — resume available',
-  'privacy.list.progressLabel': '{kind, select, erase {Progress of erasure request} other {Progress of access request}}',
+  'privacy.list.failedResume': '{reason}: resume available',
+  'privacy.list.progressLabel':
+    '{kind, select, erase {Progress of erasure request} other {Progress of access request}}',
 
   'privacy.new.visitorRequired': 'Search for the visitor and select them.',
   'privacy.new.proofRequired': 'Record where you documented how the requester’s identity will be verified.',
   'privacy.new.visitorGone': 'That visitor no longer exists. Search again.',
   'privacy.new.title': 'New privacy request',
-  'privacy.new.description': 'Record a data subject’s request. Nothing happens until you verify the requester’s identity in the next step.',
+  'privacy.new.description':
+    'Record a data subject’s request. Nothing happens until you verify the requester’s identity in the next step.',
   'privacy.new.createErasure': 'Create erasure request',
   'privacy.new.createAccess': 'Create access request',
   'privacy.new.openRequest': 'Open request',
   'privacy.new.stepSubject': '1. Subject',
-  'privacy.new.cannotSearch': 'Your role can’t view visitors, so you can’t pick a subject. Ask an admin with visitor access.',
+  'privacy.new.cannotSearch':
+    'Your role can’t view visitors, so you can’t pick a subject. Ask an admin with visitor access.',
   'privacy.new.change': 'Change',
   'privacy.new.findVisitor': 'Find the visitor',
   'privacy.new.findVisitorHelp': 'Search by name, or by the full email address (exact match).',
@@ -104,17 +111,19 @@ export const privacy = {
   'privacy.new.moreMatches': 'More visitors match. Type more of the name, or use the email address.',
   'privacy.new.stepType': '2. Request type',
   'privacy.new.requestType': 'Request type',
-  'privacy.new.accessLabel': 'Access — export their data',
+  'privacy.new.accessLabel': 'Access: export their data',
   'privacy.new.accessDescription':
     'Builds a JSON file with everything {brand} holds about this visitor: identities, sessions, chats (public messages and their own), ratings, custom fields and consent records. Staff internal notes and other visitors’ messages are excluded. Nothing is changed or deleted.',
-  'privacy.new.eraseLabel': 'Erasure — permanently delete their personal data',
+  'privacy.new.eraseLabel': 'Erasure: permanently delete their personal data',
   'privacy.new.eraseDescription':
     'Removes the visitor’s personal data from every active store: profile, sessions, page events, attachments and exports. Transcript text in their chats is redacted. Other visitors in the same chats are not affected.',
   'privacy.new.eraseWarningTitle': 'Erasure can’t be undone',
-  'privacy.new.eraseWarningBody': 'Once verified and run, the visitor’s personal data and their transcript text are gone for good — including for your team. If they asked for a copy, complete an access request first.',
+  'privacy.new.eraseWarningBody':
+    'Once verified and run, the visitor’s personal data and their transcript text are gone for good, including for your team. If they asked for a copy, complete an access request first.',
   'privacy.new.stepEvidence': '3. Evidence reference',
   'privacy.new.evidence': 'Verification evidence reference',
-  'privacy.new.evidenceHelp': 'A ticket or case number where you record how the requester’s identity is verified. Don’t paste the evidence itself. Kept only for a short period.',
+  'privacy.new.evidenceHelp':
+    'A ticket or case number where you record how the requester’s identity is verified. Don’t paste the evidence itself. Kept only for a short period.',
   'privacy.new.evidencePlaceholder': 'e.g. {example}',
   'privacy.new.verifiedIdentity': 'Verified identity',
   'privacy.new.noEmail': 'No email',
@@ -128,7 +137,7 @@ export const privacy = {
   'privacy.policy.subjectChats': 'Redacted throughout the visitor’s chats (other visitors’ messages kept)',
   'privacy.policy.subjectMessages': 'Only the visitor’s own messages redacted',
   'privacy.policy.retained': 'Kept',
-  'privacy.downstream.notConfigured': 'Not configured — nothing was sent',
+  'privacy.downstream.notConfigured': 'Not configured: nothing was sent',
   'privacy.downstream.noMappedRecords': 'No linked records',
   'privacy.downstream.pendingManual': 'Needs manual deletion in the provider',
   'privacy.downstream.accepted': 'Request accepted by the provider (not yet confirmed)',
@@ -144,7 +153,8 @@ export const privacy = {
   'privacy.reauth.startExport': 'start this access export',
   'privacy.reauth.runRetention': 'run retention now',
 
-  'privacy.drawer.title': '{kind, select, erase {Erasure request — {subject}} other {Access request — {subject}}}',
+  'privacy.drawer.title':
+    '{kind, select, erase {Erasure request: {subject}} other {Access request: {subject}}}',
   'privacy.drawer.titleFallback': 'Privacy request',
   'privacy.drawer.createdAt': 'Created {date}',
   'privacy.drawer.loadError': 'Could not load this request: {error}',
@@ -162,10 +172,11 @@ export const privacy = {
   'privacy.drawer.progressLabel': '{kind, select, erase {Erasure progress} other {Export progress}}',
   'privacy.drawer.waitingRetry': 'Waiting to retry after an error ({error}). Attempt {attempt}.',
   'privacy.drawer.waitingWorker': 'Waiting for a worker to start…',
-  'privacy.drawer.runningStep': '{step} — step {done} of {total}. Updates automatically.',
+  'privacy.drawer.runningStep': '{step}: step {done} of {total}. Updates automatically.',
   'privacy.drawer.running': '{step}. Updates automatically.',
   'privacy.drawer.finished': 'Finished {relative}.',
-  'privacy.drawer.stoppedAfter': '{count, plural, one {Stopped after # attempt.} other {Stopped after # attempts.}}',
+  'privacy.drawer.stoppedAfter':
+    '{count, plural, one {Stopped after # attempt.} other {Stopped after # attempts.}}',
   'privacy.drawer.failedTitle': 'This request did not finish',
   'privacy.drawer.resume': 'Resume',
   'privacy.drawer.failedReason': 'Reason: {reason}.',
@@ -178,8 +189,8 @@ export const privacy = {
   'privacy.drawer.colRowsChanged': 'Rows changed',
   'privacy.drawer.colItems': 'Items',
   'privacy.drawer.storeConfirmations': 'Store confirmations',
-  'privacy.drawer.storeConfirmed': '{store} — confirmed',
-  'privacy.drawer.storeNotConfirmed': '{store} — not confirmed',
+  'privacy.drawer.storeConfirmed': '{store}: confirmed',
+  'privacy.drawer.storeNotConfirmed': '{store}: not confirmed',
   'privacy.drawer.exportFile': 'JSON file, {size}.',
   'privacy.drawer.exportNotesIncluded': 'Includes staff internal notes.',
   'privacy.drawer.exportNotesExcluded': 'Staff internal notes are excluded.',
@@ -187,7 +198,8 @@ export const privacy = {
   'privacy.drawer.exportAvailableUntil': 'Available until {date}.',
   'privacy.drawer.exportAudited': 'Downloads are recorded in the audit log.',
   'privacy.drawer.sha256': 'SHA-256: {hash}',
-  'privacy.drawer.exportExpired': 'This export has expired and was removed. Create a new access request if the visitor still needs a copy.',
+  'privacy.drawer.exportExpired':
+    'This export has expired and was removed. Create a new access request if the visitor still needs a copy.',
   'privacy.drawer.downloadExport': 'Download export',
   'privacy.drawer.whatWasKept': 'What was kept',
   'privacy.drawer.connectedTools': 'Connected tools',
@@ -197,21 +209,26 @@ export const privacy = {
   'privacy.verify.exportStarted': 'Export started',
   'privacy.verify.evidenceTooLong': 'The evidence reference can be at most {max} characters.',
   'privacy.verify.title': 'Verify the requester',
-  'privacy.verify.body': '{kind, select, erase {Only continue once you’re confident the person asking is {subject}. Verification queues the erasure immediately.} other {Only continue once you’re confident the person asking is {subject}. Verification queues the export immediately.}}',
+  'privacy.verify.body':
+    '{kind, select, erase {Only continue once you’re confident the person asking is {subject}. Verification queues the erasure immediately.} other {Only continue once you’re confident the person asking is {subject}. Verification queues the export immediately.}}',
   'privacy.verify.method': 'How was the identity verified?',
   'privacy.verify.updatedEvidence': 'Updated evidence reference',
-  'privacy.verify.updatedEvidenceHelp': 'Optional. Leave blank to keep the reference recorded when the request was created.',
+  'privacy.verify.updatedEvidenceHelp':
+    'Optional. Leave blank to keep the reference recorded when the request was created.',
   'privacy.verify.submitErase': 'Verify and erase…',
   'privacy.verify.submitExport': 'Verify and start export…',
   'privacy.verify.confirmEraseTitle': 'Erase {subject}?',
   'privacy.verify.confirmExportTitle': 'Export data for {subject}?',
-  'privacy.verify.confirmEraseBody': 'This permanently deletes {subject}’s personal data from every active store and redacts transcript text in their chats. It can’t be undone, and your team will no longer see what they wrote.',
-  'privacy.verify.confirmExportBody': '{brand} will collect {subject}’s data into a JSON export that privacy admins can download for a limited time. Nothing is deleted.',
+  'privacy.verify.confirmEraseBody':
+    'This permanently deletes {subject}’s personal data from every active store and redacts transcript text in their chats. It can’t be undone, and your team will no longer see what they wrote.',
+  'privacy.verify.confirmExportBody':
+    '{brand} will collect {subject}’s data into a JSON export that privacy admins can download for a limited time. Nothing is deleted.',
   'privacy.verify.confirmErase': 'Erase permanently',
   'privacy.verify.confirmExport': 'Start export',
 
   'privacy.retention.target.closedChats': 'Closed chats',
-  'privacy.retention.target.closedChatsWhat': 'messages and attachments removed; non-identifying chat metadata kept for analytics',
+  'privacy.retention.target.closedChatsWhat':
+    'messages and attachments removed; non-identifying chat metadata kept for analytics',
   'privacy.retention.target.messages': 'Messages',
   'privacy.retention.target.messagesWhat': 'in those chats',
   'privacy.retention.target.attachments': 'Attachments',
@@ -227,12 +244,14 @@ export const privacy = {
   'privacy.retention.target.expiredExports': 'Expired access exports',
   'privacy.retention.target.expiredExportsWhat': 'files past their download window',
   'privacy.retention.title': 'Retention',
-  'privacy.retention.description': 'Old data is removed automatically in small batches. Preview what the next batch would remove, or run one batch now.',
+  'privacy.retention.description':
+    'Old data is removed automatically in small batches. Preview what the next batch would remove, or run one batch now.',
   'privacy.retention.runNow': 'Run retention now',
   'privacy.retention.currentSettings': 'Current settings',
   'privacy.retention.changeInGeneral': 'Change in General settings',
   'privacy.retention.transcripts': 'Chat transcripts',
-  'privacy.retention.transcriptsKept': '{days, plural, one {Kept # day after a chat closes} other {Kept # days after a chat closes}}',
+  'privacy.retention.transcriptsKept':
+    '{days, plural, one {Kept # day after a chat closes} other {Kept # days after a chat closes}}',
   'privacy.retention.pageEvents': 'Page events',
   'privacy.retention.pageEventsKept': '{days, plural, one {Kept # day} other {Kept # days}}',
   'privacy.retention.ipAddresses': 'IP addresses',
@@ -244,9 +263,11 @@ export const privacy = {
   'privacy.retention.browsingConsent': 'Only after the visitor consents',
   'privacy.retention.browsingNoConsent': 'Without a consent prompt',
   'privacy.retention.webhookHistory': 'Webhook delivery history',
-  'privacy.retention.webhookKept': '{days, plural, one {Kept # day (deployment setting)} other {Kept # days (deployment setting)}}',
+  'privacy.retention.webhookKept':
+    '{days, plural, one {Kept # day (deployment setting)} other {Kept # days (deployment setting)}}',
   'privacy.retention.evidence': 'Verification evidence',
-  'privacy.retention.evidenceKept': '{days, plural, one {Kept # day after a request finishes (deployment setting)} other {Kept # days after a request finishes (deployment setting)}}',
+  'privacy.retention.evidenceKept':
+    '{days, plural, one {Kept # day after a request finishes (deployment setting)} other {Kept # days after a request finishes (deployment setting)}}',
   'privacy.retention.nextBatch': 'Next batch (dry run)',
   'privacy.retention.checkedAt': 'Checked {time} ·',
   'privacy.retention.checking': 'Checking…',
@@ -256,8 +277,10 @@ export const privacy = {
   'privacy.retention.colOlderThan': 'Older than',
   'privacy.retention.colInNextBatch': 'In next batch',
   'privacy.retention.expiryPassed': 'Expiry passed',
-  'privacy.retention.batchSize': '{count, plural, one {Batches hold at most # chat.} other {Batches hold at most # chats.}}',
-  'privacy.retention.moreRemaining': 'More data is past its retention period than one batch removes; later automatic runs continue.',
+  'privacy.retention.batchSize':
+    '{count, plural, one {Batches hold at most # chat.} other {Batches hold at most # chats.}}',
+  'privacy.retention.moreRemaining':
+    'More data is past its retention period than one batch removes; later automatic runs continue.',
   'privacy.retention.nothingDue': 'Nothing is currently past its retention period.',
   'privacy.retention.allCovered': 'This batch covers everything currently past its retention period.',
   'privacy.retention.resultProblemsTitle': 'Retention batch finished with problems',
@@ -265,11 +288,14 @@ export const privacy = {
   'privacy.retention.resultBody':
     'Removed {closedChats, plural, one {# chat transcript} other {# chat transcripts}} ({messages, plural, one {# message} other {# messages}}, {attachments, plural, one {# attachment} other {# attachments}}), {pageEvents, plural, one {# page event} other {# page events}}, {webhookDeliveries, plural, one {# webhook delivery} other {# webhook deliveries}}, {evidence, plural, one {# evidence reference} other {# evidence references}} and {exports, plural, one {# expired export} other {# expired exports}}.',
   'privacy.retention.resultFailures': 'Not confirmed: {failures}. The next run retries them.',
-  'privacy.retention.legalHoldFallback': 'Legal holds are not modeled in this release; no records are exempted from retention.',
-  'privacy.retention.preserveHint': 'If you must preserve records for a legal matter, export them before they reach their retention period.',
+  'privacy.retention.legalHoldFallback':
+    'Legal holds are not modeled in this release; no records are exempted from retention.',
+  'privacy.retention.preserveHint':
+    'If you must preserve records for a legal matter, export them before they reach their retention period.',
   'privacy.retention.confirmTitle': 'Run retention now?',
   'privacy.retention.confirmBody':
     'This permanently deletes {messages, plural, one {# message} other {# messages}} and {attachments, plural, one {# attachment} other {# attachments}} from {closedChats, plural, one {# closed chat} other {# closed chats}}, {pageEvents, plural, one {# page event} other {# page events}}, {webhookDeliveries, plural, one {# webhook delivery} other {# webhook deliveries}}, {evidence, plural, one {# evidence reference} other {# evidence references}} and {exports, plural, one {# expired export} other {# expired exports}}. It can’t be undone.',
-  'privacy.retention.confirmBodyFallback': 'This permanently deletes data past its retention period. It can’t be undone.',
+  'privacy.retention.confirmBodyFallback':
+    'This permanently deletes data past its retention period. It can’t be undone.',
   'privacy.retention.deleteNow': 'Delete now',
 } satisfies Record<string, string>;

@@ -8,7 +8,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, FileUp, XCircle } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Badge, Banner, Button, CheckboxField, Dialog, DialogContent, Field, Table, TableScroll, TD, TH, THead, TR, Textarea } from '@/components/ui';
+import {
+  Badge,
+  Banner,
+  Button,
+  CheckboxField,
+  Dialog,
+  DialogContent,
+  Field,
+  Table,
+  TableScroll,
+  TD,
+  TH,
+  THead,
+  TR,
+  Textarea,
+} from '@/components/ui';
 import { api, ApiError, errorMessage, isApiError } from '@/lib/api';
 import { formatBytes, formatTime } from '@/lib/format';
 import { uuid } from '@/lib/ids';
@@ -38,7 +53,9 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
     if (!f) return;
     setError(null);
     if (f.size > MAX_CSV * 4) {
-      setFieldError(t('shortcuts.import.fileTooLarge', { size: formatBytes(f.size), max: formatBytes(MAX_CSV) }));
+      setFieldError(
+        t('shortcuts.import.fileTooLarge', { size: formatBytes(f.size), max: formatBytes(MAX_CSV) }),
+      );
       return;
     }
     const text = await f.text();
@@ -58,7 +75,8 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
       commitKey.current = uuid();
       setRejectedOnly(false);
     } catch (e) {
-      if (e instanceof ApiError && e.fieldErrors.csv_text?.length) setFieldError(e.fieldErrors.csv_text.join(' · '));
+      if (e instanceof ApiError && e.fieldErrors.csv_text?.length)
+        setFieldError(e.fieldErrors.csv_text.join(' · '));
       setError(errorMessage(e));
     } finally {
       setBusy(null);
@@ -70,8 +88,16 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
     setBusy('commit');
     setError(null);
     try {
-      const r = await api.post<ImportCommit>('/shortcuts/import-commit', { previewToken: preview.previewToken }, { idempotencyKey: commitKey.current ?? uuid() });
-      toast.success(r.restored ? t('shortcuts.import.doneRestored', { count: r.committed, restored: r.restored }) : t('shortcuts.import.done', { count: r.committed }));
+      const r = await api.post<ImportCommit>(
+        '/shortcuts/import-commit',
+        { previewToken: preview.previewToken },
+        { idempotencyKey: commitKey.current ?? uuid() },
+      );
+      toast.success(
+        r.restored
+          ? t('shortcuts.import.doneRestored', { count: r.committed, restored: r.restored })
+          : t('shortcuts.import.done', { count: r.committed }),
+      );
       await qc.invalidateQueries({ queryKey: sk.root });
       onClose();
     } catch (e) {
@@ -84,7 +110,11 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const rows = preview ? (rejectedOnly ? preview.rows.filter((r) => r.status === 'rejected') : preview.rows) : [];
+  const rows = preview
+    ? rejectedOnly
+      ? preview.rows.filter((r) => r.status === 'rejected')
+      : preview.rows
+    : [];
 
   return (
     <Dialog open onOpenChange={(o) => !o && !busy && onClose()}>
@@ -98,8 +128,15 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               <Button variant="secondary" onClick={() => setPreview(null)} disabled={!!busy}>
                 {t('shortcuts.import.backToCsv')}
               </Button>
-              <Button variant="primary" onClick={() => void commit()} loading={busy === 'commit'} disabled={!preview.previewToken}>
-                {preview.summary.valid ? t('shortcuts.import.commit', { count: preview.summary.valid }) : t('shortcuts.import.nothing')}
+              <Button
+                variant="primary"
+                onClick={() => void commit()}
+                loading={busy === 'commit'}
+                disabled={!preview.previewToken}
+              >
+                {preview.summary.valid
+                  ? t('shortcuts.import.commit', { count: preview.summary.valid })
+                  : t('shortcuts.import.nothing')}
               </Button>
             </>
           ) : (
@@ -107,7 +144,12 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               <Button variant="secondary" onClick={onClose} disabled={!!busy}>
                 {t('common.cancel')}
               </Button>
-              <Button variant="primary" onClick={() => void runPreview()} loading={busy === 'preview'} disabled={!csv.trim() || tooLong}>
+              <Button
+                variant="primary"
+                onClick={() => void runPreview()}
+                loading={busy === 'preview'}
+                disabled={!csv.trim() || tooLong}
+              >
                 {t('shortcuts.import.preview')}
               </Button>
             </>
@@ -118,21 +160,55 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
           <div className="flex flex-col gap-4">
             <div className="rounded-[var(--radius-control)] bg-surface-2 px-3 py-2 text-sm text-fg-2">
               <p>
-                {t('shortcuts.import.required')} <code className="text-fg" dir="ltr">{REQUIRED_COLUMNS}</code>
+                {t('shortcuts.import.required')}{' '}
+                <code className="text-fg" dir="ltr">
+                  {REQUIRED_COLUMNS}
+                </code>
               </p>
               <p className="mt-1">{t('shortcuts.import.optional')}</p>
-              <code className="mt-1 block break-all text-xs text-fg" dir="ltr">{COLUMNS}</code>
-              <p className="mt-1 text-xs">{t('shortcuts.import.formatHelp', { column: 'scope_type', values: 'tenant, department, personal', separator: '|', max: formatNumber(500) })}</p>
+              <code className="mt-1 block break-all text-xs text-fg" dir="ltr">
+                {COLUMNS}
+              </code>
+              <p className="mt-1 text-xs">
+                {t('shortcuts.import.formatHelp', {
+                  column: 'scope_type',
+                  values: 'tenant, department, personal',
+                  separator: '|',
+                  max: formatNumber(500),
+                })}
+              </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <input ref={fileRef} type="file" accept=".csv,text/csv,text/plain" className="sr-only" id="csv-file" onChange={(e) => void readFile(e.target.files?.[0])} />
+              <input
+                ref={fileRef}
+                type="file"
+                accept=".csv,text/csv,text/plain"
+                className="sr-only"
+                id="csv-file"
+                onChange={(e) => void readFile(e.target.files?.[0])}
+              />
               <Button variant="secondary" onClick={() => fileRef.current?.click()}>
                 <FileUp className="size-4" aria-hidden />
                 {t('shortcuts.import.chooseFile')}
               </Button>
-              {fileName && <span className="text-sm text-fg-2">{t('shortcuts.import.loaded', { name: isolate(fileName) })}</span>}
+              {fileName && (
+                <span className="text-sm text-fg-2">
+                  {t('shortcuts.import.loaded', { name: isolate(fileName) })}
+                </span>
+              )}
             </div>
-            <Field label={t('shortcuts.import.csvText')} error={fieldError ?? (tooLong ? t('shortcuts.import.tooLong', { length: formatNumber(csv.length), max: formatNumber(MAX_CSV) }) : undefined)}>
+            <Field
+              label={t('shortcuts.import.csvText')}
+              error={
+                fieldError ??
+                (tooLong
+                  ? t('shortcuts.import.tooLong', {
+                      length: formatNumber(csv.length),
+                      max: formatNumber(MAX_CSV),
+                    })
+                  : undefined)
+              }
+            >
               <Textarea
                 value={csv}
                 onChange={(e) => {
@@ -156,15 +232,31 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               <Badge tone="success" icon={<CheckCircle2 className="size-3.5" aria-hidden />}>
                 {t('shortcuts.import.valid', { count: preview.summary.valid })}
               </Badge>
-              <Badge tone={preview.summary.rejected ? 'danger' : 'neutral'} icon={<XCircle className="size-3.5" aria-hidden />}>
+              <Badge
+                tone={preview.summary.rejected ? 'danger' : 'neutral'}
+                icon={<XCircle className="size-3.5" aria-hidden />}
+              >
                 {t('shortcuts.import.rejected', { count: preview.summary.rejected })}
               </Badge>
-              {preview.expiresAt && <span className="text-xs text-fg-2">{t('shortcuts.import.validUntil', { time: formatTime(preview.expiresAt) })}</span>}
+              {preview.expiresAt && (
+                <span className="text-xs text-fg-2">
+                  {t('shortcuts.import.validUntil', { time: formatTime(preview.expiresAt) })}
+                </span>
+              )}
             </div>
             {preview.capacityError && <Banner tone="danger">{preview.capacityError}</Banner>}
-            {!preview.previewToken && !preview.capacityError && <Banner tone="warning">{t('shortcuts.import.noneValid')}</Banner>}
+            {!preview.previewToken && !preview.capacityError && (
+              <Banner tone="warning">{t('shortcuts.import.noneValid')}</Banner>
+            )}
             {error && <Banner tone="danger">{error}</Banner>}
-            {preview.summary.rejected > 0 && <CheckboxField label={t('shortcuts.import.rejectedOnly')} checked={rejectedOnly} onCheckedChange={(c) => setRejectedOnly(c === true)} className="min-h-0 py-0" />}
+            {preview.summary.rejected > 0 && (
+              <CheckboxField
+                label={t('shortcuts.import.rejectedOnly')}
+                checked={rejectedOnly}
+                onCheckedChange={(c) => setRejectedOnly(c === true)}
+                className="min-h-0 py-0"
+              />
+            )}
             <TableScroll className="max-h-[50vh] rounded-[var(--radius-control)] border border-line-subtle">
               <Table className="min-w-[720px]">
                 <THead>
@@ -180,13 +272,23 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
                   {rows.map((r) => (
                     <TR key={r.line} className="align-top">
                       <TD className="py-2 tabular text-fg-2">{r.line}</TD>
-                      <TD className="py-2 font-mono text-sm" dir="ltr">{r.slug ? `/${r.slug}` : <span className="text-fg-3">—</span>}</TD>
-                      <TD className="py-2 text-sm" dir="auto">{r.title || <span className="text-fg-3">—</span>}</TD>
-                      <TD className="py-2 text-sm">{r.scopeType && r.scopeType in SCOPE_LABELS ? t(SCOPE_LABELS[r.scopeType as ScopeType]) : r.scopeType}</TD>
+                      <TD className="py-2 font-mono text-sm" dir="ltr">
+                        {r.slug ? `/${r.slug}` : null}
+                      </TD>
+                      <TD className="py-2 text-sm" dir="auto">
+                        {r.title || null}
+                      </TD>
+                      <TD className="py-2 text-sm">
+                        {r.scopeType && r.scopeType in SCOPE_LABELS
+                          ? t(SCOPE_LABELS[r.scopeType as ScopeType])
+                          : r.scopeType}
+                      </TD>
                       <TD className="py-2">
                         {r.status === 'valid' ? (
                           <Badge tone="success" icon={<CheckCircle2 className="size-3.5" aria-hidden />}>
-                            {r.action === 'restore' ? t('shortcuts.import.validRestore') : t('shortcuts.import.validNew')}
+                            {r.action === 'restore'
+                              ? t('shortcuts.import.validRestore')
+                              : t('shortcuts.import.validNew')}
                           </Badge>
                         ) : (
                           <div className="flex flex-col gap-1">

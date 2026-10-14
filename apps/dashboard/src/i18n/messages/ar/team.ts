@@ -46,8 +46,10 @@ export const team: Record<keyof typeof source, string> = {
   'team.draft.errCapacity': 'أدخل عددًا صحيحًا من {min} إلى {max}',
 
   'team.status.suspended': 'معلَّق',
-  'team.status.interruptedSince': 'الحالة المحددة {status}، لكن لا يوجد اتصال مباشر منذ {date}. لن تصله محادثات جديدة حتى يعود الاتصال.',
-  'team.status.interrupted': 'الحالة المحددة {status}، لكن لا يوجد اتصال مباشر. لن تصله محادثات جديدة حتى يعود الاتصال.',
+  'team.status.interruptedSince':
+    'الحالة المحددة {status}، لكن لا يوجد اتصال مباشر منذ {date}. لن تصله محادثات جديدة حتى يعود الاتصال.',
+  'team.status.interrupted':
+    'الحالة المحددة {status}، لكن لا يوجد اتصال مباشر. لن تصله محادثات جديدة حتى يعود الاتصال.',
   'team.status.notConnected': 'غير متصل',
   'team.status.srSetToSeen': '(الحالة المحددة {status}، آخر ظهور {time})',
   'team.status.srSetTo': '(الحالة المحددة {status})',
@@ -64,9 +66,12 @@ export const team: Record<keyof typeof source, string> = {
   'team.reauth.rateLimited': 'محاولات كثيرة جدًا. انتظر بضع دقائق ثم حاول مرة أخرى.',
   'team.reauth.title': 'تأكيد هويتك',
   'team.reauth.descAction': 'لتنفيذ «{action}»، أكّد كلمة المرور. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
-  'team.reauth.descActionMfa': 'لتنفيذ «{action}»، أكّد كلمة المرور ورمز المصادقة. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
-  'team.reauth.desc': 'لإجراء هذا التغيير الحساس أمنيًا، أكّد كلمة المرور. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
-  'team.reauth.descMfa': 'لإجراء هذا التغيير الحساس أمنيًا، أكّد كلمة المرور ورمز المصادقة. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
+  'team.reauth.descActionMfa':
+    'لتنفيذ «{action}»، أكّد كلمة المرور ورمز المصادقة. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
+  'team.reauth.desc':
+    'لإجراء هذا التغيير الحساس أمنيًا، أكّد كلمة المرور. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
+  'team.reauth.descMfa':
+    'لإجراء هذا التغيير الحساس أمنيًا، أكّد كلمة المرور ورمز المصادقة. لن يُطلب منك ذلك مجددًا لمدة 15 دقيقة.',
   'team.reauth.signedInAs': 'تم تسجيل الدخول باسم {email}',
   'team.reauth.password': 'كلمة المرور',
   'team.reauth.code': 'رمز المصادقة',
@@ -83,10 +88,13 @@ export const team: Record<keyof typeof source, string> = {
   'team.transfer.title': 'نقل الملكية',
   'team.transfer.description': 'سلِّم {workspace} إلى زميل آخر. يوجد دائمًا مالك واحد فقط.',
   'team.transfer.whatChanges': 'ما الذي سيتغير',
-  'team.transfer.changeOwner': 'يحصل {name} على تحكّم كامل، بما في ذلك الفوترة والأسرار وعمليات النقل المستقبلية.',
-  'team.transfer.changeOwnerNoName': 'يحصل المالك الجديد على تحكّم كامل، بما في ذلك الفوترة والأسرار وعمليات النقل المستقبلية.',
+  'team.transfer.changeOwner':
+    'يحصل {name} على تحكّم كامل، بما في ذلك الفوترة والأسرار وعمليات النقل المستقبلية.',
+  'team.transfer.changeOwnerNoName':
+    'يحصل المالك الجديد على تحكّم كامل، بما في ذلك الفوترة والأسرار وعمليات النقل المستقبلية.',
   'team.transfer.changeAdmin': 'تصبح مسؤولًا. ولا يستطيع تغيير ذلك إلا المالك الجديد.',
-  'team.transfer.changeReconnect': 'تُعيد لوحتا التحكم المفتوحتان لديكما الاتصال بالصلاحيات الجديدة فورًا، ولا يُسجَّل خروج أحد.',
+  'team.transfer.changeReconnect':
+    'تُعيد لوحتا التحكم المفتوحتان لديكما الاتصال بالصلاحيات الجديدة فورًا، ولا يُسجَّل خروج أحد.',
   'team.transfer.noEligible': 'لا يوجد زملاء مؤهلون. ادعُ شخصًا وتأكد أولًا من أن وصوله نشط.',
   'team.transfer.newOwner': 'المالك الجديد',
   'team.transfer.newOwnerHint': 'يجب أن تكون عضويته نشطة وبريده الإلكتروني موثَّقًا.',
@@ -99,11 +107,14 @@ export const team: Record<keyof typeof source, string> = {
   'team.invite.verifyTitle': 'أكّد عنوان بريدك الإلكتروني أولًا',
   'team.invite.emailSent': 'تم إرسال البريد',
   'team.invite.resendLink': 'إعادة إرسال الرابط',
-  'team.invite.verifyBody': 'لحماية مساحة العمل، لا يمكن إرسال الدعوات إلا من حساب موثَّق. افتح رابط التحقق الذي أرسلناه إلى {email}، ثم أرسل الدعوة مرة أخرى.',
-  'team.invite.verifyBodyNoEmail': 'لحماية مساحة العمل، لا يمكن إرسال الدعوات إلا من حساب موثَّق. افتح رابط التحقق الذي أرسلناه إلى بريدك الإلكتروني، ثم أرسل الدعوة مرة أخرى.',
-  'team.invite.resendFailed': 'تعذّرت إعادة إرسال الرابط الآن — حاول مرة أخرى بعد قليل.',
+  'team.invite.verifyBody':
+    'لحماية مساحة العمل، لا يمكن إرسال الدعوات إلا من حساب موثَّق. افتح رابط التحقق الذي أرسلناه إلى {email}، ثم أرسل الدعوة مرة أخرى.',
+  'team.invite.verifyBodyNoEmail':
+    'لحماية مساحة العمل، لا يمكن إرسال الدعوات إلا من حساب موثَّق. افتح رابط التحقق الذي أرسلناه إلى بريدك الإلكتروني، ثم أرسل الدعوة مرة أخرى.',
+  'team.invite.resendFailed': 'تعذّرت إعادة إرسال الرابط الآن، حاول مرة أخرى بعد قليل.',
   'team.invite.noSeatsTitle': 'لا توجد مقاعد متبقية في خطتك',
-  'team.invite.noSeatsBody': '{error} (تحجز الدعوات المعلّقة مقعدًا حتى تُقبل أو تُلغى أو تنتهي صلاحيتها). ألغِ دعوة غير مستخدمة أو علّق شخصًا لم يعد بحاجة إلى الوصول، ثم حاول مرة أخرى.',
+  'team.invite.noSeatsBody':
+    '{error} (تحجز الدعوات المعلّقة مقعدًا حتى تُقبل أو تُلغى أو تنتهي صلاحيتها). ألغِ دعوة غير مستخدمة أو علّق شخصًا لم يعد بحاجة إلى الوصول، ثم حاول مرة أخرى.',
   'team.invite.noPermission': 'ليست لديك صلاحية دعوة الزملاء.',
   'team.invite.deptMissing': 'أحد الأقسام المحددة لم يعد موجودًا. راجع قائمة الأقسام وحاول مرة أخرى.',
   'team.invite.errEmailRequired': 'أدخل عنوان البريد الإلكتروني للزميل',
@@ -111,11 +122,13 @@ export const team: Record<keyof typeof source, string> = {
   'team.invite.sentToast': 'أُرسلت الدعوة إلى {email}',
   'team.invite.disabledHint': 'معطَّل',
   'team.invite.title': 'دعوة زميل',
-  'team.invite.description': 'سيصله رابط بالبريد الإلكتروني للانضمام إلى مساحة العمل هذه. تنتهي صلاحية الدعوات بعد 7 أيام.',
+  'team.invite.description':
+    'سيصله رابط بالبريد الإلكتروني للانضمام إلى مساحة العمل هذه. تنتهي صلاحية الدعوات بعد 7 أيام.',
   'team.invite.sendAnother': 'إرسال دعوة أخرى',
   'team.invite.send': 'إرسال الدعوة',
   'team.invite.sentBody': 'تنتهي صلاحية الرابط في {date}. يمكنك دعوة شخص آخر أدناه.',
-  'team.invite.unverifiedNotice': 'لم يُوثَّق عنوان بريدك الإلكتروني بعد. لا تُرسل الدعوات إلا من حسابات موثَّقة — تحقّق من صندوق الوارد بحثًا عن رابط التحقق.',
+  'team.invite.unverifiedNotice':
+    'لم يُوثَّق عنوان بريدك الإلكتروني بعد. لا تُرسل الدعوات إلا من حسابات موثَّقة، تحقّق من صندوق الوارد بحثًا عن رابط التحقق.',
   'team.invite.emailLabel': 'عنوان البريد الإلكتروني',
   'team.invite.role': 'الدور',
   'team.invite.deptHintAnalyst': 'لا يخدم المحللون المحادثات؛ الأقسام مهمة للأدوار الأخرى فقط.',
@@ -141,18 +154,21 @@ export const team: Record<keyof typeof source, string> = {
   'team.invitations.listLabel': 'الدعوات المعلّقة',
   'team.invitations.mobileMeta': '{departments} · السعة {capacity} · أُرسلت {sent}',
   'team.invitations.resendFailedTitle': 'تعذّرت إعادة إرسال الدعوة إلى {email}',
-  'team.invitations.resendFailedBody': 'أُلغي الرابط السابق، لذا يحتاج المدعو إلى رابط جديد. أصلح المشكلة أدناه ثم أعد المحاولة.',
+  'team.invitations.resendFailedBody':
+    'أُلغي الرابط السابق، لذا يحتاج المدعو إلى رابط جديد. أصلح المشكلة أدناه ثم أعد المحاولة.',
   'team.invitations.retry': 'إعادة محاولة الإرسال',
   'team.invitations.revokeTitle': 'إلغاء الدعوة الموجهة إلى {email}؟',
   'team.invitations.revokeConfirm': 'إلغاء الدعوة',
-  'team.invitations.revokeBody': 'يتوقف الرابط المرسَل بالبريد عن العمل فورًا ويُحرَّر المقعد الذي كان يحجزه. يمكنك دعوته مجددًا لاحقًا.',
+  'team.invitations.revokeBody':
+    'يتوقف الرابط المرسَل بالبريد عن العمل فورًا ويُحرَّر المقعد الذي كان يحجزه. يمكنك دعوته مجددًا لاحقًا.',
   'team.invitations.expired': 'منتهية الصلاحية',
   'team.invitations.expiresIn': 'تنتهي {time}',
 
   'team.drawer.ownerRule': 'لكل مساحة عمل مالك واحد فقط دائمًا، لذا لا يمكن خفض دور المالك أو تعليقه.',
   'team.drawer.askOwner': 'اطلب من المالك نقل الملكية أولًا.',
   'team.drawer.errPermission': '{error} لا يتيح دورك إجراء هذا التغيير.',
-  'team.drawer.errVersion': 'عدّل زميل {name} أثناء تحريرك. تعديلاتك محفوظة — راجع القيم الحالية، ثم احفظ مجددًا لتطبيقها فوقها.',
+  'team.drawer.errVersion':
+    'عدّل زميل {name} أثناء تحريرك. تعديلاتك محفوظة: راجع القيم الحالية، ثم احفظ مجددًا لتطبيقها فوقها.',
   'team.drawer.errNotFound': 'هذا الموظف أو أحد الأقسام المحددة لم يعد موجودًا. أعد تحميل قائمة الفريق.',
   'team.drawer.savedToast': 'حُفظت التغييرات الخاصة بـ{name}',
   'team.drawer.restoredToast': 'يمكن لـ{name} تسجيل الدخول مجددًا',
@@ -175,16 +191,19 @@ export const team: Record<keyof typeof source, string> = {
   'team.drawer.roleOwnerHint': 'لا ينتقل دور المالك إلا عبر نقل الملكية.',
   'team.drawer.roleAdminLocked': 'لا يستطيع تغيير دور المسؤول إلا المالك.',
   'team.drawer.roleNoPermission': 'ليست لديك صلاحية تغيير الأدوار.',
-  'team.drawer.roleChangeSelf': 'تُعيد لوحة التحكم المفتوحة لديك الاتصال بالصلاحيات الجديدة فور الحفظ، ولا يُسجَّل خروج أحد.',
-  'team.drawer.roleChangeOther': 'تُعيد لوحة التحكم المفتوحة لدى {name} الاتصال بالصلاحيات الجديدة فور الحفظ، ولا يُسجَّل خروج أحد.',
+  'team.drawer.roleChangeSelf':
+    'تُعيد لوحة التحكم المفتوحة لديك الاتصال بالصلاحيات الجديدة فور الحفظ، ولا يُسجَّل خروج أحد.',
+  'team.drawer.roleChangeOther':
+    'تُعيد لوحة التحكم المفتوحة لدى {name} الاتصال بالصلاحيات الجديدة فور الحفظ، ولا يُسجَّل خروج أحد.',
   'team.drawer.handOver': 'لتسليم مساحة العمل، <link>انقل الملكية</link>. ستصبح بعدها مسؤولًا.',
   'team.drawer.access': 'الوصول إلى مساحة العمل',
-  'team.drawer.accessActive': 'نشط — يمكنه تسجيل الدخول واستقبال المحادثات.',
-  'team.drawer.accessSuspended': 'معلَّق — لا يمكنه تسجيل الدخول إلى مساحة العمل هذه.',
+  'team.drawer.accessActive': 'نشط: يمكنه تسجيل الدخول واستقبال المحادثات.',
+  'team.drawer.accessSuspended': 'معلَّق: لا يمكنه تسجيل الدخول إلى مساحة العمل هذه.',
   'team.drawer.suspend': 'تعليق الوصول',
   'team.drawer.restore': 'استعادة الوصول',
   'team.drawer.ownerNoSuspend': 'لا يمكن تعليق المالك. انقل الملكية أولًا.',
-  'team.drawer.departmentsHint': 'الخدمة: يستقبل محادثات قائمة انتظار القسم ويرد عليها. المراقبة: يمكنه متابعة محادثات القسم وقائمة انتظاره (للمشرفين والمسؤولين).',
+  'team.drawer.departmentsHint':
+    'الخدمة: يستقبل محادثات قائمة انتظار القسم ويرد عليها. المراقبة: يمكنه متابعة محادثات القسم وقائمة انتظاره (للمشرفين والمسؤولين).',
   'team.drawer.departmentsUnavailable': 'تفاصيل الأقسام غير متاحة.',
   'team.drawer.noDepartments': 'لا توجد أقسام بعد. أنشئ قسمًا من الإعدادات ← الأقسام.',
   'team.drawer.departmentAccessFor': 'وصول {name} إلى الأقسام',
@@ -197,17 +216,19 @@ export const team: Record<keyof typeof source, string> = {
   'team.drawer.deptChangeSelf': 'يُعاد اتصالك المباشر بالأقسام الجديدة عند الحفظ.',
   'team.drawer.deptChangeOther': 'تُعاد جلسة {name} المباشرة بالأقسام الجديدة عند الحفظ.',
   'team.drawer.capacity': 'السعة',
-  'team.drawer.capacityHint': 'الحد الأقصى للمحادثات المتزامنة (من {min} إلى {max}). تُحتسب عروض المحادثات المحجوزة ضمن السعة.',
+  'team.drawer.capacityHint':
+    'الحد الأقصى للمحادثات المتزامنة (من {min} إلى {max}). تُحتسب عروض المحادثات المحجوزة ضمن السعة.',
   'team.drawer.currentLoad':
     '{count, plural, zero {لا توجد محادثات نشطة حاليًا.} one {محادثة نشطة واحدة حاليًا.} two {محادثتان نشطتان حاليًا.} few {# محادثات نشطة حاليًا.} many {# محادثة نشطة حاليًا.} other {# محادثة نشطة حاليًا.}}',
   'team.drawer.decrease': 'خفض السعة',
   'team.drawer.increase': 'زيادة السعة',
-  'team.drawer.belowLoad': 'أقل من الحمل الحالي: تبقى المحادثات الحالية مُسندة، ولن تُعرض محادثات جديدة حتى ينخفض الحمل إلى أقل من {capacity}.',
+  'team.drawer.belowLoad':
+    'أقل من الحمل الحالي: تبقى المحادثات الحالية مُسندة، ولن تُعرض محادثات جديدة حتى ينخفض الحمل إلى أقل من {capacity}.',
   'team.drawer.suspendTitle': 'تعليق {name}؟',
   'team.drawer.suspendBody':
     'سيُسجَّل خروج {email} من كل مكان: تُلغى جميع جلسات لوحة التحكم والاتصالات المباشرة فورًا، وتعود محادثاته النشطة وعروض المحادثات المعلّقة إلى قائمة الانتظار لموظفين آخرين، ويغادر المحادثات التي كان يساعد فيها. لن يتمكن من استخدام مساحة العمل هذه حتى تستعيد وصوله.',
   'team.drawer.suspendOwnsChats':
-    'لدى {name} {count, plural, zero {لا محادثات نشطة} one {محادثة نشطة واحدة} two {محادثتان نشطتان} few {# محادثات نشطة} many {# محادثة نشطة} other {# محادثة نشطة}}. تبقى هذه المحادثات مُسندة — حوّلها من المراقبة أو صندوق الوارد حتى لا يبقى الزوار في الانتظار.',
+    'لدى {name} {count, plural, zero {لا محادثات نشطة} one {محادثة نشطة واحدة} two {محادثتان نشطتان} few {# محادثات نشطة} many {# محادثة نشطة} other {# محادثة نشطة}}. تبقى هذه المحادثات مُسندة، حوّلها من المراقبة أو صندوق الوارد حتى لا يبقى الزوار في الانتظار.',
   'team.drawer.suspendSelf': 'أنت تعلّق حسابك. سيُسجَّل خروجك فورًا.',
   'team.drawer.restoreTitle': 'استعادة وصول {name}؟',
   'team.drawer.restoreBody': 'يمكنه تسجيل الدخول مجددًا بحسابه الحالي. يبقى دوره وأقسامه وسعته دون تغيير.',
@@ -219,7 +240,8 @@ export const team: Record<keyof typeof source, string> = {
   'team.statusFilter.interrupted': 'منقطع الاتصال (الحالة متصل/بعيد)',
   'team.statusFilter.suspended': 'معلَّق',
 
-  'team.page.dirtyWhat': '{count, plural, zero {لا موظفين} one {موظف واحد} two {موظفَين} few {# موظفين} many {# موظفًا} other {# موظف}}',
+  'team.page.dirtyWhat':
+    '{count, plural, zero {لا موظفين} one {موظف واحد} two {موظفَين} few {# موظفين} many {# موظفًا} other {# موظف}}',
   'team.page.fixFields': 'أصلح الحقول المميّزة الخاصة بـ{name} أولًا.',
   'team.page.savedToast': 'حُفظت التغييرات',
   'team.page.title': 'الفريق',
@@ -247,7 +269,8 @@ export const team: Record<keyof typeof source, string> = {
   'team.page.filterDept': 'القسم {department}',
   'team.page.thisDepartment': 'هذا القسم',
   'team.page.emptyBody': 'ادعُ زملاءك لبدء مشاركة صندوق الوارد.',
-  'team.page.showing': 'يُعرض {shown} من أصل {total, plural, zero {لا زملاء} one {زميل واحد} two {زميلَين} few {# زملاء} many {# زميلًا} other {# زميل}}',
+  'team.page.showing':
+    'يُعرض {shown} من أصل {total, plural, zero {لا زملاء} one {زميل واحد} two {زميلَين} few {# زملاء} many {# زميلًا} other {# زميل}}',
   'team.page.activeChats': 'المحادثات النشطة',
   'team.page.lastSeen': 'آخر ظهور',
   'team.page.openAgent': 'فتح {name}',

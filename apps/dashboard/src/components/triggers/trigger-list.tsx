@@ -7,7 +7,17 @@
  * Refreshes live when any trigger is published, enabled, disabled or archived.
  */
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, CircleDashed, Copy, MoreHorizontal, Pencil, PauseCircle, Plus, Trash2, Workflow } from 'lucide-react';
+import {
+  CheckCircle2,
+  CircleDashed,
+  Copy,
+  MoreHorizontal,
+  Pencil,
+  PauseCircle,
+  Plus,
+  Trash2,
+  Workflow,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState } from 'react';
@@ -51,7 +61,14 @@ import { useCan } from '@/stores/session';
 import { departmentNamer, describeAction, eventLabel } from './dsl-ui';
 import { FunnelPanel, FunnelRangeSelect, type FunnelRange } from './funnel';
 import { archiveTrigger, publishTrigger, setTriggerEnabled } from './trigger-commands';
-import { hasInvitation, tk, triggerStatus, useTriggers, useTriggersRealtime, type TriggerListItem } from './triggers-api';
+import {
+  hasInvitation,
+  tk,
+  triggerStatus,
+  useTriggers,
+  useTriggersRealtime,
+  type TriggerListItem,
+} from './triggers-api';
 
 export function TriggerList() {
   return (
@@ -61,7 +78,11 @@ export function TriggerList() {
   );
 }
 
-export function StatusBadge({ t: trigger }: { t: Pick<TriggerListItem, 'publishedRevision' | 'enabled' | 'draftPending'> }) {
+export function StatusBadge({
+  t: trigger,
+}: {
+  t: Pick<TriggerListItem, 'publishedRevision' | 'enabled' | 'draftPending'>;
+}) {
   const t = useT();
   const s = triggerStatus(trigger);
   return (
@@ -79,7 +100,9 @@ export function StatusBadge({ t: trigger }: { t: Pick<TriggerListItem, 'publishe
           {t('triggers.status.draft')}
         </Badge>
       )}
-      {s !== 'draft' && trigger.draftPending && <Badge tone="info">{t('triggers.status.unpublishedChanges')}</Badge>}
+      {s !== 'draft' && trigger.draftPending && (
+        <Badge tone="info">{t('triggers.status.unpublishedChanges')}</Badge>
+      )}
     </span>
   );
 }
@@ -90,7 +113,8 @@ function ListPage() {
   const pathname = usePathname();
   const params = useSearchParams();
   const eventParam = params.get('event');
-  const event = eventParam && (DSL_EVENTS as readonly string[]).includes(eventParam) ? (eventParam as DslEvent) : null;
+  const event =
+    eventParam && (DSL_EVENTS as readonly string[]).includes(eventParam) ? (eventParam as DslEvent) : null;
   const canManage = useCan('triggers.manage');
   const q = useTriggers(event);
   const all = useTriggers(null);
@@ -142,7 +166,13 @@ function ListPage() {
           }
           action={
             <Field label={t('triggers.label.event')} hideLabel>
-              <Select compact value={event ?? ''} onChange={(e) => setEvent(e.target.value)} className="w-56" aria-label={t('triggers.list.filterByEvent')}>
+              <Select
+                compact
+                value={event ?? ''}
+                onChange={(e) => setEvent(e.target.value)}
+                className="w-56"
+                aria-label={t('triggers.list.filterByEvent')}
+              >
                 <option value="">{t('triggers.list.allEvents')}</option>
                 {DSL_EVENTS.map((e) => (
                   <option key={e} value={e}>
@@ -199,7 +229,11 @@ function ListPage() {
                 {q.data.map((tr) => (
                   <TR key={tr.id}>
                     <TD className="max-w-[320px] py-3">
-                      <Link href={`/settings/triggers/${tr.id}`} className="font-medium text-fg underline-offset-4 hover:text-primary hover:underline" dir="auto">
+                      <Link
+                        href={`/settings/triggers/${tr.id}`}
+                        className="font-medium text-fg underline-offset-4 hover:text-primary hover:underline"
+                        dir="auto"
+                      >
                         {tr.name}
                       </Link>
                       {tr.description && (
@@ -223,26 +257,50 @@ function ListPage() {
                       )}
                     </TD>
                     <TD className="text-end tabular">{formatNumber(tr.matchCount)}</TD>
-                    <TD className="text-end tabular">{tr.errorCount > 0 ? <span className="font-medium text-danger">{formatNumber(tr.errorCount)}</span> : formatNumber(tr.errorCount)}</TD>
+                    <TD className="text-end tabular">
+                      {tr.errorCount > 0 ? (
+                        <span className="font-medium text-danger">{formatNumber(tr.errorCount)}</span>
+                      ) : (
+                        formatNumber(tr.errorCount)
+                      )}
+                    </TD>
                     <TD className="text-end">
                       <div className="flex items-center justify-end gap-1">
                         {canManage && (
-                          <Button size="sm" variant="secondary" onClick={() => setToggle({ t: tr, enabled: !tr.enabled })}>
-                            {!tr.publishedRevision ? t('common.publish') : tr.enabled ? t('common.disable') : t('common.enable')}
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => setToggle({ t: tr, enabled: !tr.enabled })}
+                          >
+                            {!tr.publishedRevision
+                              ? t('common.publish')
+                              : tr.enabled
+                                ? t('common.disable')
+                                : t('common.enable')}
                           </Button>
                         )}
                         <Menu>
                           <MenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label={t('triggers.list.moreActionsFor', { name: isolate(tr.name) })}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              aria-label={t('triggers.list.moreActionsFor', { name: isolate(tr.name) })}
+                            >
                               <MoreHorizontal className="size-4" aria-hidden />
                             </Button>
                           </MenuTrigger>
                           <MenuContent>
-                            <MenuItem icon={<Pencil />} onSelect={() => router.push(`/settings/triggers/${tr.id}`)}>
+                            <MenuItem
+                              icon={<Pencil />}
+                              onSelect={() => router.push(`/settings/triggers/${tr.id}`)}
+                            >
                               {canManage ? t('common.edit') : t('common.view')}
                             </MenuItem>
                             {canManage && (
-                              <MenuItem icon={<Copy />} onSelect={() => router.push(`/settings/triggers/new?from=${tr.id}`)}>
+                              <MenuItem
+                                icon={<Copy />}
+                                onSelect={() => router.push(`/settings/triggers/new?from=${tr.id}`)}
+                              >
                                 {t('triggers.list.duplicate')}
                               </MenuItem>
                             )}
@@ -278,7 +336,11 @@ function ListPage() {
               <section key={tr.id} aria-labelledby={`funnel-${tr.id}`} className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 id={`funnel-${tr.id}`} className="text-sm font-semibold text-fg">
-                    <Link href={`/settings/triggers/${tr.id}?tab=invitations`} className="underline-offset-4 hover:text-primary hover:underline" dir="auto">
+                    <Link
+                      href={`/settings/triggers/${tr.id}?tab=invitations`}
+                      className="underline-offset-4 hover:text-primary hover:underline"
+                      dir="auto"
+                    >
                       {tr.name}
                     </Link>
                   </h3>
@@ -299,18 +361,39 @@ function ListPage() {
         title={
           !toggle
             ? ''
-            : t(!toggle.t.publishedRevision ? 'triggers.list.publishTitle' : toggle.enabled ? 'triggers.list.enableTitle' : 'triggers.list.disableTitle', { name: isolate(toggle.t.name) })
+            : t(
+                !toggle.t.publishedRevision
+                  ? 'triggers.list.publishTitle'
+                  : toggle.enabled
+                    ? 'triggers.list.enableTitle'
+                    : 'triggers.list.disableTitle',
+                { name: isolate(toggle.t.name) },
+              )
         }
         description={
           !toggle
             ? ''
             : !toggle.t.publishedRevision
-              ? t('triggers.list.publishBody', { revision: toggle.t.currentRevision, event: eventLabel(t, toggle.t.event) })
+              ? t('triggers.list.publishBody', {
+                  revision: toggle.t.currentRevision,
+                  event: eventLabel(t, toggle.t.event),
+                })
               : toggle.enabled
-                ? t(toggle.t.draftPending ? 'triggers.list.enableBodyDraft' : 'triggers.list.enableBody', { revision: toggle.t.publishedRevision, event: eventLabel(t, toggle.t.event) })
+                ? t(toggle.t.draftPending ? 'triggers.list.enableBodyDraft' : 'triggers.list.enableBody', {
+                    revision: toggle.t.publishedRevision,
+                    event: eventLabel(t, toggle.t.event),
+                  })
                 : t('triggers.list.disableBody', { revision: toggle.t.publishedRevision })
         }
-        confirmLabel={!toggle ? '' : !toggle.t.publishedRevision ? t('triggers.list.publishAndEnable') : toggle.enabled ? t('common.enable') : t('common.disable')}
+        confirmLabel={
+          !toggle
+            ? ''
+            : !toggle.t.publishedRevision
+              ? t('triggers.list.publishAndEnable')
+              : toggle.enabled
+                ? t('common.enable')
+                : t('common.disable')
+        }
         danger={!!toggle && !toggle.enabled && !!toggle.t.publishedRevision}
         onConfirm={async () => {
           if (!toggle) return;
@@ -325,20 +408,29 @@ function ListPage() {
             }
             throw e;
           }
-          toast.success(!tr.publishedRevision ? t('triggers.list.publishedEnabled') : enabled ? t('triggers.list.enabledToast') : t('triggers.list.disabledToast'));
+          toast.success(
+            !tr.publishedRevision
+              ? t('triggers.list.publishedEnabled')
+              : enabled
+                ? t('triggers.list.enabledToast')
+                : t('triggers.list.disabledToast'),
+          );
           await refresh();
         }}
       >
-        {toggle && (!toggle.t.publishedRevision || toggle.enabled) && toggle.t.definition && !toggle.t.draftPending && (
-          <div className="flex flex-col gap-1 text-sm">
-            <p className="font-medium text-fg">{t('triggers.label.whenMatches')}</p>
-            <ul className="list-disc ps-5 text-fg-2">
-              {toggle.t.definition.actions.map((a, i) => (
-                <li key={i}>{describeAction(t, a, { department: deptName })}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {toggle &&
+          (!toggle.t.publishedRevision || toggle.enabled) &&
+          toggle.t.definition &&
+          !toggle.t.draftPending && (
+            <div className="flex flex-col gap-1 text-sm">
+              <p className="font-medium text-fg">{t('triggers.label.whenMatches')}</p>
+              <ul className="list-disc ps-5 text-fg-2">
+                {toggle.t.definition.actions.map((a, i) => (
+                  <li key={i}>{describeAction(t, a, { department: deptName })}</li>
+                ))}
+              </ul>
+            </div>
+          )}
       </ConfirmDialog>
 
       <ConfirmDialog
@@ -400,8 +492,17 @@ function CreateTriggerDialog({ triggers, onClose }: { triggers: TriggerListItem[
             value={mode}
             onChange={setMode}
             options={[
-              { value: 'copy', label: t('triggers.create.copyLabel'), description: t('triggers.create.copyHelp'), disabled: !triggers.length },
-              { value: 'blank', label: t('triggers.create.blankLabel'), description: t('triggers.create.blankHelp') },
+              {
+                value: 'copy',
+                label: t('triggers.create.copyLabel'),
+                description: t('triggers.create.copyHelp'),
+                disabled: !triggers.length,
+              },
+              {
+                value: 'blank',
+                label: t('triggers.create.blankLabel'),
+                description: t('triggers.create.blankHelp'),
+              },
             ]}
           />
           {mode === 'copy' ? (
@@ -409,7 +510,7 @@ function CreateTriggerDialog({ triggers, onClose }: { triggers: TriggerListItem[
               <Select value={from} onChange={(e) => setFrom(e.target.value)}>
                 {triggers.map((tr) => (
                   <option key={tr.id} value={tr.id}>
-                    {tr.name} — {eventLabel(t, tr.event)}
+                    {tr.name} ({eventLabel(t, tr.event)})
                   </option>
                 ))}
               </Select>
@@ -425,7 +526,9 @@ function CreateTriggerDialog({ triggers, onClose }: { triggers: TriggerListItem[
               </Select>
             </Field>
           )}
-          {!triggers.length && mode === 'blank' && <Banner tone="info">{t('triggers.create.nothingToCopy')}</Banner>}
+          {!triggers.length && mode === 'blank' && (
+            <Banner tone="info">{t('triggers.create.nothingToCopy')}</Banner>
+          )}
         </div>
       </DialogContent>
     </Dialog>

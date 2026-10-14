@@ -56,7 +56,13 @@ export const TRIGGER_TEMPLATES: TriggerTemplate[] = [
         { field: 'eligible_agent_count', op: 'eq', value: 0 },
       ],
       any: [],
-      actions: [{ type: 'send_public_message', text: 'Thanks for your patience — all of our agents are helping other customers right now. You are in the queue and we will be with you shortly.', attribution: 'Support team' }],
+      actions: [
+        {
+          type: 'send_public_message',
+          text: 'Thanks for your patience. All of our agents are helping other customers right now. You are in the queue and we will be with you shortly.',
+          attribution: 'Support team',
+        },
+      ],
       stop_processing: false,
       cooldown_seconds: 0,
     },

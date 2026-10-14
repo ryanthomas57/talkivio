@@ -17,14 +17,18 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.rules.atMost': '≤ {n}',
   'customFields.rules.from': 'من {date}',
   'customFields.rules.until': 'حتى {date}',
-  'customFields.rules.options': '{count, plural, zero {لا خيارات} one {خيار واحد} two {خياران} few {# خيارات} many {# خيارًا} other {# خيار}}',
+  'customFields.rules.options':
+    '{count, plural, zero {لا خيارات} one {خيار واحد} two {خياران} few {# خيارات} many {# خيارًا} other {# خيار}}',
   'customFields.rules.none': 'بدون قواعد إضافية',
   'customFields.page.title': 'الحقول المخصصة',
-  'customFields.page.description': 'حقول محددة النوع يمكن للموظفين وموقعك تخزينها في سجلات الزوار — الخطة، ومعرّف الحساب، وتاريخ التجديد. يتم التحقق من القيم وفق هذه القواعد.',
+  'customFields.page.description':
+    'حقول محددة النوع يمكن للموظفين وموقعك تخزينها في سجلات الزوار، مثل الخطة، ومعرّف الحساب، وتاريخ التجديد. يتم التحقق من القيم وفق هذه القواعد.',
   'customFields.page.new': 'حقل جديد',
   'customFields.page.readOnly': 'يمكنك عرض تعريفات الحقول. اطلب من مسؤول إضافتها أو تغييرها.',
-  'customFields.page.rulesNote': 'لا يمكن إعادة تسمية مفتاح الحقل، ولا يمكن تغيير نوعه بعد أن تصبح له قيمة لدى أي زائر أو رسالة خارج الدوام — أنشئ حقلًا جديدًا بدلًا من ذلك. تؤدي الأرشفة إلى إخفاء الحقل عن المحررين وعن SDK؛ ويُحتفظ بالقيم المخزنة.',
-  'customFields.page.activeCount': '{count, plural, zero {لا حقول نشطة} one {حقل نشط واحد} two {حقلان نشطان} few {# حقول نشطة} many {# حقلًا نشطًا} other {# حقل نشط}} (الحد الأقصى {max})',
+  'customFields.page.rulesNote':
+    'لا يمكن إعادة تسمية مفتاح الحقل، ولا يمكن تغيير نوعه بعد أن تصبح له قيمة لدى أي زائر أو رسالة خارج الدوام، أنشئ حقلًا جديدًا بدلًا من ذلك. تؤدي الأرشفة إلى إخفاء الحقل عن المحررين وعن SDK؛ ويُحتفظ بالقيم المخزنة.',
+  'customFields.page.activeCount':
+    '{count, plural, zero {لا حقول نشطة} one {حقل نشط واحد} two {حقلان نشطان} few {# حقول نشطة} many {# حقلًا نشطًا} other {# حقل نشط}} (الحد الأقصى {max})',
   'customFields.page.showArchived': 'إظهار المؤرشفة',
   'customFields.page.loadFailed': 'تعذّر تحميل الحقول المخصصة. {error}',
   'customFields.page.emptyTitle': 'لا توجد حقول مخصصة بعد',
@@ -41,8 +45,10 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.col.writable': 'قابل للكتابة من الموقع',
   'customFields.col.visible': 'مرئي للزائر',
   'customFields.archive.title': 'أرشفة «{label}»؟',
-  'customFields.archive.body': 'لن يتمكن الموظفون ولا SDK الموقع من تعيين {key} بعد الآن. يُحتفظ بالقيم المخزنة لدى الزوار وتُعرض للقراءة فقط. يبقى المفتاح محجوزًا.',
-  'customFields.archive.bodyGeneric': 'لن يتمكن الموظفون ولا SDK الموقع من تعيين هذا الحقل بعد الآن. يُحتفظ بالقيم المخزنة لدى الزوار وتُعرض للقراءة فقط. يبقى المفتاح محجوزًا.',
+  'customFields.archive.body':
+    'لن يتمكن الموظفون ولا SDK الموقع من تعيين {key} بعد الآن. يُحتفظ بالقيم المخزنة لدى الزوار وتُعرض للقراءة فقط. يبقى المفتاح محجوزًا.',
+  'customFields.archive.bodyGeneric':
+    'لن يتمكن الموظفون ولا SDK الموقع من تعيين هذا الحقل بعد الآن. يُحتفظ بالقيم المخزنة لدى الزوار وتُعرض للقراءة فقط. يبقى المفتاح محجوزًا.',
   'customFields.archive.confirm': 'أرشفة الحقل',
   'customFields.archive.done': 'تمت أرشفة {label}',
   'customFields.dialog.wholeNumber': 'أدخل عددًا صحيحًا من {min} إلى {max}',
@@ -52,7 +58,8 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.dialog.needOption': 'أضف خيارًا واحدًا على الأقل',
   'customFields.dialog.uniqueOptions': 'يجب أن تكون قيم الخيارات فريدة',
   'customFields.dialog.optionTooLong': 'لا تتجاوز القيم والتسميات {max} حرف',
-  'customFields.dialog.keyInvalid': 'ابدأ بحرف؛ واستخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات سفلية (بحد أقصى {max})',
+  'customFields.dialog.keyInvalid':
+    'ابدأ بحرف؛ واستخدم أحرفًا إنجليزية صغيرة وأرقامًا وشرطات سفلية (بحد أقصى {max})',
   'customFields.dialog.keyReserved': 'هذا المفتاح محجوز',
   'customFields.dialog.labelRequired': 'أدخل تسمية',
   'customFields.dialog.saved': 'تم حفظ الحقل المخصص',
@@ -60,13 +67,16 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.dialog.invalid': 'غير صالح',
   'customFields.dialog.editTitle': 'تعديل «{label}»',
   'customFields.dialog.newTitle': 'حقل مخصص جديد',
-  'customFields.dialog.description': 'قيم محددة النوع ومتحقق منها تُخزَّن في سجل كل زائر. القيم بسيطة — وليست كائنات أو شيفرة أبدًا.',
+  'customFields.dialog.description':
+    'قيم محددة النوع ومتحقق منها تُخزَّن في سجل كل زائر. القيم بسيطة، وليست كائنات أو شيفرة أبدًا.',
   'customFields.dialog.save': 'حفظ الحقل',
   'customFields.dialog.create': 'إنشاء الحقل',
   'customFields.dialog.keyLocked': 'لا يمكن تغيير المفاتيح بعد الإنشاء.',
   'customFields.dialog.keyHint': 'يستخدمه SDK أداة الدردشة والتكاملات. لا يمكن تغييره لاحقًا.',
-  'customFields.dialog.typeHint': 'يُرفض تغيير النوع إذا كانت لأي زائر أو رسالة خارج الدوام قيمة لهذا الحقل — أنشئ حقلًا جديدًا بدلًا من ذلك.',
-  'customFields.dialog.typeChange': 'تغيير النوع من {from} إلى {to}: سيفشل الحفظ إذا كانت لهذا الحقل قيم بالفعل.',
+  'customFields.dialog.typeHint':
+    'يُرفض تغيير النوع إذا كانت لأي زائر أو رسالة خارج الدوام قيمة لهذا الحقل، أنشئ حقلًا جديدًا بدلًا من ذلك.',
+  'customFields.dialog.typeChange':
+    'تغيير النوع من {from} إلى {to}: سيفشل الحفظ إذا كانت لهذا الحقل قيم بالفعل.',
   'customFields.dialog.validation': 'التحقق',
   'customFields.dialog.format': 'الصيغة',
   'customFields.dialog.formatAny': 'أي نص',
@@ -89,9 +99,11 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.dialog.removeOption': 'إزالة الخيار {n}',
   'customFields.dialog.addOption': 'إضافة خيار',
   'customFields.dialog.writable': 'قابل للكتابة من موقعك',
-  'customFields.dialog.writableHint': 'يمكن لـ SDK أداة الدردشة في موقعك تعيين هذه القيمة. تعامل معها كبيانات مقدّمة من الزائر وغير موثّقة.',
+  'customFields.dialog.writableHint':
+    'يمكن لـ SDK أداة الدردشة في موقعك تعيين هذه القيمة. تعامل معها كبيانات مقدّمة من الزائر وغير موثّقة.',
   'customFields.dialog.visible': 'مرئي للزائر',
-  'customFields.dialog.visibleHint': 'يمكن للزائر رؤية هذه القيمة الخاصة به. لا تستخدمها أبدًا للملاحظات الداخلية أو الأسرار.',
+  'customFields.dialog.visibleHint':
+    'يمكن للزائر رؤية هذه القيمة الخاصة به. لا تستخدمها أبدًا للملاحظات الداخلية أو الأسرار.',
   'customFields.dialog.conflictTitle': 'غيّر شخص آخر هذا الحقل',
   'customFields.dialog.conflictBody': 'أعد تحميل أحدث إصدار، ثم أعد تطبيق تغييراتك.',
   'customFields.values.saved': 'تم حفظ الحقول المخصصة',
@@ -101,7 +113,8 @@ export const customFields: Record<keyof typeof source, string> = {
   'customFields.values.noneDefined': 'لا توجد حقول مخصصة معرّفة لمساحة العمل هذه.',
   'customFields.values.defineFields': 'تعريف الحقول',
   'customFields.values.emptyTitle': 'لا توجد حقول مخصصة معرّفة',
-  'customFields.values.emptyBody': 'يعرّف المسؤولون الحقول محددة النوع (الخطة، معرّف الحساب، …) من الإعدادات ← الحقول المخصصة.',
+  'customFields.values.emptyBody':
+    'يعرّف المسؤولون الحقول محددة النوع (الخطة، معرّف الحساب، …) من الإعدادات ← الحقول المخصصة.',
   'customFields.values.defineCustomFields': 'تعريف الحقول المخصصة',
   'customFields.values.conflictTitle': 'تغيّر هذا الزائر منذ أن فتحته',
   'customFields.values.conflictBody': 'حفظ شخص آخر تغييرات. أعد التحميل لعرضها، ثم أعد تطبيق تعديلاتك.',

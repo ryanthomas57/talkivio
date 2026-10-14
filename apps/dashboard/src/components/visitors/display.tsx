@@ -32,7 +32,7 @@ export function ticking(baseMs: number | null | undefined, receivedAt: number, n
 }
 
 export function Elapsed({ ms, className }: { ms: number | null; className?: string }) {
-  if (ms === null) return <span className={cn('text-fg-3', className)}>—</span>;
+  if (ms === null) return null;
   return (
     <span className={cn('tabular', className)} aria-label={formatDurationLong(ms)}>
       {formatDuration(ms)}
@@ -84,11 +84,19 @@ const DEVICE: Record<string, { label: MessageKey; Icon: typeof Monitor }> = {
   tablet: { label: 'visitors.device.tablet', Icon: Tablet },
 };
 
-export function DeviceLabel({ category, className }: { category: string | null | undefined; className?: string }) {
+export function DeviceLabel({
+  category,
+  className,
+}: {
+  category: string | null | undefined;
+  className?: string;
+}) {
   const t = useT();
   if (!category) return <span className={cn('text-fg-3', className)}>{t('common.unknown')}</span>;
   const known = DEVICE[category];
-  const d = known ? { label: t(known.label), Icon: known.Icon } : { label: category.charAt(0).toUpperCase() + category.slice(1), Icon: HelpCircle };
+  const d = known
+    ? { label: t(known.label), Icon: known.Icon }
+    : { label: category.charAt(0).toUpperCase() + category.slice(1), Icon: HelpCircle };
   return (
     <span className={cn('inline-flex items-center gap-1.5', className)}>
       <d.Icon className="size-3.5 shrink-0 text-fg-2" aria-hidden />
@@ -104,7 +112,11 @@ export function ApproxCountry({ code, className }: { code: string | null | undef
   const name = countryName(code) ?? code;
   return (
     <Tooltip content={t('visitors.display.approxTooltip')}>
-      <span className={cn('inline-flex items-center gap-1', className)} tabIndex={0} aria-label={t('visitors.display.approxLabel', { country: name })}>
+      <span
+        className={cn('inline-flex items-center gap-1', className)}
+        tabIndex={0}
+        aria-label={t('visitors.display.approxLabel', { country: name })}
+      >
         <span aria-hidden className="text-fg-2">
           ≈
         </span>
@@ -115,32 +127,60 @@ export function ApproxCountry({ code, className }: { code: string | null | undef
 }
 
 /** Verified identity vs anonymous / visitor-provided (unverified) details. */
-export function IdentityBadge({ verified, identified, compact }: { verified: boolean; identified?: boolean; compact?: boolean }) {
+export function IdentityBadge({
+  verified,
+  identified,
+  compact,
+}: {
+  verified: boolean;
+  identified?: boolean;
+  compact?: boolean;
+}) {
   const t = useT();
   if (verified)
     return (
-      <Badge tone="success" icon={<BadgeCheck className="size-3.5" aria-hidden />} title={t('visitors.display.verifiedTitle')}>
+      <Badge
+        tone="success"
+        icon={<BadgeCheck className="size-3.5" aria-hidden />}
+        title={t('visitors.display.verifiedTitle')}
+      >
         {compact ? t('visitors.display.verified') : t('visitors.display.verifiedIdentity')}
       </Badge>
     );
   if (identified)
     return (
-      <Badge tone="neutral" icon={<CircleUser className="size-3.5" aria-hidden />} title={t('visitors.display.unverifiedTitle')}>
+      <Badge
+        tone="neutral"
+        icon={<CircleUser className="size-3.5" aria-hidden />}
+        title={t('visitors.display.unverifiedTitle')}
+      >
         {t('visitors.display.unverified')}
       </Badge>
     );
   return (
-    <Badge tone="neutral" icon={<CircleUser className="size-3.5" aria-hidden />} title={t('visitors.display.anonymousTitle')}>
+    <Badge
+      tone="neutral"
+      icon={<CircleUser className="size-3.5" aria-hidden />}
+      title={t('visitors.display.anonymousTitle')}
+    >
       {t('visitors.display.anonymous')}
     </Badge>
   );
 }
 
 /** Truncated page label; the full sanitized URL appears on hover and keyboard focus. */
-export function PageCell({ url, title, hidden }: { url: string | null; title?: string | null; hidden?: boolean }) {
+export function PageCell({
+  url,
+  title,
+  hidden,
+}: {
+  url: string | null;
+  title?: string | null;
+  hidden?: boolean;
+}) {
   const t = useT();
   if (hidden) return <span className="text-xs text-fg-3">{t('visitors.display.pageHidden')}</span>;
-  if (!url) return <span className="text-fg-3">—</span>;
+  if (!url) return null;
   const label = urlLabel(url);
   return (
     <Tooltip
@@ -159,7 +199,11 @@ export function PageCell({ url, title, hidden }: { url: string | null; title?: s
         tabIndex={0}
         dir="auto"
         className="block min-w-0 truncate rounded-sm"
-        aria-label={title ? t('visitors.display.currentPageWithTitle', { title: isolate(title), url: isolate(label) }) : t('visitors.display.currentPage', { url: isolate(label) })}
+        aria-label={
+          title
+            ? t('visitors.display.currentPageWithTitle', { title: isolate(title), url: isolate(label) })
+            : t('visitors.display.currentPage', { url: isolate(label) })
+        }
       >
         {label}
       </span>

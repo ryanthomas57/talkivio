@@ -11,7 +11,16 @@ import { Badge, Tooltip } from '@/components/ui';
 import { isolate, useT, type MessageKey } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
-import { ApproxCountry, DeviceLabel, Elapsed, IdentityBadge, originLabel, PageCell, ticking, useMonoNow } from './display';
+import {
+  ApproxCountry,
+  DeviceLabel,
+  Elapsed,
+  IdentityBadge,
+  originLabel,
+  PageCell,
+  ticking,
+  useMonoNow,
+} from './display';
 import type { LiveRow } from './live-model';
 import { GROUP_HINT, GROUP_LABEL, type LiveGroup } from './types';
 import { useWindowedRows } from './windowing';
@@ -20,15 +29,29 @@ const ROW_H = 56;
 const GROUP_H = 36;
 const HEAD_H = 40;
 
-type Item = { kind: 'group'; group: LiveGroup; loaded: number } | { kind: 'row'; row: LiveRow; index: number };
+type Item =
+  { kind: 'group'; group: LiveGroup; loaded: number } | { kind: 'row'; row: LiveRow; index: number };
 
-const COLS: Array<{ key: string; label: MessageKey; width: number; sticky?: boolean; title?: MessageKey; srLabel?: MessageKey }> = [
+const COLS: Array<{
+  key: string;
+  label: MessageKey;
+  width: number;
+  sticky?: boolean;
+  title?: MessageKey;
+  srLabel?: MessageKey;
+}> = [
   { key: 'visitor', label: 'common.visitor', width: 200, sticky: true },
   { key: 'page', label: 'visitors.live.col.page', width: 216 },
   { key: 'ref', label: 'visitors.live.col.referrer', width: 112 },
   { key: 'site', label: 'visitors.live.col.onSite', width: 84 },
   { key: 'dwell', label: 'visitors.live.col.onPage', width: 84 },
-  { key: 'country', label: 'visitors.live.col.country', width: 120, title: 'visitors.live.col.countryTitle', srLabel: 'visitors.live.col.countrySr' },
+  {
+    key: 'country',
+    label: 'visitors.live.col.country',
+    width: 120,
+    title: 'visitors.live.col.countryTitle',
+    srLabel: 'visitors.live.col.countrySr',
+  },
   { key: 'device', label: 'visitors.live.col.device', width: 96 },
   { key: 'sessions', label: 'visitors.live.col.visits', width: 76 },
   { key: 'tags', label: 'visitors.live.col.tags', width: 120 },
@@ -90,7 +113,8 @@ export function LiveTable({
     let idx = a.index;
     while (idx < items.length && items[idx]!.kind !== 'row') idx++;
     const it = items[idx];
-    anchorRef.current = it && it.kind === 'row' ? { id: it.row.v.visitorId, delta: el.scrollTop - offsets[idx]! } : null;
+    anchorRef.current =
+      it && it.kind === 'row' ? { id: it.row.v.visitorId, delta: el.scrollTop - offsets[idx]! } : null;
   }, [anchor, items, offsets]);
 
   useEffect(() => {
@@ -124,7 +148,9 @@ export function LiveTable({
       requestAnimationFrame(() => {
         const it = items[pos];
         if (it?.kind !== 'row') return;
-        scrollRef.current?.querySelector<HTMLButtonElement>(`[data-visitor-button="${it.row.v.visitorId}"]`)?.focus();
+        scrollRef.current
+          ?.querySelector<HTMLButtonElement>(`[data-visitor-button="${it.row.v.visitorId}"]`)
+          ?.focus();
       });
     },
     [items, scrollToIndex],
@@ -164,8 +190,18 @@ export function LiveTable({
   const visible = items.slice(range.start, range.end);
 
   return (
-    <div ref={scrollRef} className="relative min-h-0 flex-1 overflow-auto scroll-thin" role="region" aria-label={label} tabIndex={-1}>
-      <table className="table-fixed border-collapse text-start text-sm" style={{ width: TABLE_W, minWidth: '100%' }} aria-rowcount={totalRows + 1}>
+    <div
+      ref={scrollRef}
+      className="relative min-h-0 flex-1 overflow-auto scroll-thin"
+      role="region"
+      aria-label={label}
+      tabIndex={-1}
+    >
+      <table
+        className="table-fixed border-collapse text-start text-sm"
+        style={{ width: TABLE_W, minWidth: '100%' }}
+        aria-rowcount={totalRows + 1}
+      >
         <colgroup>
           {COLS.map((c) => (
             <col key={c.key} style={{ width: c.width }} />
@@ -174,7 +210,14 @@ export function LiveTable({
         <thead className="sticky top-0 z-[2] bg-surface-2">
           <tr aria-rowindex={1} style={{ height: HEAD_H }}>
             {COLS.map((c) => (
-              <th key={c.key} scope="col" className={cn('whitespace-nowrap border-b border-line px-3 text-xs font-semibold uppercase tracking-wide text-fg-2', c.sticky && 'sticky start-0 z-[3] bg-surface-2')}>
+              <th
+                key={c.key}
+                scope="col"
+                className={cn(
+                  'whitespace-nowrap border-b border-line px-3 text-xs font-semibold uppercase tracking-wide text-fg-2',
+                  c.sticky && 'sticky start-0 z-[3] bg-surface-2',
+                )}
+              >
                 {c.title ? (
                   <>
                     <span aria-hidden title={t(c.title)}>
@@ -194,17 +237,33 @@ export function LiveTable({
           {visible.map((it) =>
             it.kind === 'group' ? (
               <tr key={`g-${it.group}`} style={{ height: GROUP_H }} className="bg-canvas">
-                <th scope="colgroup" colSpan={COLS.length} className="sticky start-0 border-b border-line-subtle px-3 text-start text-xs font-semibold text-fg-2">
+                <th
+                  scope="colgroup"
+                  colSpan={COLS.length}
+                  className="sticky start-0 border-b border-line-subtle px-3 text-start text-xs font-semibold text-fg-2"
+                >
                   <span className="inline-flex items-center gap-2">
                     <span className="uppercase tracking-wide text-fg">{t(GROUP_LABEL[it.group])}</span>
                     <span className="tabular">{formatNumber(counts[it.group] ?? it.loaded)}</span>
-                    {counts[it.group] !== undefined && (counts[it.group] ?? 0) > it.loaded && <span className="font-normal">{t('visitors.live.groupLoaded', { count: it.loaded })}</span>}
+                    {counts[it.group] !== undefined && (counts[it.group] ?? 0) > it.loaded && (
+                      <span className="font-normal">
+                        {t('visitors.live.groupLoaded', { count: it.loaded })}
+                      </span>
+                    )}
                     <span className="hidden font-normal sm:inline">· {t(GROUP_HINT[it.group])}</span>
                   </span>
                 </th>
               </tr>
             ) : (
-              <VisitorRow key={it.row.v.visitorId} row={it.row} rowIndex={it.index + 2} now={now} selected={it.row.v.visitorId === selectedId} onSelect={onSelect} onKey={onKey} />
+              <VisitorRow
+                key={it.row.v.visitorId}
+                row={it.row}
+                rowIndex={it.index + 2}
+                now={now}
+                selected={it.row.v.visitorId === selectedId}
+                onSelect={onSelect}
+                onKey={onKey}
+              />
             ),
           )}
           {range.padBottom > 0 && <tr aria-hidden style={{ height: range.padBottom }} />}
@@ -247,7 +306,13 @@ const VisitorRow = memo(function VisitorRow({
       }}
       className={cn('group cursor-pointer', selected ? 'bg-primary-tint' : 'hover:bg-surface-2')}
     >
-      <td className={cn(cell, 'sticky start-0 z-[1]', selected ? 'bg-primary-tint' : 'bg-surface group-hover:bg-surface-2')}>
+      <td
+        className={cn(
+          cell,
+          'sticky start-0 z-[1]',
+          selected ? 'bg-primary-tint' : 'bg-surface group-hover:bg-surface-2',
+        )}
+      >
         <div className="flex min-w-0 flex-col gap-0.5">
           <button
             type="button"
@@ -277,9 +342,7 @@ const VisitorRow = memo(function VisitorRow({
         </div>
       </td>
       <td className={cell}>
-        {v.browsingHidden ? (
-          <span className="text-fg-3">—</span>
-        ) : v.referrerOrigin ? (
+        {v.browsingHidden ? null : v.referrerOrigin ? (
           <span className="block truncate" title={v.referrerOrigin} dir="auto">
             {originLabel(v.referrerOrigin)}
           </span>
@@ -293,14 +356,18 @@ const VisitorRow = memo(function VisitorRow({
       <td className={cell}>
         <Elapsed ms={dwell} />
       </td>
-      <td className={cell}>{v.browsingHidden ? <span className="text-fg-3">—</span> : <ApproxCountry code={v.country} className="max-w-full" />}</td>
+      <td className={cell}>
+        {v.browsingHidden ? null : <ApproxCountry code={v.country} className="max-w-full" />}
+      </td>
       <td className={cell}>
         <DeviceLabel category={v.deviceCategory} />
       </td>
       <td className={cell}>
         <div className="flex flex-col gap-0.5">
-          <span className="tabular">{v.sessionCount === null ? '—' : formatNumber(v.sessionCount)}</span>
-          {liveTabs > 1 && <span className="text-xs text-fg-2">{t('visitors.live.tabsOpen', { count: liveTabs })}</span>}
+          <span className="tabular">{v.sessionCount === null ? '' : formatNumber(v.sessionCount)}</span>
+          {liveTabs > 1 && (
+            <span className="text-xs text-fg-2">{t('visitors.live.tabsOpen', { count: liveTabs })}</span>
+          )}
         </div>
       </td>
       <td className={cell}>
@@ -329,18 +396,32 @@ const VisitorRow = memo(function VisitorRow({
               </Tooltip>
             )}
           </span>
-        ) : (
-          <span className="text-fg-3">—</span>
-        )}
+        ) : null}
       </td>
       <td className={cell}>
         {v.chat ? (
           <div className="flex min-w-0 flex-col gap-0.5">
-            <span className={cn('inline-flex items-center gap-1.5 font-medium', v.group === 'incoming' ? 'text-warning' : 'text-success')}>
-              {v.group === 'incoming' ? <Timer className="size-3.5" aria-hidden /> : <MessageSquare className="size-3.5" aria-hidden />}
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 font-medium',
+                v.group === 'incoming' ? 'text-warning' : 'text-success',
+              )}
+            >
               {v.group === 'incoming' ? (
-                <span className="tabular" aria-label={wait === null ? undefined : t('visitors.live.waiting', { duration: formatDurationLong(wait) })}>
-                  {t('visitors.live.waiting', { duration: wait === null ? '—' : formatDuration(wait) })}
+                <Timer className="size-3.5" aria-hidden />
+              ) : (
+                <MessageSquare className="size-3.5" aria-hidden />
+              )}
+              {v.group === 'incoming' ? (
+                <span
+                  className="tabular"
+                  aria-label={
+                    wait === null
+                      ? undefined
+                      : t('visitors.live.waiting', { duration: formatDurationLong(wait) })
+                  }
+                >
+                  {wait === null ? null : t('visitors.live.waiting', { duration: formatDuration(wait) })}
                 </span>
               ) : (
                 t('visitors.live.inChat')

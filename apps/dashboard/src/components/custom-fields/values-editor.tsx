@@ -29,13 +29,19 @@ function toDraft(defs: CustomField[], values: Record<string, unknown>): Draft {
   return d;
 }
 
-function parse(t: Translate, f: CustomField, raw: string | boolean): { ok: true; value: string | number | boolean | null } | { ok: false; error: string } {
+function parse(
+  t: Translate,
+  f: CustomField,
+  raw: string | boolean,
+): { ok: true; value: string | number | boolean | null } | { ok: false; error: string } {
   const s = typeof raw === 'boolean' ? String(raw) : raw.trim();
   if (s === '') return { ok: true, value: null };
   switch (f.dataType) {
     case 'number': {
       const n = Number(s);
-      return Number.isFinite(n) ? { ok: true, value: n } : { ok: false, error: t('customFields.dialog.enterNumber') };
+      return Number.isFinite(n)
+        ? { ok: true, value: n }
+        : { ok: false, error: t('customFields.dialog.enterNumber') };
     }
     case 'boolean':
       return { ok: true, value: s === 'true' };
@@ -45,7 +51,7 @@ function parse(t: Translate, f: CustomField, raw: string | boolean): { ok: true;
 }
 
 function display(t: Translate, f: CustomField | undefined, v: unknown): string {
-  if (v === null || v === undefined || v === '') return '—';
+  if (v === null || v === undefined || v === '') return '';
   if (f?.dataType === 'boolean') return v === true ? t('common.yes') : t('common.no');
   if (f?.dataType === 'enum') return f.validation.options?.find((o) => o.value === v)?.label ?? String(v);
   return String(v);
@@ -63,7 +69,12 @@ export interface ValuesTarget {
 function SourceNote({ source }: { source: FieldProvenance | undefined }) {
   const t = useT();
   if (!source) return null;
-  const label = source.source === 'visitor' ? t('customFields.values.sourceVisitor') : source.source === 'trigger' ? t('customFields.values.sourceTrigger') : t('customFields.values.sourceAgent');
+  const label =
+    source.source === 'visitor'
+      ? t('customFields.values.sourceVisitor')
+      : source.source === 'trigger'
+        ? t('customFields.values.sourceTrigger')
+        : t('customFields.values.sourceAgent');
   return (
     <span className="block text-[11px] font-normal text-fg-3" title={formatDateTime(source.at)}>
       {label}
@@ -71,7 +82,17 @@ function SourceNote({ source }: { source: FieldProvenance | undefined }) {
   );
 }
 
-export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { visitor: ValuesTarget; onSaved: (next: unknown) => void; onReload: () => void; compact?: boolean }) {
+export function CustomFieldValues({
+  visitor,
+  onSaved,
+  onReload,
+  compact,
+}: {
+  visitor: ValuesTarget;
+  onSaved: (next: unknown) => void;
+  onReload: () => void;
+  compact?: boolean;
+}) {
   const t = useT();
   const defsQ = useCustomFields(false);
   const canEdit = useCan('visitors.edit') && !visitor.erased;
@@ -107,7 +128,11 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
     setFailure(null);
     setConflict(false);
     try {
-      const next = await api.patch(`/visitors/${visitor.id}`, { customFields: patch }, { ifMatch: visitor.version });
+      const next = await api.patch(
+        `/visitors/${visitor.id}`,
+        { customFields: patch },
+        { ifMatch: visitor.version },
+      );
       onSaved(next);
       setEditing(false);
       toast.success(t('customFields.values.saved'));
@@ -116,7 +141,8 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
       if (isApiError(e, 'VERSION_CONFLICT')) setConflict(true);
       else if (e instanceof ApiError && Object.keys(e.fieldErrors).length) {
         const fe: Record<string, string> = {};
-        for (const [k, msgs] of Object.entries(e.fieldErrors)) fe[k.replace(/^custom_fields\./, '')] = msgs[0] ?? t('customFields.values.invalid');
+        for (const [k, msgs] of Object.entries(e.fieldErrors))
+          fe[k.replace(/^custom_fields\./, '')] = msgs[0] ?? t('customFields.values.invalid');
         setErrors(fe);
         setFailure(e.message);
       } else setFailure(errorMessage(e));
@@ -129,7 +155,12 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
   const guard = useDirtyGuard(dirty, { what: t('customFields.values.dirtyWhat'), onSave: save });
 
   if (defsQ.isLoading) return <Skeleton className="h-20 w-full" />;
-  if (defsQ.isError) return <Banner tone="danger">{t('customFields.values.loadFailed', { error: errorMessage(defsQ.error) })}</Banner>;
+  if (defsQ.isError)
+    return (
+      <Banner tone="danger">
+        {t('customFields.values.loadFailed', { error: errorMessage(defsQ.error) })}
+      </Banner>
+    );
   if (!defs.length && !extra.length)
     return compact ? (
       <p className="text-sm text-fg-2">
@@ -193,7 +224,9 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
                 </dt>
                 <dd className="min-w-0 text-end font-medium text-fg break-anywhere" dir="auto">
                   {display(t, f, visitor.customFields[f.key])}
-                  {f.key in visitor.customFields && <SourceNote source={visitor.customFieldSources?.[f.key]} />}
+                  {f.key in visitor.customFields && (
+                    <SourceNote source={visitor.customFieldSources?.[f.key]} />
+                  )}
                 </dd>
               </div>
             ))}
@@ -237,7 +270,13 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
           }}
         >
           {defs.map((f) => (
-            <ValueInput key={f.id} field={f} value={draft[f.key] ?? ''} error={errors[f.key]} onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))} />
+            <ValueInput
+              key={f.id}
+              field={f}
+              value={draft[f.key] ?? ''}
+              error={errors[f.key]}
+              onChange={(v) => setDraft((d) => ({ ...d, [f.key]: v }))}
+            />
           ))}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" variant="primary" loading={saving} disabled={!dirty}>
@@ -253,7 +292,17 @@ export function CustomFieldValues({ visitor, onSaved, onReload, compact }: { vis
   );
 }
 
-function ValueInput({ field: f, value, error, onChange }: { field: CustomField; value: string | boolean; error?: string; onChange: (v: string) => void }) {
+function ValueInput({
+  field: f,
+  value,
+  error,
+  onChange,
+}: {
+  field: CustomField;
+  value: string | boolean;
+  error?: string;
+  onChange: (v: string) => void;
+}) {
   const t = useT();
   const v = typeof value === 'boolean' ? String(value) : value;
   const description = t('customFields.values.ruleHint', { rules: describeRules(f) });
@@ -286,15 +335,34 @@ function ValueInput({ field: f, value, error, onChange }: { field: CustomField; 
       <Input
         value={v}
         onChange={(e) => onChange(e.target.value)}
-        type={f.dataType === 'number' ? 'number' : f.dataType === 'date' ? 'date' : val.format === 'email' ? 'email' : val.format === 'url' ? 'url' : val.format === 'phone' ? 'tel' : 'text'}
+        type={
+          f.dataType === 'number'
+            ? 'number'
+            : f.dataType === 'date'
+              ? 'date'
+              : val.format === 'email'
+                ? 'email'
+                : val.format === 'url'
+                  ? 'url'
+                  : val.format === 'phone'
+                    ? 'tel'
+                    : 'text'
+        }
         inputMode={f.dataType === 'number' ? 'decimal' : undefined}
         step={f.dataType === 'number' ? (val.integer ? 1 : 'any') : undefined}
-        min={f.dataType === 'number' || f.dataType === 'date' ? (val.min as string | number | undefined) : undefined}
-        max={f.dataType === 'number' || f.dataType === 'date' ? (val.max as string | number | undefined) : undefined}
+        min={
+          f.dataType === 'number' || f.dataType === 'date'
+            ? (val.min as string | number | undefined)
+            : undefined
+        }
+        max={
+          f.dataType === 'number' || f.dataType === 'date'
+            ? (val.max as string | number | undefined)
+            : undefined
+        }
         maxLength={f.dataType === 'string' ? (val.maxLength ?? 500) : undefined}
         dir={f.dataType === 'string' && !val.format ? 'auto' : undefined}
       />
     </Field>
   );
 }
-

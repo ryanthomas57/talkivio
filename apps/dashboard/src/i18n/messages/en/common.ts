@@ -31,6 +31,7 @@ export const common = {
   'common.filters': 'Filters',
   'common.all': 'All',
   'common.none': 'None',
+  'common.notAvailable': 'N/A',
   'common.unknown': 'Unknown',
   'common.other': 'Other',
   'common.yes': 'Yes',

@@ -16,7 +16,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.install.neverVerified': 'لم يتم التحقق مطلقًا',
   'sites.origins.duplicate': 'مطابق للنطاق {n}',
   'sites.origins.legend': 'النطاقات المسموح بها',
-  'sites.origins.help': 'البروتوكول والمضيف بدقة، مع منفذ اختياري — بدون مسارات. يلزم HTTPS إلا على localhost. خيار «النطاقات الفرعية أيضًا» يسمح كذلك بأي نطاق فرعي لذلك المضيف.',
+  'sites.origins.help':
+    'البروتوكول والمضيف بدقة، مع منفذ اختياري، بدون مسارات. يلزم HTTPS إلا على localhost. خيار «النطاقات الفرعية أيضًا» يسمح كذلك بأي نطاق فرعي لذلك المضيف.',
   'sites.origins.originN': 'النطاق {n}',
   'sites.origins.matchN': 'نوع المطابقة للنطاق {n}',
   'sites.origins.exact': 'النطاق المطابق تمامًا',
@@ -26,7 +27,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.origins.widgetSeen': 'رُصدت أداة الدردشة {time}',
   'sites.origins.seen': 'رُصدت {time}',
   'sites.origins.add': 'إضافة نطاق',
-  'sites.origins.limit': 'يمكنك إضافة {count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقين} few {# نطاقات} many {# نطاقًا} other {# نطاق}} كحد أقصى لكل موقع.',
+  'sites.origins.limit':
+    'يمكنك إضافة {count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقين} few {# نطاقات} many {# نطاقًا} other {# نطاق}} كحد أقصى لكل موقع.',
   'sites.create.nameRequired': 'أدخل اسمًا لهذا الموقع',
   'sites.create.originRequired': 'أضف العنوان الذي ستعمل عليه أداة الدردشة، مثل https://www.example.com',
   'sites.create.created': 'تم إنشاء {name}',
@@ -37,7 +39,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.create.name': 'اسم الموقع',
   'sites.create.nameHint': 'يظهر لفريقك، مثل «المتجر الرئيسي».',
   'sites.list.title': 'المواقع',
-  'sites.list.description': 'الأماكن التي تعمل فيها أداة الدردشة. لكل موقع نطاقاته المسموح بها وإعدادات أداة الدردشة ومقتطف التثبيت الخاص به.',
+  'sites.list.description':
+    'الأماكن التي تعمل فيها أداة الدردشة. لكل موقع نطاقاته المسموح بها وإعدادات أداة الدردشة ومقتطف التثبيت الخاص به.',
   'sites.list.add': 'إضافة موقع',
   'sites.list.emptyTitle': 'لا توجد مواقع بعد',
   'sites.list.emptyBody': 'أضف موقعك ونطاقاته المسموح بها للحصول على مقتطف تثبيت أداة الدردشة.',
@@ -46,10 +49,12 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.list.colInstallation': 'التثبيت',
   'sites.list.colWidget': 'إعدادات أداة الدردشة',
   'sites.list.identityVerification': 'التحقق من الهوية',
-  'sites.list.originCount': '{count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقان} few {# نطاقات} many {# نطاقًا} other {# نطاق}}',
+  'sites.list.originCount':
+    '{count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقان} few {# نطاقات} many {# نطاقًا} other {# نطاق}}',
   'sites.list.revision': 'المراجعة {revision}',
   'sites.list.published': 'منشورة',
-  'sites.list.mobileMeta': '{count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقان} few {# نطاقات} many {# نطاقًا} other {# نطاق}} · مراجعة أداة الدردشة {revision}',
+  'sites.list.mobileMeta':
+    '{count, plural, zero {لا نطاقات} one {نطاق واحد} two {نطاقان} few {# نطاقات} many {# نطاقًا} other {# نطاق}} · مراجعة أداة الدردشة {revision}',
   'sites.detail.tabs.general': 'عام',
   'sites.detail.tabs.widget': 'أداة الدردشة',
   'sites.detail.tabs.installation': 'التثبيت',
@@ -61,22 +66,27 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.detail.allWebsites': 'كل المواقع',
   'sites.detail.archived': 'مؤرشف',
   'sites.detail.widgetDisabled': 'أداة الدردشة معطّلة',
-  'sites.detail.meta': 'أُضيف في {date} · {count, plural, zero {لا نطاقات مسموح بها} one {نطاق واحد مسموح به} two {نطاقان مسموح بهما} few {# نطاقات مسموح بها} many {# نطاقًا مسموحًا به} other {# نطاق مسموح به}} · مراجعة أداة الدردشة {revision}',
-  'sites.detail.archivedBanner': 'تمت أرشفة هذا الموقع في {date}. لم تعد أداة الدردشة تُحمَّل عليه، وإعداداته للقراءة فقط.',
+  'sites.detail.meta':
+    'أُضيف في {date} · {count, plural, zero {لا نطاقات مسموح بها} one {نطاق واحد مسموح به} two {نطاقان مسموح بهما} few {# نطاقات مسموح بها} many {# نطاقًا مسموحًا به} other {# نطاق مسموح به}} · مراجعة أداة الدردشة {revision}',
+  'sites.detail.archivedBanner':
+    'تمت أرشفة هذا الموقع في {date}. لم تعد أداة الدردشة تُحمَّل عليه، وإعداداته للقراءة فقط.',
   'sites.general.description': 'التفاصيل الأساسية والقسم الذي تُوجَّه إليه محادثات هذا الموقع.',
   'sites.general.fixFields': 'صحّح الحقول المميّزة.',
   'sites.general.saved': 'تم حفظ إعدادات الموقع',
-  'sites.general.notFoundChoose': '{error}. ربما تمت أرشفته — اختر غيره.',
+  'sites.general.notFoundChoose': '{error}. ربما تمت أرشفته، اختر غيره.',
   'sites.general.widgetEnabledToast': 'تم تفعيل أداة الدردشة على هذا الموقع',
   'sites.general.widgetDisabledToast': 'تم تعطيل أداة الدردشة على هذا الموقع',
   'sites.general.archived': 'تمت أرشفة {name}',
   'sites.general.conflictTitle': 'غيّر شخص آخر هذا الموقع',
-  'sites.general.conflictBody': 'لا تزال تعديلاتك هنا لكنها لم تُحفظ. أعد التحميل لعرض أحدث الإعدادات (ستُتجاهل تعديلاتك غير المحفوظة)، ثم أجرِ تغييرك مرة أخرى.',
+  'sites.general.conflictBody':
+    'لا تزال تعديلاتك هنا لكنها لم تُحفظ. أعد التحميل لعرض أحدث الإعدادات (ستُتجاهل تعديلاتك غير المحفوظة)، ثم أجرِ تغييرك مرة أخرى.',
   'sites.general.widgetEnabled': 'أداة الدردشة مفعّلة',
   'sites.general.widgetOnHint': 'تُحمَّل أداة الدردشة على النطاقات المسموح بها. تُطبَّق التغييرات فورًا.',
-  'sites.general.widgetOffHint': 'أداة الدردشة مخفية في كل مكان ولا يمكن للزوار الجدد بدء محادثات. تُطبَّق التغييرات فورًا.',
+  'sites.general.widgetOffHint':
+    'أداة الدردشة مخفية في كل مكان ولا يمكن للزوار الجدد بدء محادثات. تُطبَّق التغييرات فورًا.',
   'sites.general.defaultDepartment': 'القسم الافتراضي',
-  'sites.general.defaultDepartmentHint': 'تذهب المحادثات الجديدة من هذا الموقع إلى هنا ما لم يختر الزائر أو مُشغِّل قسمًا آخر.',
+  'sites.general.defaultDepartmentHint':
+    'تذهب المحادثات الجديدة من هذا الموقع إلى هنا ما لم يختر الزائر أو مُشغِّل قسمًا آخر.',
   'sites.general.noDefaultDepartment': 'بدون قسم افتراضي',
   'sites.general.departmentOption': '{name}{state, select, archived { (مؤرشف)} disabled { (معطّل)} other {}}',
   'sites.general.hours': 'ساعات العمل',
@@ -87,25 +97,33 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.general.workspaceDefault': 'الافتراضي لمساحة العمل',
   'sites.general.scheduleOption': '{name} · {zone}{archived, select, yes { (مؤرشف)} other {}}',
   'sites.general.currentSchedule': 'الجدول الحالي',
-  'sites.general.noSchedules': 'لا توجد جداول بعد، لذا تُطبَّق الساعات الافتراضية لمساحة العمل. تُدار الجداول من الإعدادات.',
-  'sites.general.originsDescription': 'لا تُحمَّل أداة الدردشة، ولا يحصل الزوار على جلسة، إلا على هذه النطاقات. الحفظ يستبدل القائمة بأكملها.',
+  'sites.general.noSchedules':
+    'لا توجد جداول بعد، لذا تُطبَّق الساعات الافتراضية لمساحة العمل. تُدار الجداول من الإعدادات.',
+  'sites.general.originsDescription':
+    'لا تُحمَّل أداة الدردشة، ولا يحصل الزوار على جلسة، إلا على هذه النطاقات. الحفظ يستبدل القائمة بأكملها.',
   'sites.general.noOrigins': 'بدون نطاقات مسموح بها لا يمكن تحميل أداة الدردشة في أي مكان.',
   'sites.general.unsaved': 'تغييرات غير محفوظة',
   'sites.general.allSaved': 'تم حفظ كل التغييرات',
   'sites.general.discard': 'تجاهل',
   'sites.general.archiveTitle': 'أرشفة الموقع',
-  'sites.general.archiveDescription': 'يوقف أداة الدردشة على كل النطاقات ويقطع اتصال الزوار. يُحتفظ بسجل المحادثات.',
+  'sites.general.archiveDescription':
+    'يوقف أداة الدردشة على كل النطاقات ويقطع اتصال الزوار. يُحتفظ بسجل المحادثات.',
   'sites.general.archiveButton': 'أرشفة {name}',
   'sites.general.disableTitle': 'تعطيل أداة الدردشة على {name}؟',
   'sites.general.disableConfirm': 'تعطيل أداة الدردشة',
-  'sites.general.disableBody': 'تختفي أداة الدردشة من كل النطاقات المسموح بها فورًا ويُقطع اتصال الزوار المتصلين. يحتفظ الموظفون بالوصول إلى المحادثات الحالية. يمكنك إعادة تفعيلها في أي وقت.',
+  'sites.general.disableBody':
+    'تختفي أداة الدردشة من كل النطاقات المسموح بها فورًا ويُقطع اتصال الزوار المتصلين. يحتفظ الموظفون بالوصول إلى المحادثات الحالية. يمكنك إعادة تفعيلها في أي وقت.',
   'sites.general.archiveConfirmTitle': 'أرشفة {name}؟',
-  'sites.general.archiveBody': 'تتوقف أداة الدردشة عن التحميل على {origins} ويُقطع اتصال الزوار المتصلين فورًا. يبقى سجل المحادثات متاحًا. لا يمكن استعادة المواقع المؤرشفة من لوحة التحكم.',
-  'sites.general.archiveBodyAll': 'تتوقف أداة الدردشة عن التحميل على كل النطاقات ويُقطع اتصال الزوار المتصلين فورًا. يبقى سجل المحادثات متاحًا. لا يمكن استعادة المواقع المؤرشفة من لوحة التحكم.',
+  'sites.general.archiveBody':
+    'تتوقف أداة الدردشة عن التحميل على {origins} ويُقطع اتصال الزوار المتصلين فورًا. يبقى سجل المحادثات متاحًا. لا يمكن استعادة المواقع المؤرشفة من لوحة التحكم.',
+  'sites.general.archiveBodyAll':
+    'تتوقف أداة الدردشة عن التحميل على كل النطاقات ويُقطع اتصال الزوار المتصلين فورًا. يبقى سجل المحادثات متاحًا. لا يمكن استعادة المواقع المؤرشفة من لوحة التحكم.',
   'sites.install.snippetTitle': 'مقتطف التثبيت',
-  'sites.install.snippetHint': 'الصق هذا قبل وسم الإغلاق {slot0} في كل صفحة تريد أن تظهر فيها الدردشة. يحتوي على مفتاح الموقع العام فقط — بدون أي أسرار.',
+  'sites.install.snippetHint':
+    'الصق هذا قبل وسم الإغلاق {slot0} في كل صفحة تريد أن تظهر فيها الدردشة. يحتوي على مفتاح الموقع العام فقط، بدون أي أسرار.',
   'sites.install.whatSnippet': 'مقتطف التثبيت',
-  'sites.install.rotatedBanner': 'تم تدوير مفتاح الموقع. استبدل المقتطف القديم قبل {time} — بعد ذلك تتوقف الصفحات التي تستخدم المفتاح القديم عن تحميل أداة الدردشة.',
+  'sites.install.rotatedBanner':
+    'تم تدوير مفتاح الموقع. استبدل المقتطف القديم قبل {time}: بعد ذلك تتوقف الصفحات التي تستخدم المفتاح القديم عن تحميل أداة الدردشة.',
   'sites.install.checkTitle': 'فحص التثبيت',
   'sites.install.checkDescription': 'افتح أي صفحة تحتوي على المقتطف في نطاق مسموح به؛ يتحدّث هذا خلال ثوانٍ.',
   'sites.install.checking': 'جارٍ فحص التثبيت',
@@ -115,21 +133,24 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.install.checklist': 'قائمة التحقق من التثبيت',
   'sites.install.originsConfigured': 'تم إعداد النطاقات المسموح بها ({count})',
   'sites.install.addOrigin': 'أضف نطاقًا مسموحًا به واحدًا على الأقل في علامة التبويب «عام»',
-  'sites.install.widgetDisabled': 'أداة الدردشة معطّلة — فعّلها من «عام»',
+  'sites.install.widgetDisabled': 'أداة الدردشة معطّلة: فعّلها من «عام»',
   'sites.install.published': 'تم نشر إعدادات أداة الدردشة (المراجعة {revision})',
   'sites.install.loadedOn': 'تم تحميل أداة الدردشة على {origin} {time}',
   'sites.install.loadedOnYourSite': 'تم تحميل أداة الدردشة على موقعك {time}',
-  'sites.install.lastSeenOn': 'آخر رصد {time} على {origin} — أعد تحميل صفحة تحتوي على المقتطف للتحقق مجددًا',
-  'sites.install.lastSeen': 'آخر رصد {time} — أعد تحميل صفحة تحتوي على المقتطف للتحقق مجددًا',
+  'sites.install.lastSeenOn': 'آخر رصد {time} على {origin}: أعد تحميل صفحة تحتوي على المقتطف للتحقق مجددًا',
+  'sites.install.lastSeen': 'آخر رصد {time}: أعد تحميل صفحة تحتوي على المقتطف للتحقق مجددًا',
   'sites.install.waiting': 'بانتظار تحميل أداة الدردشة على نطاق مسموح به…',
   'sites.install.diagnostics': 'التشخيص',
   'sites.install.troubleTitle': 'لا تظهر؟',
-  'sites.install.troubleOrigin': 'يجب أن يطابق نطاق الصفحة نطاقًا مسموحًا به تمامًا (البروتوكول والمضيف والمنفذ)، مثل https://www.example.com مقابل https://example.com.',
+  'sites.install.troubleOrigin':
+    'يجب أن يطابق نطاق الصفحة نطاقًا مسموحًا به تمامًا (البروتوكول والمضيف والمنفذ)، مثل https://www.example.com مقابل https://example.com.',
   'sites.install.troubleHttp': 'لا تعمل الصفحات المقدَّمة عبر HTTP إلا على localhost.',
   'sites.install.troubleCsp': 'إذا كان موقعك يرسل ترويسة Content-Security-Policy، فأضف المصادر أدناه.',
-  'sites.install.troubleVisibility': 'تأكّد من تفعيل أداة الدردشة ومن أن قواعد ظهور الصفحات في علامة التبويب «أداة الدردشة» تشمل الصفحة.',
+  'sites.install.troubleVisibility':
+    'تأكّد من تفعيل أداة الدردشة ومن أن قواعد ظهور الصفحات في علامة التبويب «أداة الدردشة» تشمل الصفحة.',
   'sites.install.cspTitle': 'سياسة أمان المحتوى (CSP)',
-  'sites.install.cspDescription': 'مطلوب فقط إذا كان موقعك يرسل ترويسة CSP. أضف هذه المصادر إلى التوجيهات المطابقة (وادمجها مع الموجودة لديك).',
+  'sites.install.cspDescription':
+    'مطلوب فقط إذا كان موقعك يرسل ترويسة CSP. أضف هذه المصادر إلى التوجيهات المطابقة (وادمجها مع الموجودة لديك).',
   'sites.install.whatCsp': 'توجيهات CSP',
   'sites.install.loader': 'المُحمِّل',
   'sites.install.apiOrigin': 'نطاق أداة الدردشة وواجهة API',
@@ -137,7 +158,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.install.complete': '(مكتمل)',
   'sites.install.notYet': '(لم يكتمل بعد)',
   'sites.security.overlap.none': 'بدون فترة تداخل',
-  'sites.security.overlap.noneHint': 'يتوقف المفتاح القديم عن العمل فورًا. تفقد الصفحات التي لا تزال تستخدمه أداة الدردشة حتى تحديثها.',
+  'sites.security.overlap.noneHint':
+    'يتوقف المفتاح القديم عن العمل فورًا. تفقد الصفحات التي لا تزال تستخدمه أداة الدردشة حتى تحديثها.',
   'sites.security.overlap.15m': '15 دقيقة',
   'sites.security.overlap.1h': 'ساعة واحدة',
   'sites.security.overlap.1hHint': 'موصى به لمعظم المواقع.',
@@ -150,16 +172,21 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.security.action.disableIdentity': 'إيقاف التحقق من الهوية',
   'sites.security.rotated': 'تم تدوير مفتاح الموقع',
   'sites.security.identityOff': 'تم إيقاف التحقق من الهوية',
-  'sites.security.keyDescription': 'المفتاح العام في مقتطف التثبيت. يعرّف هذا الموقع لكنه لا يمنح أي صلاحيات إدارية.',
+  'sites.security.keyDescription':
+    'المفتاح العام في مقتطف التثبيت. يعرّف هذا الموقع لكنه لا يمنح أي صلاحيات إدارية.',
   'sites.security.whatKey': 'مفتاح الموقع',
   'sites.security.previousTitle': 'المفتاح السابق لا يزال مقبولًا',
-  'sites.security.previousBody': 'تستمر الصفحات التي تستخدم المفتاح السابق في العمل حتى {time} ({relative}). حدّث المقتطف في كل مكان قبل ذلك.',
-  'sites.security.rotateHelp': 'دوّر المفتاح إذا نُسخ إلى مكان لا ينبغي أن يكون فيه، أو لإيقاف تثبيت قديم. خلال فترة التداخل يعمل المفتاحان القديم والجديد، لذا يمكنك نشر المقتطف الجديد دون انقطاع؛ وبعد ذلك لا يُحمِّل أداة الدردشة إلا المفتاح الجديد.',
+  'sites.security.previousBody':
+    'تستمر الصفحات التي تستخدم المفتاح السابق في العمل حتى {time} ({relative}). حدّث المقتطف في كل مكان قبل ذلك.',
+  'sites.security.rotateHelp':
+    'دوّر المفتاح إذا نُسخ إلى مكان لا ينبغي أن يكون فيه، أو لإيقاف تثبيت قديم. خلال فترة التداخل يعمل المفتاحان القديم والجديد، لذا يمكنك نشر المقتطف الجديد دون انقطاع؛ وبعد ذلك لا يُحمِّل أداة الدردشة إلا المفتاح الجديد.',
   'sites.security.rotateKey': 'تدوير مفتاح الموقع',
   'sites.security.rotateKeyShort': 'تدوير المفتاح',
-  'sites.security.identityDescription': 'يتيح لخادمك الخلفي توثيق العملاء المسجّلين برمز موقَّع قصير الأجل، فيرى الموظفون هوية موثّقة ويستطيع الزوار رؤية محادثاتهم السابقة. تبقى الأسماء والعناوين غير الموقَّعة غير موثّقة.',
-  'sites.security.copySecretNow': 'انسخ هذا السر الآن — لن يُعرض مرة أخرى',
-  'sites.security.storeSecret': 'خزّنه في مدير الأسرار أو متغيرات البيئة على خادمك (مثل {slot0}). لا تضعه أبدًا في شيفرة المتصفح أو مقتطف التثبيت أو مستودع عام.',
+  'sites.security.identityDescription':
+    'يتيح لخادمك الخلفي توثيق العملاء المسجّلين برمز موقَّع قصير الأجل، فيرى الموظفون هوية موثّقة ويستطيع الزوار رؤية محادثاتهم السابقة. تبقى الأسماء والعناوين غير الموقَّعة غير موثّقة.',
+  'sites.security.copySecretNow': 'انسخ هذا السر الآن، لن يُعرض مرة أخرى',
+  'sites.security.storeSecret':
+    'خزّنه في مدير الأسرار أو متغيرات البيئة على خادمك (مثل {slot0}). لا تضعه أبدًا في شيفرة المتصفح أو مقتطف التثبيت أو مستودع عام.',
   'sites.security.whatSecret': 'سر التحقق من الهوية',
   'sites.security.storedSafely': 'خزّنته بأمان',
   'sites.security.rotateSecret': 'تدوير السر',
@@ -167,24 +194,29 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.security.enableAndCreate': 'التفعيل وإنشاء سر',
   'sites.security.signTitle': 'وقّع رموز الهوية على خادمك',
   'sites.security.serverOnly': 'على الخادم فقط',
-  'sites.security.signBody': 'أنشئ رمزًا عند كل تحميل للصفحة للعميل المسجّل (HS256، صالح لمدة 5 دقائق كحد أقصى، و{slot0} فريد)، ثم مرّره إلى أداة الدردشة باستخدام {slot1}.',
+  'sites.security.signBody':
+    'أنشئ رمزًا عند كل تحميل للصفحة للعميل المسجّل (HS256، صالح لمدة 5 دقائق كحد أقصى، و{slot0} فريد)، ثم مرّره إلى أداة الدردشة باستخدام {slot1}.',
   'sites.security.whatNodeSample': 'مثال Node.js لرمز الهوية',
   'sites.security.newKeyActive': 'مفتاح الموقع الجديد نشط',
   'sites.security.rotateTitle': 'تدوير مفتاح {name}؟',
   'sites.security.deployNew': 'انشر المقتطف الجديد في كل صفحة تُحمِّل أداة الدردشة.',
-  'sites.security.rotateDescription': 'سيُنشأ مفتاح عام جديد. اختر المدة التي يستمر فيها المفتاح الحالي في العمل.',
+  'sites.security.rotateDescription':
+    'سيُنشأ مفتاح عام جديد. اختر المدة التي يستمر فيها المفتاح الحالي في العمل.',
   'sites.security.newKey': 'مفتاح الموقع الجديد',
   'sites.security.whatNewKey': 'مفتاح الموقع الجديد',
   'sites.security.previousUntil': 'يستمر المفتاح السابق في العمل حتى {time}.',
-  'sites.security.previousGone': 'لم يعد المفتاح السابق يعمل. لن تُحمِّل الصفحات التي لا تزال تستخدمه أداة الدردشة حتى تنشر المقتطف الجديد.',
+  'sites.security.previousGone':
+    'لم يعد المفتاح السابق يعمل. لن تُحمِّل الصفحات التي لا تزال تستخدمه أداة الدردشة حتى تنشر المقتطف الجديد.',
   'sites.security.whatNewSnippet': 'مقتطف التثبيت الجديد',
   'sites.security.overlapLegend': 'فترة التداخل',
   'sites.security.passwordNote': 'سيُطلب منك تأكيد كلمة المرور. يحتفظ الزوار الذين يتحدثون حاليًا بجلستهم.',
   'sites.security.rotateSecretTitle': 'تدوير سر التحقق من الهوية؟',
-  'sites.security.rotateSecretBody': 'سيُنشأ سر جديد ويتوقف الحالي عن العمل فورًا — تُرفض الرموز التي توقّعها خوادمك به ويظهر العملاء غير موثّقين حتى تنشر السر الجديد.',
+  'sites.security.rotateSecretBody':
+    'سيُنشأ سر جديد ويتوقف الحالي عن العمل فورًا، تُرفض الرموز التي توقّعها خوادمك به ويظهر العملاء غير موثّقين حتى تنشر السر الجديد.',
   'sites.security.disableTitle': 'إيقاف التحقق من الهوية؟',
-  'sites.security.disableBody': 'سيُحذف السر. لن تُقبل رموز الهوية بعد ذلك، لذا يُعامل العملاء العائدون كزوار مجهولين ولا يمكنهم رؤية سجل محادثاتهم الموثّق. إعادة التفعيل تُنشئ سرًا جديدًا.',
-  'sites.widget.lang.auto': 'تلقائي — مطابقة متصفح الزائر',
+  'sites.security.disableBody':
+    'سيُحذف السر. لن تُقبل رموز الهوية بعد ذلك، لذا يُعامل العملاء العائدون كزوار مجهولين ولا يمكنهم رؤية سجل محادثاتهم الموثّق. إعادة التفعيل تُنشئ سرًا جديدًا.',
+  'sites.widget.lang.auto': 'تلقائي: مطابقة متصفح الزائر',
   'sites.widget.lang.en': 'الإنجليزية',
   'sites.widget.lang.es': 'الإسبانية',
   'sites.widget.lang.fr': 'الفرنسية',
@@ -198,20 +230,26 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.previewLang.ar': 'العربية (RTL)',
   'sites.widget.notice.publishedByTeammateToast': 'نشر أحد زملائك المراجعة {revision}؛ يعرضها المحرر الآن.',
   'sites.widget.notice.publishedByTeammateTitle': 'نشر أحد زملائك المراجعة {revision} للتو',
-  'sites.widget.notice.publishedByTeammateBody': 'تعديلاتك غير المحفوظة مبنية على إصدار أقدم. أعد التحميل للمتابعة من الإعدادات المنشورة (ستُتجاهل تعديلاتك)، أو احفظ لإنشاء مسودة جديدة فوقها.',
-  'sites.widget.notice.fixFields': 'صحّح {count, plural, zero {الحقول المميّزة} one {الحقل المميّز} two {الحقلين المميّزين} few {الحقول المميّزة الـ#} many {الحقول المميّزة الـ#} other {الحقول المميّزة الـ#}} قبل الحفظ.',
+  'sites.widget.notice.publishedByTeammateBody':
+    'تعديلاتك غير المحفوظة مبنية على إصدار أقدم. أعد التحميل للمتابعة من الإعدادات المنشورة (ستُتجاهل تعديلاتك)، أو احفظ لإنشاء مسودة جديدة فوقها.',
+  'sites.widget.notice.fixFields':
+    'صحّح {count, plural, zero {الحقول المميّزة} one {الحقل المميّز} two {الحقلين المميّزين} few {الحقول المميّزة الـ#} many {الحقول المميّزة الـ#} other {الحقول المميّزة الـ#}} قبل الحفظ.',
   'sites.widget.notice.savedAsTitle': 'حُفظت كمسودة بالمراجعة {revision}',
-  'sites.widget.notice.savedAsBody': 'حفظ أحد زملائك أداة الدردشة أو نشرها أثناء تعديلك (كنت تتوقع المراجعة {expected}). استبدلت إعداداتك أي مسودة غير منشورة له — راجع المعاينة قبل النشر.',
+  'sites.widget.notice.savedAsBody':
+    'حفظ أحد زملائك أداة الدردشة أو نشرها أثناء تعديلك (كنت تتوقع المراجعة {expected}). استبدلت إعداداتك أي مسودة غير منشورة له، راجع المعاينة قبل النشر.',
   'sites.widget.notice.draftChangedTitle': 'غيّر أحد زملائك المسودة أثناء تعديلك',
-  'sites.widget.notice.draftChangedBody': 'أعد التحميل لمراجعة مسودته (ستُتجاهل تعديلاتك)، أو احفظ مرة أخرى لاستبدالها بإعداداتك.',
+  'sites.widget.notice.draftChangedBody':
+    'أعد التحميل لمراجعة مسودته (ستُتجاهل تعديلاتك)، أو احفظ مرة أخرى لاستبدالها بإعداداتك.',
   'sites.widget.notice.notSaved': 'لم تُحفظ المسودة',
-  'sites.widget.notice.notSavedFields': '{error} {count, plural, zero {لا حقول تحتاج} one {حقل واحد يحتاج} two {حقلان يحتاجان} few {# حقول تحتاج} many {# حقلًا يحتاج} other {# حقل يحتاج}} إلى المراجعة.',
+  'sites.widget.notice.notSavedFields':
+    '{error} {count, plural, zero {لا حقول تحتاج} one {حقل واحد يحتاج} two {حقلان يحتاجان} few {# حقول تحتاج} many {# حقلًا يحتاج} other {# حقل يحتاج}} إلى المراجعة.',
   'sites.widget.notice.alreadyPublished': 'المراجعة {revision} منشورة بالفعل',
   'sites.widget.notice.published': 'تم نشر المراجعة {revision}. تتحدّث أدوات الدردشة المثبتة خلال لحظات.',
   'sites.widget.notice.newerDraftTitle': 'توجد مسودة أحدث',
-  'sites.widget.notice.newerDraftBody': 'حفظ أحد زملائك مسودة أحدث أو غيّر المراجعة {revision}، لذا لم تُنشر. أعد التحميل لمراجعة أحدث مسودة قبل النشر.',
+  'sites.widget.notice.newerDraftBody':
+    'حفظ أحد زملائك مسودة أحدث أو غيّر المراجعة {revision}، لذا لم تُنشر. أعد التحميل لمراجعة أحدث مسودة قبل النشر.',
   'sites.widget.notice.notPublished': 'لم يتم النشر',
-  'sites.widget.notice.discarded': 'تم تجاهل المسودة — يعرض المحرر المراجعة المنشورة {revision}',
+  'sites.widget.notice.discarded': 'تم تجاهل المسودة: يعرض المحرر المراجعة المنشورة {revision}',
   'sites.widget.notice.notDiscarded': 'لم يتم تجاهل المسودة',
   'sites.widget.status.live': 'المنشور على موقعك',
   'sites.widget.status.publishedAgo': 'نُشرت {time}',
@@ -230,10 +268,13 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.rangeUnit': '{min}–{max} {unit}',
   'sites.widget.colorPicker': 'منتقي {label}',
   'sites.widget.requirement.hidden': 'مخفي',
-  'sites.widget.contrast.primary': 'النص الأبيض {white} · النص الداكن {dark}. تستخدم أداة الدردشة نصًا {uses, select, white {أبيض} other {داكنًا}} على هذا اللون.',
-  'sites.widget.contrast.primaryLow': 'لا يبلغ أيٌّ منهما {ratio}، لذا قد يصعب قراءة نص زر التشغيل والأزرار — اختر درجة أغمق أو أفتح.',
+  'sites.widget.contrast.primary':
+    'النص الأبيض {white} · النص الداكن {dark}. تستخدم أداة الدردشة نصًا {uses, select, white {أبيض} other {داكنًا}} على هذا اللون.',
+  'sites.widget.contrast.primaryLow':
+    'لا يبلغ أيٌّ منهما {ratio}، لذا قد يصعب قراءة نص زر التشغيل والأزرار، اختر درجة أغمق أو أفتح.',
   'sites.widget.contrast.pair': 'تباين {what}: {ratio}.',
-  'sites.widget.contrast.pairAuto': 'دون {ratio} تحوّل أداة الدردشة نص الترويسة إلى الأبيض أو الداكن تلقائيًا.',
+  'sites.widget.contrast.pairAuto':
+    'دون {ratio} تحوّل أداة الدردشة نص الترويسة إلى الأبيض أو الداكن تلقائيًا.',
   'sites.widget.contrast.pairLow': 'أقل من {ratio} الموصى به للنص.',
   'sites.widget.appearance.title': 'المظهر',
   'sites.widget.appearance.description': 'الألوان والموضع والعلامة التجارية.',
@@ -241,7 +282,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.appearance.brandColor': 'لون العلامة التجارية',
   'sites.widget.appearance.brandColorHint': 'زر التشغيل والأزرار وفقاعات رسائل زوارك.',
   'sites.widget.appearance.secondaryColor': 'اللون الثانوي',
-  'sites.widget.appearance.secondaryColorHint': 'يُخزَّن مع الإعدادات؛ تستمد أداة الدردشة الحالية ألوان التمييز من لون العلامة التجارية.',
+  'sites.widget.appearance.secondaryColorHint':
+    'يُخزَّن مع الإعدادات؛ تستمد أداة الدردشة الحالية ألوان التمييز من لون العلامة التجارية.',
   'sites.widget.appearance.headerBackground': 'خلفية الترويسة',
   'sites.widget.appearance.headerText': 'نص الترويسة',
   'sites.widget.appearance.position': 'الموضع',
@@ -249,7 +291,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.appearance.bottomRight': 'أسفل اليمين',
   'sites.widget.appearance.bottomLeft': 'أسفل اليسار',
   'sites.widget.appearance.sideOffset': 'الإزاحة الجانبية',
-  'sites.widget.appearance.sideOffsetHint': 'المسافة من الحافة اليسرى أو اليمنى، {min}–{max} بكسل. تستخدم الأجهزة المحمولة دائمًا {mobile} بكسل.',
+  'sites.widget.appearance.sideOffsetHint':
+    'المسافة من الحافة اليسرى أو اليمنى، {min}–{max} بكسل. تستخدم الأجهزة المحمولة دائمًا {mobile} بكسل.',
   'sites.widget.appearance.bottomOffset': 'الإزاحة السفلية',
   'sites.widget.appearance.bottomOffsetHint': 'المسافة من الحافة السفلية، {min}–{max} بكسل.',
   'sites.widget.appearance.launcher': 'زر التشغيل',
@@ -260,9 +303,11 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.icon.wave': 'تلويح',
   'sites.widget.icon.custom': 'صورة مخصصة',
   'sites.widget.appearance.customIconUrl': 'رابط الأيقونة المخصصة',
-  'sites.widget.appearance.customIconUrlHint': 'صورة مربعة (رابط https://)، بحجم {size} × {size} بكسل على الأقل. إذا كان فارغًا أو تعذّر تحميله، تُعرض أيقونة الدردشة.',
+  'sites.widget.appearance.customIconUrlHint':
+    'صورة مربعة (رابط https://)، بحجم {size} × {size} بكسل على الأقل. إذا كان فارغًا أو تعذّر تحميله، تُعرض أيقونة الدردشة.',
   'sites.widget.appearance.launcherLabel': 'نص زر التشغيل',
-  'sites.widget.appearance.launcherLabelHint': 'الاسم الذي تقرؤه التقنيات المساعدة لزر التشغيل، ونصه الظاهر عند عرضه.',
+  'sites.widget.appearance.launcherLabelHint':
+    'الاسم الذي تقرؤه التقنيات المساعدة لزر التشغيل، ونصه الظاهر عند عرضه.',
   'sites.widget.appearance.showLauncherLabel': 'إظهار النص بجانب زر التشغيل',
   'sites.widget.appearance.showLauncherLabelHint': 'يعرض النص في شكل كبسولة أثناء إغلاق أداة الدردشة.',
   'sites.widget.appearance.header': 'الترويسة والعلامة التجارية',
@@ -282,7 +327,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.appearance.launcherRadius': 'استدارة زوايا زر التشغيل',
   'sites.widget.appearance.launcherRadiusHint': '{min}–{max} بكسل؛ القيمة {circle} أو أكثر تجعله دائريًا.',
   'sites.widget.appearance.width': 'عرض النافذة',
-  'sites.widget.appearance.widthHint': '{min}–{max} بكسل على سطح المكتب؛ وتستخدم الأجهزة المحمولة الشاشة كاملة.',
+  'sites.widget.appearance.widthHint':
+    '{min}–{max} بكسل على سطح المكتب؛ وتستخدم الأجهزة المحمولة الشاشة كاملة.',
   'sites.widget.appearance.height': 'ارتفاع النافذة',
   'sites.widget.appearance.heightHint': '{min}–{max} بكسل؛ ولا تتجاوز أبدًا ارتفاع نافذة المتصفح.',
   'sites.widget.appearance.font': 'الخط',
@@ -295,11 +341,14 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.theme.dark': 'داكن',
   'sites.widget.theme.auto': 'مطابقة نظام الزائر',
   'sites.widget.content.title': 'المحتوى',
-  'sites.widget.content.description': 'اللغة وكل رسالة يقرؤها الزوار. تظهر الرسائل كما كُتبت تمامًا (ويتكيف اتجاه النص تلقائيًا)؛ وتتبع الأزرار وتسميات النماذج لغة أداة الدردشة.',
+  'sites.widget.content.description':
+    'اللغة وكل رسالة يقرؤها الزوار. تظهر الرسائل كما كُتبت تمامًا (ويتكيف اتجاه النص تلقائيًا)؛ وتتبع الأزرار وتسميات النماذج لغة أداة الدردشة.',
   'sites.widget.content.language': 'لغة أداة الدردشة',
-  'sites.widget.content.languageArabic': 'تعكس العربية التخطيط من اليمين إلى اليسار. اكتب رسائلك أدناه بالعربية أيضًا.',
+  'sites.widget.content.languageArabic':
+    'تعكس العربية التخطيط من اليمين إلى اليسار. اكتب رسائلك أدناه بالعربية أيضًا.',
   'sites.widget.content.languageSdk': 'لا يزال بالإمكان تبديل لغة الزوار باستخدام setLocale في SDK.',
-  'sites.widget.content.languageUntranslated': 'لم تُترجم التسميات المضمّنة في أداة الدردشة إلى {language} بعد؛ يرى الزوار لغة متصفحهم أو الإنجليزية.',
+  'sites.widget.content.languageUntranslated':
+    'لم تُترجم التسميات المضمّنة في أداة الدردشة إلى {language} بعد؛ يرى الزوار لغة متصفحهم أو الإنجليزية.',
   'sites.widget.content.conversation': 'المحادثة',
   'sites.widget.content.welcome': 'رسالة الترحيب',
   'sites.widget.content.welcomeHint': 'أول رسالة في محادثة جديدة.',
@@ -328,7 +377,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.behavior.prechatEnabled': 'طرح أسئلة قبل المحادثة',
   'sites.widget.behavior.phone': 'الهاتف',
   'sites.widget.behavior.offlineForm': 'نموذج خارج الدوام',
-  'sites.widget.behavior.offlineFormHint': 'يظهر عندما لا يتوفر أحد. يُطلب الاسم والبريد الإلكتروني والرسالة دائمًا.',
+  'sites.widget.behavior.offlineFormHint':
+    'يظهر عندما لا يتوفر أحد. يُطلب الاسم والبريد الإلكتروني والرسالة دائمًا.',
   'sites.widget.behavior.offlineFormEnabled': 'السماح للزوار بترك رسالة خارج الدوام',
   'sites.widget.behavior.during': 'أثناء المحادثة وبعدها',
   'sites.widget.behavior.attachments': 'يمكن للزوار إرسال ملفات',
@@ -351,7 +401,8 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.behavior.pagesExclude': 'كل الصفحات باستثناء المطابقة لنمط',
   'sites.widget.behavior.showOn': 'الإظهار على',
   'sites.widget.behavior.hideOn': 'الإخفاء على',
-  'sites.widget.behavior.patternHelp': 'روابط كاملة أو أجزاء منها؛ الرمز * يطابق أي شيء، مثل https://shop.example.com/checkout/* أو /pricing.',
+  'sites.widget.behavior.patternHelp':
+    'روابط كاملة أو أجزاء منها؛ الرمز * يطابق أي شيء، مثل https://shop.example.com/checkout/* أو /pricing.',
   'sites.widget.behavior.patternN': 'النمط {n}',
   'sites.widget.behavior.removePattern': 'إزالة النمط {n}',
   'sites.widget.behavior.addPattern': 'إضافة نمط',
@@ -361,8 +412,10 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.preview.agentsAvailable': 'الموظفون متاحون',
   'sites.widget.preview.online': 'متصل: يمكن بدء المحادثات.',
   'sites.widget.preview.offline': 'غير متصل: تُعرض تجربة خارج الدوام.',
-  'sites.widget.preview.note': 'تشغّل المعاينة أداة الدردشة الحقيقية في وضع اختبار معزول برسائل نموذجية. لا تُنشئ زوارًا ولا تُحتسب في التحليلات. وتعرض التعديلات غير المحفوظة.',
-  'sites.widget.bar.attention': '{count, plural, zero {لا حقول تحتاج} one {حقل واحد يحتاج} two {حقلان يحتاجان} few {# حقول تحتاج} many {# حقلًا يحتاج} other {# حقل يحتاج}} إلى المراجعة',
+  'sites.widget.preview.note':
+    'تشغّل المعاينة أداة الدردشة الحقيقية في وضع اختبار معزول برسائل نموذجية. لا تُنشئ زوارًا ولا تُحتسب في التحليلات. وتعرض التعديلات غير المحفوظة.',
+  'sites.widget.bar.attention':
+    '{count, plural, zero {لا حقول تحتاج} one {حقل واحد يحتاج} two {حقلان يحتاجان} few {# حقول تحتاج} many {# حقلًا يحتاج} other {# حقل يحتاج}} إلى المراجعة',
   'sites.widget.bar.draftReady': 'المسودة جاهزة للنشر',
   'sites.widget.bar.upToDate': 'محدّث',
   'sites.widget.bar.discardDraft': 'تجاهل المسودة',
@@ -372,14 +425,18 @@ export const sites: Record<keyof typeof source, string> = {
   'sites.widget.bar.publishRevision': 'نشر المراجعة {revision}',
   'sites.widget.discard.title': 'تجاهل مسودة المراجعة {revision}؟',
   'sites.widget.discard.titleNoRevision': 'تجاهل مسودة المراجعة؟',
-  'sites.widget.discard.body': 'تُستبدل المسودة غير المنشورة بالإعدادات المنشورة (المراجعة {revision}). لا تتأثر أداة الدردشة المنشورة.',
-  'sites.widget.discard.bodyWithEdits': 'تُستبدل المسودة غير المنشورة وتعديلاتك غير المحفوظة بالإعدادات المنشورة (المراجعة {revision}). لا تتأثر أداة الدردشة المنشورة.',
+  'sites.widget.discard.body':
+    'تُستبدل المسودة غير المنشورة بالإعدادات المنشورة (المراجعة {revision}). لا تتأثر أداة الدردشة المنشورة.',
+  'sites.widget.discard.bodyWithEdits':
+    'تُستبدل المسودة غير المنشورة وتعديلاتك غير المحفوظة بالإعدادات المنشورة (المراجعة {revision}). لا تتأثر أداة الدردشة المنشورة.',
   'sites.widget.validation.hex': 'استخدم لونًا سداسي عشريًا من 6 خانات، مثل {example}',
   'sites.widget.validation.wholeNumber': 'أدخل عددًا صحيحًا من {min} إلى {max}',
   'sites.widget.validation.tooLongNow': 'استخدم {max} حرفًا أو أقل (الآن {now})',
   'sites.widget.validation.urlTooLong': 'استخدم رابطًا من {max} حرف أو أقل',
   'sites.widget.validation.https': 'أدخل رابط صورة كاملًا يبدأ بـ https:// (لا يُقبل http://)',
-  'sites.widget.validation.maxPatterns': 'استخدم {count, plural, zero {لا أنماط} one {نمطًا واحدًا} two {نمطين} few {# أنماط} many {# نمطًا} other {# نمط}} كحد أقصى',
+  'sites.widget.validation.maxPatterns':
+    'استخدم {count, plural, zero {لا أنماط} one {نمطًا واحدًا} two {نمطين} few {# أنماط} many {# نمطًا} other {# نمط}} كحد أقصى',
   'sites.widget.validation.tooLong': 'استخدم {max} حرفًا أو أقل',
-  'sites.widget.validation.needPattern': 'أضف نمط صفحة واحدًا على الأقل، وإلا فلن تظهر أداة الدردشة في أي صفحة',
+  'sites.widget.validation.needPattern':
+    'أضف نمط صفحة واحدًا على الأقل، وإلا فلن تظهر أداة الدردشة في أي صفحة',
 };

@@ -127,7 +127,7 @@ const STORIES = [
 ] as const;
 
 /** Sample controls in the gallery respond, so nothing on the page looks broken; they never change any data. */
-const exampleOnly = () => toast.info('Example only — controls in this gallery don’t change anything.');
+const exampleOnly = () => toast.info('Example only. Controls in this gallery don’t change anything.');
 
 export default function DesignSystemPage() {
   const [email, setEmail] = useState('not-an-email');
@@ -515,7 +515,7 @@ export default function DesignSystemPage() {
                   id: 'b',
                   seq: 2,
                   sender: { type: 'agent', id: 'me', displayName: 'Uma Owner' },
-                  body: 'Yes — see https://example.com/shipping',
+                  body: 'Yes, see https://example.com/shipping',
                 })}
                 own
                 grouped={false}

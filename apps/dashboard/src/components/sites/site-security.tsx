@@ -94,7 +94,9 @@ export function SiteSecurity({ site }: { site: Site }) {
     try {
       const r = await withReauth(
         () => api.post<{ secret: string }>(`/sites/${site.id}/identity-secret`),
-        site.identityVerificationEnabled ? t('sites.security.action.rotateSecret') : t('sites.security.action.enableIdentity'),
+        site.identityVerificationEnabled
+          ? t('sites.security.action.rotateSecret')
+          : t('sites.security.action.enableIdentity'),
       );
       setSecret(r.secret);
       refreshSite();
@@ -104,7 +106,10 @@ export function SiteSecurity({ site }: { site: Site }) {
   };
 
   const disable = async () => {
-    await withReauth(() => api.delete(`/sites/${site.id}/identity-secret`), t('sites.security.action.disableIdentity'));
+    await withReauth(
+      () => api.delete(`/sites/${site.id}/identity-secret`),
+      t('sites.security.action.disableIdentity'),
+    );
     setSecret(null);
     refreshSite();
     toast.success(t('sites.security.identityOff'));
@@ -116,10 +121,7 @@ export function SiteSecurity({ site }: { site: Site }) {
   return (
     <div className="flex flex-col gap-6">
       <Card>
-        <CardHeader
-          title={t('sites.install.siteKey')}
-          description={t('sites.security.keyDescription')}
-        />
+        <CardHeader title={t('sites.install.siteKey')} description={t('sites.security.keyDescription')} />
         <CardBody className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">
             <code className="break-all rounded-md bg-surface-2 px-3 py-2 font-mono text-sm" dir="ltr">
@@ -129,12 +131,13 @@ export function SiteSecurity({ site }: { site: Site }) {
           </div>
           {overlapActive && (
             <Banner tone="info" title={t('sites.security.previousTitle')}>
-              {t('sites.security.previousBody', { time: formatDateTime(site.previousKeyExpiresAt), relative: formatRelative(site.previousKeyExpiresAt) })}
+              {t('sites.security.previousBody', {
+                time: formatDateTime(site.previousKeyExpiresAt),
+                relative: formatRelative(site.previousKeyExpiresAt),
+              })}
             </Banner>
           )}
-          <div className="text-sm text-fg-2">
-            {t('sites.security.rotateHelp')}
-          </div>
+          <div className="text-sm text-fg-2">{t('sites.security.rotateHelp')}</div>
           {canManage && (
             <Button
               variant="secondary"
@@ -175,11 +178,16 @@ export function SiteSecurity({ site }: { site: Site }) {
               </p>
               <p className="text-sm">
                 {richT(t('sites.security.storeSecret', slots(1)), [
-                  <code key="env" className="font-mono" dir="ltr">TALKIVIO_IDENTITY_SECRET</code>, // i18n-ignore: environment variable name
+                  <code key="env" className="font-mono" dir="ltr">
+                    TALKIVIO_IDENTITY_SECRET
+                  </code>, // i18n-ignore: environment variable name
                 ])}
               </p>
               <div className="flex flex-wrap items-center gap-3">
-                <code className="min-w-0 break-all rounded-md bg-surface px-3 py-2 font-mono text-sm" dir="ltr">
+                <code
+                  className="min-w-0 break-all rounded-md bg-surface px-3 py-2 font-mono text-sm"
+                  dir="ltr"
+                >
                   {secret}
                 </code>
                 <CopyButton text={secret} what={t('sites.security.whatSecret')} />
@@ -228,8 +236,12 @@ export function SiteSecurity({ site }: { site: Site }) {
                 {t('sites.security.serverOnly')}
               </Badge>
               {richT(t('sites.security.signBody', slots(2)), [
-                <code key="jti" className="font-mono" dir="ltr">jti</code>, // i18n-ignore: JWT claim name
-                <code key="call" className="font-mono text-xs" dir="ltr">Talkivio(&apos;identify&apos;, {'{'} externalIdToken {'}'})</code>, // i18n-ignore: JavaScript API call
+                <code key="jti" className="font-mono" dir="ltr">
+                  jti
+                </code>, // i18n-ignore: JWT claim name
+                <code key="call" className="font-mono text-xs" dir="ltr">
+                  Talkivio(&apos;identify&apos;, {'{'} externalIdToken {'}'})
+                </code>, // i18n-ignore: JavaScript API call
               ])}
             </p>
             <CodeBlock what={t('sites.security.whatNodeSample')} code={nodeSample(site.id, tenantId)} />
@@ -240,7 +252,11 @@ export function SiteSecurity({ site }: { site: Site }) {
       <Dialog open={rotateOpen} onOpenChange={(o) => !rotating && setRotateOpen(o)}>
         <DialogContent
           size="md"
-          title={rotated ? t('sites.security.newKeyActive') : t('sites.security.rotateTitle', { name: isolate(site.name) })}
+          title={
+            rotated
+              ? t('sites.security.newKeyActive')
+              : t('sites.security.rotateTitle', { name: isolate(site.name) })
+          }
           description={rotated ? t('sites.security.deployNew') : t('sites.security.rotateDescription')}
           footer={
             rotated ? (
@@ -297,9 +313,7 @@ export function SiteSecurity({ site }: { site: Site }) {
                   description: o.description ? t(o.description) : undefined,
                 }))}
               />
-              <p className="text-sm text-fg-2">
-                {t('sites.security.passwordNote')}
-              </p>
+              <p className="text-sm text-fg-2">{t('sites.security.passwordNote')}</p>
             </div>
           )}
         </DialogContent>
@@ -329,7 +343,7 @@ export function SiteSecurity({ site }: { site: Site }) {
 }
 
 function nodeSample(siteId: string, tenantId: string): string {
-  return `// server.js — runs on YOUR backend only. Never expose the secret to browsers.
+  return `// server.js: runs on YOUR backend only. Never expose the secret to browsers.
 import { createHmac, randomUUID } from 'node:crypto';
 
 const SITE_ID = '${siteId}';

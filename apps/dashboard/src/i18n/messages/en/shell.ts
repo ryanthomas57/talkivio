@@ -14,7 +14,7 @@ export const shell = {
   'shell.nav.withWaiting': '{label}, {count, plural, one {# waiting or unread} other {# waiting or unread}}',
   'shell.nav.waitingOrUnread': 'waiting or unread',
   'shell.status.changeFailed': 'Status not changed: {error}',
-  'shell.status.interruptedHelp': 'Connection interrupted — you will not receive new chats until it recovers.',
+  'shell.status.interruptedHelp': 'Connection interrupted. You will not receive new chats until it recovers.',
   'shell.status.notConnected': 'Not connected',
   'shell.status.triggerLabel': 'Your status: {status}. Change status',
   'shell.status.menuLabel': 'Your status',
@@ -22,9 +22,11 @@ export const shell = {
   'shell.gate.goToSignIn': 'Go to sign in',
   'shell.gate.loading': 'Loading workspace',
   'shell.connection.connecting': 'Connecting to live updates…',
-  'shell.connection.reconnecting': 'Connection lost. Reconnecting and recovering messages — your transcript and drafts are kept.',
-  'shell.connection.offline': 'You are offline. Messages you write stay as drafts until the connection returns.',
-  'shell.connection.restored': 'Live — connection restored.',
+  'shell.connection.reconnecting':
+    'Connection lost. Reconnecting and recovering messages. Your transcript and drafts are kept.',
+  'shell.connection.offline':
+    'You are offline. Messages you write stay as drafts until the connection returns.',
+  'shell.connection.restored': 'Live: connection restored.',
   'shell.drawer.open': 'Open navigation',
   'shell.drawer.title': 'Navigation',
   'shell.drawer.description': 'Main sections of the workspace',
@@ -33,7 +35,8 @@ export const shell = {
   'shell.verify.notice': 'Confirm {email} to invite teammates.',
   'shell.session.accessUpdated': 'Your access was updated by an administrator.',
   'shell.session.endedTitle': 'Your session has ended',
-  'shell.session.endedBody': 'Sign in again to continue. Unsent drafts stay on this device and are never sent automatically.',
+  'shell.session.endedBody':
+    'Sign in again to continue. Unsent drafts stay on this device and are never sent automatically.',
   'shell.session.signInAgain': 'Sign in again',
   'shell.account.switchFailed': 'Could not switch workspace: {error}',
   'shell.account.menuLabel': 'Account menu for {name}',

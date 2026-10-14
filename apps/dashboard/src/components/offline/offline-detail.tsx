@@ -6,11 +6,33 @@
  * handled / needs-reply toggle guarded by the entity version.
  */
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, CheckCircle2, Link2, Mail, MailCheck, MailWarning, Phone, RotateCcw, Send } from 'lucide-react';
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Link2,
+  Mail,
+  MailCheck,
+  MailWarning,
+  Phone,
+  RotateCcw,
+  Send,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Banner, Button, Card, CardBody, CardHeader, EmptyState, Field, Page, PanelError, Skeleton, Textarea } from '@/components/ui';
+import {
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  EmptyState,
+  Field,
+  Page,
+  PanelError,
+  Skeleton,
+  Textarea,
+} from '@/components/ui';
 import { useDirtyGuard } from '@/hooks/use-dirty-guard';
 import { useRealtimeEvent, useResync, useScopes } from '@/hooks/use-realtime';
 import { isolate, useT, type MessageKey, type Translate } from '@/i18n';
@@ -26,7 +48,7 @@ const MAX_REPLY = 8000;
 const codePoints = (s: string) => [...s].length;
 
 function fieldValue(t: Translate, v: unknown): string {
-  if (v === null || v === undefined || v === '') return '—';
+  if (v === null || v === undefined || v === '') return '';
   if (typeof v === 'boolean') return v ? t('common.yes') : t('common.no');
   if (Array.isArray(v)) return v.map((x) => fieldValue(t, x)).join(', ');
   if (typeof v === 'object') return JSON.stringify(v);
@@ -56,7 +78,12 @@ export function OfflineDetailView({ id }: { id: string }) {
   const qc = useQueryClient();
   const departments = useDepartments(canView);
   const sites = useSites(canView);
-  const q = useQuery({ queryKey: offlineKeys.detail(id), queryFn: () => api.get<OfflineDetail>(`/offline-submissions/${id}`), enabled: canView, retry: (n, e) => !(isApiError(e) && e.status < 500) && n < 2 });
+  const q = useQuery({
+    queryKey: offlineKeys.detail(id),
+    queryFn: () => api.get<OfflineDetail>(`/offline-submissions/${id}`),
+    enabled: canView,
+    retry: (n, e) => !(isApiError(e) && e.status < 500) && n < 2,
+  });
   const d = q.data;
 
   useScopes(d ? [{ kind: 'queue', id: d.departmentId ?? 'none' }] : null);
@@ -84,7 +111,10 @@ export function OfflineDetailView({ id }: { id: string }) {
     );
 
   const back = (
-    <Link href="/offline-messages" className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+    <Link
+      href="/offline-messages"
+      className="inline-flex min-h-10 items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+    >
       <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
       {t('offline.detail.back')}
     </Link>
@@ -119,7 +149,10 @@ export function OfflineDetailView({ id }: { id: string }) {
           />
         ) : (
           <Card>
-            <PanelError message={t('offline.detail.loadFailed', { error: errorMessage(q.error) })} onRetry={() => void q.refetch()} />
+            <PanelError
+              message={t('offline.detail.loadFailed', { error: errorMessage(q.error) })}
+              onRetry={() => void q.refetch()}
+            />
           </Card>
         )}
       </Page>
@@ -128,7 +161,13 @@ export function OfflineDetailView({ id }: { id: string }) {
 
   const erased = d.status === 'erased';
   const deptName = d.departmentId ? byId(departments.data).get(d.departmentId)?.name : undefined;
-  const dept = deptName ? <bdi>{deptName}</bdi> : d.departmentId ? t('common.department') : t('offline.noDepartment');
+  const dept = deptName ? (
+    <bdi>{deptName}</bdi>
+  ) : d.departmentId ? (
+    t('common.department')
+  ) : (
+    t('offline.noDepartment')
+  );
   const site = byId(sites.data).get(d.siteId)?.name;
   const len = codePoints(body.trim());
   const fields = Object.entries(d.customFields ?? {});
@@ -136,17 +175,26 @@ export function OfflineDetailView({ id }: { id: string }) {
   const sendReply = async () => {
     const text = body.trim();
     if (!text) return setReplyError(t('offline.detail.replyEmpty'));
-    if (codePoints(text) > MAX_REPLY) return setReplyError(t('offline.detail.replyTooLong', { max: MAX_REPLY }));
+    if (codePoints(text) > MAX_REPLY)
+      return setReplyError(t('offline.detail.replyTooLong', { max: MAX_REPLY }));
     if (!idem.current || idem.current.body !== text) idem.current = { body: text, key: uuid() };
     setSending(true);
     setReplyError(null);
     try {
-      const next = await api.post<OfflineDetail>(`/offline-submissions/${id}/reply`, { body: text }, { idempotencyKey: idem.current.key });
+      const next = await api.post<OfflineDetail>(
+        `/offline-submissions/${id}/reply`,
+        { body: text },
+        { idempotencyKey: idem.current.key },
+      );
       qc.setQueryData(offlineKeys.detail(id), next);
       void qc.invalidateQueries({ queryKey: offlineKeys.listAll });
       setBody('');
       idem.current = null;
-      setSentNote(d.email ? t('offline.detail.replyQueuedTo', { email: isolate(d.email) }) : t('offline.detail.replyQueued'));
+      setSentNote(
+        d.email
+          ? t('offline.detail.replyQueuedTo', { email: isolate(d.email) })
+          : t('offline.detail.replyQueued'),
+      );
       toast.success(t('offline.detail.replySent', { reference: isolate(d.reference) }));
     } catch (e) {
       setReplyError(isApiError(e) ? (e.field('body') ?? errorMessage(e)) : errorMessage(e));
@@ -160,10 +208,17 @@ export function OfflineDetailView({ id }: { id: string }) {
     setStatusError(null);
     setConflict(null);
     try {
-      const next = await api.patch<OfflineDetail>(`/offline-submissions/${id}`, { status, expectedVersion: d.version });
+      const next = await api.patch<OfflineDetail>(`/offline-submissions/${id}`, {
+        status,
+        expectedVersion: d.version,
+      });
       qc.setQueryData(offlineKeys.detail(id), next);
       void qc.invalidateQueries({ queryKey: offlineKeys.listAll });
-      toast.success(status === 'handled' ? t('offline.detail.markedHandled', { reference: isolate(d.reference) }) : t('offline.detail.markedReceived', { reference: isolate(d.reference) }));
+      toast.success(
+        status === 'handled'
+          ? t('offline.detail.markedHandled', { reference: isolate(d.reference) })
+          : t('offline.detail.markedReceived', { reference: isolate(d.reference) }),
+      );
     } catch (e) {
       if (isApiError(e, 'VERSION_CONFLICT')) setConflict(errorMessage(e));
       else setStatusError(errorMessage(e));
@@ -186,7 +241,10 @@ export function OfflineDetailView({ id }: { id: string }) {
           </h1>
           <p className="text-sm text-fg-2">
             <time dateTime={d.createdAt} title={formatDateTime(d.createdAt)}>
-              {t('offline.detail.received', { time: formatDateTime(d.createdAt), relative: formatRelative(d.createdAt) })}
+              {t('offline.detail.received', {
+                time: formatDateTime(d.createdAt),
+                relative: formatRelative(d.createdAt),
+              })}
             </time>{' '}
             · {dept}
             {site && (
@@ -234,13 +292,20 @@ export function OfflineDetailView({ id }: { id: string }) {
           {t('offline.detail.conflictBody', { error: conflict })}
         </Banner>
       )}
-      {statusError && <Banner tone="danger">{t('offline.detail.statusFailed', { error: statusError })}</Banner>}
+      {statusError && (
+        <Banner tone="danger">{t('offline.detail.statusFailed', { error: statusError })}</Banner>
+      )}
       {erased && <Banner tone="info">{t('offline.detail.erased')}</Banner>}
       {d.status === 'handled' && d.handledAt && (
         <p className="flex items-center gap-1.5 text-sm text-fg-2">
           <CheckCircle2 className="size-4 text-success" aria-hidden />
           <time dateTime={d.handledAt} title={formatDateTime(d.handledAt)}>
-            {d.handledBy ? t('offline.detail.handledBy', { name: isolate(d.handledBy.displayName), time: formatRelative(d.handledAt) }) : t('offline.detail.handled', { time: formatRelative(d.handledAt) })}
+            {d.handledBy
+              ? t('offline.detail.handledBy', {
+                  name: isolate(d.handledBy.displayName),
+                  time: formatRelative(d.handledAt),
+                })
+              : t('offline.detail.handled', { time: formatRelative(d.handledAt) })}
           </time>
         </p>
       )}
@@ -271,7 +336,12 @@ export function OfflineDetailView({ id }: { id: string }) {
           </Card>
 
           <Card>
-            <CardHeader title={t('offline.detail.replyTitle')} description={d.email ? t('offline.detail.replyDescription', { email: isolate(d.email) }) : undefined} />
+            <CardHeader
+              title={t('offline.detail.replyTitle')}
+              description={
+                d.email ? t('offline.detail.replyDescription', { email: isolate(d.email) }) : undefined
+              }
+            />
             <CardBody className="flex flex-col gap-4">
               {sentNote && <Banner tone="success">{sentNote}</Banner>}
               {erased ? (
@@ -286,7 +356,11 @@ export function OfflineDetailView({ id }: { id: string }) {
                     void sendReply();
                   }}
                 >
-                  <Field label={t('offline.detail.yourReply')} error={replyError} description={t('common.characterCount', { count: len, max: MAX_REPLY })}>
+                  <Field
+                    label={t('offline.detail.yourReply')}
+                    error={replyError}
+                    description={t('common.characterCount', { count: len, max: MAX_REPLY })}
+                  >
                     <Textarea
                       value={body}
                       onChange={(e) => {
@@ -307,7 +381,10 @@ export function OfflineDetailView({ id }: { id: string }) {
                   </div>
                 </form>
               )}
-              <section aria-labelledby="replies-h" className="flex flex-col gap-2 border-t border-line-subtle pt-4">
+              <section
+                aria-labelledby="replies-h"
+                className="flex flex-col gap-2 border-t border-line-subtle pt-4"
+              >
                 <h3 id="replies-h" className="text-sm font-semibold">
                   {t('offline.detail.sentReplies', { count: d.replies.length })}
                 </h3>
@@ -319,8 +396,13 @@ export function OfflineDetailView({ id }: { id: string }) {
                       const st = REPLY_STATUS[r.status];
                       const StatusIcon = st?.Icon ?? Mail;
                       return (
-                        <li key={r.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-control)] bg-surface-2 px-3 py-2 text-sm">
-                          <span className={`inline-flex items-center gap-1.5 font-medium ${st?.cls ?? 'text-fg-2'}`}>
+                        <li
+                          key={r.id}
+                          className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-[var(--radius-control)] bg-surface-2 px-3 py-2 text-sm"
+                        >
+                          <span
+                            className={`inline-flex items-center gap-1.5 font-medium ${st?.cls ?? 'text-fg-2'}`}
+                          >
                             <StatusIcon className="size-4" aria-hidden />
                             {st ? t(st.label) : r.status}
                           </span>
@@ -328,12 +410,21 @@ export function OfflineDetailView({ id }: { id: string }) {
                             <time dateTime={r.createdAt} title={formatDateTime(r.createdAt)}>
                               {t('offline.reply.sentAt', { time: formatDateTime(r.createdAt) })}
                             </time>
-                            {r.acceptedAt && <> · {t('offline.reply.acceptedAgo', { time: formatRelative(r.acceptedAt) })}</>}
+                            {r.acceptedAt && (
+                              <> · {t('offline.reply.acceptedAgo', { time: formatRelative(r.acceptedAt) })}</>
+                            )}
                           </span>
                           {r.emailText && (
                             <details className="w-full">
-                              <summary className="cursor-pointer text-xs font-medium text-primary">{t('offline.reply.showEmail')}</summary>
-                              <pre dir="auto" className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-anywhere rounded-md bg-surface px-3 py-2 font-sans text-sm text-fg scroll-thin">{r.emailText}</pre>
+                              <summary className="cursor-pointer text-xs font-medium text-primary">
+                                {t('offline.reply.showEmail')}
+                              </summary>
+                              <pre
+                                dir="auto"
+                                className="mt-2 max-h-64 overflow-auto whitespace-pre-wrap break-anywhere rounded-md bg-surface px-3 py-2 font-sans text-sm text-fg scroll-thin"
+                              >
+                                {r.emailText}
+                              </pre>
                             </details>
                           )}
                         </li>
@@ -361,7 +452,10 @@ export function OfflineDetailView({ id }: { id: string }) {
                   <dt className="text-xs font-medium text-fg-2">{t('common.email')}</dt>
                   <dd className="break-anywhere">
                     {d.email ? (
-                      <a href={`mailto:${d.email}`} className="inline-flex min-h-8 items-center gap-1.5 text-primary hover:underline">
+                      <a
+                        href={`mailto:${d.email}`}
+                        className="inline-flex min-h-8 items-center gap-1.5 text-primary hover:underline"
+                      >
                         <Mail className="size-4 shrink-0" aria-hidden />
                         <bdi>{d.email}</bdi>
                       </a>
@@ -374,7 +468,10 @@ export function OfflineDetailView({ id }: { id: string }) {
                   <dt className="text-xs font-medium text-fg-2">{t('offline.detail.phone')}</dt>
                   <dd className="break-anywhere">
                     {d.phone ? (
-                      <a href={`tel:${d.phone.replace(/[^\d+]/g, '')}`} className="inline-flex min-h-8 items-center gap-1.5 text-primary hover:underline">
+                      <a
+                        href={`tel:${d.phone.replace(/[^\d+]/g, '')}`}
+                        className="inline-flex min-h-8 items-center gap-1.5 text-primary hover:underline"
+                      >
                         <Phone className="size-4 shrink-0" aria-hidden />
                         <bdi dir="ltr">{d.phone}</bdi>
                       </a>
@@ -391,9 +488,16 @@ export function OfflineDetailView({ id }: { id: string }) {
               <CardHeader title={t('offline.detail.sourceChat')} />
               <CardBody className="flex flex-col gap-2 text-sm">
                 <p className="text-fg-2">
-                  {d.conversionReason ? (CONVERSION_REASONS[d.conversionReason] ? t(CONVERSION_REASONS[d.conversionReason]!) : d.conversionReason.replace(/_/g, ' ')) : t('offline.detail.converted')}
+                  {d.conversionReason
+                    ? CONVERSION_REASONS[d.conversionReason]
+                      ? t(CONVERSION_REASONS[d.conversionReason]!)
+                      : d.conversionReason.replace(/_/g, ' ')
+                    : t('offline.detail.converted')}
                 </p>
-                <Link href={`/inbox/${d.sourceChatId}`} className="inline-flex min-h-10 items-center gap-1.5 font-medium text-primary hover:underline">
+                <Link
+                  href={`/inbox/${d.sourceChatId}`}
+                  className="inline-flex min-h-10 items-center gap-1.5 font-medium text-primary hover:underline"
+                >
                   <Link2 className="size-4" aria-hidden />
                   {t('offline.detail.openChat')}
                 </Link>

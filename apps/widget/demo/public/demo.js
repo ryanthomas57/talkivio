@@ -50,7 +50,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     bar();
     if (!key) {
-      log('No site key yet — paste one above (create a website in the dashboard first).');
+      log('No site key yet. Paste one above (create a website in the dashboard first).');
       return;
     }
     var s = document.createElement('script');

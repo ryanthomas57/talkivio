@@ -106,7 +106,7 @@ export function Invitations({ onInvite }: { onInvite: () => void }) {
       inv.departmentIds
         .map((id) => deptMap.get(id)?.name)
         .filter(Boolean)
-        .join(', ') || '—';
+        .join(', ') || '';
     const actions = (inv: Invitation) => (
       <div className="flex justify-end gap-1">
         <Button
@@ -189,7 +189,11 @@ export function Invitations({ onInvite }: { onInvite: () => void }) {
                 <Badge>{t(ROLE_LABEL[inv.role])}</Badge>
               </div>
               <span className="text-xs text-fg-2">
-                {t('team.invitations.mobileMeta', { departments: isolate(deptNames(inv)), capacity: inv.capacity, sent: formatRelative(inv.createdAt) })}
+                {t('team.invitations.mobileMeta', {
+                  departments: isolate(deptNames(inv)),
+                  capacity: inv.capacity,
+                  sent: formatRelative(inv.createdAt),
+                })}
               </span>
               <Expiry at={inv.expiresAt} />
               {actions(inv)}
@@ -204,7 +208,10 @@ export function Invitations({ onInvite }: { onInvite: () => void }) {
     <Card>
       {failure && (
         <div className="flex flex-col gap-2 border-b border-line-subtle p-4">
-          <Banner tone="danger" title={t('team.invitations.resendFailedTitle', { email: isolate(failure.inv.email) })}>
+          <Banner
+            tone="danger"
+            title={t('team.invitations.resendFailedTitle', { email: isolate(failure.inv.email) })}
+          >
             {t('team.invitations.resendFailedBody')}
           </Banner>
           {describe(failure.error)}
@@ -247,7 +254,9 @@ function Expiry({ at }: { at: string }) {
       title={formatDateTime(at)}
       className={soon ? 'text-sm font-medium text-warning' : 'text-sm text-fg-2'}
     >
-      {ms <= 0 ? t('team.invitations.expired') : t('team.invitations.expiresIn', { time: formatRelative(at) })}
+      {ms <= 0
+        ? t('team.invitations.expired')
+        : t('team.invitations.expiresIn', { time: formatRelative(at) })}
     </time>
   );
 }

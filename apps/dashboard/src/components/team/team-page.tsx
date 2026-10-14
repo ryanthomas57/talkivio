@@ -54,7 +54,15 @@ const STATUS_FILTERS: Array<{ value: StatusFilter; label: MessageKey }> = [
 ];
 
 /** A count sentence whose number is marked <b>…</b> in the message, so the emphasis follows the translation's word order. */
-function Count({ text, className, numClassName = 'text-fg' }: { text: string; className?: string; numClassName?: string }) {
+function Count({
+  text,
+  className,
+  numClassName = 'text-fg',
+}: {
+  text: string;
+  className?: string;
+  numClassName?: string;
+}) {
   const [before, num, after] = text.split(/<b>|<\/b>/);
   return (
     <span className={className}>
@@ -231,9 +239,17 @@ export function TeamPage() {
   const activeFilterList = new Intl.ListFormat(intlLocale(), { type: 'conjunction' }).format(
     [
       q ? t('team.page.filterQuery', { q: isolate(q) }) : null,
-      role ? t('team.page.filterRole', { role: ROLE_LABEL[role] ? t(ROLE_LABEL[role]) : isolate(role) }) : null,
+      role
+        ? t('team.page.filterRole', { role: ROLE_LABEL[role] ? t(ROLE_LABEL[role]) : isolate(role) })
+        : null,
       statusLabel ? t('team.page.filterStatus', { status: t(statusLabel) }) : null,
-      dept ? t('team.page.filterDept', { department: deptMap.get(dept)?.name ? isolate(deptMap.get(dept)!.name) : t('team.page.thisDepartment') }) : null,
+      dept
+        ? t('team.page.filterDept', {
+            department: deptMap.get(dept)?.name
+              ? isolate(deptMap.get(dept)!.name)
+              : t('team.page.thisDepartment'),
+          })
+        : null,
     ].filter((x): x is string => !!x),
   );
 
@@ -264,8 +280,16 @@ export function TeamPage() {
         <p className="-mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm text-fg-2" aria-live="polite">
           <Count text={t('team.page.countOnline', { count: counts.online })} />
           <Count text={t('team.page.countAway', { count: counts.away })} />
-          {counts.interrupted > 0 && <Count className="text-warning" numClassName="" text={t('team.page.countNotConnected', { count: counts.interrupted })} />}
-          {counts.suspended > 0 && <Count text={t('team.page.countSuspended', { count: counts.suspended })} />}
+          {counts.interrupted > 0 && (
+            <Count
+              className="text-warning"
+              numClassName=""
+              text={t('team.page.countNotConnected', { count: counts.interrupted })}
+            />
+          )}
+          {counts.suspended > 0 && (
+            <Count text={t('team.page.countSuspended', { count: counts.suspended })} />
+          )}
         </p>
       )}
 
@@ -363,7 +387,11 @@ export function TeamPage() {
               <EmptyState
                 icon={<Users />}
                 title={filtersActive ? t('team.page.emptyFilteredTitle') : t('team.page.emptyTitle')}
-                description={filtersActive ? t('team.page.emptyFilteredBody', { filters: activeFilterList }) : t('team.page.emptyBody')}
+                description={
+                  filtersActive
+                    ? t('team.page.emptyFilteredBody', { filters: activeFilterList })
+                    : t('team.page.emptyBody')
+                }
                 action={
                   filtersActive ? (
                     <Button onClick={() => setParams({ q: null, role: null, status: null, dept: null })}>
@@ -419,8 +447,12 @@ export function TeamPage() {
                                     <span className="truncate font-medium" dir="auto">
                                       {a.displayName}
                                     </span>
-                                    {a.id === viewerId && <span className="text-xs text-fg-2">{t('team.page.you')}</span>}
-                                    {dirtySet.has(a.id) && <Badge tone="warning">{t('team.page.unsaved')}</Badge>}
+                                    {a.id === viewerId && (
+                                      <span className="text-xs text-fg-2">{t('team.page.you')}</span>
+                                    )}
+                                    {dirtySet.has(a.id) && (
+                                      <Badge tone="warning">{t('team.page.unsaved')}</Badge>
+                                    )}
                                   </span>
                                   <span className="truncate text-xs text-fg-2" dir="auto">
                                     {a.email}
@@ -438,7 +470,7 @@ export function TeamPage() {
                             </TD>
                             <TD className="max-w-[220px]">
                               <span className="line-clamp-2 text-fg-2" title={names.join(', ')} dir="auto">
-                                {names.length ? names.join(', ') : '—'}
+                                {names.length ? names.join(', ') : ''}
                               </span>
                             </TD>
                             <TD>
@@ -473,7 +505,9 @@ export function TeamPage() {
                                 <span className="truncate font-medium" dir="auto">
                                   {a.displayName}
                                 </span>
-                                {a.id === viewerId && <span className="text-xs text-fg-2">{t('team.page.you')}</span>}
+                                {a.id === viewerId && (
+                                  <span className="text-xs text-fg-2">{t('team.page.you')}</span>
+                                )}
                               </span>
                               <span className="truncate text-xs text-fg-2" dir="auto">
                                 {a.email}
@@ -495,7 +529,9 @@ export function TeamPage() {
                               {names.join(', ')}
                             </span>
                           )}
-                          {dirtySet.has(a.id) && <Badge tone="warning">{t('team.drawer.unsavedChanges')}</Badge>}
+                          {dirtySet.has(a.id) && (
+                            <Badge tone="warning">{t('team.drawer.unsavedChanges')}</Badge>
+                          )}
                         </button>
                       </li>
                     );

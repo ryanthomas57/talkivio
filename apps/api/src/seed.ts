@@ -36,7 +36,12 @@ import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { hash as argonHash, verify as argonVerify } from '@node-rs/argon2';
-import { DEFAULT_WIDGET_CONFIG, defaultSchedule, mergeOrgSettings, type WidgetConfig } from '@talkivio/contracts';
+import {
+  DEFAULT_WIDGET_CONFIG,
+  defaultSchedule,
+  mergeOrgSettings,
+  type WidgetConfig,
+} from '@talkivio/contracts';
 import { TenantDb, type Tx } from './db/tenant-db';
 import { hashConfig } from './features/workspace/sites.service';
 
@@ -394,7 +399,7 @@ function repliesFor(t: TenantFx, deptIds: Record<string, string>, membershipIds:
         scopeId: membershipIds['alpha.agent1'],
         slug: 'sig',
         title: "Ana's sign-off (personal)",
-        body: 'Thanks for chatting! — {{agent.display_name}}, Sales',
+        body: 'Thanks for chatting! {{agent.display_name}}, Sales',
       },
     );
   }

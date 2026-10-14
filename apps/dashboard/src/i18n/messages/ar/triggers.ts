@@ -17,8 +17,9 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.label.whenMatches': 'عند التطابق سيقوم بما يلي:',
   'triggers.label.stopsLower': 'يوقف المُشغِّلات الأقل أسبقية',
   'triggers.label.lowerStillRun': 'تستمر المُشغِّلات الأقل أسبقية في العمل',
-  'triggers.label.cooldownValue': '{count, plural, zero {# ثانية لكل جلسة زائر} one {ثانية واحدة لكل جلسة زائر} two {ثانيتان لكل جلسة زائر} few {# ثوانٍ لكل جلسة زائر} many {# ثانية لكل جلسة زائر} other {# ثانية لكل جلسة زائر}}',
-  'triggers.label.unavailableForEvent': '{label} — غير متاح لهذا الحدث',
+  'triggers.label.cooldownValue':
+    '{count, plural, zero {# ثانية لكل جلسة زائر} one {ثانية واحدة لكل جلسة زائر} two {ثانيتان لكل جلسة زائر} few {# ثوانٍ لكل جلسة زائر} many {# ثانية لكل جلسة زائر} other {# ثانية لكل جلسة زائر}}',
+  'triggers.label.unavailableForEvent': '{label}: غير متاح لهذا الحدث',
   'triggers.label.yesTrue': 'نعم (true)',
   'triggers.label.noFalse': 'لا (false)',
   'triggers.label.choose': 'اختر…',
@@ -111,18 +112,19 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.location.any': 'شروط «أيٌّ»',
   'triggers.location.actionN': 'الإجراء {n}',
 
-  'triggers.reason.fired': 'تطابق — جُمعت الإجراءات',
+  'triggers.reason.fired': 'تطابق: جُمعت الإجراءات',
   'triggers.reason.conditionsFalse': 'لم تتحقق الشروط',
-  'triggers.reason.cooldown': 'تم التخطي — لا يزال في فترة التهدئة',
-  'triggers.reason.recursion': 'تم التخطي — سبق أن نفّذ إجراءً في سلسلة التسبب هذه',
-  'triggers.reason.depthLimit': 'تم التخطي — بلغ حد عمق سلسلة التسبب',
+  'triggers.reason.cooldown': 'تم التخطي: لا يزال في فترة التهدئة',
+  'triggers.reason.recursion': 'تم التخطي: سبق أن نفّذ إجراءً في سلسلة التسبب هذه',
+  'triggers.reason.depthLimit': 'تم التخطي: بلغ حد عمق سلسلة التسبب',
   'triggers.reason.eventMismatch': 'يستمع إلى حدث مختلف',
-  'triggers.reason.afterStop': 'لم يُقيَّم — أوقف مُشغِّل سابق المعالجة',
+  'triggers.reason.afterStop': 'لم يُقيَّم: أوقف مُشغِّل سابق المعالجة',
   'triggers.suppression.departmentAlreadySet': 'اختار إجراء أعلى أسبقية القسم بالفعل',
   'triggers.suppression.priorityAlreadySet': 'عيّن إجراء أعلى أسبقية الأولوية بالفعل',
   'triggers.suppression.invitationAlreadySelected': 'اختيرت دعوة أعلى أسبقية بالفعل',
   'triggers.suppression.fieldAlreadySet': 'يكتب إجراء أعلى أسبقية حقل الزائر هذا بالفعل',
-  'triggers.suppression.admissionBlocked': 'قبول المحادثة ممنوع، لذا تُسقط إجراءات التوجيه والإجراءات الموجّهة إلى الزائر',
+  'triggers.suppression.admissionBlocked':
+    'قبول المحادثة ممنوع، لذا تُسقط إجراءات التوجيه والإجراءات الموجّهة إلى الزائر',
   'triggers.effectReason.noChat': 'لا توجد محادثة لهذا الحدث',
   'triggers.effectReason.chatMissing': 'لم تعد المحادثة موجودة',
   'triggers.effectReason.chatAssigned': 'كانت المحادثة مُسندة بالفعل',
@@ -145,10 +147,13 @@ export const triggers: Record<keyof typeof source, string> = {
 
   'triggers.describe.setDepartment': 'التوجيه إلى {department}',
   'triggers.describe.setPriority': 'تعيين أولوية قائمة الانتظار إلى {priority}',
-  'triggers.describe.addTag': '{target, select, chat {إضافة الوسم «{tag}» إلى المحادثة} other {إضافة الوسم «{tag}» إلى الزائر}}',
-  'triggers.describe.removeTag': '{target, select, chat {إزالة الوسم «{tag}» من المحادثة} other {إزالة الوسم «{tag}» من الزائر}}',
+  'triggers.describe.addTag':
+    '{target, select, chat {إضافة الوسم «{tag}» إلى المحادثة} other {إضافة الوسم «{tag}» إلى الزائر}}',
+  'triggers.describe.removeTag':
+    '{target, select, chat {إزالة الوسم «{tag}» من المحادثة} other {إزالة الوسم «{tag}» من الزائر}}',
   'triggers.describe.sendPublicMessage': 'إرسال «{text}» باسم {attribution}',
-  'triggers.describe.displayInvitation': 'عرض الدعوة «{message}» (بحد أقصى {max} لكل جلسة، و{hours} ساعة بعد الإغلاق)',
+  'triggers.describe.displayInvitation':
+    'عرض الدعوة «{message}» (بحد أقصى {max} لكل جلسة، و{hours} ساعة بعد الإغلاق)',
   'triggers.describe.clearVisitorField': 'مسح حقل الزائر {key}',
   'triggers.describe.setVisitorField': 'تعيين حقل الزائر {key} إلى {value}',
   'triggers.describe.notifyDepartment': 'إشعار {department}: «{text}»',
@@ -172,7 +177,8 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.input.addValue': 'أضف قيمة',
 
   'triggers.conditions.count': '{count} من {max} شرط',
-  'triggers.conditions.missingNote': 'القيمة المفقودة تُفشل كل عامل مقارنة عدا «مفقود»، بما في ذلك «لا يساوي».',
+  'triggers.conditions.missingNote':
+    'القيمة المفقودة تُفشل كل عامل مقارنة عدا «مفقود»، بما في ذلك «لا يساوي».',
   'triggers.conditions.allHint': 'يجب أن يتحقق كل شرط. إذا لم توجد شروط، تكون هذه المجموعة صحيحة.',
   'triggers.conditions.anyHint': 'يجب أن يتحقق شرط واحد على الأقل. اتركها فارغة لتجاهل هذه المجموعة.',
   'triggers.conditions.add': 'إضافة شرط',
@@ -206,7 +212,8 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.actions.siteDefault': 'الافتراضي للموقع',
   'triggers.actions.departmentHelp': 'لا ينطبق إلا عندما تكون المحادثة غير مُسندة.',
   'triggers.actions.queuePriority': 'أولوية قائمة الانتظار',
-  'triggers.actions.queuePriorityHelp': 'من 0 إلى 100. الأعلى يُخدَم أولًا، ولا ينطبق إلا عندما تكون المحادثة غير مُسندة.',
+  'triggers.actions.queuePriorityHelp':
+    'من 0 إلى 100. الأعلى يُخدَم أولًا، ولا ينطبق إلا عندما تكون المحادثة غير مُسندة.',
   'triggers.actions.tag': 'الوسم',
   'triggers.actions.tagHelp': 'أحرف لاتينية صغيرة وأرقام و- و_.',
   'triggers.actions.applyTo': 'التطبيق على',
@@ -234,24 +241,30 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.actions.notificationText': 'نص الإشعار',
   'triggers.actions.notificationTextHelp': 'يُعرض لموظفي القسم (500 حرف كحد أقصى). لا يستهلك سعة المحادثات.',
   'triggers.actions.webhookEventName': 'اسم حدث Webhook',
-  'triggers.actions.webhookEventNameHelp': 'معرّف بأحرف لاتينية صغيرة يُسلَّم إلى Webhook المشتركة، مثل {example} (64 حرفًا كحد أقصى).',
+  'triggers.actions.webhookEventNameHelp':
+    'معرّف بأحرف لاتينية صغيرة يُسلَّم إلى Webhook المشتركة، مثل {example} (64 حرفًا كحد أقصى).',
   'triggers.actions.blockReason': 'السبب (يُسجَّل في أثر التدقيق)',
-  'triggers.actions.blockReasonHelp': 'يمنع المحادثة ويُسقط إجراءات التوجيه اللاحقة والإجراءات الموجّهة إلى الزائر (200 حرف كحد أقصى).',
+  'triggers.actions.blockReasonHelp':
+    'يمنع المحادثة ويُسقط إجراءات التوجيه اللاحقة والإجراءات الموجّهة إلى الزائر (200 حرف كحد أقصى).',
 
   'triggers.sim.enterNumber': 'أدخل رقمًا، أو حدّد الحقل كمفقود.',
   'triggers.sim.chooseValue': 'اختر قيمة، أو حدّد الحقل كمفقود.',
   'triggers.sim.checkValues': 'تحقق من قيم العينة المميّزة.',
   'triggers.sim.invalidValue': 'قيمة غير صالحة',
   'triggers.sim.sampleEvent': 'حدث تجريبي',
-  'triggers.sim.descUnsaved': 'يحاكي التعريف الحالي في المحرّر، بما فيه التعديلات غير المحفوظة، على «{event}» بالقيم أدناه. لا يُحفظ أو يُكتب أي شيء ولا يرى أي زائر شيئًا.',
-  'triggers.sim.descSaved': 'يحاكي المراجعة {revision} على «{event}» بالقيم أدناه. لا يُكتب أي شيء ولا يرى أي زائر شيئًا.',
+  'triggers.sim.descUnsaved':
+    'يحاكي التعريف الحالي في المحرّر، بما فيه التعديلات غير المحفوظة، على «{event}» بالقيم أدناه. لا يُحفظ أو يُكتب أي شيء ولا يرى أي زائر شيئًا.',
+  'triggers.sim.descSaved':
+    'يحاكي المراجعة {revision} على «{event}» بالقيم أدناه. لا يُكتب أي شيء ولا يرى أي زائر شيئًا.',
   'triggers.sim.simulating': 'تجري محاكاة:',
   'triggers.sim.unsavedEdits': 'تعديلات غير محفوظة',
   'triggers.sim.savedRevision': 'المراجعة المحفوظة {revision}',
-  'triggers.sim.missingHelp': 'ألغِ تحديد «أدخل قيمة» لإرسال الحقل بوصفه {missing}، فالحقول المفقودة تُفشل كل عامل مقارنة عدا «مفقود». تُدرج الحقول التي يقرؤها هذا المُشغِّل أولًا.',
+  'triggers.sim.missingHelp':
+    'ألغِ تحديد «أدخل قيمة» لإرسال الحقل بوصفه {missing}، فالحقول المفقودة تُفشل كل عامل مقارنة عدا «مفقود». تُدرج الحقول التي يقرؤها هذا المُشغِّل أولًا.',
   'triggers.sim.missingWord': 'مفقودًا',
   'triggers.sim.includeOthers': 'تضمين المُشغِّلات المفعّلة الأخرى',
-  'triggers.sim.includeOthersHelp': 'قيّم هذه المسودة مع كل مُشغِّل منشور ومفعّل لهذا الحدث، بترتيب الأسبقية المعتمد في الإنتاج.',
+  'triggers.sim.includeOthersHelp':
+    'قيّم هذه المسودة مع كل مُشغِّل منشور ومفعّل لهذا الحدث، بترتيب الأسبقية المعتمد في الإنتاج.',
   'triggers.sim.invalidDefinition': 'تعريف المُشغِّل غير صالح.',
   'triggers.sim.fixInBuilder': 'الإصلاح في المُنشئ',
   'triggers.sim.fixProblems': 'أصلح هذه المشكلات ثم شغّل المحاكاة مجددًا. وهي مميّزة أيضًا في المُنشئ.',
@@ -289,7 +302,8 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.sim.noSuppressed': 'لم يُسقَط أي شيء.',
   'triggers.sim.suppressedMeta': '{trigger} · الإجراء {n} ({type})',
   'triggers.sim.others': 'المُشغِّلات الأخرى لهذا الحدث',
-  'triggers.sim.othersHelp': 'مُشغِّلات منشورة ومفعّلة قُيّمت في الجولة نفسها، بترتيب الأسبقية (الأولوية ثم وقت الإنشاء).',
+  'triggers.sim.othersHelp':
+    'مُشغِّلات منشورة ومفعّلة قُيّمت في الجولة نفسها، بترتيب الأسبقية (الأولوية ثم وقت الإنشاء).',
   'triggers.sim.thisTriggerRev': 'هذا المُشغِّل · المراجعة {revision}',
   'triggers.sim.thisTriggerUnsaved': 'هذا المُشغِّل · تعديلات غير محفوظة',
   'triggers.sim.priorityBadge': 'الأولوية {priority}',
@@ -300,13 +314,14 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.sim.noAll': 'لا شروط في «الكل» (صحيح).',
   'triggers.sim.noAny': 'لا شروط في «أيٌّ» (مُتجاهَل).',
   'triggers.sim.notEvaluated': 'لم تُقيَّم الشروط.',
-  'triggers.sim.groupTrue': '— صحيح',
-  'triggers.sim.groupFalse': '— خطأ',
+  'triggers.sim.groupTrue': 'صحيح',
+  'triggers.sim.groupFalse': 'خطأ',
   'triggers.sim.actualValue': 'القيمة الفعلية: {value}',
   'triggers.sim.actualMissing': 'مفقودة',
 
   'triggers.runs.title': 'عمليات التشغيل الأخيرة',
-  'triggers.runs.description': 'كل تقييم لهذا المُشغِّل في الإنتاج، الأحدث أولًا. توضح التأثيرات ما إذا كان كل إجراء قد طُبّق أو تُخطّي أو أُسقط.',
+  'triggers.runs.description':
+    'كل تقييم لهذا المُشغِّل في الإنتاج، الأحدث أولًا. توضح التأثيرات ما إذا كان كل إجراء قد طُبّق أو تُخطّي أو أُسقط.',
   'triggers.runs.toInclusive': 'إلى (شاملًا)',
   'triggers.runs.rangeError': 'يجب أن يكون تاريخ «إلى» في تاريخ «من» أو بعده.',
   'triggers.runs.clearDates': 'مسح التواريخ',
@@ -330,7 +345,8 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.runs.status.skipped': 'تُخطّي',
   'triggers.runs.status.suppressed': 'أُسقط',
 
-  'triggers.funnel.lastDays': '{count, plural, zero {آخر # يوم} one {آخر يوم} two {آخر يومين} few {آخر # أيام} many {آخر # يومًا} other {آخر # يوم}}',
+  'triggers.funnel.lastDays':
+    '{count, plural, zero {آخر # يوم} one {آخر يوم} two {آخر يومين} few {آخر # أيام} many {آخر # يومًا} other {آخر # يوم}}',
   'triggers.funnel.allTime': 'كل الأوقات',
   'triggers.funnel.rangeLabel': 'النطاق الزمني لمسار الدعوات',
   'triggers.funnel.eligible': 'مؤهلة',
@@ -340,10 +356,11 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.funnel.ofEligible': '{pct} من المؤهلة',
   'triggers.funnel.ofDisplayed': '{pct} من المعروضة',
   'triggers.funnel.ofAccepted': '{pct} من المقبولة',
-  'triggers.funnel.noEligible': '— لا توجد دعوات مؤهلة',
-  'triggers.funnel.noDisplayed': '— لا توجد دعوات معروضة',
-  'triggers.funnel.noAccepted': '— لا توجد دعوات مقبولة',
-  'triggers.funnel.also': 'أيضًا: {dismissed} مُغلقة · {expired} منتهية. الأعداد لدعوات مميّزة، وعرض الدعوة لا يُحتسب أبدًا طلبَ محادثة.',
+  'triggers.funnel.noEligible': 'لا توجد دعوات مؤهلة',
+  'triggers.funnel.noDisplayed': 'لا توجد دعوات معروضة',
+  'triggers.funnel.noAccepted': 'لا توجد دعوات مقبولة',
+  'triggers.funnel.also':
+    'أيضًا: {dismissed} مُغلقة · {expired} منتهية. الأعداد لدعوات مميّزة، وعرض الدعوة لا يُحتسب أبدًا طلبَ محادثة.',
 
   'triggers.commands.publishFirst': 'انشر المُشغِّل قبل تفعيله.',
 
@@ -352,11 +369,14 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.status.draft': 'مسودة',
   'triggers.status.unpublishedChanges': 'تغييرات غير منشورة',
   'triggers.list.title': 'المُشغِّلات',
-  'triggers.list.description': 'عمليات تلقائية تستجيب لأحداث الزوار والمحادثات: الدعوات الاستباقية والتوجيه والوسوم والترحيب. مرتبة حسب ترتيب التقييم، الأعلى أولوية أولًا ثم الأقدم.',
+  'triggers.list.description':
+    'عمليات تلقائية تستجيب لأحداث الزوار والمحادثات: الدعوات الاستباقية والتوجيه والوسوم والترحيب. مرتبة حسب ترتيب التقييم، الأعلى أولوية أولًا ثم الأقدم.',
   'triggers.list.new': 'مُشغِّل جديد',
   'triggers.list.allTriggers': 'كل المُشغِّلات',
-  'triggers.list.count': '{count, plural, zero {لا مُشغِّلات.} one {مُشغِّل واحد.} two {مُشغِّلان.} few {# مُشغِّلات.} many {# مُشغِّلًا.} other {# مُشغِّل.}}',
-  'triggers.list.countForEvent': '{count, plural, zero {لا مُشغِّلات لـ«{event}».} one {مُشغِّل واحد لـ«{event}».} two {مُشغِّلان لـ«{event}».} few {# مُشغِّلات لـ«{event}».} many {# مُشغِّلًا لـ«{event}».} other {# مُشغِّل لـ«{event}».}}',
+  'triggers.list.count':
+    '{count, plural, zero {لا مُشغِّلات.} one {مُشغِّل واحد.} two {مُشغِّلان.} few {# مُشغِّلات.} many {# مُشغِّلًا.} other {# مُشغِّل.}}',
+  'triggers.list.countForEvent':
+    '{count, plural, zero {لا مُشغِّلات لـ«{event}».} one {مُشغِّل واحد لـ«{event}».} two {مُشغِّلان لـ«{event}».} few {# مُشغِّلات لـ«{event}».} many {# مُشغِّلًا لـ«{event}».} other {# مُشغِّل لـ«{event}».}}',
   'triggers.list.loading': 'جارٍ تحميل المُشغِّلات…',
   'triggers.list.filterByEvent': 'التصفية حسب الحدث',
   'triggers.list.allEvents': 'كل الأحداث',
@@ -376,9 +396,11 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.list.publishTitle': 'نشر «{name}»؟',
   'triggers.list.enableTitle': 'تفعيل «{name}»؟',
   'triggers.list.disableTitle': 'تعطيل «{name}»؟',
-  'triggers.list.publishBody': 'تصبح المراجعة {revision} الإصدار المنشور وتبدأ العمل فورًا على أحداث «{event}».',
+  'triggers.list.publishBody':
+    'تصبح المراجعة {revision} الإصدار المنشور وتبدأ العمل فورًا على أحداث «{event}».',
   'triggers.list.enableBody': 'تبدأ المراجعة المنشورة {revision} العمل فورًا على أحداث «{event}».',
-  'triggers.list.enableBodyDraft': 'تبدأ المراجعة المنشورة {revision} العمل فورًا على أحداث «{event}». تبقى مسودتك غير المنشورة مسودة.',
+  'triggers.list.enableBodyDraft':
+    'تبدأ المراجعة المنشورة {revision} العمل فورًا على أحداث «{event}». تبقى مسودتك غير المنشورة مسودة.',
   'triggers.list.disableBody': 'تتوقف المراجعة {revision} عن العمل. لا يُلغى أي شيء نُفّذ بالفعل.',
   'triggers.list.publishAndEnable': 'نشر وتفعيل',
   'triggers.list.changedSinceLoad': 'تغيّر هذا المُشغِّل منذ تحميل القائمة. حُدّثت القائمة، فحاول مرة أخرى.',
@@ -386,10 +408,12 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.list.enabledToast': 'فُعّل المُشغِّل',
   'triggers.list.disabledToast': 'عُطّل المُشغِّل',
   'triggers.list.archiveTitle': 'أرشفة «{name}»؟',
-  'triggers.list.archiveBody': 'يتوقف المُشغِّل عن العمل فورًا ويختفي من هذه القائمة. يُحتفظ بسجل عمليات تشغيله.',
+  'triggers.list.archiveBody':
+    'يتوقف المُشغِّل عن العمل فورًا ويختفي من هذه القائمة. يُحتفظ بسجل عمليات تشغيله.',
   'triggers.list.archiveConfirm': 'أرشفة المُشغِّل',
   'triggers.list.archivedToast': 'أُرشف المُشغِّل',
-  'triggers.create.description': 'ابدأ من مُشغِّل موجود، بما في ذلك القوالب الجاهزة، أو من البداية. لا يُحفظ أي شيء حتى تحفظ المسودة.',
+  'triggers.create.description':
+    'ابدأ من مُشغِّل موجود، بما في ذلك القوالب الجاهزة، أو من البداية. لا يُحفظ أي شيء حتى تحفظ المسودة.',
   'triggers.create.startFrom': 'البدء من',
   'triggers.create.copyLabel': 'نسخة من مُشغِّل موجود',
   'triggers.create.copyHelp': 'القوالب الجاهزة مثل «دعوة صفحة الأسعار» مدرجة هنا.',
@@ -402,7 +426,8 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.history.formerMember': 'عضو سابق',
   'triggers.history.system': 'النظام (قالب جاهز)',
   'triggers.history.title': 'سجل المراجعات',
-  'triggers.history.description': 'يُحتفظ بكل مسودة محفوظة وكل عملية نشر. اعرض مراجعة لرؤيتها كاملة ومعرفة ما يختلف عن المسودة الحالية. تنسخ الاستعادة مراجعة سابقة إلى مسودة جديدة، وتستمر المراجعة المنشورة في العمل حتى تنشر مجددًا.',
+  'triggers.history.description':
+    'يُحتفظ بكل مسودة محفوظة وكل عملية نشر. اعرض مراجعة لرؤيتها كاملة ومعرفة ما يختلف عن المسودة الحالية. تنسخ الاستعادة مراجعة سابقة إلى مسودة جديدة، وتستمر المراجعة المنشورة في العمل حتى تنشر مجددًا.',
   'triggers.history.empty': 'لا توجد مراجعات',
   'triggers.history.colRevision': 'المراجعة',
   'triggers.history.colState': 'الحالة',
@@ -414,8 +439,10 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.history.restoreAsDraft': 'استعادة كمسودة',
   'triggers.history.restoreAsDraftEllipsis': 'استعادة كمسودة…',
   'triggers.history.restoreTitle': 'استعادة المراجعة {n} كمسودة؟',
-  'triggers.history.restoreBody': 'تُنسخ المراجعة {n} إلى مراجعة مسودة جديدة لـ«{name}». لا يتغيّر شيء في الإنتاج حتى تنشرها.',
-  'triggers.history.restoreBodyDirty': 'تُنسخ المراجعة {n} إلى مراجعة مسودة جديدة لـ«{name}». لا يتغيّر شيء في الإنتاج حتى تنشرها. ستُستبدل تعديلاتك غير المحفوظة في المحرّر.',
+  'triggers.history.restoreBody':
+    'تُنسخ المراجعة {n} إلى مراجعة مسودة جديدة لـ«{name}». لا يتغيّر شيء في الإنتاج حتى تنشرها.',
+  'triggers.history.restoreBodyDirty':
+    'تُنسخ المراجعة {n} إلى مراجعة مسودة جديدة لـ«{name}». لا يتغيّر شيء في الإنتاج حتى تنشرها. ستُستبدل تعديلاتك غير المحفوظة في المحرّر.',
   'triggers.history.restored': 'استُعيدت المراجعة {from} بوصفها المراجعة {to}',
   'triggers.history.stateRunning': 'منشورة · تعمل',
   'triggers.history.stateDisabled': 'منشورة · معطّلة',
@@ -428,9 +455,11 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.history.loadError': 'تعذّر تحميل المراجعة {n}: {error}',
   'triggers.history.compared': 'مقارنة بالمسودة الحالية',
   'triggers.history.isCurrent': 'هذه المراجعة هي المسودة الحالية.',
-  'triggers.history.isCurrentDirty': 'هذه المراجعة هي المسودة الحالية. تعديلاتك غير المحفوظة في المحرّر ليست جزءًا منها.',
+  'triggers.history.isCurrentDirty':
+    'هذه المراجعة هي المسودة الحالية. تعديلاتك غير المحفوظة في المحرّر ليست جزءًا منها.',
   'triggers.history.noCurrent': 'لا توجد مسودة حالية للمقارنة بها.',
-  'triggers.history.comparedSaved': 'مقارنة بالمسودة المحفوظة (المراجعة {n}). تعديلاتك غير المحفوظة غير مضمّنة.',
+  'triggers.history.comparedSaved':
+    'مقارنة بالمسودة المحفوظة (المراجعة {n}). تعديلاتك غير المحفوظة غير مضمّنة.',
   'triggers.history.definition': 'التعريف',
   'triggers.history.actionsInOrder': 'الإجراءات بالترتيب',
   'triggers.diff.setting': '{label}: {from} في المراجعة {revision} ← {to} في المسودة',
@@ -440,11 +469,15 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.diff.off': 'معطّل',
   'triggers.diff.reordered': 'الإجراءات نفسها بترتيب مختلف',
   'triggers.diff.same': 'التعريف نفسه في المسودة الحالية (المراجعة {n}).',
-  'triggers.diff.legend': '{plus} في المسودة الحالية فقط (المراجعة {head}) · {minus} في المراجعة {revision} فقط',
+  'triggers.diff.legend':
+    '{plus} في المسودة الحالية فقط (المراجعة {head}) · {minus} في المراجعة {revision} فقط',
   'triggers.diff.settings': 'الإعدادات',
-  'triggers.diff.added': '{count, plural, zero {لا إضافات} one {إضافة واحدة} two {إضافتان} few {# إضافات} many {# إضافة} other {# إضافة}}',
-  'triggers.diff.removed': '{count, plural, zero {لا إزالات} one {إزالة واحدة} two {إزالتان} few {# إزالات} many {# إزالة} other {# إزالة}}',
-  'triggers.diff.changed': '{count, plural, zero {لا تغييرات} one {تغيير واحد} two {تغييران} few {# تغييرات} many {# تغييرًا} other {# تغيير}}',
+  'triggers.diff.added':
+    '{count, plural, zero {لا إضافات} one {إضافة واحدة} two {إضافتان} few {# إضافات} many {# إضافة} other {# إضافة}}',
+  'triggers.diff.removed':
+    '{count, plural, zero {لا إزالات} one {إزالة واحدة} two {إزالتان} few {# إزالات} many {# إزالة} other {# إزالة}}',
+  'triggers.diff.changed':
+    '{count, plural, zero {لا تغييرات} one {تغيير واحد} two {تغييران} few {# تغييرات} many {# تغييرًا} other {# تغيير}}',
   'triggers.diff.srAdded': 'في المسودة الحالية فقط:',
   'triggers.diff.srRemoved': 'في هذه المراجعة فقط:',
   'triggers.diff.srChanged': 'تغيّر:',
@@ -469,23 +502,28 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.editor.revisionsPublished': '· المسودة: المراجعة {draft} · المنشورة: المراجعة {published}',
   'triggers.editor.publishEllipsis': 'نشر…',
   'triggers.editor.moreActions': 'مزيد من إجراءات المُشغِّل',
-  'triggers.editor.readOnly': 'يمكنك عرض هذا المُشغِّل وعمليات تشغيله. يتطلب التعديل والمحاكاة والنشر صلاحية «إدارة المُشغِّلات».',
+  'triggers.editor.readOnly':
+    'يمكنك عرض هذا المُشغِّل وعمليات تشغيله. يتطلب التعديل والمحاكاة والنشر صلاحية «إدارة المُشغِّلات».',
   'triggers.editor.conflictTitle': 'غيّر شخص آخر هذا المُشغِّل',
   'triggers.editor.reloadTheirs': 'تحميل نسختهم',
   'triggers.editor.keepMine': 'الاحتفاظ بتعديلاتي',
-  'triggers.editor.conflictBody': 'لم تُحفظ تغييراتك. أعد التحميل لتجاهل تعديلاتك ورؤية أحدث إصدار، أو احتفظ بتعديلاتك فوق أحدث إصدار واحفظ مجددًا.',
+  'triggers.editor.conflictBody':
+    'لم تُحفظ تغييراتك. أعد التحميل لتجاهل تعديلاتك ورؤية أحدث إصدار، أو احتفظ بتعديلاتك فوق أحدث إصدار واحفظ مجددًا.',
   'triggers.editor.loadLatest': 'تحميل الأحدث',
-  'triggers.editor.remoteChangedBody': 'لا تزال تعديلاتك غير المحفوظة هنا، لكنها مبنية على إصدار أقدم. حمّل أحدث إصدار (ستُتجاهل تعديلاتك)، أو احفظ للاختيار بين نسختهم ونسختك.',
+  'triggers.editor.remoteChangedBody':
+    'لا تزال تعديلاتك غير المحفوظة هنا، لكنها مبنية على إصدار أقدم. حمّل أحدث إصدار (ستُتجاهل تعديلاتك)، أو احفظ للاختيار بين نسختهم ونسختك.',
   'triggers.editor.remoteKeptBody': 'احتُفظ بتعديلاتك غير المحفوظة فوق أحدث إصدار.',
   'triggers.editor.remoteLatestBody': 'يعرض المحرّر الآن أحدث إصدار.',
-  'triggers.editor.remoteChangedBanner': 'تغيّر هذا المُشغِّل في مكان آخر أثناء تعديلك. سيفشل الحفظ حتى تعيد التحميل أو تحتفظ بتعديلاتك.',
+  'triggers.editor.remoteChangedBanner':
+    'تغيّر هذا المُشغِّل في مكان آخر أثناء تعديلك. سيفشل الحفظ حتى تعيد التحميل أو تحتفظ بتعديلاتك.',
   'triggers.editor.sections': 'أقسام المُشغِّل',
   'triggers.editor.tabBuilder': 'المُنشئ',
   'triggers.editor.tabSimulator': 'المحاكي',
   'triggers.editor.tabRuns': 'عمليات التشغيل',
   'triggers.editor.tabHistory': 'السجل',
   'triggers.editor.tabInvitations': 'الدعوات',
-  'triggers.editor.problemsLabel': '{count, plural, zero {لا مشكلات} one {مشكلة واحدة} two {مشكلتان} few {# مشكلات} many {# مشكلة} other {# مشكلة}}',
+  'triggers.editor.problemsLabel':
+    '{count, plural, zero {لا مشكلات} one {مشكلة واحدة} two {مشكلتان} few {# مشكلات} many {# مشكلة} other {# مشكلة}}',
   'triggers.editor.basics': 'الأساسيات',
   'triggers.editor.basicsHelp': 'متى يعمل المُشغِّل وكيف يُرتَّب مقارنة بغيره للحدث نفسه.',
   'triggers.editor.eventHelp': 'يؤدي تغيير الحدث إلى إعادة فحص كل شرط وإجراء.',
@@ -493,11 +531,14 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.editor.cooldownHelp': 'لكل جلسة زائر. القيمة 0 تعني عدم وجود فترة تهدئة (30 يومًا كحد أقصى).',
   'triggers.editor.stopLabel': 'إيقاف المعالجة بعد هذا المُشغِّل',
   'triggers.editor.stopHelp': 'عندما يتطابق هذا المُشغِّل، لا تُقيَّم المُشغِّلات الأقل أسبقية للحدث نفسه.',
-  'triggers.editor.conditionsHelp': 'تُقيَّم على لقطة واحدة للزائر والمحادثة والجدول والموقع تُؤخذ عند وقوع الحدث.',
-  'triggers.editor.actionsHelp': 'تُنفَّذ بالترتيب عند تطابق الشروط. في التوجيه والأولوية يُحتسب أول إجراء فائز عبر كل المُشغِّلات.',
+  'triggers.editor.conditionsHelp':
+    'تُقيَّم على لقطة واحدة للزائر والمحادثة والجدول والموقع تُؤخذ عند وقوع الحدث.',
+  'triggers.editor.actionsHelp':
+    'تُنفَّذ بالترتيب عند تطابق الشروط. في التوجيه والأولوية يُحتسب أول إجراء فائز عبر كل المُشغِّلات.',
   'triggers.editor.funnel': 'مسار الدعوات',
   'triggers.editor.funnelHelp': 'الدعوات المميّزة التي أنشأها هذا المُشغِّل، حسب المرحلة.',
-  'triggers.editor.problemsToFix': '{count, plural, zero {لا مشكلات لإصلاحها} one {مشكلة واحدة لإصلاحها} two {مشكلتان لإصلاحهما} few {# مشكلات لإصلاحها} many {# مشكلة لإصلاحها} other {# مشكلة لإصلاحها}}',
+  'triggers.editor.problemsToFix':
+    '{count, plural, zero {لا مشكلات لإصلاحها} one {مشكلة واحدة لإصلاحها} two {مشكلتان لإصلاحهما} few {# مشكلات لإصلاحها} many {# مشكلة لإصلاحها} other {# مشكلة لإصلاحها}}',
   'triggers.editor.unsavedChanges': 'تغييرات غير محفوظة',
   'triggers.editor.validNotSaved': 'صالح، لم يُحفظ بعد',
   'triggers.editor.discard': 'تجاهل',
@@ -505,10 +546,13 @@ export const triggers: Record<keyof typeof source, string> = {
   'triggers.editor.publishSaveFailed': 'تعذّر حفظ المسودة، لذا لم يُنشر أي شيء. راجع الرسالة أعلى المحرّر.',
   'triggers.editor.publishedEnabled': 'نُشرت المراجعة {n} وفُعّلت',
   'triggers.editor.publishedDisabled': 'نُشرت المراجعة {n} (معطّلة)',
-  'triggers.editor.publishConflict': 'تغيّرت المسودة منذ فتحت مربع الحوار هذا (حفظ شخص ما مراجعة أحدث). أُعيد تحميل المحرّر، فراجع وانشر مجددًا.',
-  'triggers.editor.disableBody': 'تتوقف المراجعة المنشورة {revision} عن العمل على أحداث «{event}». لا يُلغى أي شيء نُفّذ بالفعل.',
+  'triggers.editor.publishConflict':
+    'تغيّرت المسودة منذ فتحت مربع الحوار هذا (حفظ شخص ما مراجعة أحدث). أُعيد تحميل المحرّر، فراجع وانشر مجددًا.',
+  'triggers.editor.disableBody':
+    'تتوقف المراجعة المنشورة {revision} عن العمل على أحداث «{event}». لا يُلغى أي شيء نُفّذ بالفعل.',
   'triggers.editor.changedElsewhere': 'تغيّر هذا المُشغِّل في مكان آخر. أُعيد تحميله، فحاول مرة أخرى.',
-  'triggers.editor.archiveBody': 'يتوقف المُشغِّل عن العمل فورًا ويُزال من القائمة. يُحتفظ بسجل عمليات تشغيله.',
+  'triggers.editor.archiveBody':
+    'يتوقف المُشغِّل عن العمل فورًا ويُزال من القائمة. يُحتفظ بسجل عمليات تشغيله.',
   'triggers.remote.draftSaved': 'حفظ شخص آخر مسودة (المراجعة {n}).',
   'triggers.remote.restored': 'استعاد شخص آخر مراجعة سابقة بوصفها المسودة {n}.',
   'triggers.remote.details': 'غيّر شخص آخر اسم هذا المُشغِّل أو وصفه.',

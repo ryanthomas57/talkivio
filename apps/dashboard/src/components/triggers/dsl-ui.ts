@@ -155,21 +155,42 @@ export function trustedCustomFields(defs: CustomFieldDef[] | undefined): CustomF
 }
 
 /** Allowlisted fields grouped by subject, with availability for the event (ch. 32). */
-export function fieldGroups(t: Translate, event: DslEvent, customDefs: CustomFieldDef[] | undefined): FieldGroup[] {
+export function fieldGroups(
+  t: Translate,
+  event: DslEvent,
+  customDefs: CustomFieldDef[] | undefined,
+): FieldGroup[] {
   const groups = new Map<string, FieldOption[]>();
   for (const f of DSL_FIELDS) {
     const subject = SUBJECT_LABELS[subjectOf(f.key)] ? subjectOf(f.key) : 'other';
     const list = groups.get(subject) ?? [];
-    list.push({ key: f.key, label: fieldLabel(t, f.key, f.label), type: f.type, enumValues: f.enumValues, unavailable: !!f.events && !f.events.includes(event), custom: false });
+    list.push({
+      key: f.key,
+      label: fieldLabel(t, f.key, f.label),
+      type: f.type,
+      enumValues: f.enumValues,
+      unavailable: !!f.events && !f.events.includes(event),
+      custom: false,
+    });
     groups.set(subject, list);
   }
-  const out: FieldGroup[] = [...groups.entries()].map(([id, fields]) => ({ id, label: SUBJECT_LABELS[id] ? t(SUBJECT_LABELS[id]!) : t('common.other'), fields }));
+  const out: FieldGroup[] = [...groups.entries()].map(([id, fields]) => ({
+    id,
+    label: SUBJECT_LABELS[id] ? t(SUBJECT_LABELS[id]!) : t('common.other'),
+    fields,
+  }));
   const custom = trustedCustomFields(customDefs);
   if (custom.length) {
     out.push({
       id: 'custom',
       label: t('triggers.fieldGroup.custom'),
-      fields: custom.map((d) => ({ key: `${DSL_CUSTOM_PREFIX}${d.key}`, label: d.label || d.key, type: customFieldType(d.dataType), unavailable: false, custom: true })),
+      fields: custom.map((d) => ({
+        key: `${DSL_CUSTOM_PREFIX}${d.key}`,
+        label: d.label || d.key,
+        type: customFieldType(d.dataType),
+        unavailable: false,
+        custom: true,
+      })),
     });
   }
   return out;
@@ -181,18 +202,30 @@ export function findField(groups: FieldGroup[], key: string): FieldOption | null
 }
 
 /** Validation context from the tenant's reference data; only lists that loaded are enforced. */
-export function validationContext(input: { departmentIds?: string[]; siteIds?: string[]; customDefs?: CustomFieldDef[] }): DslValidationContext {
+export function validationContext(input: {
+  departmentIds?: string[];
+  siteIds?: string[];
+  customDefs?: CustomFieldDef[];
+}): DslValidationContext {
   const ctx: DslValidationContext = {};
   if (input.departmentIds) ctx.departmentIds = input.departmentIds;
   if (input.siteIds) ctx.siteIds = input.siteIds;
   if (input.customDefs) {
-    ctx.customFields = Object.fromEntries(input.customDefs.filter((d) => !d.archivedAt).map((d) => [d.key, { type: customFieldType(d.dataType), trusted: !d.publicWritable }]));
+    ctx.customFields = Object.fromEntries(
+      input.customDefs
+        .filter((d) => !d.archivedAt)
+        .map((d) => [d.key, { type: customFieldType(d.dataType), trusted: !d.publicWritable }]),
+    );
   }
   return ctx;
 }
 
 /** Default operand for a field type and operator, so a new row starts in a sensible state. */
-export function defaultValue(type: DslFieldType, op: DslOperator, enumValues?: readonly string[]): DslCondition['value'] {
+export function defaultValue(
+  type: DslFieldType,
+  op: DslOperator,
+  enumValues?: readonly string[],
+): DslCondition['value'] {
   if (op === 'exists' || op === 'missing') return undefined;
   if (op === 'in' || op === 'not_in') return [];
   if (op === 'gt' || op === 'gte' || op === 'lt' || op === 'lte') return 0;
@@ -209,7 +242,9 @@ export function defaultValue(type: DslFieldType, op: DslOperator, enumValues?: r
 }
 
 export function newCondition(groups: FieldGroup[]): DslCondition {
-  const first = groups.flatMap((g) => g.fields).find((f) => !f.unavailable && f.key === 'page.path') ?? groups[0]!.fields[0]!;
+  const first =
+    groups.flatMap((g) => g.fields).find((f) => !f.unavailable && f.key === 'page.path') ??
+    groups[0]!.fields[0]!;
   const op = dslOperatorsFor(first.type)[0]!;
   return { field: first.key, op, value: defaultValue(first.type, op, first.enumValues) };
 }
@@ -228,7 +263,15 @@ export function newAction(type: DslActionType, event: DslEvent): DslAction {
     case 'send_public_message':
       return { type, text: '', attribution: DSL_DEFAULT_ATTRIBUTION };
     case 'display_invitation':
-      return { type, message: '', attribution: DSL_DEFAULT_ATTRIBUTION, department_id: null, expires_in_seconds: 600, max_per_session: 1, dismiss_cooldown_hours: 24 };
+      return {
+        type,
+        message: '',
+        attribution: DSL_DEFAULT_ATTRIBUTION,
+        department_id: null,
+        expires_in_seconds: 600,
+        max_per_session: 1,
+        dismiss_cooldown_hours: 24,
+      };
     case 'set_visitor_field':
       return { type, key: '', value: '' };
     case 'notify_department':
@@ -246,7 +289,16 @@ export function firstActionTypeFor(event: DslEvent): DslActionType {
 }
 
 export function blankDefinition(event: DslEvent): DslDefinition {
-  return { dsl_version: DSL_VERSION, event, priority: 100, all: [], any: [], actions: [newAction(firstActionTypeFor(event), event)], stop_processing: false, cooldown_seconds: 0 };
+  return {
+    dsl_version: DSL_VERSION,
+    event,
+    priority: 100,
+    all: [],
+    any: [],
+    actions: [newAction(firstActionTypeFor(event), event)],
+    stop_processing: false,
+    cooldown_seconds: 0,
+  };
 }
 
 export function actionAvailable(type: DslActionType, event: DslEvent): boolean {
@@ -321,7 +373,10 @@ export class IssueIndex {
 }
 
 /** API 422 `field_errors` (`definition.actions.0.text`) → DSL issues with editor paths. */
-export function issuesFromFieldErrors(fieldErrors: Record<string, string[]>, prefix = 'definition'): DslIssue[] {
+export function issuesFromFieldErrors(
+  fieldErrors: Record<string, string[]>,
+  prefix = 'definition',
+): DslIssue[] {
   const out: DslIssue[] = [];
   for (const [key, msgs] of Object.entries(fieldErrors)) {
     if (key !== prefix && !key.startsWith(`${prefix}.`)) continue;
@@ -339,7 +394,12 @@ export function issueLocation(t: Translate, path: string): string {
   if (head === 'all') return n ? t('triggers.location.allN', { n }) : t('triggers.location.all');
   if (head === 'any') return n ? t('triggers.location.anyN', { n }) : t('triggers.location.any');
   if (head === 'actions') return n ? t('triggers.location.actionN', { n }) : t('triggers.label.actions');
-  const basics: Record<string, MessageKey> = { event: 'triggers.label.event', priority: 'triggers.label.priority', cooldown_seconds: 'triggers.label.cooldown', stop_processing: 'triggers.label.stopProcessing' };
+  const basics: Record<string, MessageKey> = {
+    event: 'triggers.label.event',
+    priority: 'triggers.label.priority',
+    cooldown_seconds: 'triggers.label.cooldown',
+    stop_processing: 'triggers.label.stopProcessing',
+  };
   const key = basics[head!];
   return key ? t(key) : path;
 }
@@ -398,7 +458,11 @@ export function reasonLabel(t: Translate, reason: string | null | undefined): st
 }
 
 /** Short plain-language summary of an action, using names for referenced ids when known. */
-export function describeAction(t: Translate, a: DslAction, names: { department: (id: string | null) => string }): string {
+export function describeAction(
+  t: Translate,
+  a: DslAction,
+  names: { department: (id: string | null) => string },
+): string {
   switch (a.type) {
     case 'set_department':
       return t('triggers.describe.setDepartment', { department: isolate(names.department(a.department_id)) });
@@ -409,13 +473,25 @@ export function describeAction(t: Translate, a: DslAction, names: { department: 
     case 'remove_tag':
       return t('triggers.describe.removeTag', { tag: isolate(a.tag), target: a.target });
     case 'send_public_message':
-      return t('triggers.describe.sendPublicMessage', { text: isolate(truncate(a.text, 80)), attribution: isolate(a.attribution) });
+      return t('triggers.describe.sendPublicMessage', {
+        text: isolate(truncate(a.text, 80)),
+        attribution: isolate(a.attribution),
+      });
     case 'display_invitation':
-      return t('triggers.describe.displayInvitation', { message: isolate(truncate(a.message, 60)), max: a.max_per_session, hours: a.dismiss_cooldown_hours });
+      return t('triggers.describe.displayInvitation', {
+        message: isolate(truncate(a.message, 60)),
+        max: a.max_per_session,
+        hours: a.dismiss_cooldown_hours,
+      });
     case 'set_visitor_field':
-      return a.value === null ? t('triggers.describe.clearVisitorField', { key: isolate(a.key) }) : t('triggers.describe.setVisitorField', { key: isolate(a.key), value: isolate(String(a.value)) });
+      return a.value === null
+        ? t('triggers.describe.clearVisitorField', { key: isolate(a.key) })
+        : t('triggers.describe.setVisitorField', { key: isolate(a.key), value: isolate(String(a.value)) });
     case 'notify_department':
-      return t('triggers.describe.notifyDepartment', { department: isolate(names.department(a.department_id)), text: isolate(truncate(a.text, 60)) });
+      return t('triggers.describe.notifyDepartment', {
+        department: isolate(names.department(a.department_id)),
+        text: isolate(truncate(a.text, 60)),
+      });
     case 'create_webhook_job':
       return t('triggers.describe.createWebhookJob', { event: isolate(a.event_name) });
     case 'block_admission':
@@ -424,8 +500,12 @@ export function describeAction(t: Translate, a: DslAction, names: { department: 
 }
 
 /** Names used when a referenced department or website id is not (or no longer) known. */
-export function departmentNamer(t: Translate, lookup: (id: string) => string | undefined): (id: string | null) => string {
-  return (id) => (id ? (lookup(id) ?? t('triggers.names.unknownDepartment')) : t('triggers.names.siteDefaultDepartment'));
+export function departmentNamer(
+  t: Translate,
+  lookup: (id: string) => string | undefined,
+): (id: string | null) => string {
+  return (id) =>
+    id ? (lookup(id) ?? t('triggers.names.unknownDepartment')) : t('triggers.names.siteDefaultDepartment');
 }
 
 export function truncate(s: string, n: number): string {
@@ -434,13 +514,19 @@ export function truncate(s: string, n: number): string {
 }
 
 export function formatValue(t: Translate, v: unknown): string {
-  if (v === undefined || v === null) return '—';
-  if (Array.isArray(v)) return v.length ? v.map((x) => String(x)).join(t('triggers.listSeparator')) : t('triggers.value.emptyList');
-  if (typeof v === 'string') return v === '' ? t('triggers.value.emptyText') : t('triggers.value.quoted', { value: isolate(v) });
+  if (v === undefined || v === null) return '';
+  if (Array.isArray(v))
+    return v.length
+      ? v.map((x) => String(x)).join(t('triggers.listSeparator'))
+      : t('triggers.value.emptyList');
+  if (typeof v === 'string')
+    return v === '' ? t('triggers.value.emptyText') : t('triggers.value.quoted', { value: isolate(v) });
   return String(v);
 }
 
 /** One condition in words: "Page path contains “/pricing”". */
 export function conditionText(t: Translate, field: string, op: string, value?: string): string {
-  return value === undefined ? t('triggers.condition.textNoValue', { field, op }) : t('triggers.condition.text', { field, op, value });
+  return value === undefined
+    ? t('triggers.condition.textNoValue', { field, op })
+    : t('triggers.condition.text', { field, op, value });
 }

@@ -9,7 +9,8 @@ export const bans = {
   'bans.page.noAccessTitle': 'You don’t have access to bans',
   'bans.page.noAccessBody': 'Ask an admin or supervisor with ban permissions.',
   'bans.page.title': 'Bans',
-  'bans.page.description': 'Blocked visitors and addresses. Banned visitors see a neutral “Service unavailable” message; reasons are never shown to them.',
+  'bans.page.description':
+    'Blocked visitors and addresses. Banned visitors see a neutral “Service unavailable” message; reasons are never shown to them.',
   'bans.page.create': 'Create ban',
   'bans.page.show': 'Show',
   'bans.page.filterActive': 'Active bans',
@@ -21,7 +22,7 @@ export const bans = {
   'bans.page.emptyActive': 'No active bans',
   'bans.page.emptyEnded': 'No expired or lifted bans',
   'bans.page.emptyAll': 'No bans yet',
-  'bans.page.searchLoadedOnly': 'Only loaded bans are searched — load more to search further.',
+  'bans.page.searchLoadedOnly': 'Only loaded bans are searched. Load more to search further.',
   'bans.page.tryDifferent': 'Try a different word.',
   'bans.page.emptyBody': 'Bans you create from a visitor profile or here appear in this list.',
   'bans.page.clearSearch': 'Clear search',
@@ -39,9 +40,12 @@ export const bans = {
   'bans.unban.label': 'Unban {target}',
   'bans.unban.button': 'Unban',
   'bans.unban.title': 'Unban {target}?',
-  'bans.unban.body': '{target} will be able to start chats and send offline messages again. The unban is recorded in the audit log.',
-  'bans.unban.bodySite': '{target} will be able to start chats and send offline messages again on {site}. The unban is recorded in the audit log.',
-  'bans.unban.bodyGeneric': 'This target will be able to start chats and send offline messages again. The unban is recorded in the audit log.',
+  'bans.unban.body':
+    '{target} will be able to start chats and send offline messages again. The unban is recorded in the audit log.',
+  'bans.unban.bodySite':
+    '{target} will be able to start chats and send offline messages again on {site}. The unban is recorded in the audit log.',
+  'bans.unban.bodyGeneric':
+    'This target will be able to start chats and send offline messages again. The unban is recorded in the audit log.',
   'bans.unban.thatSite': 'that site',
   'bans.unban.done': '{target} unbanned',
   'bans.expiry.24h': '24 hours',
@@ -54,7 +58,7 @@ export const bans = {
   'bans.dialog.selectedSite': 'the selected site',
   'bans.dialog.chooseVisitor': 'Choose the visitor to ban',
   'bans.dialog.ipRequired': 'Enter an IP address',
-  'bans.dialog.noCidr': 'Ban an exact address — CIDR ranges are not accepted',
+  'bans.dialog.noCidr': 'Ban an exact address. CIDR ranges are not accepted',
   'bans.dialog.ipInvalid': 'Enter a valid IPv4 or IPv6 address',
   'bans.dialog.reasonRequired': 'A reason is required (visible to staff only)',
   'bans.dialog.expiryInvalid': 'Choose a valid date and time',
@@ -64,14 +68,17 @@ export const bans = {
   'bans.dialog.invalid': 'Invalid value',
   'bans.dialog.titleVisitor': 'Ban {name}',
   'bans.dialog.title': 'Create a ban',
-  'bans.dialog.description': 'Banned visitors cannot start chats or send offline messages. They see a neutral “Service unavailable” message — never the reason.',
-  'bans.dialog.visitorHint': 'Best effort for anonymous visitors: clearing browser storage creates a new identity.',
+  'bans.dialog.description':
+    'Banned visitors cannot start chats or send offline messages. They see a neutral “Service unavailable” message, never the reason.',
+  'bans.dialog.visitorHint':
+    'Best effort for anonymous visitors: clearing browser storage creates a new identity.',
   'bans.dialog.ip': 'IP address',
   'bans.dialog.ipHint': 'Blocks everyone on that exact address. Stored as a keyed hash and shown masked.',
   'bans.dialog.visitorLabel': 'Visitor:',
   'bans.dialog.shownAs': 'Shown to staff as {masked}',
   'bans.dialog.ipFieldHint': 'An exact IPv4 or IPv6 address. Ranges are not accepted.',
-  'bans.dialog.ipWarning': 'IP bans can block other people who share this network address — offices, schools, mobile carriers and VPNs.',
+  'bans.dialog.ipWarning':
+    'IP bans can block other people who share this network address, such as offices, schools, mobile carriers and VPNs.',
   'bans.dialog.sites': 'Sites',
   'bans.dialog.sitesRoleHint': 'Your role can only create workspace-wide bans.',
   'bans.dialog.allSitesOption': 'All sites in this workspace',
@@ -80,9 +87,11 @@ export const bans = {
   'bans.dialog.reasonHint': 'Staff only. Never shown to the visitor.',
   'bans.dialog.reasonPlaceholder': 'e.g. Repeated abusive messages in chat #1042',
   'bans.dialog.closeChat': 'End this visitor’s open chat now',
-  'bans.dialog.closeChatHint': 'Any queued or active chat is closed with reason “banned”. Unchecked, the current chat continues but no new chats can start.',
+  'bans.dialog.closeChatHint':
+    'Any queued or active chat is closed with reason “banned”. Unchecked, the current chat continues but no new chats can start.',
   'bans.dialog.effect': 'Effect',
-  'bans.dialog.effectBody': '{target} will be blocked on {site}{until, select, date { until {date}} never { until someone unbans it} other {}}.',
+  'bans.dialog.effectBody':
+    '{target} will be blocked on {site}{until, select, date { until {date}} never { until someone unbans it} other {}}.',
   'bans.dialog.selectedVisitor': 'The selected visitor',
   'bans.dialog.address': 'Address {masked}',
   'bans.dialog.theAddress': 'The address',

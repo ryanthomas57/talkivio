@@ -39,10 +39,10 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.label.search': 'فهرس البحث',
   'privacy.label.started': 'جارٍ البدء',
   'privacy.label.collecting': 'جارٍ جمع البيانات',
-  'privacy.store.transcripts': 'قاعدة البيانات — سجلات المحادثة',
-  'privacy.store.searchIndex': 'قاعدة البيانات — فهرس البحث',
-  'privacy.store.profile': 'قاعدة البيانات — ملف الزائر',
-  'privacy.store.derivedPayloads': 'قاعدة البيانات — الحمولات المشتقة (المهام وصندوق الصادر وWebhook)',
+  'privacy.store.transcripts': 'قاعدة البيانات: سجلات المحادثة',
+  'privacy.store.searchIndex': 'قاعدة البيانات: فهرس البحث',
+  'privacy.store.profile': 'قاعدة البيانات: ملف الزائر',
+  'privacy.store.derivedPayloads': 'قاعدة البيانات: الحمولات المشتقة (المهام وصندوق الصادر وWebhook)',
   'privacy.store.objectStorage': 'تخزين الملفات (الأصلية والصور المصغّرة)',
   'privacy.store.redis': 'ذاكرة التخزين المؤقت الفورية',
   'privacy.store.tombstoneLedger': 'سجل شواهد المحو (خارج النسخ الاحتياطية)',
@@ -52,15 +52,18 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.subject.fallback': 'الزائر {id}',
 
   'privacy.view.noAccessTitle': 'ليس لديك صلاحية الوصول إلى أدوات الخصوصية',
-  'privacy.view.noAccessBody': 'يدير مسؤولو مساحة العمل الذين لديهم صلاحية الخصوصية طلبات الخصوصية والاحتفاظ بالبيانات.',
+  'privacy.view.noAccessBody':
+    'يدير مسؤولو مساحة العمل الذين لديهم صلاحية الخصوصية طلبات الخصوصية والاحتفاظ بالبيانات.',
   'privacy.view.title': 'الخصوصية',
   'privacy.view.description':
     'تعامل مع طلبات الزوار للاطلاع على بياناتهم أو حذفها، وتحكّم في مدة الاحتفاظ بالبيانات. تدعم هذه الأدوات التزاماتك لكنها لا تشهد بالامتثال القانوني، فأنت من يحدد الأساس القانوني والإشعارات ومواعيد الرد وفق ولايتك القضائية.',
   'privacy.view.newRequest': 'طلب جديد',
   'privacy.view.legalHoldTitle': 'الحجز القانوني غير متاح',
-  'privacy.view.legalHoldBody': 'لا يمكن لهذا الإصدار وضع السجلات تحت الحجز القانوني. تزيل طلبات محو البيانات المُتحقَّق منها وسياسة الاحتفاظ البيانات دون استثناء.',
+  'privacy.view.legalHoldBody':
+    'لا يمكن لهذا الإصدار وضع السجلات تحت الحجز القانوني. تزيل طلبات محو البيانات المُتحقَّق منها وسياسة الاحتفاظ البيانات دون استثناء.',
   'privacy.list.title': 'طلبات أصحاب البيانات',
-  'privacy.list.description': 'تُنتج طلبات الاطلاع ملف تصدير قابلًا للتنزيل. وتزيل طلبات المحو البيانات الشخصية للزائر من كل المخازن وتعرض ما تم تأكيده.',
+  'privacy.list.description':
+    'تُنتج طلبات الاطلاع ملف تصدير قابلًا للتنزيل. وتزيل طلبات المحو البيانات الشخصية للزائر من كل المخازن وتعرض ما تم تأكيده.',
   'privacy.list.state': 'الحالة',
   'privacy.list.allStates': 'كل الحالات',
   'privacy.list.type': 'النوع',
@@ -78,49 +81,56 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.list.colProgress': 'التقدّم',
   'privacy.list.verify': 'تحقّق',
   'privacy.list.review': 'مراجعة',
-  'privacy.list.rowSr': '{kind, select, erase { — طلب محو البيانات} other { — طلب الاطلاع}}',
+  'privacy.list.rowSr': '{kind, select, erase { طلب محو البيانات} other { طلب الاطلاع}}',
   'privacy.list.needsVerification': 'يحتاج إلى التحقق من الهوية',
   'privacy.list.doneAt': 'اكتمل {relative}',
   'privacy.list.stopped': 'متوقف',
-  'privacy.list.failedResume': '{reason} — يمكن الاستئناف',
+  'privacy.list.failedResume': '{reason}: يمكن الاستئناف',
   'privacy.list.progressLabel': '{kind, select, erase {تقدّم طلب محو البيانات} other {تقدّم طلب الاطلاع}}',
 
   'privacy.new.visitorRequired': 'ابحث عن الزائر وحدّده.',
   'privacy.new.proofRequired': 'سجّل المكان الذي وثّقت فيه طريقة التحقق من هوية مقدّم الطلب.',
   'privacy.new.visitorGone': 'لم يعد هذا الزائر موجودًا. ابحث مرة أخرى.',
   'privacy.new.title': 'طلب خصوصية جديد',
-  'privacy.new.description': 'سجّل طلب صاحب البيانات. لن يحدث شيء حتى تتحقق من هوية مقدّم الطلب في الخطوة التالية.',
+  'privacy.new.description':
+    'سجّل طلب صاحب البيانات. لن يحدث شيء حتى تتحقق من هوية مقدّم الطلب في الخطوة التالية.',
   'privacy.new.createErasure': 'إنشاء طلب محو البيانات',
   'privacy.new.createAccess': 'إنشاء طلب اطلاع',
   'privacy.new.openRequest': 'فتح الطلب',
   'privacy.new.stepSubject': '1. صاحب البيانات',
-  'privacy.new.cannotSearch': 'لا يتيح لك دورك عرض الزوار، لذا لا يمكنك اختيار صاحب البيانات. اطلب ذلك من مسؤول لديه صلاحية الوصول إلى الزوار.',
+  'privacy.new.cannotSearch':
+    'لا يتيح لك دورك عرض الزوار، لذا لا يمكنك اختيار صاحب البيانات. اطلب ذلك من مسؤول لديه صلاحية الوصول إلى الزوار.',
   'privacy.new.change': 'تغيير',
   'privacy.new.findVisitor': 'ابحث عن الزائر',
   'privacy.new.findVisitorHelp': 'ابحث بالاسم، أو بعنوان البريد الإلكتروني الكامل (تطابق تام).',
   'privacy.new.searchPlaceholder': 'الاسم أو email@example.com',
   'privacy.new.searchFailed': 'تعذّر البحث: {error}',
-  'privacy.new.noMatches': 'لا يوجد زوار يطابقون «{term}». تتطابق الأسماء جزئيًا، أما عناوين البريد الإلكتروني فيجب أن تتطابق تمامًا.',
+  'privacy.new.noMatches':
+    'لا يوجد زوار يطابقون «{term}». تتطابق الأسماء جزئيًا، أما عناوين البريد الإلكتروني فيجب أن تتطابق تمامًا.',
   'privacy.new.matchesLabel': 'الزوار المطابقون',
   'privacy.new.select': 'تحديد',
-  'privacy.new.moreMatches': 'يوجد زوار مطابقون آخرون. اكتب جزءًا أكبر من الاسم، أو استخدم عنوان البريد الإلكتروني.',
+  'privacy.new.moreMatches':
+    'يوجد زوار مطابقون آخرون. اكتب جزءًا أكبر من الاسم، أو استخدم عنوان البريد الإلكتروني.',
   'privacy.new.stepType': '2. نوع الطلب',
   'privacy.new.requestType': 'نوع الطلب',
-  'privacy.new.accessLabel': 'اطلاع — تصدير بياناته',
+  'privacy.new.accessLabel': 'اطلاع: تصدير بياناته',
   'privacy.new.accessDescription':
     'يُنشئ ملف JSON بكل ما يحتفظ به {brand} عن هذا الزائر: الهويات والجلسات والمحادثات (الرسائل العامة ورسائله) والتقييمات والحقول المخصصة وسجلات الموافقة. تُستثنى الملاحظات الداخلية للموظفين ورسائل الزوار الآخرين. لا يُغيَّر أي شيء ولا يُحذف.',
-  'privacy.new.eraseLabel': 'محو البيانات — حذف بياناته الشخصية نهائيًا',
+  'privacy.new.eraseLabel': 'محو البيانات: حذف بياناته الشخصية نهائيًا',
   'privacy.new.eraseDescription':
     'يزيل البيانات الشخصية للزائر من كل المخازن النشطة: الملف الشخصي والجلسات وأحداث الصفحات والمرفقات والتصديرات. ويُحجب نص سجل المحادثة في محادثاته. لا يتأثر الزوار الآخرون في المحادثات نفسها.',
   'privacy.new.eraseWarningTitle': 'لا يمكن التراجع عن محو البيانات',
-  'privacy.new.eraseWarningBody': 'بعد التحقق والتنفيذ، تختفي البيانات الشخصية للزائر ونص سجل محادثاته نهائيًا، حتى بالنسبة إلى فريقك. إذا طلب نسخة من بياناته، فأكمل طلب الاطلاع أولًا.',
+  'privacy.new.eraseWarningBody':
+    'بعد التحقق والتنفيذ، تختفي البيانات الشخصية للزائر ونص سجل محادثاته نهائيًا، حتى بالنسبة إلى فريقك. إذا طلب نسخة من بياناته، فأكمل طلب الاطلاع أولًا.',
   'privacy.new.stepEvidence': '3. مرجع الدليل',
   'privacy.new.evidence': 'مرجع دليل التحقق',
-  'privacy.new.evidenceHelp': 'رقم تذكرة أو حالة تسجّل فيه طريقة التحقق من هوية مقدّم الطلب. لا تلصق الدليل نفسه. يُحتفظ به لفترة قصيرة فقط.',
+  'privacy.new.evidenceHelp':
+    'رقم تذكرة أو حالة تسجّل فيه طريقة التحقق من هوية مقدّم الطلب. لا تلصق الدليل نفسه. يُحتفظ به لفترة قصيرة فقط.',
   'privacy.new.evidencePlaceholder': 'مثل {example}',
   'privacy.new.verifiedIdentity': 'هوية مُتحقَّق منها',
   'privacy.new.noEmail': 'لا يوجد بريد إلكتروني',
-  'privacy.new.visitorMeta': '{email} · {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}} · آخر ظهور {time}',
+  'privacy.new.visitorMeta':
+    '{email} · {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}} · آخر ظهور {time}',
 
   'privacy.method.verifiedIdentity': 'تحققنا من الهوية بإجراءاتنا المعتادة',
   'privacy.method.emailConfirmation': 'تأكّد الطلب من عنوان البريد الإلكتروني للزائر',
@@ -146,7 +156,7 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.reauth.startExport': 'بدء تصدير البيانات هذا',
   'privacy.reauth.runRetention': 'تشغيل سياسة الاحتفاظ الآن',
 
-  'privacy.drawer.title': '{kind, select, erase {طلب محو البيانات — {subject}} other {طلب اطلاع — {subject}}}',
+  'privacy.drawer.title': '{kind, select, erase {طلب محو البيانات: {subject}} other {طلب اطلاع: {subject}}}',
   'privacy.drawer.titleFallback': 'طلب خصوصية',
   'privacy.drawer.createdAt': 'أُنشئ في {date}',
   'privacy.drawer.loadError': 'تعذّر تحميل هذا الطلب: {error}',
@@ -164,10 +174,11 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.drawer.progressLabel': '{kind, select, erase {تقدّم محو البيانات} other {تقدّم التصدير}}',
   'privacy.drawer.waitingRetry': 'بانتظار إعادة المحاولة بعد خطأ ({error}). المحاولة {attempt}.',
   'privacy.drawer.waitingWorker': 'بانتظار بدء أحد العمّال…',
-  'privacy.drawer.runningStep': '{step} — الخطوة {done} من {total}. يتحدّث تلقائيًا.',
+  'privacy.drawer.runningStep': '{step}: الخطوة {done} من {total}. يتحدّث تلقائيًا.',
   'privacy.drawer.running': '{step}. يتحدّث تلقائيًا.',
   'privacy.drawer.finished': 'اكتمل {relative}.',
-  'privacy.drawer.stoppedAfter': 'توقف بعد {count, plural, zero {# محاولة} one {محاولة واحدة} two {محاولتين} few {# محاولات} many {# محاولة} other {# محاولة}}.',
+  'privacy.drawer.stoppedAfter':
+    'توقف بعد {count, plural, zero {# محاولة} one {محاولة واحدة} two {محاولتين} few {# محاولات} many {# محاولة} other {# محاولة}}.',
   'privacy.drawer.failedTitle': 'لم يكتمل هذا الطلب',
   'privacy.drawer.resume': 'استئناف',
   'privacy.drawer.failedReason': 'السبب: {reason}.',
@@ -180,8 +191,8 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.drawer.colRowsChanged': 'الصفوف المعدّلة',
   'privacy.drawer.colItems': 'العناصر',
   'privacy.drawer.storeConfirmations': 'تأكيدات المخازن',
-  'privacy.drawer.storeConfirmed': '{store} — مؤكَّد',
-  'privacy.drawer.storeNotConfirmed': '{store} — غير مؤكَّد',
+  'privacy.drawer.storeConfirmed': '{store}: مؤكَّد',
+  'privacy.drawer.storeNotConfirmed': '{store}: غير مؤكَّد',
   'privacy.drawer.exportFile': 'ملف JSON بحجم {size}.',
   'privacy.drawer.exportNotesIncluded': 'يتضمن الملاحظات الداخلية للموظفين.',
   'privacy.drawer.exportNotesExcluded': 'تُستثنى الملاحظات الداخلية للموظفين.',
@@ -189,7 +200,8 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.drawer.exportAvailableUntil': 'متاح حتى {date}.',
   'privacy.drawer.exportAudited': 'تُسجَّل عمليات التنزيل في سجل التدقيق.',
   'privacy.drawer.sha256': 'بصمة SHA-256: {hash}',
-  'privacy.drawer.exportExpired': 'انتهت صلاحية هذا التصدير وأُزيل. أنشئ طلب اطلاع جديدًا إذا كان الزائر لا يزال بحاجة إلى نسخة.',
+  'privacy.drawer.exportExpired':
+    'انتهت صلاحية هذا التصدير وأُزيل. أنشئ طلب اطلاع جديدًا إذا كان الزائر لا يزال بحاجة إلى نسخة.',
   'privacy.drawer.downloadExport': 'تنزيل التصدير',
   'privacy.drawer.whatWasKept': 'ما تم الاحتفاظ به',
   'privacy.drawer.connectedTools': 'الأدوات المتصلة',
@@ -199,7 +211,8 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.verify.exportStarted': 'بدأ التصدير',
   'privacy.verify.evidenceTooLong': 'يمكن أن يتكون مرجع الدليل من {max} حرفًا على الأكثر.',
   'privacy.verify.title': 'تحقّق من مقدّم الطلب',
-  'privacy.verify.body': '{kind, select, erase {لا تتابع إلا عندما تكون واثقًا من أن صاحب الطلب هو {subject}. يضيف التحقق محو البيانات إلى قائمة الانتظار فورًا.} other {لا تتابع إلا عندما تكون واثقًا من أن صاحب الطلب هو {subject}. يضيف التحقق التصدير إلى قائمة الانتظار فورًا.}}',
+  'privacy.verify.body':
+    '{kind, select, erase {لا تتابع إلا عندما تكون واثقًا من أن صاحب الطلب هو {subject}. يضيف التحقق محو البيانات إلى قائمة الانتظار فورًا.} other {لا تتابع إلا عندما تكون واثقًا من أن صاحب الطلب هو {subject}. يضيف التحقق التصدير إلى قائمة الانتظار فورًا.}}',
   'privacy.verify.method': 'كيف تم التحقق من الهوية؟',
   'privacy.verify.updatedEvidence': 'مرجع دليل محدَّث',
   'privacy.verify.updatedEvidenceHelp': 'اختياري. اتركه فارغًا للاحتفاظ بالمرجع المسجَّل عند إنشاء الطلب.',
@@ -207,13 +220,16 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.verify.submitExport': 'تحقّق وابدأ التصدير…',
   'privacy.verify.confirmEraseTitle': 'محو بيانات {subject}؟',
   'privacy.verify.confirmExportTitle': 'تصدير بيانات {subject}؟',
-  'privacy.verify.confirmEraseBody': 'يحذف هذا البيانات الشخصية لـ{subject} نهائيًا من كل المخازن النشطة ويحجب نص سجل المحادثة في محادثاته. لا يمكن التراجع عن ذلك، ولن يتمكن فريقك بعد ذلك من رؤية ما كتبه.',
-  'privacy.verify.confirmExportBody': 'سيجمع {brand} بيانات {subject} في ملف تصدير JSON يمكن لمسؤولي الخصوصية تنزيله لفترة محدودة. لن يُحذف أي شيء.',
+  'privacy.verify.confirmEraseBody':
+    'يحذف هذا البيانات الشخصية لـ{subject} نهائيًا من كل المخازن النشطة ويحجب نص سجل المحادثة في محادثاته. لا يمكن التراجع عن ذلك، ولن يتمكن فريقك بعد ذلك من رؤية ما كتبه.',
+  'privacy.verify.confirmExportBody':
+    'سيجمع {brand} بيانات {subject} في ملف تصدير JSON يمكن لمسؤولي الخصوصية تنزيله لفترة محدودة. لن يُحذف أي شيء.',
   'privacy.verify.confirmErase': 'محو نهائي',
   'privacy.verify.confirmExport': 'بدء التصدير',
 
   'privacy.retention.target.closedChats': 'المحادثات المغلقة',
-  'privacy.retention.target.closedChatsWhat': 'تُزال الرسائل والمرفقات، وتُحفظ بيانات المحادثة الوصفية غير المعرِّفة لأغراض التحليلات',
+  'privacy.retention.target.closedChatsWhat':
+    'تُزال الرسائل والمرفقات، وتُحفظ بيانات المحادثة الوصفية غير المعرِّفة لأغراض التحليلات',
   'privacy.retention.target.messages': 'الرسائل',
   'privacy.retention.target.messagesWhat': 'في تلك المحادثات',
   'privacy.retention.target.attachments': 'المرفقات',
@@ -229,14 +245,17 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.retention.target.expiredExports': 'تصديرات البيانات المنتهية الصلاحية',
   'privacy.retention.target.expiredExportsWhat': 'ملفات تجاوزت مهلة التنزيل',
   'privacy.retention.title': 'الاحتفاظ بالبيانات',
-  'privacy.retention.description': 'تُزال البيانات القديمة تلقائيًا على دفعات صغيرة. اعرض معاينة لما ستزيله الدفعة التالية، أو شغّل دفعة واحدة الآن.',
+  'privacy.retention.description':
+    'تُزال البيانات القديمة تلقائيًا على دفعات صغيرة. اعرض معاينة لما ستزيله الدفعة التالية، أو شغّل دفعة واحدة الآن.',
   'privacy.retention.runNow': 'تشغيل الاحتفاظ الآن',
   'privacy.retention.currentSettings': 'الإعدادات الحالية',
   'privacy.retention.changeInGeneral': 'التغيير في الإعدادات العامة',
   'privacy.retention.transcripts': 'سجلات المحادثة',
-  'privacy.retention.transcriptsKept': 'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} بعد إغلاق المحادثة',
+  'privacy.retention.transcriptsKept':
+    'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} بعد إغلاق المحادثة',
   'privacy.retention.pageEvents': 'أحداث الصفحات',
-  'privacy.retention.pageEventsKept': 'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
+  'privacy.retention.pageEventsKept':
+    'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
   'privacy.retention.ipAddresses': 'عناوين IP',
   'privacy.retention.ipStored': 'تُخزَّن مع جلسات الزوار',
   'privacy.retention.ipNotStored': 'لا تُخزَّن',
@@ -246,9 +265,11 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.retention.browsingConsent': 'بعد موافقة الزائر فقط',
   'privacy.retention.browsingNoConsent': 'دون طلب موافقة',
   'privacy.retention.webhookHistory': 'سجل تسليمات Webhook',
-  'privacy.retention.webhookKept': 'يُحتفظ به لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} (إعداد النشر)',
+  'privacy.retention.webhookKept':
+    'يُحتفظ به لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} (إعداد النشر)',
   'privacy.retention.evidence': 'أدلة التحقق',
-  'privacy.retention.evidenceKept': 'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} بعد انتهاء الطلب (إعداد النشر)',
+  'privacy.retention.evidenceKept':
+    'يُحتفظ بها لمدة {days, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} بعد انتهاء الطلب (إعداد النشر)',
   'privacy.retention.nextBatch': 'الدفعة التالية (تشغيل تجريبي)',
   'privacy.retention.checkedAt': 'فُحص {time} ·',
   'privacy.retention.checking': 'جارٍ الفحص…',
@@ -258,8 +279,10 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.retention.colOlderThan': 'أقدم من',
   'privacy.retention.colInNextBatch': 'في الدفعة التالية',
   'privacy.retention.expiryPassed': 'انقضى تاريخ الانتهاء',
-  'privacy.retention.batchSize': 'تتضمن كل دفعة {count, plural, zero {# محادثة} one {محادثة واحدة} two {محادثتين} few {# محادثات} many {# محادثة} other {# محادثة}} على الأكثر.',
-  'privacy.retention.moreRemaining': 'تجاوزت بيانات فترة الاحتفاظ أكثر مما تزيله دفعة واحدة، وستتابع عمليات التشغيل التلقائية اللاحقة إزالتها.',
+  'privacy.retention.batchSize':
+    'تتضمن كل دفعة {count, plural, zero {# محادثة} one {محادثة واحدة} two {محادثتين} few {# محادثات} many {# محادثة} other {# محادثة}} على الأكثر.',
+  'privacy.retention.moreRemaining':
+    'تجاوزت بيانات فترة الاحتفاظ أكثر مما تزيله دفعة واحدة، وستتابع عمليات التشغيل التلقائية اللاحقة إزالتها.',
   'privacy.retention.nothingDue': 'لا توجد حاليًا بيانات تجاوزت فترة الاحتفاظ.',
   'privacy.retention.allCovered': 'تشمل هذه الدفعة كل البيانات التي تجاوزت فترة الاحتفاظ حاليًا.',
   'privacy.retention.resultProblemsTitle': 'انتهت دفعة الاحتفاظ مع وجود مشكلات',
@@ -267,11 +290,14 @@ export const privacy: Record<keyof typeof source, string> = {
   'privacy.retention.resultBody':
     'أُزيل: {closedChats, plural, zero {لا سجلات محادثة} one {سجل محادثة واحد} two {سجلّا محادثة} few {# سجلات محادثة} many {# سجلًّا للمحادثات} other {# سجل محادثة}} ({messages, plural, zero {لا رسائل} one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}}، {attachments, plural, zero {لا مرفقات} one {مرفق واحد} two {مرفقان} few {# مرفقات} many {# مرفقًا} other {# مرفق}})، و{pageEvents, plural, zero {لا أحداث صفحات} one {حدث صفحة واحد} two {حدثا صفحة} few {# أحداث صفحات} many {# حدثًا للصفحات} other {# حدث صفحة}}، و{webhookDeliveries, plural, zero {لا تسليمات Webhook} one {تسليم Webhook واحد} two {تسليما Webhook} few {# تسليمات Webhook} many {# تسليمًا لـWebhook} other {# تسليم Webhook}}، و{evidence, plural, zero {لا مراجع أدلة} one {مرجع دليل واحد} two {مرجعا دليل} few {# مراجع أدلة} many {# مرجعًا للأدلة} other {# مرجع دليل}}، و{exports, plural, zero {لا تصديرات منتهية الصلاحية} one {تصدير واحد منتهي الصلاحية} two {تصديران منتهيا الصلاحية} few {# تصديرات منتهية الصلاحية} many {# تصديرًا منتهي الصلاحية} other {# تصدير منتهي الصلاحية}}.',
   'privacy.retention.resultFailures': 'لم يُؤكَّد: {failures}. سيعيد التشغيل التالي المحاولة.',
-  'privacy.retention.legalHoldFallback': 'الحجز القانوني غير مدعوم في هذا الإصدار، ولا تُستثنى أي سجلات من سياسة الاحتفاظ.',
-  'privacy.retention.preserveHint': 'إذا كان عليك حفظ سجلات لمسألة قانونية، فصدّرها قبل أن تبلغ نهاية فترة الاحتفاظ.',
+  'privacy.retention.legalHoldFallback':
+    'الحجز القانوني غير مدعوم في هذا الإصدار، ولا تُستثنى أي سجلات من سياسة الاحتفاظ.',
+  'privacy.retention.preserveHint':
+    'إذا كان عليك حفظ سجلات لمسألة قانونية، فصدّرها قبل أن تبلغ نهاية فترة الاحتفاظ.',
   'privacy.retention.confirmTitle': 'تشغيل الاحتفاظ الآن؟',
   'privacy.retention.confirmBody':
     'سيُحذف نهائيًا: {messages, plural, zero {لا رسائل} one {رسالة واحدة} two {رسالتان} few {# رسائل} many {# رسالة} other {# رسالة}} و{attachments, plural, zero {لا مرفقات} one {مرفق واحد} two {مرفقان} few {# مرفقات} many {# مرفقًا} other {# مرفق}} من {closedChats, plural, zero {# محادثة مغلقة} one {محادثة مغلقة واحدة} two {محادثتين مغلقتين} few {# محادثات مغلقة} many {# محادثة مغلقة} other {# محادثة مغلقة}}، و{pageEvents, plural, zero {لا أحداث صفحات} one {حدث صفحة واحد} two {حدثا صفحة} few {# أحداث صفحات} many {# حدثًا للصفحات} other {# حدث صفحة}}، و{webhookDeliveries, plural, zero {لا تسليمات Webhook} one {تسليم Webhook واحد} two {تسليما Webhook} few {# تسليمات Webhook} many {# تسليمًا لـWebhook} other {# تسليم Webhook}}، و{evidence, plural, zero {لا مراجع أدلة} one {مرجع دليل واحد} two {مرجعا دليل} few {# مراجع أدلة} many {# مرجعًا للأدلة} other {# مرجع دليل}}، و{exports, plural, zero {لا تصديرات منتهية الصلاحية} one {تصدير واحد منتهي الصلاحية} two {تصديران منتهيا الصلاحية} few {# تصديرات منتهية الصلاحية} many {# تصديرًا منتهي الصلاحية} other {# تصدير منتهي الصلاحية}}. لا يمكن التراجع عن ذلك.',
-  'privacy.retention.confirmBodyFallback': 'يحذف هذا نهائيًا البيانات التي تجاوزت فترة الاحتفاظ. لا يمكن التراجع عن ذلك.',
+  'privacy.retention.confirmBodyFallback':
+    'يحذف هذا نهائيًا البيانات التي تجاوزت فترة الاحتفاظ. لا يمكن التراجع عن ذلك.',
   'privacy.retention.deleteNow': 'احذف الآن',
 };

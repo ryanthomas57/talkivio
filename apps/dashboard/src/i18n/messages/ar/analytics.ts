@@ -23,11 +23,13 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.measure.offlineSubmissions': 'رسائل خارج الدوام',
 
   'analytics.group.volume': 'الحجم',
-  'analytics.group.volumeHint': 'نتائج المحادثات المطلوبة ضمن النطاق. قد تتداخل الفائتة والمتروكة — لا تجمعهما أبدًا.',
+  'analytics.group.volumeHint':
+    'نتائج المحادثات المطلوبة ضمن النطاق. قد تتداخل الفائتة والمتروكة، لا تجمعهما أبدًا.',
   'analytics.group.rates': 'معدلات الفائتة والمتروكة',
   'analytics.group.ratesHint': 'نِسب من المحادثات المطلوبة.',
   'analytics.group.speed': 'الرد والمدة',
-  'analytics.group.speedHint': 'الوسيط مع p90/p95 من المدد المرتبة. تُستبعد المحادثات التي لا عينة لها، ولا تُحتسب صفرًا أبدًا.',
+  'analytics.group.speedHint':
+    'الوسيط مع p90/p95 من المدد المرتبة. تُستبعد المحادثات التي لا عينة لها، ولا تُحتسب صفرًا أبدًا.',
   'analytics.group.quality': 'الرضا',
   'analytics.group.qualityHint': 'أحدث تقييم لكل محادثة؛ تُستبعد المحادثات غير المقيَّمة من CSAT.',
   'analytics.group.invitations': 'الدعوات الاستباقية',
@@ -39,16 +41,23 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.dur.hm': '{h} س {m} د',
   'analytics.dur.dh': '{d} ي {h} س',
   'analytics.spoken.none': 'لا توجد قيمة',
-  'analytics.spoken.hours': '{n, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
-  'analytics.spoken.minutes': '{n, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
-  'analytics.spoken.seconds': '{n, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتان} few {# ثوانٍ} many {# ثانية} other {# ثانية}}',
+  'analytics.spoken.hours':
+    '{n, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
+  'analytics.spoken.minutes':
+    '{n, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
+  'analytics.spoken.seconds':
+    '{n, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتان} few {# ثوانٍ} many {# ثانية} other {# ثانية}}',
   'analytics.spoken.joiner': ' و',
 
   'analytics.unit.median': 'الوسيط',
-  'analytics.unit.chats': '{count, plural, zero {محادثة} one {محادثة} two {محادثة} few {محادثات} many {محادثة} other {محادثة}}',
-  'analytics.unit.ratings': '{count, plural, zero {تقييم} one {تقييم} two {تقييم} few {تقييمات} many {تقييمًا} other {تقييم}}',
-  'analytics.unit.invitations': '{count, plural, zero {دعوة} one {دعوة} two {دعوة} few {دعوات} many {دعوة} other {دعوة}}',
-  'analytics.unit.submissions': '{count, plural, zero {رسالة} one {رسالة} two {رسالة} few {رسائل} many {رسالة} other {رسالة}}',
+  'analytics.unit.chats':
+    '{count, plural, zero {محادثة} one {محادثة} two {محادثة} few {محادثات} many {محادثة} other {محادثة}}',
+  'analytics.unit.ratings':
+    '{count, plural, zero {تقييم} one {تقييم} two {تقييم} few {تقييمات} many {تقييمًا} other {تقييم}}',
+  'analytics.unit.invitations':
+    '{count, plural, zero {دعوة} one {دعوة} two {دعوة} few {دعوات} many {دعوة} other {دعوة}}',
+  'analytics.unit.submissions':
+    '{count, plural, zero {رسالة} one {رسالة} two {رسالة} few {رسائل} many {رسالة} other {رسالة}}',
 
   'analytics.ratio.missedRate': '{num} فائتة ÷ {den} مطلوبة',
   'analytics.ratio.abandonedRate': '{num} متروكة ÷ {den} مطلوبة',
@@ -57,13 +66,19 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.ratio.plain': '{num} ÷ {den}',
 
   'analytics.nullPolicy.zeroWhenNoEvents': 'يُعرض 0 عندما لا يحدث شيء ضمن النطاق.',
-  'analytics.nullPolicy.denominatorZero': 'غير متاح: المقام يساوي 0 في هذا النطاق (يُعرض —، وليس 0 %).',
-  'analytics.nullPolicy.unassignedExcluded': 'لا توجد محادثات مُسندة في هذا النطاق. تُستبعد المحادثات غير المُسندة، لذا لا توجد مدة لعرضها.',
-  'analytics.nullPolicy.unansweredExcluded': 'لم تتلقَّ أي محادثة ردًا بشريًا في هذا النطاق. تُستبعد المحادثات التي لم يُرد عليها بدلًا من احتسابها 0 ث.',
-  'analytics.nullPolicy.openExcluded': 'لم تُغلق أي محادثة في هذا النطاق. تُستبعد المحادثات المفتوحة حتى تُغلق.',
+  'analytics.nullPolicy.denominatorZero':
+    'غير متاح: المقام يساوي 0 في هذا النطاق (يُعرض «غير متاح»، وليس 0 %).',
+  'analytics.nullPolicy.unassignedExcluded':
+    'لا توجد محادثات مُسندة في هذا النطاق. تُستبعد المحادثات غير المُسندة، لذا لا توجد مدة لعرضها.',
+  'analytics.nullPolicy.unansweredExcluded':
+    'لم تتلقَّ أي محادثة ردًا بشريًا في هذا النطاق. تُستبعد المحادثات التي لم يُرد عليها بدلًا من احتسابها 0 ث.',
+  'analytics.nullPolicy.openExcluded':
+    'لم تُغلق أي محادثة في هذا النطاق. تُستبعد المحادثات المفتوحة حتى تُغلق.',
   'analytics.nullPolicy.noRatings': 'لا توجد تقييمات في هذا النطاق. تُستبعد المحادثات غير المقيَّمة من CSAT.',
-  'analytics.nullPolicy.noServedChats': 'لا توجد محادثات مخدومة في هذا النطاق، لذا معدل الاستجابة للتقييم غير معرَّف.',
-  'analytics.nullPolicy.filterNotApplicable': 'غير منطبق أثناء تفعيل عامل تصفية الموظف أو الوسم — هذه الفئة ليس لها موظف أو وسم.',
+  'analytics.nullPolicy.noServedChats':
+    'لا توجد محادثات مخدومة في هذا النطاق، لذا معدل الاستجابة للتقييم غير معرَّف.',
+  'analytics.nullPolicy.filterNotApplicable':
+    'غير منطبق أثناء تفعيل عامل تصفية الموظف أو الوسم، هذه الفئة ليس لها موظف أو وسم.',
   'analytics.nullPolicy.noSamples': 'لا توجد عينات في هذا النطاق.',
 
   'analytics.change.pts': '{value} نقطة',
@@ -86,13 +101,14 @@ export const analytics: Record<keyof typeof source, string> = {
 
   'analytics.freshness.behindTitle': 'بيانات التقرير متأخرة',
   'analytics.freshness.behindBody': 'التجميع متأخر بمقدار {lag}. تشمل الأرقام النشاط حتى {time} وقد تتغير.',
-  'analytics.freshness.behindBodyUnknown': 'التجميع متأخر بمقدار {lag}. تشمل الأرقام النشاط حتى وقت غير معروف وقد تتغير.',
+  'analytics.freshness.behindBodyUnknown':
+    'التجميع متأخر بمقدار {lag}. تشمل الأرقام النشاط حتى وقت غير معروف وقد تتغير.',
   'analytics.freshness.behindBodyPending':
-    'التجميع متأخر بمقدار {lag} — {count, plural, zero {لا محادثات قيد المعالجة} one {لا تزال محادثة واحدة قيد المعالجة} two {لا تزال محادثتان قيد المعالجة} few {لا تزال # محادثات قيد المعالجة} many {لا تزال # محادثة قيد المعالجة} other {لا تزال # محادثة قيد المعالجة}}. تشمل الأرقام النشاط حتى {time} وقد تتغير.',
+    'التجميع متأخر بمقدار {lag}: {count, plural, zero {لا محادثات قيد المعالجة} one {لا تزال محادثة واحدة قيد المعالجة} two {لا تزال محادثتان قيد المعالجة} few {لا تزال # محادثات قيد المعالجة} many {لا تزال # محادثة قيد المعالجة} other {لا تزال # محادثة قيد المعالجة}}. تشمل الأرقام النشاط حتى {time} وقد تتغير.',
   'analytics.freshness.behindBodyPendingUnknown':
-    'التجميع متأخر بمقدار {lag} — {count, plural, zero {لا محادثات قيد المعالجة} one {لا تزال محادثة واحدة قيد المعالجة} two {لا تزال محادثتان قيد المعالجة} few {لا تزال # محادثات قيد المعالجة} many {لا تزال # محادثة قيد المعالجة} other {لا تزال # محادثة قيد المعالجة}}. تشمل الأرقام النشاط حتى وقت غير معروف وقد تتغير.',
+    'التجميع متأخر بمقدار {lag}: {count, plural, zero {لا محادثات قيد المعالجة} one {لا تزال محادثة واحدة قيد المعالجة} two {لا تزال محادثتان قيد المعالجة} few {لا تزال # محادثات قيد المعالجة} many {لا تزال # محادثة قيد المعالجة} other {لا تزال # محادثة قيد المعالجة}}. تشمل الأرقام النشاط حتى وقت غير معروف وقد تتغير.',
   'analytics.freshness.line':
-    'حتى <time>{time}</time>، {source, select, raw {محسوبة من السجلات الخام} cached {من البيانات المجمّعة (مخزّنة مؤقتًا)} other {من البيانات المجمّعة}}{stale, select, yes { — متأخرة} other {}}',
+    'حتى <time>{time}</time>، {source, select, raw {محسوبة من السجلات الخام} cached {من البيانات المجمّعة (مخزّنة مؤقتًا)} other {من البيانات المجمّعة}}{stale, select, yes { (متأخرة)} other {}}',
 
   'analytics.range.today': 'اليوم',
   'analytics.range.yesterday': 'أمس',
@@ -119,7 +135,8 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.export.ready': 'التصدير جاهز',
   'analytics.export.download': 'تنزيل {filename}',
   'analytics.export.downloadCsv': 'تنزيل ملف CSV',
-  'analytics.export.rows': '{count, plural, zero {لا صفوف} one {صف واحد} two {صفّان} few {# صفوف} many {# صفًا} other {# صف}}',
+  'analytics.export.rows':
+    '{count, plural, zero {لا صفوف} one {صف واحد} two {صفّان} few {# صفوف} many {# صفًا} other {# صف}}',
   'analytics.export.expires': 'تنتهي الصلاحية <time>{relative}</time> ({date})',
   'analytics.export.failed': 'فشل التصدير. ابدأ تصديرًا جديدًا.',
   'analytics.export.failedCode': 'فشل التصدير ({code}). ابدأ تصديرًا جديدًا.',
@@ -171,12 +188,15 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.chats.halfOpen': 'فترة نصف مفتوحة [from, to)؛ تُحتسب المحادثات حسب وقت الطلب.',
   'analytics.chats.limited': 'مقتصر على أقسامك.',
   'analytics.chats.noChats': 'لم تُطلب أي محادثات في هذا النطاق مع عوامل التصفية الحالية.',
-  'analytics.chats.noChatsFiltered': 'لم تُطلب أي محادثات في هذا النطاق مع عوامل التصفية الحالية — جرّب مسح عوامل التصفية أو توسيع النطاق.',
+  'analytics.chats.noChatsFiltered':
+    'لم تُطلب أي محادثات في هذا النطاق مع عوامل التصفية الحالية، جرّب مسح عوامل التصفية أو توسيع النطاق.',
   'analytics.chats.volumeTitle': 'حجم المحادثات',
-  'analytics.chats.volumeHint': 'المحادثات المطلوبة والمخدومة والفائتة في كل فترة (قد تتداخل الفائتة مع المتروكة).',
+  'analytics.chats.volumeHint':
+    'المحادثات المطلوبة والمخدومة والفائتة في كل فترة (قد تتداخل الفائتة مع المتروكة).',
   'analytics.chats.volumeEmpty': 'لم تُطلب أي محادثات في هذا النطاق.',
   'analytics.chats.responseTitle': 'وقت الرد الأول',
-  'analytics.chats.responseHint': 'الوسيط وp90 لكل فترة للمحادثات المخدومة؛ تبقى الفترات التي لا ردود فيها فارغة (وليست 0 أبدًا).',
+  'analytics.chats.responseHint':
+    'الوسيط وp90 لكل فترة للمحادثات المخدومة؛ تبقى الفترات التي لا ردود فيها فارغة (وليست 0 أبدًا).',
   'analytics.chats.sampleColumn': 'العينة (n)',
   'analytics.chats.responseEmpty': 'لا توجد ردود في هذا النطاق.',
   'analytics.chats.chartDisplay': 'طريقة عرض المخطط',
@@ -199,20 +219,22 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.agents.def.capacity': 'السعة',
   'analytics.agents.hours': '{n} س',
   'analytics.agents.minutes': '{n} د',
-  'analytics.agents.noSamples': '— (لا عينات)',
+  'analytics.agents.noSamples': 'لا عينات',
   'analytics.agents.p90n': 'p90 {p90} · n {n}',
-  'analytics.agents.notOnline': '— (غير متصل)',
+  'analytics.agents.notOnline': 'غير متصل',
   'analytics.agents.slotTime': '{used} ÷ {available} من وقت الخانات',
   'analytics.agents.slotRatio': '{used} ÷ {available}',
-  'analytics.agents.capped': 'القيمة الخام {raw} — مقيَّدة؛ يلزم فحص البيانات',
+  'analytics.agents.capped': 'القيمة الخام {raw}: مقيَّدة؛ يلزم فحص البيانات',
   'analytics.agents.tooLongTitle': 'النطاق طويل جدًا لتقرير الموظفين',
   'analytics.agents.tooLongBody': 'يغطي تقرير الموظفين التفاعلي حتى {days} يومًا. ضيّق النطاق.',
   'analytics.agents.loadError': 'تعذّر تحميل تقرير الموظفين: {error}',
   'analytics.agents.title': 'نشاط الموظفين',
-  'analytics.agents.description': '{span} · {timezone}. تُنسب المحادثات المعالَجة حسب فترات الملكية، لذا قد يتجاوز المجموع ({sum}) عدد المحادثات المميّزة ({distinct}).',
+  'analytics.agents.description':
+    '{span} · {timezone}. تُنسب المحادثات المعالَجة حسب فترات الملكية، لذا قد يتجاوز المجموع ({sum}) عدد المحادثات المميّزة ({distinct}).',
   'analytics.agents.export': 'تصدير الموظفين بصيغة CSV',
   'analytics.agents.emptyTitle': 'لا يوجد موظفون يطابقون عوامل التصفية هذه',
-  'analytics.agents.emptyBody': 'يظهر هنا فقط الأعضاء الذين يمكنهم خدمة المحادثات في القسم المحدد. امسح عامل تصفية القسم أو الموظف لعرض كل من في النطاق.',
+  'analytics.agents.emptyBody':
+    'يظهر هنا فقط الأعضاء الذين يمكنهم خدمة المحادثات في القسم المحدد. امسح عامل تصفية القسم أو الموظف لعرض كل من في النطاق.',
   'analytics.agents.caption': 'نشاط كل موظف في النطاق المحدد',
   'analytics.agents.col.handled': 'المحادثات المعالَجة',
   'analytics.agents.col.replies': 'الردود',
@@ -225,13 +247,16 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.agents.rowMeta': '{role} · السعة {capacity}',
   'analytics.agents.rowMetaDisabled': '{role} · السعة {capacity} · معطَّل',
   'analytics.agents.owned': '{time} ملكية',
-  'analytics.agents.inChats': 'في {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتين} few {# محادثات} many {# محادثة} other {# محادثة}}',
-  'analytics.agents.noRatings': '— (لا تقييمات)',
+  'analytics.agents.inChats':
+    'في {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتين} few {# محادثات} many {# محادثة} other {# محادثة}}',
+  'analytics.agents.noRatings': 'لا تقييمات',
   'analytics.agents.goodRated': '{good} جيدة ÷ {rated} مقيَّمة',
-  'analytics.agents.totals': 'الإجمالي ({count, plural, zero {لا موظفين} one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفًا} other {# موظف}})',
+  'analytics.agents.totals':
+    'الإجمالي ({count, plural, zero {لا موظفين} one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفًا} other {# موظف}})',
   'analytics.agents.distinct': '{count} مميّزة',
   'analytics.agents.sum': 'المجموع {count}',
-  'analytics.agents.firstReplies': '{count, plural, zero {لا ردود أولى} one {رد أول واحد} two {ردّان أولان} few {# ردود أولى} many {# ردًا أول} other {# رد أول}}',
+  'analytics.agents.firstReplies':
+    '{count, plural, zero {لا ردود أولى} one {رد أول واحد} two {ردّان أولان} few {# ردود أولى} many {# ردًا أول} other {# رد أول}}',
   'analytics.agents.definitions': 'التعريفات',
   'analytics.agents.nearestRank': 'أقرب رتبة على المدد الخام المرتبة.',
 
@@ -242,13 +267,15 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.invitations.rate.displayed': '{pct} من المؤهلة',
   'analytics.invitations.rate.accepted': '{pct} من المعروضة',
   'analytics.invitations.rate.served': '{pct} من المقبولة',
-  'analytics.invitations.denominatorZero': '— (المقام 0)',
+  'analytics.invitations.denominatorZero': 'غير متاح (المقام 0)',
   'analytics.invitations.loadError': 'تعذّر تحميل تقرير الدعوات: {error}',
   'analytics.invitations.title': 'مسار الدعوات',
-  'analytics.invitations.description': '{span} · {timezone}. الدعوات المنشأة ضمن النطاق، متتبَّعة عبر العرض والقبول والرد البشري.',
+  'analytics.invitations.description':
+    '{span} · {timezone}. الدعوات المنشأة ضمن النطاق، متتبَّعة عبر العرض والقبول والرد البشري.',
   'analytics.invitations.export': 'تصدير الدعوات بصيغة CSV',
   'analytics.invitations.emptyTitle': 'لا توجد دعوات استباقية في هذا النطاق',
-  'analytics.invitations.emptyFiltered': 'لا توجد دعوات تطابق عامل تصفية الموقع أو القسم. امسح عوامل التصفية أو وسّع النطاق.',
+  'analytics.invitations.emptyFiltered':
+    'لا توجد دعوات تطابق عامل تصفية الموقع أو القسم. امسح عوامل التصفية أو وسّع النطاق.',
   'analytics.invitations.emptyBody': 'تظهر الدعوات هنا بمجرد أن تستهدف حملة استباقية الزوار.',
   'analytics.invitations.stages': 'مراحل المسار',
   'analytics.invitations.caption': 'المسار حسب الحملة',
@@ -262,7 +289,8 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.view.noAccessTitle': 'التحليلات غير متاحة لدورك',
   'analytics.view.noAccessBody': 'اطلب من مسؤول مساحة العمل صلاحية الوصول إلى التحليلات.',
   'analytics.view.title': 'التحليلات',
-  'analytics.view.description': 'نتائج المحادثات وأوقات الرد والرضا ونشاط الموظفين خلال {range} ({timezone}). يوثّق كل مقياس فئته وتعريفه.',
+  'analytics.view.description':
+    'نتائج المحادثات وأوقات الرد والرضا ونشاط الموظفين خلال {range} ({timezone}). يوثّق كل مقياس فئته وتعريفه.',
   'analytics.view.exportCsv': 'تصدير CSV',
   'analytics.view.reports': 'التقارير',
   'analytics.view.agents': 'الموظفون',
@@ -270,14 +298,15 @@ export const analytics: Record<keyof typeof source, string> = {
 
   'analytics.overview.title': 'نظرة عامة',
   'analytics.overview.yourWorkspace': 'مساحة عملك',
-  'analytics.overview.descTodayWelcome': 'مرحبًا بعودتك يا {name}. نشاط اليوم في {workspace}، مع تحديث مباشر.',
+  'analytics.overview.descTodayWelcome':
+    'مرحبًا بعودتك يا {name}. نشاط اليوم في {workspace}، مع تحديث مباشر.',
   'analytics.overview.descToday': 'نشاط اليوم في {workspace}، مع تحديث مباشر.',
   'analytics.overview.descWorkWelcome': 'مرحبًا بعودتك يا {name}. عبء عملك في {workspace}، مع تحديث مباشر.',
   'analytics.overview.descWork': 'عبء عملك في {workspace}، مع تحديث مباشر.',
   'analytics.overview.yourWork': 'عملك',
   'analytics.overview.yourStatus': 'حالتك:',
   'analytics.overview.connection':
-    '{state, select, live {متصل، وتصلك التحديثات المباشرة} connecting {جارٍ الاتصال…} idle {جارٍ الاتصال…} reconnecting {جارٍ إعادة الاتصال — لن تُعرض محادثات جديدة حتى يعود الاتصال} offline {الاتصال مقطوع — لن تُعرض محادثات جديدة حتى يعود الاتصال} other {حالة الاتصال {state} — لن تُعرض محادثات جديدة حتى يعود الاتصال}}',
+    '{state, select, live {متصل، وتصلك التحديثات المباشرة} connecting {جارٍ الاتصال…} idle {جارٍ الاتصال…} reconnecting {جارٍ إعادة الاتصال: لن تُعرض محادثات جديدة حتى يعود الاتصال} offline {الاتصال مقطوع: لن تُعرض محادثات جديدة حتى يعود الاتصال} other {حالة الاتصال {state}: لن تُعرض محادثات جديدة حتى يعود الاتصال}}',
   'analytics.overview.statusHint': 'غيّر حالتك من قائمة الحالة في الشريط العلوي.',
   'analytics.overview.myActive': 'محادثاتي النشطة',
   'analytics.overview.myActiveDef': 'المحادثات النشطة التي تشارك فيها، مالكًا أو متعاونًا.',
@@ -286,12 +315,13 @@ export const analytics: Record<keyof typeof source, string> = {
   'analytics.overview.unreadDef': 'رسائل الزوار في محادثاتك النشطة التي وصلت بعد آخر موضع قراءة لك.',
   'analytics.overview.openInbox': 'فتح صندوق الوارد',
   'analytics.overview.waiting': 'في الانتظار في أقسامي',
-  'analytics.overview.waitingDef': 'المحادثات في قائمة الانتظار أو المعروضة التي لم تُقبل بعد، في الأقسام التي تخدمها إضافةً إلى المحادثات بلا قسم.',
+  'analytics.overview.waitingDef':
+    'المحادثات في قائمة الانتظار أو المعروضة التي لم تُقبل بعد، في الأقسام التي تخدمها إضافةً إلى المحادثات بلا قسم.',
   'analytics.overview.openQueue': 'فتح قائمة الانتظار',
   'analytics.overview.offers': 'عروض محادثات لك',
   'analytics.overview.offersDef': 'المحادثات المعروضة أو المحوّلة إليك حاليًا ولم تقبلها أو ترفضها بعد.',
   'analytics.overview.liveQueues': 'قوائم الانتظار المباشرة',
-  'analytics.overview.stale': 'قديمة — توقفت التحديثات المباشرة. افتح المراقبة لمعرفة التفاصيل.',
+  'analytics.overview.stale': 'قديمة: توقفت التحديثات المباشرة. افتح المراقبة لمعرفة التفاصيل.',
   'analytics.overview.fresh': 'تُحدَّث خلال ثوانٍ.',
   'analytics.overview.openMonitor': 'فتح المراقبة',
   'analytics.overview.countersUnavailable': 'العدّادات المباشرة غير متاحة: {error}',

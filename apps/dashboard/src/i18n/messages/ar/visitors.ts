@@ -25,7 +25,7 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.display.unverified': 'غير موثَّق',
   'visitors.display.anonymousTitle': 'لا يوجد اسم أو بريد إلكتروني مسجَّل',
   'visitors.display.anonymous': 'مجهول',
-  'visitors.display.pageHidden': 'مخفية — لا توجد موافقة على التحليلات',
+  'visitors.display.pageHidden': 'مخفية: لا توجد موافقة على التحليلات',
   'visitors.display.currentPage': 'الصفحة الحالية {url}',
   'visitors.display.currentPageWithTitle': 'الصفحة الحالية {title}، {url}',
 
@@ -62,7 +62,7 @@ export const visitors: Record<keyof typeof source, string> = {
     'الأشخاص الموجودون على مواقعك الآن. تظهر تفاصيل التصفح فقط للزوار الذين وافقوا على التحليلات، والمواقع الجغرافية تقريبية.',
   'visitors.page.geoCredit': 'تحديد الموقع الجغرافي عبر IP بواسطة DB-IP',
   'visitors.page.liveOn': 'التحديثات المباشرة مفعّلة',
-  'visitors.page.livePaused': 'التحديثات المباشرة متوقفة — جارٍ إعادة الاتصال',
+  'visitors.page.livePaused': 'التحديثات المباشرة متوقفة: جارٍ إعادة الاتصال',
   'visitors.page.search': 'البحث في الزوار',
   'visitors.page.searchPlaceholder': 'الاسم أو التسمية أو البريد الإلكتروني الكامل',
   'visitors.page.site': 'الموقع',
@@ -188,7 +188,7 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.merge.pickerDescription': 'يجب أن يملك السجل المُبقى عليه هوية موثَّقة من الرمز الموقَّع لموقعك.',
   'visitors.merge.proofLabel': 'مرجع إثبات الهوية',
   'visitors.merge.proofDescription':
-    'مصدر الهوية الموثَّقة — مثل معرّف العميل المسجّل دخوله أو تذكرة الدعم. ليس عنوان بريد إلكتروني.',
+    'مصدر الهوية الموثَّقة: مثل معرّف العميل المسجّل دخوله أو تذكرة الدعم. ليس عنوان بريد إلكتروني.',
   'visitors.merge.reason': 'السبب',
 
   'visitors.identity.notProvided': 'غير متوفر',
@@ -209,7 +209,7 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.identity.notice':
     'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة. لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
   'visitors.identity.noticeWithVerified':
-    'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة — وستصبح القيم الموثَّقة الحالية غير موثَّقة أيضًا (مع الإبقاء على رابط الهوية الموثَّقة). لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
+    'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة، وستصبح القيم الموثَّقة الحالية غير موثَّقة أيضًا (مع الإبقاء على رابط الهوية الموثَّقة). لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
   'visitors.identity.displayName': 'الاسم المعروض',
   'visitors.identity.displayNameHint': 'اتركه فارغًا لاستخدام التسمية المجهولة بدلًا منه.',
   'visitors.identity.contactEmail': 'البريد الإلكتروني للتواصل',

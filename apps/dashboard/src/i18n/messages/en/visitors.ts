@@ -23,7 +23,7 @@ export const visitors = {
   'visitors.display.unverified': 'Unverified',
   'visitors.display.anonymousTitle': 'No name or email on record',
   'visitors.display.anonymous': 'Anonymous',
-  'visitors.display.pageHidden': 'Hidden — no analytics consent',
+  'visitors.display.pageHidden': 'Hidden: no analytics consent',
   'visitors.display.currentPage': 'Current page {url}',
   'visitors.display.currentPageWithTitle': 'Current page {title}, {url}',
 
@@ -58,7 +58,7 @@ export const visitors = {
     'People on your sites right now. Browsing details appear only for visitors who granted analytics consent; locations are approximate.',
   'visitors.page.geoCredit': 'IP geolocation by DB-IP',
   'visitors.page.liveOn': 'Live updates on',
-  'visitors.page.livePaused': 'Live updates paused — reconnecting',
+  'visitors.page.livePaused': 'Live updates paused: reconnecting',
   'visitors.page.search': 'Search visitors',
   'visitors.page.searchPlaceholder': 'Name, label or exact email',
   'visitors.page.site': 'Site',
@@ -184,7 +184,7 @@ export const visitors = {
     'The surviving record must have a verified identity from your site’s signed token.',
   'visitors.merge.proofLabel': 'Identity proof reference',
   'visitors.merge.proofDescription':
-    'Where the verified identity comes from — e.g. the signed-in customer ID or support ticket. Not an email address.',
+    'Where the verified identity comes from, e.g. the signed-in customer ID or support ticket. Not an email address.',
   'visitors.merge.reason': 'Reason',
 
   'visitors.identity.notProvided': 'Not provided',
@@ -205,7 +205,7 @@ export const visitors = {
   'visitors.identity.notice':
     'Details you enter are saved as unverified. Names already shown in past chat messages do not change.',
   'visitors.identity.noticeWithVerified':
-    'Details you enter are saved as unverified — the current verified values will become unverified too (the verified identity link is kept). Names already shown in past chat messages do not change.',
+    'Details you enter are saved as unverified. The current verified values will become unverified too (the verified identity link is kept). Names already shown in past chat messages do not change.',
   'visitors.identity.displayName': 'Display name',
   'visitors.identity.displayNameHint': 'Leave empty to fall back to the anonymous label.',
   'visitors.identity.contactEmail': 'Contact email',

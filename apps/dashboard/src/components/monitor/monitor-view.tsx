@@ -2,7 +2,27 @@
 import { ArrowDown, ArrowUp, Gauge, Users } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Badge, Banner, Button, Card, CardHeader, EmptyState, Field, Page, PageHeader, PanelError, Select, Skeleton, StatusLabel, Table, TableScroll, TD, TH, THead, TR } from '@/components/ui';
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Field,
+  Page,
+  PageHeader,
+  PanelError,
+  Select,
+  Skeleton,
+  StatusLabel,
+  Table,
+  TableScroll,
+  TD,
+  TH,
+  THead,
+  TR,
+} from '@/components/ui';
 import { formatSeconds } from '@/components/analytics/measures';
 import { timeIn } from '@/components/analytics/use-theme';
 import { useT, type MessageKey } from '@/i18n';
@@ -34,7 +54,8 @@ export function MonitorView() {
   const pathname = usePathname();
   const deptParam = sp.get('department');
   const departmentId = deptParam && UUID_RE.test(deptParam) ? deptParam : null;
-  const sort: SortKey = (['load', 'backlog', 'unanswered', 'name'] as const).find((k) => k === sp.get('sort')) ?? 'load';
+  const sort: SortKey =
+    (['load', 'backlog', 'unanswered', 'name'] as const).find((k) => k === sp.get('sort')) ?? 'load';
   const setParam = (k: string, v: string | null) => {
     const q = new URLSearchParams(sp.toString());
     if (v) q.set(k, v);
@@ -46,14 +67,21 @@ export function MonitorView() {
   const scope = useSession((s) => s.agent?.departmentScope ?? 'all');
   const departments = useDepartments(canView);
   const deptOptions = useMemo(
-    () => (departments.data ?? []).filter((d) => !d.archivedAt && (scope === 'all' || scope.includes(d.id))).sort((a, b) => a.name.localeCompare(b.name)),
+    () =>
+      (departments.data ?? [])
+        .filter((d) => !d.archivedAt && (scope === 'all' || scope.includes(d.id)))
+        .sort((a, b) => a.name.localeCompare(b.name)),
     [departments.data, scope],
   );
 
   if (!canView) {
     return (
       <Page>
-        <EmptyState icon={<Gauge />} title={t('monitor.view.noAccessTitle')} description={t('monitor.view.noAccessBody')} />
+        <EmptyState
+          icon={<Gauge />}
+          title={t('monitor.view.noAccessTitle')}
+          description={t('monitor.view.noAccessBody')}
+        />
       </Page>
     );
   }
@@ -66,8 +94,13 @@ export function MonitorView() {
         description={t('monitor.view.description')}
         actions={
           <Field label={t('common.department')} className="w-full min-w-[220px] sm:w-auto">
-            <Select value={departmentId ?? ''} onChange={(e) => setParam('department', e.target.value || null)}>
-              <option value="">{scope === 'all' ? t('monitor.view.allDepartments') : t('monitor.view.allMyDepartments')}</option>
+            <Select
+              value={departmentId ?? ''}
+              onChange={(e) => setParam('department', e.target.value || null)}
+            >
+              <option value="">
+                {scope === 'all' ? t('monitor.view.allDepartments') : t('monitor.view.allMyDepartments')}
+              </option>
               {deptOptions.map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
@@ -82,15 +115,32 @@ export function MonitorView() {
         <MonitorSkeleton />
       ) : m.error && !s ? (
         <Card>
-          <PanelError message={t('monitor.view.unavailable', { error: errorMessage(m.error) })} onRetry={() => void m.refetch()} />
+          <PanelError
+            message={t('monitor.view.unavailable', { error: errorMessage(m.error) })}
+            onRetry={() => void m.refetch()}
+          />
         </Card>
       ) : s ? (
         <>
-          <LiveStatus snapshot={s} stale={m.stale} silent={m.silent} conn={m.conn} refetching={m.isFetching} onRefresh={() => void m.refetch()} error={m.error ? errorMessage(m.error) : null} />
+          <LiveStatus
+            snapshot={s}
+            stale={m.stale}
+            silent={m.silent}
+            conn={m.conn}
+            refetching={m.isFetching}
+            onRefresh={() => void m.refetch()}
+            error={m.error ? errorMessage(m.error) : null}
+          />
           <WaitAnnouncer snapshot={s} receivedAt={m.receivedAt} now={m.now} />
           <MonitorCounters snapshot={s} stale={m.stale} receivedAt={m.receivedAt} now={m.now} />
           <DepartmentsCard snapshot={s} receivedAt={m.receivedAt} now={m.now} />
-          <AgentGrid snapshot={s} receivedAt={m.receivedAt} now={m.now} sort={sort} onSort={(k) => setParam('sort', k === 'load' ? null : k)} />
+          <AgentGrid
+            snapshot={s}
+            receivedAt={m.receivedAt}
+            now={m.now}
+            sort={sort}
+            onSort={(k) => setParam('sort', k === 'load' ? null : k)}
+          />
         </>
       ) : null}
     </Page>
@@ -117,7 +167,10 @@ function LiveStatus({
   const t = useT();
   const tz = s.counters.csat.timezone;
   const seconds = Math.round(s.thresholds.staleAfterMs / 1000);
-  const [asOfBefore, asOfTime, asOfAfter] = t('monitor.live.asOf', { time: timeIn(s.asOf, tz), timezone: tz }).split(/<time>|<\/time>/);
+  const [asOfBefore, asOfTime, asOfAfter] = t('monitor.live.asOf', {
+    time: timeIn(s.asOf, tz),
+    timezone: tz,
+  }).split(/<time>|<\/time>/);
   return (
     <div className="flex flex-col gap-2">
       {stale ? (
@@ -159,7 +212,15 @@ function LiveStatus({
 }
 
 /** Screen-reader announcement only when the oldest-wait severity changes (not every tick). */
-function WaitAnnouncer({ snapshot: s, receivedAt, now }: { snapshot: MonitorSnapshot; receivedAt: number; now: number }) {
+function WaitAnnouncer({
+  snapshot: s,
+  receivedAt,
+  now,
+}: {
+  snapshot: MonitorSnapshot;
+  receivedAt: number;
+  now: number;
+}) {
   const t = useT();
   const wait = s.counters.queued > 0 ? tickingSeconds(s.counters.oldestWaitSeconds, receivedAt, now) : null;
   const level = levelFor(wait, s.thresholds.queueWarningSeconds, s.thresholds.queueCriticalSeconds);
@@ -169,7 +230,8 @@ function WaitAnnouncer({ snapshot: s, receivedAt, now }: { snapshot: MonitorSnap
     if (prev.current === level) return;
     const was = prev.current;
     prev.current = level;
-    if (level === 'warning' || level === 'critical') setMsg(t('monitor.announce.level', { level, duration: formatSeconds(wait), count: s.counters.queued }));
+    if (level === 'warning' || level === 'critical')
+      setMsg(t('monitor.announce.level', { level, duration: formatSeconds(wait), count: s.counters.queued }));
     else if (was === 'warning' || was === 'critical') setMsg(t('monitor.announce.back'));
   }, [level, wait, s.counters.queued, t]);
   return (
@@ -179,7 +241,15 @@ function WaitAnnouncer({ snapshot: s, receivedAt, now }: { snapshot: MonitorSnap
   );
 }
 
-function DepartmentsCard({ snapshot: s, receivedAt, now }: { snapshot: MonitorSnapshot; receivedAt: number; now: number }) {
+function DepartmentsCard({
+  snapshot: s,
+  receivedAt,
+  now,
+}: {
+  snapshot: MonitorSnapshot;
+  receivedAt: number;
+  now: number;
+}) {
   const t = useT();
   const th = { warning: s.thresholds.queueWarningSeconds, critical: s.thresholds.queueCriticalSeconds };
   const busy = s.busyDepartments.length;
@@ -187,10 +257,15 @@ function DepartmentsCard({ snapshot: s, receivedAt, now }: { snapshot: MonitorSn
     <Card>
       <CardHeader
         title={t('common.departments')}
-        description={busy ? t('monitor.departments.busy', { count: busy }) : t('monitor.departments.noneBusy')}
+        description={
+          busy ? t('monitor.departments.busy', { count: busy }) : t('monitor.departments.noneBusy')
+        }
       />
       {s.departments.length === 0 ? (
-        <EmptyState title={t('monitor.departments.emptyTitle')} description={t('monitor.departments.emptyBody')} />
+        <EmptyState
+          title={t('monitor.departments.emptyTitle')}
+          description={t('monitor.departments.emptyBody')}
+        />
       ) : (
         <TableScroll>
           <Table className="min-w-[760px]">
@@ -211,7 +286,13 @@ function DepartmentsCard({ snapshot: s, receivedAt, now }: { snapshot: MonitorSn
                 const wait = d.queued > 0 ? tickingSeconds(d.oldestWaitSeconds, receivedAt, now) : null;
                 const level = levelFor(wait, th.warning, th.critical);
                 return (
-                  <TR key={d.departmentId ?? 'none'} className={cn(level === 'critical' && 'bg-danger-tint/60', level === 'warning' && 'bg-warning-tint/60')}>
+                  <TR
+                    key={d.departmentId ?? 'none'}
+                    className={cn(
+                      level === 'critical' && 'bg-danger-tint/60',
+                      level === 'warning' && 'bg-warning-tint/60',
+                    )}
+                  >
                     <TD>
                       <span className="flex flex-wrap items-center gap-2">
                         {d.departmentId === null ? (
@@ -227,14 +308,21 @@ function DepartmentsCard({ snapshot: s, receivedAt, now }: { snapshot: MonitorSn
                     <TD className="text-end tabular">{formatNumber(d.queued)}</TD>
                     <TD>
                       <span className="flex flex-col">
-                        <span className="tabular">{wait === null ? '—' : formatSeconds(wait)}</span>
+                        <span className="tabular">
+                          {wait === null ? t('common.notAvailable') : formatSeconds(wait)}
+                        </span>
                         <WaitLevelLabel level={level} thresholds={th} />
                       </span>
                     </TD>
                     <TD className="text-end tabular">{formatNumber(d.active)}</TD>
                     <TD className="text-end tabular">{formatNumber(d.offeredReservations)}</TD>
                     <TD className="text-end tabular">{formatNumber(d.responseBacklog)}</TD>
-                    <TD className={cn('text-end tabular', d.queued > 0 && d.availableAgents === 0 && 'font-medium text-danger')}>
+                    <TD
+                      className={cn(
+                        'text-end tabular',
+                        d.queued > 0 && d.availableAgents === 0 && 'font-medium text-danger',
+                      )}
+                    >
                       {formatNumber(d.availableAgents)} / {formatNumber(d.onlineAgents)}
                     </TD>
                   </TR>
@@ -253,32 +341,76 @@ function sortAgents(rows: AgentGridRow[], sort: SortKey): AgentGridRow[] {
   const name = (a: AgentGridRow, b: AgentGridRow) => a.displayName.localeCompare(b.displayName);
   switch (sort) {
     case 'backlog':
-      return copy.sort((a, b) => b.responseBacklog - a.responseBacklog || (b.oldestUnansweredSeconds ?? -1) - (a.oldestUnansweredSeconds ?? -1) || name(a, b));
+      return copy.sort(
+        (a, b) =>
+          b.responseBacklog - a.responseBacklog ||
+          (b.oldestUnansweredSeconds ?? -1) - (a.oldestUnansweredSeconds ?? -1) ||
+          name(a, b),
+      );
     case 'unanswered':
-      return copy.sort((a, b) => (b.oldestUnansweredSeconds ?? -1) - (a.oldestUnansweredSeconds ?? -1) || name(a, b));
+      return copy.sort(
+        (a, b) => (b.oldestUnansweredSeconds ?? -1) - (a.oldestUnansweredSeconds ?? -1) || name(a, b),
+      );
     case 'name':
       return copy.sort(name);
     default:
-      return copy.sort((a, b) => (b.loadPct ?? 0) - (a.loadPct ?? 0) || b.responseBacklog - a.responseBacklog || name(a, b));
+      return copy.sort(
+        (a, b) => (b.loadPct ?? 0) - (a.loadPct ?? 0) || b.responseBacklog - a.responseBacklog || name(a, b),
+      );
   }
 }
 
-function SortHeader({ label, k, sort, onSort, className, desc = true }: { label: string; k: SortKey; sort: SortKey; onSort: (k: SortKey) => void; className?: string; desc?: boolean }) {
+function SortHeader({
+  label,
+  k,
+  sort,
+  onSort,
+  className,
+  desc = true,
+}: {
+  label: string;
+  k: SortKey;
+  sort: SortKey;
+  onSort: (k: SortKey) => void;
+  className?: string;
+  desc?: boolean;
+}) {
   const t = useT();
   const active = sort === k;
   const Icon = desc ? ArrowDown : ArrowUp;
   return (
     <TH className={className} aria-sort={active ? (desc ? 'descending' : 'ascending') : 'none'}>
-      <button type="button" onClick={() => onSort(k)} className={cn('inline-flex min-h-8 items-center gap-1 uppercase tracking-wide hover:text-fg', active && 'text-fg')}>
+      <button
+        type="button"
+        onClick={() => onSort(k)}
+        className={cn(
+          'inline-flex min-h-8 items-center gap-1 uppercase tracking-wide hover:text-fg',
+          active && 'text-fg',
+        )}
+      >
         {label}
         <Icon className={cn('size-3.5', !active && 'invisible')} aria-hidden />
-        {!active && <span className="sr-only">{t('monitor.agents.sortBy', { label: label.toLowerCase() })}</span>}
+        {!active && (
+          <span className="sr-only">{t('monitor.agents.sortBy', { label: label.toLowerCase() })}</span>
+        )}
       </button>
     </TH>
   );
 }
 
-function AgentGrid({ snapshot: s, receivedAt, now, sort, onSort }: { snapshot: MonitorSnapshot; receivedAt: number; now: number; sort: SortKey; onSort: (k: SortKey) => void }) {
+function AgentGrid({
+  snapshot: s,
+  receivedAt,
+  now,
+  sort,
+  onSort,
+}: {
+  snapshot: MonitorSnapshot;
+  receivedAt: number;
+  now: number;
+  sort: SortKey;
+  onSort: (k: SortKey) => void;
+}) {
   const t = useT();
   const rows = useMemo(() => sortAgents(s.agents, sort), [s.agents, sort]);
   const th = { warning: s.thresholds.queueWarningSeconds, critical: s.thresholds.queueCriticalSeconds };
@@ -286,7 +418,11 @@ function AgentGrid({ snapshot: s, receivedAt, now, sort, onSort }: { snapshot: M
     <Card>
       <CardHeader title={t('monitor.agents.title')} description={t('monitor.agents.description')} />
       {rows.length === 0 ? (
-        <EmptyState icon={<Users />} title={t('monitor.agents.emptyTitle')} description={t('monitor.agents.emptyBody')} />
+        <EmptyState
+          icon={<Users />}
+          title={t('monitor.agents.emptyTitle')}
+          description={t('monitor.agents.emptyBody')}
+        />
       ) : (
         <TableScroll>
           <Table className="min-w-[860px]">
@@ -299,8 +435,19 @@ function AgentGrid({ snapshot: s, receivedAt, now, sort, onSort }: { snapshot: M
                 <TH className="text-end">{t('monitor.col.active')}</TH>
                 <TH className="text-end">{t('monitor.col.collab')}</TH>
                 <TH className="text-end">{t('monitor.col.offers')}</TH>
-                <SortHeader label={t('monitor.col.backlog')} k="backlog" sort={sort} onSort={onSort} className="text-end" />
-                <SortHeader label={t('monitor.col.oldestUnanswered')} k="unanswered" sort={sort} onSort={onSort} />
+                <SortHeader
+                  label={t('monitor.col.backlog')}
+                  k="backlog"
+                  sort={sort}
+                  onSort={onSort}
+                  className="text-end"
+                />
+                <SortHeader
+                  label={t('monitor.col.oldestUnanswered')}
+                  k="unanswered"
+                  sort={sort}
+                  onSort={onSort}
+                />
               </tr>
             </THead>
             <tbody>
@@ -315,23 +462,43 @@ function AgentGrid({ snapshot: s, receivedAt, now, sort, onSort }: { snapshot: M
                         <span className="font-medium" dir="auto">
                           {a.displayName}
                         </span>
-                        <span className="text-xs capitalize text-fg-2">{ROLE_LABEL[a.role] ? t(ROLE_LABEL[a.role]!) : a.role}</span>
+                        <span className="text-xs capitalize text-fg-2">
+                          {ROLE_LABEL[a.role] ? t(ROLE_LABEL[a.role]!) : a.role}
+                        </span>
                       </span>
                     </TD>
                     <TD>
                       <span className="flex flex-col gap-0.5">
                         <StatusLabel status={a.effectiveStatus} />
-                        {a.effectiveStatus === 'online' && <span className={cn('text-xs', a.available ? 'text-success' : 'text-fg-2')}>{a.available ? t('monitor.agents.accepting') : a.atCapacity ? t('monitor.agents.atCapacity') : t('monitor.agents.notAccepting')}</span>}
+                        {a.effectiveStatus === 'online' && (
+                          <span className={cn('text-xs', a.available ? 'text-success' : 'text-fg-2')}>
+                            {a.available
+                              ? t('monitor.agents.accepting')
+                              : a.atCapacity
+                                ? t('monitor.agents.atCapacity')
+                                : t('monitor.agents.notAccepting')}
+                          </span>
+                        )}
                       </span>
                     </TD>
                     <TD>
                       <span className="flex min-w-[140px] flex-col gap-1">
                         <span className="text-sm tabular">
                           {t('monitor.agents.slots', { used, capacity: a.capacity })}
-                          {a.atCapacity && <span className="ms-1.5 text-xs font-medium text-warning">{t('monitor.agents.full')}</span>}
+                          {a.atCapacity && (
+                            <span className="ms-1.5 text-xs font-medium text-warning">
+                              {t('monitor.agents.full')}
+                            </span>
+                          )}
                         </span>
                         <span className="h-1.5 overflow-hidden rounded-full bg-surface-3" aria-hidden>
-                          <span className={cn('block h-full rounded-full', a.atCapacity ? 'bg-warning' : 'bg-primary')} style={{ width: `${Math.min(100, a.capacity ? (used / a.capacity) * 100 : 0)}%` }} />
+                          <span
+                            className={cn(
+                              'block h-full rounded-full',
+                              a.atCapacity ? 'bg-warning' : 'bg-primary',
+                            )}
+                            style={{ width: `${Math.min(100, a.capacity ? (used / a.capacity) * 100 : 0)}%` }}
+                          />
                         </span>
                       </span>
                     </TD>
@@ -340,9 +507,7 @@ function AgentGrid({ snapshot: s, receivedAt, now, sort, onSort }: { snapshot: M
                     <TD className="text-end tabular">{formatNumber(a.reservedOffers)}</TD>
                     <TD className="text-end tabular">{formatNumber(a.responseBacklog)}</TD>
                     <TD>
-                      {age === null ? (
-                        <span className="text-fg-2">—</span>
-                      ) : (
+                      {age === null ? null : (
                         <span className="flex flex-col">
                           <span className="tabular">{formatSeconds(age)}</span>
                           <WaitLevelLabel level={level} thresholds={th} />

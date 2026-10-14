@@ -13,9 +13,28 @@
  */
 import { CheckCircle2, CircleSlash, MinusCircle, Play, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { DSL_CUSTOM_PREFIX, DSL_FIELDS, type DslConditionTrace, type DslDefinition, type DslEvent, type DslFieldType, type DslIssue } from '@talkivio/contracts';
+import {
+  DSL_CUSTOM_PREFIX,
+  DSL_FIELDS,
+  type DslConditionTrace,
+  type DslDefinition,
+  type DslEvent,
+  type DslFieldType,
+  type DslIssue,
+} from '@talkivio/contracts';
 import { richT } from '@/components/integrations/rich';
-import { Badge, Banner, Button, Card, CardBody, CardHeader, CheckboxField, Field, Input, Select } from '@/components/ui';
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  CheckboxField,
+  Field,
+  Input,
+  Select,
+} from '@/components/ui';
 import { isolate, useT, type Translate } from '@/i18n';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -40,7 +59,15 @@ import {
   type FieldGroup,
 } from './dsl-ui';
 import { NumberBox, ValueList } from './inputs';
-import { customFieldType, echoValue, fixSimulation, type CustomFieldDef, type SimulatedTrigger, type SimulationResult, type TriggerDetail } from './triggers-api';
+import {
+  customFieldType,
+  echoValue,
+  fixSimulation,
+  type CustomFieldDef,
+  type SimulatedTrigger,
+  type SimulationResult,
+  type TriggerDetail,
+} from './triggers-api';
 
 interface SnapField {
   key: string;
@@ -69,9 +96,22 @@ function emptyFor(f: SnapField): unknown {
   }
 }
 
-function snapshotFields(t: Translate, event: DslEvent, customDefs: CustomFieldDef[] | undefined): SnapField[] {
-  const base = DSL_FIELDS.filter((f) => !f.events || f.events.includes(event)).map((f) => ({ key: f.key, label: fieldLabel(t, f.key, f.label), type: f.type, enumValues: f.enumValues }));
-  const custom = trustedCustomFields(customDefs).map((d) => ({ key: `${DSL_CUSTOM_PREFIX}${d.key}`, label: d.label || d.key, type: customFieldType(d.dataType) as DslFieldType }));
+function snapshotFields(
+  t: Translate,
+  event: DslEvent,
+  customDefs: CustomFieldDef[] | undefined,
+): SnapField[] {
+  const base = DSL_FIELDS.filter((f) => !f.events || f.events.includes(event)).map((f) => ({
+    key: f.key,
+    label: fieldLabel(t, f.key, f.label),
+    type: f.type,
+    enumValues: f.enumValues,
+  }));
+  const custom = trustedCustomFields(customDefs).map((d) => ({
+    key: `${DSL_CUSTOM_PREFIX}${d.key}`,
+    label: d.label || d.key,
+    type: customFieldType(d.dataType) as DslFieldType,
+  }));
   return [...base, ...custom];
 }
 
@@ -157,13 +197,20 @@ export function Simulator({
     // Unsaved edits are simulated as they are; a clean editor runs the saved head revision.
     const target = unsaved ? { definition } : { revision: trigger.currentRevision };
     try {
-      const r = await api.post<SimulationResult>(`/triggers/${trigger.id}/simulate`, { event, snapshot, ...target, includePublished });
+      const r = await api.post<SimulationResult>(`/triggers/${trigger.id}/simulate`, {
+        event,
+        snapshot,
+        ...target,
+        includePublished,
+      });
       setResult(fixSimulation(r));
     } catch (e) {
       setResult(null);
       if (e instanceof ApiError && Object.keys(e.fieldErrors).length) {
         const fe: Record<string, string> = {};
-        for (const [k, v] of Object.entries(e.fieldErrors)) if (k.startsWith('snapshot.')) fe[k.slice('snapshot.'.length)] = v[0] ?? t('triggers.sim.invalidValue');
+        for (const [k, v] of Object.entries(e.fieldErrors))
+          if (k.startsWith('snapshot.'))
+            fe[k.slice('snapshot.'.length)] = v[0] ?? t('triggers.sim.invalidValue');
         setFieldErrors(fe);
         const issues = issuesFromFieldErrors(e.fieldErrors);
         if (issues.length) {
@@ -185,20 +232,39 @@ export function Simulator({
           description={
             unsaved
               ? t('triggers.sim.descUnsaved', { event: eventLabel(t, event) })
-              : t('triggers.sim.descSaved', { revision: trigger.currentRevision, event: eventLabel(t, event) })
+              : t('triggers.sim.descSaved', {
+                  revision: trigger.currentRevision,
+                  event: eventLabel(t, event),
+                })
           }
         />
         <CardBody className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-fg-2">{t('triggers.sim.simulating')}</span>
-            {unsaved ? <Badge tone="warning">{t('triggers.sim.unsavedEdits')}</Badge> : <Badge tone="neutral">{t('triggers.sim.savedRevision', { revision: trigger.currentRevision })}</Badge>}
+            {unsaved ? (
+              <Badge tone="warning">{t('triggers.sim.unsavedEdits')}</Badge>
+            ) : (
+              <Badge tone="neutral">
+                {t('triggers.sim.savedRevision', { revision: trigger.currentRevision })}
+              </Badge>
+            )}
           </div>
           <p className="text-sm text-fg-2">
-            {richT(t, 'triggers.sim.missingHelp', { missing: <strong className="font-semibold text-fg">{t('triggers.sim.missingWord')}</strong> })}
+            {richT(t, 'triggers.sim.missingHelp', {
+              missing: <strong className="font-semibold text-fg">{t('triggers.sim.missingWord')}</strong>,
+            })}
           </p>
           <ul className="flex flex-col divide-y divide-line-subtle rounded-[var(--radius-control)] border border-line-subtle">
             {ordered.map((f) => (
-              <SnapshotRow key={f.key} f={f} e={entry(f.key, f)} used={usedFields.has(f.key)} error={fieldErrors[f.key]} refs={refs} onChange={(e) => setEntry(f.key, e)} />
+              <SnapshotRow
+                key={f.key}
+                f={f}
+                e={entry(f.key, f)}
+                used={usedFields.has(f.key)}
+                error={fieldErrors[f.key]}
+                refs={refs}
+                onChange={(e) => setEntry(f.key, e)}
+              />
             ))}
           </ul>
           <CheckboxField
@@ -231,7 +297,9 @@ export function Simulator({
           </div>
         </CardBody>
       </Card>
-      <div aria-live="polite">{result && <SimulationResultView result={result} groups={groups} refs={refs} />}</div>
+      <div aria-live="polite">
+        {result && <SimulationResultView result={result} groups={groups} refs={refs} />}
+      </div>
     </div>
   );
 }
@@ -245,7 +313,8 @@ function IssueSummary({ issues }: { issues: DslIssue[] }) {
         <li key={n} className="flex items-start gap-1.5 text-sm">
           <span aria-hidden className="mt-2 size-1.5 shrink-0 rounded-full bg-danger" />
           <span className="min-w-0">
-            <span className="font-medium">{issueLocation(t, i.path)}:</span> <span dir="auto">{i.message}</span>
+            <span className="font-medium">{issueLocation(t, i.path)}:</span>{' '}
+            <span dir="auto">{i.message}</span>
           </span>
         </li>
       ))}
@@ -253,7 +322,21 @@ function IssueSummary({ issues }: { issues: DslIssue[] }) {
   );
 }
 
-function SnapshotRow({ f, e, used, error, refs, onChange }: { f: SnapField; e: Entry; used: boolean; error?: string; refs: RefData; onChange: (e: Entry) => void }) {
+function SnapshotRow({
+  f,
+  e,
+  used,
+  error,
+  refs,
+  onChange,
+}: {
+  f: SnapField;
+  e: Entry;
+  used: boolean;
+  error?: string;
+  refs: RefData;
+  onChange: (e: Entry) => void;
+}) {
   const t = useT();
   const refList = f.key === 'department.id' ? refs.departments : f.key === 'site.id' ? refs.sites : undefined;
   const id = `snap-${f.key.replace(/[^a-z0-9]/gi, '-')}`;
@@ -269,16 +352,28 @@ function SnapshotRow({ f, e, used, error, refs, onChange }: { f: SnapField; e: E
           {f.key}
         </code>
         <label className="flex min-h-11 items-center gap-2 text-sm text-fg">
-          <input type="checkbox" className="size-[18px] accent-[var(--primary)]" checked={e.provided} onChange={(ev) => onChange({ ...e, provided: ev.target.checked })} />
+          <input
+            type="checkbox"
+            className="size-[18px] accent-[var(--primary)]"
+            checked={e.provided}
+            onChange={(ev) => onChange({ ...e, provided: ev.target.checked })}
+          />
           {t('triggers.sim.provideValue')}
         </label>
       </div>
       {e.provided ? (
         <Field label={t('triggers.sim.sampleValueFor', { field: f.label })} hideLabel error={error} id={id}>
           {f.type === 'number' ? (
-            <NumberBox value={typeof e.value === 'number' ? e.value : Number.NaN} step="any" onChange={(v) => onChange({ ...e, value: v })} />
+            <NumberBox
+              value={typeof e.value === 'number' ? e.value : Number.NaN}
+              step="any"
+              onChange={(v) => onChange({ ...e, value: v })}
+            />
           ) : f.type === 'boolean' ? (
-            <Select value={String(e.value === true)} onChange={(ev) => onChange({ ...e, value: ev.target.value === 'true' })}>
+            <Select
+              value={String(e.value === true)}
+              onChange={(ev) => onChange({ ...e, value: ev.target.value === 'true' })}
+            >
               <option value="true">{t('triggers.label.yesTrue')}</option>
               <option value="false">{t('triggers.label.noFalse')}</option>
             </Select>
@@ -291,9 +386,17 @@ function SnapshotRow({ f, e, used, error, refs, onChange }: { f: SnapField; e: E
               ))}
             </Select>
           ) : f.type === 'list' ? (
-            <ValueList label={t('triggers.sim.valuesFor', { field: f.label })} values={Array.isArray(e.value) ? (e.value as string[]) : []} onChange={(v) => onChange({ ...e, value: v.map(String) })} placeholder={t('triggers.label.addTag')} />
+            <ValueList
+              label={t('triggers.sim.valuesFor', { field: f.label })}
+              values={Array.isArray(e.value) ? (e.value as string[]) : []}
+              onChange={(v) => onChange({ ...e, value: v.map(String) })}
+              placeholder={t('triggers.label.addTag')}
+            />
           ) : f.type === 'id' && refList ? (
-            <Select value={typeof e.value === 'string' ? e.value : ''} onChange={(ev) => onChange({ ...e, value: ev.target.value })}>
+            <Select
+              value={typeof e.value === 'string' ? e.value : ''}
+              onChange={(ev) => onChange({ ...e, value: ev.target.value })}
+            >
               <option value="">{t('triggers.label.choose')}</option>
               {refList.map((r) => (
                 <option key={r.id} value={r.id}>
@@ -302,7 +405,14 @@ function SnapshotRow({ f, e, used, error, refs, onChange }: { f: SnapField; e: E
               ))}
             </Select>
           ) : (
-            <Input value={typeof e.value === 'string' ? e.value : ''} onChange={(ev) => onChange({ ...e, value: ev.target.value })} placeholder={f.type === 'id' ? t('triggers.label.idUuid') : t('triggers.sim.emptyTextPlaceholder')} dir="auto" />
+            <Input
+              value={typeof e.value === 'string' ? e.value : ''}
+              onChange={(ev) => onChange({ ...e, value: ev.target.value })}
+              placeholder={
+                f.type === 'id' ? t('triggers.label.idUuid') : t('triggers.sim.emptyTextPlaceholder')
+              }
+              dir="auto"
+            />
           )}
         </Field>
       ) : (
@@ -325,7 +435,15 @@ function conditionWord(t: Translate, trace: DslConditionTrace): string {
   return t('triggers.sim.wordFalse');
 }
 
-function SimulationResultView({ result, groups, refs }: { result: SimulationResult; groups: FieldGroup[]; refs: RefData }) {
+function SimulationResultView({
+  result,
+  groups,
+  refs,
+}: {
+  result: SimulationResult;
+  groups: FieldGroup[];
+  refs: RefData;
+}) {
   const t = useT();
   const names = new Map(result.triggers.map((tr) => [tr.triggerId, tr.name ?? t('triggers.sim.unnamed')]));
   const candidate = result.triggers.find((tr) => tr.candidate);
@@ -334,8 +452,13 @@ function SimulationResultView({ result, groups, refs }: { result: SimulationResu
   const dry = result.writes === false;
   const resultDescription =
     result.revision === null
-      ? t(dry ? 'triggers.sim.resultUnsavedDry' : 'triggers.sim.resultUnsaved', { event: eventLabel(t, result.event) })
-      : t(dry ? 'triggers.sim.resultRevisionDry' : 'triggers.sim.resultRevision', { revision: result.revision, event: eventLabel(t, result.event) });
+      ? t(dry ? 'triggers.sim.resultUnsavedDry' : 'triggers.sim.resultUnsaved', {
+          event: eventLabel(t, result.event),
+        })
+      : t(dry ? 'triggers.sim.resultRevisionDry' : 'triggers.sim.resultRevision', {
+          revision: result.revision,
+          event: eventLabel(t, result.event),
+        });
 
   return (
     <div className="flex flex-col gap-6">
@@ -343,9 +466,19 @@ function SimulationResultView({ result, groups, refs }: { result: SimulationResu
         <CardHeader title={t('triggers.sim.result')} description={resultDescription} />
         <CardBody className="flex flex-col gap-4">
           {candidate ? (
-            <Banner tone={candidate.fired ? 'success' : candidate.matched ? 'warning' : 'info'} title={candidate.fired ? t('triggers.sim.fires') : candidate.matched ? t('triggers.sim.matchesNoFire') : t('triggers.sim.doesNotFire')}>
+            <Banner
+              tone={candidate.fired ? 'success' : candidate.matched ? 'warning' : 'info'}
+              title={
+                candidate.fired
+                  ? t('triggers.sim.fires')
+                  : candidate.matched
+                    ? t('triggers.sim.matchesNoFire')
+                    : t('triggers.sim.doesNotFire')
+              }
+            >
               {reasonLabel(t, candidate.reason)}
-              {result.stoppedBy && ` · ${t('triggers.sim.stoppedBy', { name: isolate(names.get(result.stoppedBy)) })}`}
+              {result.stoppedBy &&
+                ` · ${t('triggers.sim.stoppedBy', { name: isolate(names.get(result.stoppedBy)) })}`}
               {result.blocked && ` · ${t('triggers.sim.admissionBlocked')}`}
             </Banner>
           ) : (
@@ -363,16 +496,29 @@ function SimulationResultView({ result, groups, refs }: { result: SimulationResu
           ) : (
             <ol className="flex flex-col gap-2">
               {result.effects.map((e, i) => (
-                <li key={`${e.triggerId}-${e.actionIndex}`} className="flex items-start gap-3 rounded-[var(--radius-control)] border border-line-subtle px-3 py-2">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-tint text-xs font-semibold tabular text-success" aria-hidden>
+                <li
+                  key={`${e.triggerId}-${e.actionIndex}`}
+                  className="flex items-start gap-3 rounded-[var(--radius-control)] border border-line-subtle px-3 py-2"
+                >
+                  <span
+                    className="flex size-6 shrink-0 items-center justify-center rounded-full bg-success-tint text-xs font-semibold tabular text-success"
+                    aria-hidden
+                  >
                     {i + 1}
                   </span>
                   <div className="min-w-0 text-sm">
                     <p className="text-fg">{describeAction(t, e.action, { department: deptName })}</p>
                     <p className="text-xs text-fg-2">
                       {e.revision
-                        ? t('triggers.sim.effectMeta', { trigger: isolate(names.get(e.triggerId)), n: e.actionIndex + 1, revision: e.revision })
-                        : t('triggers.sim.effectMetaUnsaved', { trigger: isolate(names.get(e.triggerId)), n: e.actionIndex + 1 })}
+                        ? t('triggers.sim.effectMeta', {
+                            trigger: isolate(names.get(e.triggerId)),
+                            n: e.actionIndex + 1,
+                            revision: e.revision,
+                          })
+                        : t('triggers.sim.effectMetaUnsaved', {
+                            trigger: isolate(names.get(e.triggerId)),
+                            n: e.actionIndex + 1,
+                          })}
                     </p>
                   </div>
                 </li>
@@ -390,10 +536,19 @@ function SimulationResultView({ result, groups, refs }: { result: SimulationResu
           ) : (
             <ul className="flex flex-col gap-2">
               {result.suppressed.map((s) => (
-                <li key={`${s.triggerId}-${s.actionIndex}`} className="flex items-start gap-3 rounded-[var(--radius-control)] border border-line-subtle px-3 py-2 text-sm">
+                <li
+                  key={`${s.triggerId}-${s.actionIndex}`}
+                  className="flex items-start gap-3 rounded-[var(--radius-control)] border border-line-subtle px-3 py-2 text-sm"
+                >
                   <CircleSlash className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
                   <div className="min-w-0">
-                    <p className="text-fg">{t('triggers.sim.suppressedMeta', { trigger: isolate(names.get(s.triggerId)), n: s.actionIndex + 1, type: actionLabel(t, s.type) })}</p>
+                    <p className="text-fg">
+                      {t('triggers.sim.suppressedMeta', {
+                        trigger: isolate(names.get(s.triggerId)),
+                        n: s.actionIndex + 1,
+                        type: actionLabel(t, s.type),
+                      })}
+                    </p>
                     <p className="text-xs text-fg-2">{suppressionLabel(t, s.reason)}</p>
                   </div>
                 </li>
@@ -417,7 +572,17 @@ function SimulationResultView({ result, groups, refs }: { result: SimulationResu
   );
 }
 
-function TriggerTrace({ t: tr, snapshot, groups, open }: { t: SimulatedTrigger; snapshot: Record<string, unknown>; groups: FieldGroup[]; open?: boolean }) {
+function TriggerTrace({
+  t: tr,
+  snapshot,
+  groups,
+  open,
+}: {
+  t: SimulatedTrigger;
+  snapshot: Record<string, unknown>;
+  groups: FieldGroup[];
+  open?: boolean;
+}) {
   const t = useT();
   return (
     <details open={open} className="group rounded-[var(--radius-control)] border border-line-subtle">
@@ -426,33 +591,84 @@ function TriggerTrace({ t: tr, snapshot, groups, open }: { t: SimulatedTrigger; 
         <span className="font-medium text-fg" dir="auto">
           {tr.name ?? t('triggers.sim.unnamed')}
         </span>
-        {tr.candidate && <Badge tone="primary">{tr.revision ? t('triggers.sim.thisTriggerRev', { revision: tr.revision }) : t('triggers.sim.thisTriggerUnsaved')}</Badge>}
+        {tr.candidate && (
+          <Badge tone="primary">
+            {tr.revision
+              ? t('triggers.sim.thisTriggerRev', { revision: tr.revision })
+              : t('triggers.sim.thisTriggerUnsaved')}
+          </Badge>
+        )}
         <Badge tone="neutral">{t('triggers.sim.priorityBadge', { priority: tr.priority })}</Badge>
-        <Badge tone={tr.fired ? 'success' : tr.matched ? 'warning' : 'neutral'} icon={tr.fired ? <CheckCircle2 className="size-3.5" aria-hidden /> : <XCircle className="size-3.5" aria-hidden />}>
-          {tr.fired ? t('triggers.sim.fired') : tr.matched ? t('triggers.sim.matchedNotFired') : t('triggers.sim.notMatched')}
+        <Badge
+          tone={tr.fired ? 'success' : tr.matched ? 'warning' : 'neutral'}
+          icon={
+            tr.fired ? (
+              <CheckCircle2 className="size-3.5" aria-hidden />
+            ) : (
+              <XCircle className="size-3.5" aria-hidden />
+            )
+          }
+        >
+          {tr.fired
+            ? t('triggers.sim.fired')
+            : tr.matched
+              ? t('triggers.sim.matchedNotFired')
+              : t('triggers.sim.notMatched')}
         </Badge>
         {tr.stopProcessing && <Badge tone="info">{t('triggers.sim.stopsProcessing')}</Badge>}
         <span className="text-xs text-fg-2">{reasonLabel(t, tr.reason)}</span>
       </summary>
       {tr.evaluated ? (
         <div className="flex flex-col gap-4 border-t border-line-subtle px-3 py-3">
-          <TraceGroup title={t('triggers.label.groupAll')} result={tr.allResult} traces={tr.all} snapshot={snapshot} groups={groups} emptyText={t('triggers.sim.noAll')} />
-          <TraceGroup title={t('triggers.label.groupAny')} result={tr.anyResult} traces={tr.any} snapshot={snapshot} groups={groups} emptyText={t('triggers.sim.noAny')} />
+          <TraceGroup
+            title={t('triggers.label.groupAll')}
+            result={tr.allResult}
+            traces={tr.all}
+            snapshot={snapshot}
+            groups={groups}
+            emptyText={t('triggers.sim.noAll')}
+          />
+          <TraceGroup
+            title={t('triggers.label.groupAny')}
+            result={tr.anyResult}
+            traces={tr.any}
+            snapshot={snapshot}
+            groups={groups}
+            emptyText={t('triggers.sim.noAny')}
+          />
         </div>
       ) : (
-        <p className="border-t border-line-subtle px-3 py-3 text-sm text-fg-2">{t('triggers.sim.notEvaluated')}</p>
+        <p className="border-t border-line-subtle px-3 py-3 text-sm text-fg-2">
+          {t('triggers.sim.notEvaluated')}
+        </p>
       )}
     </details>
   );
 }
 
-function TraceGroup({ title, result, traces, snapshot, groups, emptyText }: { title: string; result: boolean; traces: DslConditionTrace[]; snapshot: Record<string, unknown>; groups: FieldGroup[]; emptyText: string }) {
+function TraceGroup({
+  title,
+  result,
+  traces,
+  snapshot,
+  groups,
+  emptyText,
+}: {
+  title: string;
+  result: boolean;
+  traces: DslConditionTrace[];
+  snapshot: Record<string, unknown>;
+  groups: FieldGroup[];
+  emptyText: string;
+}) {
   const t = useT();
   return (
     <section className="flex flex-col gap-2">
       <h4 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-fg-2">
         {title}
-        <span className={cn('normal-case tracking-normal', result ? 'text-success' : 'text-danger')}>{result ? t('triggers.sim.groupTrue') : t('triggers.sim.groupFalse')}</span>
+        <span className={cn('normal-case tracking-normal', result ? 'text-success' : 'text-danger')}>
+          {result ? t('triggers.sim.groupTrue') : t('triggers.sim.groupFalse')}
+        </span>
       </h4>
       {traces.length === 0 ? (
         <p className="text-sm text-fg-2">{emptyText}</p>
@@ -467,10 +683,19 @@ function TraceGroup({ title, result, traces, snapshot, groups, emptyText }: { ti
                 <div className="min-w-0">
                   <p className="text-fg">
                     <span className="font-medium">{conditionWord(t, c)}</span>
-                    <span className="text-fg-2"> — </span>
-                    {conditionText(t, isolate(f?.label ?? c.field), operatorLabel(t, c.op, f?.type ?? null), c.value !== undefined ? formatValue(t, c.value) : undefined)}
+                    <span className="text-fg-2">: </span>
+                    {conditionText(
+                      t,
+                      isolate(f?.label ?? c.field),
+                      operatorLabel(t, c.op, f?.type ?? null),
+                      c.value !== undefined ? formatValue(t, c.value) : undefined,
+                    )}
                   </p>
-                  <p className="text-xs text-fg-2">{t('triggers.sim.actualValue', { value: c.missing ? t('triggers.sim.actualMissing') : formatValue(t, actual) })}</p>
+                  <p className="text-xs text-fg-2">
+                    {t('triggers.sim.actualValue', {
+                      value: c.missing ? t('triggers.sim.actualMissing') : formatValue(t, actual),
+                    })}
+                  </p>
                 </div>
               </li>
             );

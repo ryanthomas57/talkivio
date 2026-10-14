@@ -478,7 +478,7 @@ export const settings = {
     'Service governed by “{name}” is open now and would close as soon as you save. Chats already in progress continue; new requests follow your after-hours behaviour.',
   'settings.hours.closures.title': 'Emergency closures',
   'settings.hours.closures.description':
-    'Close immediately regardless of schedules — for outages, events or emergencies. Chats in progress continue.',
+    'Close immediately regardless of schedules, for outages, events or emergencies. Chats in progress continue.',
   'settings.hours.closures.closeNow': 'Close now',
   'settings.hours.closures.emptyTitle': 'No active closures',
   'settings.hours.closures.emptyBody': 'Availability follows your schedules and agents online.',
@@ -537,7 +537,7 @@ export const settings = {
     'New chats appear in the queue for every eligible agent in the department; the first to accept takes the chat.',
   'settings.departments.routing.assigned': 'Automatic assignment',
   'settings.departments.routing.assignedHint':
-    'Each chat is offered to one eligible agent with free capacity — lowest load first, then whoever has waited longest. If they don’t accept in time, it goes to the next agent.',
+    'Each chat is offered to one eligible agent with free capacity: lowest load first, then whoever has waited longest. If they don’t accept in time, it goes to the next agent.',
   'settings.departments.routing.manual': 'Manual pickup',
   'settings.departments.routing.manualHint':
     'Chats wait in the queue until an agent or supervisor picks them up. Nobody is offered a chat automatically.',
@@ -546,7 +546,7 @@ export const settings = {
   'settings.departments.remoteChanged':
     'Someone else changed these settings while you were editing. Load the latest values, then apply your edits again.',
   'settings.departments.rebased':
-    'Other settings of this department changed meanwhile. Your edits here are unaffected — save again.',
+    'Other settings of this department changed meanwhile. Your edits here are unaffected. Save again.',
   'settings.departments.tabs.general': 'General',
   'settings.departments.tabs.agents': 'Agents',
   'settings.departments.tabs.routing': 'Routing',
@@ -565,7 +565,7 @@ export const settings = {
     'When disabled, visitors can’t choose this department and new chats aren’t routed to it. Chats already in progress continue normally.',
   'settings.departments.general.disableWarning': 'After saving, {name} disappears from the widget.',
   'settings.departments.general.disableWarningQueued':
-    'After saving, {name} disappears from the widget — {count, plural, one {# visitor is} other {# visitors are}} waiting in its queue right now.',
+    'After saving, {name} disappears from the widget. {count, plural, one {# visitor is} other {# visitors are}} waiting in its queue right now.',
   'settings.departments.routing.saved': 'Routing saved',
   'settings.departments.routing.pathArrow': ' → ',
   'settings.departments.routing.loop': 'This would create a loop: {path}.',
@@ -585,7 +585,7 @@ export const settings = {
     'The chat moves once to the overflow department if it is enabled and the chat hasn’t been there already.',
   'settings.departments.routing.keepWaiting': 'Keep waiting here (offer the offline form only)',
   'settings.departments.routing.overflowTo':
-    'Overflow to {name}{state, select, archived { (archived)} disabled { (disabled)} other {}}{loops, select, yes { — would create a loop} other {}}',
+    'Overflow to {name}{state, select, archived { (archived)} disabled { (disabled)} other {}}{loops, select, yes { (would create a loop)} other {}}',
   'settings.departments.routing.targetArchived':
     '{name} is archived, so overflow is skipped and visitors are only offered the offline form.',
   'settings.departments.routing.targetDisabled':
@@ -607,7 +607,7 @@ export const settings = {
   'settings.departments.hours.noSchedules': 'No schedules yet.',
   'settings.departments.hours.createOne': 'Create one in Operating hours',
   'settings.departments.hours.option': '{name} ({zone})',
-  'settings.departments.hours.optionArchived': '{name} ({zone}) — archived',
+  'settings.departments.hours.optionArchived': '{name} ({zone}): archived',
   'settings.departments.hours.viewSchedule': 'View or edit this schedule',
   'settings.departments.hours.selectedArchived':
     'The selected schedule is archived and no longer governs availability. Choose another schedule or use the default.',
@@ -622,7 +622,7 @@ export const settings = {
   'settings.departments.archive.title': 'Archive {name}?',
   'settings.departments.archive.confirm': 'Archive department',
   'settings.departments.archive.body':
-    'It stops accepting chats and disappears from the widget. Past transcripts keep its name. A department with open chats can’t be archived — close or transfer them first.',
+    'It stops accepting chats and disappears from the widget. Past transcripts keep its name. A department with open chats can’t be archived. Close or transfer them first.',
   'settings.departments.archive.fallbackFrom':
     '{names} {count, plural, one {uses} other {use}} this department as an overflow target. Overflow to an archived department is skipped.',
   'settings.departments.description':

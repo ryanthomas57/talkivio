@@ -5,14 +5,45 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo, useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { Badge, Banner, Button, Card, CardHeader, CheckboxField, Dialog, DialogContent, EmptyState, Field, Input, Page, PageHeader, PanelError, RadioGroup, Skeleton, Table, TableScroll, TD, TH, THead, TimezonePicker, TR } from '@/components/ui';
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardHeader,
+  CheckboxField,
+  Dialog,
+  DialogContent,
+  EmptyState,
+  Field,
+  Input,
+  Page,
+  PageHeader,
+  PanelError,
+  RadioGroup,
+  Skeleton,
+  Table,
+  TableScroll,
+  TD,
+  TH,
+  THead,
+  TimezonePicker,
+  TR,
+} from '@/components/ui';
 import { isolate, useT } from '@/i18n';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
 import { uuid } from '@/lib/ids';
 import { useCan, useSession } from '@/stores/session';
 import { EmergencyClosures } from './emergency-closures';
-import { hk, summarizeWeek, useHoursRealtime, useSchedules, type Schedule, type WeeklyIntervals } from './hours-api';
+import {
+  hk,
+  summarizeWeek,
+  useHoursRealtime,
+  useSchedules,
+  type Schedule,
+  type WeeklyIntervals,
+} from './hours-api';
 
 export function HoursOverview() {
   return (
@@ -70,7 +101,14 @@ function Overview() {
                 : t('settings.hours.noWorkspaceDefault')
               : t('settings.hours.schedulesHint')
           }
-          action={<CheckboxField label={t('settings.hours.showArchived')} checked={showArchived} onCheckedChange={(c) => toggleArchived(c === true)} className="min-h-0 py-0" />}
+          action={
+            <CheckboxField
+              label={t('settings.hours.showArchived')}
+              checked={showArchived}
+              onCheckedChange={(c) => toggleArchived(c === true)}
+              className="min-h-0 py-0"
+            />
+          }
         />
         {q.isPending ? (
           <div className="flex flex-col gap-2 p-4 sm:px-6">
@@ -134,32 +172,48 @@ function ScheduleRow({ s, weekStartsOn }: { s: Schedule; weekStartsOn: 0 | 1 }) 
     <TR>
       <TD>
         <div className="flex flex-wrap items-center gap-2">
-          <Link href={`/settings/hours/${s.id}`} className="font-medium text-primary hover:underline" dir="auto">
+          <Link
+            href={`/settings/hours/${s.id}`}
+            className="font-medium text-primary hover:underline"
+            dir="auto"
+          >
             {s.name}
           </Link>
-          {s.isTenantDefault && <Badge tone="primary" icon={<Star className="size-3" aria-hidden />}>{t('settings.hours.default')}</Badge>}
+          {s.isTenantDefault && (
+            <Badge tone="primary" icon={<Star className="size-3" aria-hidden />}>
+              {t('settings.hours.default')}
+            </Badge>
+          )}
           {s.archivedAt && <Badge>{t('settings.hours.archived')}</Badge>}
         </div>
       </TD>
       <TD className="whitespace-nowrap">
         {s.state ? (
           <div className="flex flex-col">
-            <span className={`inline-flex items-center gap-1.5 text-sm font-medium ${s.state.open ? 'text-success' : 'text-fg-2'}`}>
-              {s.state.open ? <DoorOpen className="size-4" aria-hidden /> : <DoorClosed className="size-4" aria-hidden />}
+            <span
+              className={`inline-flex items-center gap-1.5 text-sm font-medium ${s.state.open ? 'text-success' : 'text-fg-2'}`}
+            >
+              {s.state.open ? (
+                <DoorOpen className="size-4" aria-hidden />
+              ) : (
+                <DoorClosed className="size-4" aria-hidden />
+              )}
               {s.state.open ? t('settings.hours.open') : t('settings.hours.closed')}
             </span>
             {s.state.nextBoundary && (
               <span className="text-xs text-fg-2">
-                {s.state.nextBoundary.kind === 'open' ? t('settings.hours.opensAt', { time: s.state.nextBoundary.localLabel }) : t('settings.hours.closesAt', { time: s.state.nextBoundary.localLabel })}
+                {s.state.nextBoundary.kind === 'open'
+                  ? t('settings.hours.opensAt', { time: s.state.nextBoundary.localLabel })
+                  : t('settings.hours.closesAt', { time: s.state.nextBoundary.localLabel })}
               </span>
             )}
           </div>
-        ) : (
-          <span className="text-sm text-fg-2">—</span>
-        )}
+        ) : null}
       </TD>
       <TD className="max-w-[320px]">
-        <span className="line-clamp-2 text-sm text-fg-2">{summarizeWeek(s.weeklyIntervals, weekStartsOn)}</span>
+        <span className="line-clamp-2 text-sm text-fg-2">
+          {summarizeWeek(s.weeklyIntervals, weekStartsOn)}
+        </span>
       </TD>
       <TD className="whitespace-nowrap text-sm">{s.timezone.replace(/_/g, ' ')}</TD>
       <TD className="text-end tabular">{formatNumber(s.exceptionCount)}</TD>
@@ -168,10 +222,27 @@ function ScheduleRow({ s, weekStartsOn }: { s: Schedule; weekStartsOn: 0 | 1 }) 
 }
 
 const EMPTY_WEEK: WeeklyIntervals = { sun: [], mon: [], tue: [], wed: [], thu: [], fri: [], sat: [] };
-const OFFICE_WEEK: WeeklyIntervals = { ...EMPTY_WEEK, mon: [{ start: '09:00', end: '17:00' }], tue: [{ start: '09:00', end: '17:00' }], wed: [{ start: '09:00', end: '17:00' }], thu: [{ start: '09:00', end: '17:00' }], fri: [{ start: '09:00', end: '17:00' }] };
-const ALWAYS: WeeklyIntervals = Object.fromEntries(Object.keys(EMPTY_WEEK).map((d) => [d, [{ start: '00:00', end: '24:00' }]])) as WeeklyIntervals;
+const OFFICE_WEEK: WeeklyIntervals = {
+  ...EMPTY_WEEK,
+  mon: [{ start: '09:00', end: '17:00' }],
+  tue: [{ start: '09:00', end: '17:00' }],
+  wed: [{ start: '09:00', end: '17:00' }],
+  thu: [{ start: '09:00', end: '17:00' }],
+  fri: [{ start: '09:00', end: '17:00' }],
+};
+const ALWAYS: WeeklyIntervals = Object.fromEntries(
+  Object.keys(EMPTY_WEEK).map((d) => [d, [{ start: '00:00', end: '24:00' }]]),
+) as WeeklyIntervals;
 
-function CreateScheduleDialog({ defaultTimezone, onClose, onCreated }: { defaultTimezone: string; onClose: () => void; onCreated: (s: Schedule) => void }) {
+function CreateScheduleDialog({
+  defaultTimezone,
+  onClose,
+  onCreated,
+}: {
+  defaultTimezone: string;
+  onClose: () => void;
+  onCreated: (s: Schedule) => void;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const [name, setName] = useState('');
@@ -181,7 +252,10 @@ function CreateScheduleDialog({ defaultTimezone, onClose, onCreated }: { default
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [key] = useState(() => uuid());
-  const weekly = useMemo(() => (template === 'office' ? OFFICE_WEEK : template === 'always' ? ALWAYS : EMPTY_WEEK), [template]);
+  const weekly = useMemo(
+    () => (template === 'office' ? OFFICE_WEEK : template === 'always' ? ALWAYS : EMPTY_WEEK),
+    [template],
+  );
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -193,7 +267,11 @@ function CreateScheduleDialog({ defaultTimezone, onClose, onCreated }: { default
     setBusy(true);
     setMessage(null);
     try {
-      const s = await api.post<Schedule>('/schedules', { name: name.trim(), timezone, weeklyIntervals: weekly }, { idempotencyKey: key });
+      const s = await api.post<Schedule>(
+        '/schedules',
+        { name: name.trim(), timezone, weeklyIntervals: weekly },
+        { idempotencyKey: key },
+      );
       toast.success(t('settings.hours.create.created', { name: isolate(s.name) }));
       await qc.invalidateQueries({ queryKey: hk.schedulesRoot });
       onCreated(s);
@@ -225,7 +303,14 @@ function CreateScheduleDialog({ defaultTimezone, onClose, onCreated }: { default
         <form id="schedule-form" onSubmit={submit} noValidate className="flex flex-col gap-5">
           {message && <Banner tone="danger">{message}</Banner>}
           <Field label={t('common.name')} required error={errors.name}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} autoFocus placeholder={t('settings.hours.create.namePlaceholder')} dir="auto" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={120}
+              autoFocus
+              placeholder={t('settings.hours.create.namePlaceholder')}
+              dir="auto"
+            />
           </Field>
           <Field label={t('common.timezone')} required error={errors.timezone}>
             <TimezonePicker value={timezone} onChange={setTimezone} />
@@ -236,9 +321,17 @@ function CreateScheduleDialog({ defaultTimezone, onClose, onCreated }: { default
             value={template}
             onChange={setTemplate}
             options={[
-              { value: 'office', label: t('settings.hours.create.office'), description: t('settings.hours.create.officeHint') },
+              {
+                value: 'office',
+                label: t('settings.hours.create.office'),
+                description: t('settings.hours.create.officeHint'),
+              },
               { value: 'always', label: t('settings.hours.create.always') },
-              { value: 'empty', label: t('settings.hours.closedEveryDay'), description: t('settings.hours.create.emptyHint') },
+              {
+                value: 'empty',
+                label: t('settings.hours.closedEveryDay'),
+                description: t('settings.hours.create.emptyHint'),
+              },
             ]}
           />
         </form>

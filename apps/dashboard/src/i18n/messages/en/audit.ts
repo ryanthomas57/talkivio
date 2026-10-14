@@ -45,7 +45,7 @@ export const audit = {
   'audit.log.noAccessBody': 'Ask a workspace owner or admin for the audit permission.',
   'audit.log.title': 'Audit log',
   'audit.log.description':
-    'An append-only record of administrative and security events: who did what, to which object, and with what result. Change details are limited to safe summaries — no passwords, tokens or message text.',
+    'An append-only record of administrative and security events: who did what, to which object, and with what result. Change details are limited to safe summaries, with no passwords, tokens or message text.',
   'audit.log.exportCsv': 'Export CSV',
   'audit.log.filtersLabel': 'Audit log filters',
   'audit.log.rangeFieldError': 'Must be on or before the “To” date.',
@@ -59,7 +59,8 @@ export const audit = {
   'audit.log.action': 'Action',
   'audit.log.actionHelp': 'Exact name or prefix, e.g. webhook.*',
   'audit.log.actionPlaceholder': 'Any action',
-  'audit.log.actionInvalid': 'Use an action such as webhook.created, or a prefix such as webhook.* (lowercase letters, digits, _ and .).',
+  'audit.log.actionInvalid':
+    'Use an action such as webhook.created, or a prefix such as webhook.* (lowercase letters, digits, _ and .).',
   'audit.log.objectType': 'Object type',
   'audit.log.anyType': 'Any type',
   'audit.log.outcome': 'Outcome',
@@ -81,7 +82,8 @@ export const audit = {
   'audit.log.actorId': 'Actor id',
   'audit.log.requestId': 'Request id',
   'audit.log.showOnlyActor': 'Show only this actor',
-  'audit.log.footnote': 'Times are shown in your timezone. CSV exports include up to {max} matching events, and each export is itself recorded here.',
+  'audit.log.footnote':
+    'Times are shown in your timezone. CSV exports include up to {max} matching events, and each export is itself recorded here.',
 
   'audit.diff.none': 'none',
   'audit.diff.changedNotRecorded': 'changed (value not recorded)',

@@ -488,7 +488,7 @@ export const settings: Record<keyof typeof source, string> = {
     'الخدمة التي يتحكم فيها «{name}» مفتوحة الآن وستُغلق بمجرد الحفظ. تستمر المحادثات الجارية، وتتبع الطلبات الجديدة سلوك ما بعد ساعات العمل.',
   'settings.hours.closures.title': 'الإغلاق الطارئ',
   'settings.hours.closures.description':
-    'أغلق فورًا بغض النظر عن الجداول — عند الأعطال أو الفعاليات أو الطوارئ. تستمر المحادثات الجارية.',
+    'أغلق فورًا بغض النظر عن الجداول، عند الأعطال أو الفعاليات أو الطوارئ. تستمر المحادثات الجارية.',
   'settings.hours.closures.closeNow': 'إغلاق الآن',
   'settings.hours.closures.emptyTitle': 'لا يوجد إغلاق نشط',
   'settings.hours.closures.emptyBody': 'يتبع التوفر جداولك والموظفين المتصلين.',
@@ -542,7 +542,7 @@ export const settings: Record<keyof typeof source, string> = {
     'تظهر المحادثات الجديدة في قائمة الانتظار لكل موظف مؤهل في القسم؛ ومن يقبل أولًا يتولى المحادثة.',
   'settings.departments.routing.assigned': 'الإسناد التلقائي',
   'settings.departments.routing.assignedHint':
-    'تُعرض كل محادثة على موظف مؤهل واحد لديه سعة متاحة — الأقل انشغالًا أولًا، ثم الأطول انتظارًا. وإن لم يقبلها في الوقت المحدد، تنتقل إلى الموظف التالي.',
+    'تُعرض كل محادثة على موظف مؤهل واحد لديه سعة متاحة، الأقل انشغالًا أولًا، ثم الأطول انتظارًا. وإن لم يقبلها في الوقت المحدد، تنتقل إلى الموظف التالي.',
   'settings.departments.routing.manual': 'الاستلام اليدوي',
   'settings.departments.routing.manualHint':
     'تنتظر المحادثات في قائمة الانتظار حتى يستلمها موظف أو مشرف. لا يُعرض على أحد عرض محادثة تلقائيًا.',
@@ -551,7 +551,7 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.remoteChanged':
     'غيّر شخص آخر هذه الإعدادات أثناء تعديلك. حمّل أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
   'settings.departments.rebased':
-    'تغيّرت إعدادات أخرى لهذا القسم في الأثناء. لم تتأثر تعديلاتك هنا — احفظ مرة أخرى.',
+    'تغيّرت إعدادات أخرى لهذا القسم في الأثناء. لم تتأثر تعديلاتك هنا، احفظ مرة أخرى.',
   'settings.departments.tabs.general': 'عام',
   'settings.departments.tabs.agents': 'الموظفون',
   'settings.departments.tabs.routing': 'التوجيه',
@@ -569,7 +569,7 @@ export const settings: Record<keyof typeof source, string> = {
     'عند التعطيل، لا يستطيع الزوار اختيار هذا القسم ولا تُوجَّه إليه محادثات جديدة. تستمر المحادثات الجارية بشكل طبيعي.',
   'settings.departments.general.disableWarning': 'بعد الحفظ، سيختفي {name} من أداة الدردشة.',
   'settings.departments.general.disableWarningQueued':
-    'بعد الحفظ، سيختفي {name} من أداة الدردشة — {count, plural, zero {لا يوجد زوار} one {يوجد زائر واحد} two {يوجد زائران} few {يوجد # زوار} many {يوجد # زائرًا} other {يوجد # زائر}} في قائمة انتظاره الآن.',
+    'بعد الحفظ، سيختفي {name} من أداة الدردشة: {count, plural, zero {لا يوجد زوار} one {يوجد زائر واحد} two {يوجد زائران} few {يوجد # زوار} many {يوجد # زائرًا} other {يوجد # زائر}} في قائمة انتظاره الآن.',
   'settings.departments.routing.saved': 'تم حفظ التوجيه',
   'settings.departments.routing.pathArrow': ' ← ',
   'settings.departments.routing.loop': 'سيؤدي هذا إلى حلقة: {path}.',
@@ -589,7 +589,7 @@ export const settings: Record<keyof typeof source, string> = {
     'تنتقل المحادثة مرة واحدة إلى قسم التحويل إذا كان مفعّلًا ولم تكن المحادثة فيه من قبل.',
   'settings.departments.routing.keepWaiting': 'مواصلة الانتظار هنا (عرض نموذج خارج الدوام فقط)',
   'settings.departments.routing.overflowTo':
-    'التحويل إلى {name}{state, select, archived { (مؤرشف)} disabled { (معطّل)} other {}}{loops, select, yes { — سيؤدي إلى حلقة} other {}}',
+    'التحويل إلى {name}{state, select, archived { (مؤرشف)} disabled { (معطّل)} other {}}{loops, select, yes { (سيؤدي إلى حلقة)} other {}}',
   'settings.departments.routing.targetArchived':
     '{name} مؤرشف، لذا يُتخطّى التحويل ويُعرض على الزوار نموذج خارج الدوام فقط.',
   'settings.departments.routing.targetDisabled':
@@ -611,7 +611,7 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.hours.noSchedules': 'لا توجد جداول بعد.',
   'settings.departments.hours.createOne': 'أنشئ جدولًا في ساعات العمل',
   'settings.departments.hours.option': '{name} ({zone})',
-  'settings.departments.hours.optionArchived': '{name} ({zone}) — مؤرشف',
+  'settings.departments.hours.optionArchived': '{name} ({zone}): مؤرشف',
   'settings.departments.hours.viewSchedule': 'عرض هذا الجدول أو تعديله',
   'settings.departments.hours.selectedArchived':
     'الجدول المحدد مؤرشف ولم يعد يتحكم في التوفر. اختر جدولًا آخر أو استخدم الافتراضي.',
@@ -625,7 +625,7 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.archive.title': 'أرشفة {name}؟',
   'settings.departments.archive.confirm': 'أرشفة القسم',
   'settings.departments.archive.body':
-    'سيتوقف عن قبول المحادثات ويختفي من أداة الدردشة. تحتفظ سجلات المحادثات السابقة باسمه. لا يمكن أرشفة قسم لديه محادثات مفتوحة — أغلقها أو حوّلها أولًا.',
+    'سيتوقف عن قبول المحادثات ويختفي من أداة الدردشة. تحتفظ سجلات المحادثات السابقة باسمه. لا يمكن أرشفة قسم لديه محادثات مفتوحة، أغلقها أو حوّلها أولًا.',
   'settings.departments.archive.fallbackFrom':
     '{count, plural, zero {يستخدم {names}} one {يستخدم القسم {names}} two {يستخدم القسمان {names}} few {تستخدم الأقسام {names}} many {تستخدم الأقسام {names}} other {تستخدم الأقسام {names}}} هذا القسم كوجهة تحويل. يُتخطّى التحويل إلى قسم مؤرشف.',
   'settings.departments.description':

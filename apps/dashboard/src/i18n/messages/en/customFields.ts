@@ -18,16 +18,20 @@ export const customFields = {
   'customFields.rules.options': '{count, plural, one {# option} other {# options}}',
   'customFields.rules.none': 'No extra rules',
   'customFields.page.title': 'Custom fields',
-  'customFields.page.description': 'Typed fields agents and your website can store on visitor records — plan, account ID, renewal date. Values are validated against these rules.',
+  'customFields.page.description':
+    'Typed fields agents and your website can store on visitor records, such as plan, account ID or renewal date. Values are validated against these rules.',
   'customFields.page.new': 'New field',
   'customFields.page.readOnly': 'You can view field definitions. Ask an admin to add or change them.',
-  'customFields.page.rulesNote': 'A field’s key can’t be renamed, and its type can’t change once any visitor or offline message has a value for it — create a new field instead. Archiving hides a field from editors and the SDK; stored values are kept.',
-  'customFields.page.activeCount': '{count, plural, one {# active field} other {# active fields}} (max {max})',
+  'customFields.page.rulesNote':
+    'A field’s key can’t be renamed, and its type can’t change once any visitor or offline message has a value for it. Create a new field instead. Archiving hides a field from editors and the SDK; stored values are kept.',
+  'customFields.page.activeCount':
+    '{count, plural, one {# active field} other {# active fields}} (max {max})',
   'customFields.page.showArchived': 'Show archived',
   'customFields.page.loadFailed': 'Custom fields could not be loaded. {error}',
   'customFields.page.emptyTitle': 'No custom fields yet',
   'customFields.page.emptyActiveTitle': 'No active custom fields',
-  'customFields.page.emptyBody': 'Add a field to capture structured details about visitors, like their plan or customer ID.',
+  'customFields.page.emptyBody':
+    'Add a field to capture structured details about visitors, like their plan or customer ID.',
   'customFields.page.archivedOn': 'Archived {date}',
   'customFields.page.active': 'Active',
   'customFields.page.editLabel': 'Edit {label}',
@@ -39,8 +43,10 @@ export const customFields = {
   'customFields.col.writable': 'Website writable',
   'customFields.col.visible': 'Visitor visible',
   'customFields.archive.title': 'Archive “{label}”?',
-  'customFields.archive.body': 'Agents and the website SDK can no longer set {key}. Values already stored on visitors are kept and shown read-only. The key stays reserved.',
-  'customFields.archive.bodyGeneric': 'Agents and the website SDK can no longer set this field. Values already stored on visitors are kept and shown read-only. The key stays reserved.',
+  'customFields.archive.body':
+    'Agents and the website SDK can no longer set {key}. Values already stored on visitors are kept and shown read-only. The key stays reserved.',
+  'customFields.archive.bodyGeneric':
+    'Agents and the website SDK can no longer set this field. Values already stored on visitors are kept and shown read-only. The key stays reserved.',
   'customFields.archive.confirm': 'Archive field',
   'customFields.archive.done': 'Archived {label}',
   'customFields.dialog.wholeNumber': 'Enter a whole number from {min} to {max}',
@@ -50,7 +56,8 @@ export const customFields = {
   'customFields.dialog.needOption': 'Add at least one option',
   'customFields.dialog.uniqueOptions': 'Option values must be unique',
   'customFields.dialog.optionTooLong': 'Values and labels are at most {max} characters',
-  'customFields.dialog.keyInvalid': 'Start with a letter; use lowercase letters, digits and underscores (max {max})',
+  'customFields.dialog.keyInvalid':
+    'Start with a letter; use lowercase letters, digits and underscores (max {max})',
   'customFields.dialog.keyReserved': 'That key is reserved',
   'customFields.dialog.labelRequired': 'Enter a label',
   'customFields.dialog.saved': 'Custom field saved',
@@ -58,13 +65,16 @@ export const customFields = {
   'customFields.dialog.invalid': 'Invalid',
   'customFields.dialog.editTitle': 'Edit “{label}”',
   'customFields.dialog.newTitle': 'New custom field',
-  'customFields.dialog.description': 'Typed, validated values stored on each visitor record. Values are plain scalars — never objects or code.',
+  'customFields.dialog.description':
+    'Typed, validated values stored on each visitor record. Values are plain scalars, never objects or code.',
   'customFields.dialog.save': 'Save field',
   'customFields.dialog.create': 'Create field',
   'customFields.dialog.keyLocked': 'Keys can’t be changed after creation.',
   'customFields.dialog.keyHint': 'Used by the widget SDK and integrations. Can’t be changed later.',
-  'customFields.dialog.typeHint': 'Changing the type is rejected if any visitor or offline message already has a value for this field — create a new field instead.',
-  'customFields.dialog.typeChange': 'Type change from {from} to {to}: the save fails if this field already holds values.',
+  'customFields.dialog.typeHint':
+    'Changing the type is rejected if any visitor or offline message already has a value for this field. Create a new field instead.',
+  'customFields.dialog.typeChange':
+    'Type change from {from} to {to}: the save fails if this field already holds values.',
   'customFields.dialog.validation': 'Validation',
   'customFields.dialog.format': 'Format',
   'customFields.dialog.formatAny': 'Any text',
@@ -87,9 +97,11 @@ export const customFields = {
   'customFields.dialog.removeOption': 'Remove option {n}',
   'customFields.dialog.addOption': 'Add option',
   'customFields.dialog.writable': 'Writable from your website',
-  'customFields.dialog.writableHint': 'Your site’s widget SDK may set this value. Treat it as visitor-supplied, unverified data.',
+  'customFields.dialog.writableHint':
+    'Your site’s widget SDK may set this value. Treat it as visitor-supplied, unverified data.',
   'customFields.dialog.visible': 'Visible to the visitor',
-  'customFields.dialog.visibleHint': 'The visitor can see this value about themselves. Never use it for internal notes or secrets.',
+  'customFields.dialog.visibleHint':
+    'The visitor can see this value about themselves. Never use it for internal notes or secrets.',
   'customFields.dialog.conflictTitle': 'Someone else changed this field',
   'customFields.dialog.conflictBody': 'Reload the latest version, then reapply your changes.',
   'customFields.values.saved': 'Custom fields saved',
@@ -99,10 +111,12 @@ export const customFields = {
   'customFields.values.noneDefined': 'No custom fields are defined for this workspace.',
   'customFields.values.defineFields': 'Define fields',
   'customFields.values.emptyTitle': 'No custom fields defined',
-  'customFields.values.emptyBody': 'Admins define typed fields (plan, account ID, …) in Settings → Custom fields.',
+  'customFields.values.emptyBody':
+    'Admins define typed fields (plan, account ID, …) in Settings → Custom fields.',
   'customFields.values.defineCustomFields': 'Define custom fields',
   'customFields.values.conflictTitle': 'This visitor changed since you opened it',
-  'customFields.values.conflictBody': 'Someone else saved changes. Reload to see them, then reapply your edits.',
+  'customFields.values.conflictBody':
+    'Someone else saved changes. Reload to see them, then reapply your edits.',
   'customFields.values.archivedReadOnly': '(archived field, read-only)',
   'customFields.values.sourceVisitor': 'From the visitor’s page · unverified',
   'customFields.values.sourceAgent': 'Set by staff',

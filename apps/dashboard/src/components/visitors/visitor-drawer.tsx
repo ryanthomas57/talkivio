@@ -15,7 +15,17 @@ import { errorMessage } from '@/lib/api';
 import { formatDateTime, formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
 import { byId, useSites } from '@/lib/queries';
 import { useCan } from '@/stores/session';
-import { ApproxCountry, DeviceLabel, Elapsed, IdentityBadge, originLabel, safeHref, ticking, urlLabel, useMonoNow } from './display';
+import {
+  ApproxCountry,
+  DeviceLabel,
+  Elapsed,
+  IdentityBadge,
+  originLabel,
+  safeHref,
+  ticking,
+  urlLabel,
+  useMonoNow,
+} from './display';
 import type { LiveRow } from './live-model';
 import { PriorChats } from './prior-chats';
 import { SessionsTimeline } from './sessions-timeline';
@@ -44,12 +54,24 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
   );
 }
 
-export function VisitorDrawer({ visitorId, live, onClose }: { visitorId: string | null; live: LiveRow | null; onClose: () => void }) {
+export function VisitorDrawer({
+  visitorId,
+  live,
+  onClose,
+}: {
+  visitorId: string | null;
+  live: LiveRow | null;
+  onClose: () => void;
+}) {
   const t = useT();
   return (
     <Dialog open={!!visitorId} onOpenChange={(o) => !o && onClose()}>
       {visitorId && (
-        <DrawerContent title={live?.v.displayName ?? t('common.visitor')} description={live ? t(GROUP_LABEL[live.v.group]) : t('visitors.drawer.notInLive')} width={480}>
+        <DrawerContent
+          title={live?.v.displayName ?? t('common.visitor')}
+          description={live ? t(GROUP_LABEL[live.v.group]) : t('visitors.drawer.notInLive')}
+          width={480}
+        >
           <DrawerBody visitorId={visitorId} live={live} />
         </DrawerContent>
       )}
@@ -72,9 +94,23 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
     <div className="flex flex-col">
       <div className="flex flex-col gap-2 border-b border-line-subtle px-5 py-4">
         <div className="flex flex-wrap items-center gap-2">
-          <IdentityBadge verified={v?.identity.verified ?? p?.identityVerified ?? false} identified={v?.identity.identified ?? !!(p?.fields.name?.value || p?.fields.email?.value)} />
+          <IdentityBadge
+            verified={v?.identity.verified ?? p?.identityVerified ?? false}
+            identified={v?.identity.identified ?? !!(p?.fields.name?.value || p?.fields.email?.value)}
+          />
           {v ? (
-            <Badge tone={v.group === 'incoming' ? 'warning' : v.group === 'served' ? 'success' : v.group === 'idle' ? 'neutral' : 'info'} icon={<Radio className="size-3" aria-hidden />}>
+            <Badge
+              tone={
+                v.group === 'incoming'
+                  ? 'warning'
+                  : v.group === 'served'
+                    ? 'success'
+                    : v.group === 'idle'
+                      ? 'neutral'
+                      : 'info'
+              }
+              icon={<Radio className="size-3" aria-hidden />}
+            >
               {t(GROUP_LABEL[v.group])}
             </Badge>
           ) : (
@@ -89,7 +125,8 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
         {!v && <p className="text-sm text-fg-2">{t('visitors.drawer.leftLive')}</p>}
         <Button asChild variant="secondary" size="sm" className="self-start">
           <Link href={`/visitors/${visitorId}`}>
-            {t('visitors.drawer.openProfile')} <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden />
+            {t('visitors.drawer.openProfile')}{' '}
+            <ArrowUpRight className="size-3.5 rtl:-scale-x-100" aria-hidden />
           </Link>
         </Button>
       </div>
@@ -109,7 +146,13 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
                       </span>
                     )}
                     {safeHref(v.currentUrl) ? (
-                      <a href={safeHref(v.currentUrl)!} target="_blank" rel="noopener noreferrer nofollow" dir="auto" className="break-all text-xs text-primary hover:underline">
+                      <a
+                        href={safeHref(v.currentUrl)!}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        dir="auto"
+                        className="break-all text-xs text-primary hover:underline"
+                      >
                         {urlLabel(v.currentUrl)}
                       </a>
                     ) : (
@@ -119,7 +162,7 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
                     )}
                   </span>
                 ) : (
-                  '—'
+                  ''
                 )}
               </Row>
               <Row label={t('visitors.drawer.onThisPage')}>
@@ -128,14 +171,22 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
               <Row label={t('visitors.drawer.timeOnSite')}>
                 <Elapsed ms={ticking(v.timeOnSiteMs, live!.recv, now)} />
               </Row>
-              <Row label={t('visitors.live.col.referrer')}>{v.referrerOrigin ? <span dir="auto">{originLabel(v.referrerOrigin)}</span> : t('visitors.live.direct')}</Row>
+              <Row label={t('visitors.live.col.referrer')}>
+                {v.referrerOrigin ? (
+                  <span dir="auto">{originLabel(v.referrerOrigin)}</span>
+                ) : (
+                  t('visitors.live.direct')
+                )}
+              </Row>
               <Row label={t('visitors.drawer.location')}>
                 <ApproxCountry code={v.country} />
               </Row>
               <Row label={t('visitors.live.col.device')}>
                 <DeviceLabel category={v.deviceCategory} />
               </Row>
-              <Row label={t('visitors.live.col.visits')}>{v.sessionCount === null ? '—' : formatNumber(v.sessionCount)}</Row>
+              <Row label={t('visitors.live.col.visits')}>
+                {v.sessionCount === null ? '' : formatNumber(v.sessionCount)}
+              </Row>
             </dl>
           )}
           {v.chat && (
@@ -143,8 +194,16 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
               <span className="inline-flex items-center gap-1.5">
                 <MessageSquare className="size-4 text-fg-2" aria-hidden />
                 {v.group === 'incoming' ? (
-                  <span aria-label={waitMs === null ? undefined : t('visitors.live.waiting', { duration: formatDurationLong(waitMs) })}>
-                    {t('visitors.live.waiting', { duration: waitMs === null ? '—' : formatDuration(waitMs) })}
+                  <span
+                    aria-label={
+                      waitMs === null
+                        ? undefined
+                        : t('visitors.live.waiting', { duration: formatDurationLong(waitMs) })
+                    }
+                  >
+                    {waitMs === null
+                      ? null
+                      : t('visitors.live.waiting', { duration: formatDuration(waitMs) })}
                   </span>
                 ) : (
                   t('visitors.drawer.inActiveChat')
@@ -162,20 +221,32 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
           )}
           {v.sessions.length > 1 && (
             <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-medium text-fg-2">{t('visitors.live.tabsOpen', { count: v.sessions.length })}</p>
+              <p className="text-xs font-medium text-fg-2">
+                {t('visitors.live.tabsOpen', { count: v.sessions.length })}
+              </p>
               <ul className="flex flex-col gap-1">
                 {v.sessions.map((s) => (
-                  <li key={s.sessionId} className="flex items-center gap-2 rounded-md border border-line-subtle px-2.5 py-1.5 text-xs">
-                    {s.mostRecent && <Star className="size-3.5 shrink-0 fill-current text-warning" aria-label={t('visitors.drawer.mostRecentTab')} />}
+                  <li
+                    key={s.sessionId}
+                    className="flex items-center gap-2 rounded-md border border-line-subtle px-2.5 py-1.5 text-xs"
+                  >
+                    {s.mostRecent && (
+                      <Star
+                        className="size-3.5 shrink-0 fill-current text-warning"
+                        aria-label={t('visitors.drawer.mostRecentTab')}
+                      />
+                    )}
                     <span className="min-w-0 flex-1 truncate" dir={s.browsingHidden ? undefined : 'auto'}>
-                      {s.browsingHidden ? t('visitors.drawer.hiddenNoConsent') : urlLabel(s.currentUrl) || '—'}
+                      {s.browsingHidden ? t('visitors.drawer.hiddenNoConsent') : urlLabel(s.currentUrl) || ''}
                     </span>
                     {!s.browsingHidden && (
                       <span className="shrink-0 text-fg-2">
                         <Elapsed ms={ticking(s.pageDwellMs, live!.recv, now)} />
                       </span>
                     )}
-                    {!s.visible && <span className="shrink-0 text-fg-3">{t('visitors.drawer.background')}</span>}
+                    {!s.visible && (
+                      <span className="shrink-0 text-fg-3">{t('visitors.drawer.background')}</span>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -185,7 +256,10 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
       )}
 
       {profile.isError ? (
-        <PanelError message={t('visitors.drawer.recordLoadError', { error: errorMessage(profile.error) })} onRetry={() => void profile.refetch()} />
+        <PanelError
+          message={t('visitors.drawer.recordLoadError', { error: errorMessage(profile.error) })}
+          onRetry={() => void profile.refetch()}
+        />
       ) : !p ? (
         <div className="flex flex-col gap-3 px-5 py-4" aria-busy="true">
           <Skeleton className="h-6 w-1/2" />
@@ -201,19 +275,35 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
           <Section title={t('visitors.drawer.contact')}>
             <dl className="flex flex-col gap-1.5">
               <Row label={t('common.name')}>
-                <bdi>{p.fields.name?.value ?? '—'}</bdi> {p.fields.name?.value && !p.fields.name.verified && <span className="text-xs text-fg-2">{t('visitors.drawer.unverifiedParen')}</span>}
+                <bdi>{p.fields.name?.value ?? ''}</bdi>{' '}
+                {p.fields.name?.value && !p.fields.name.verified && (
+                  <span className="text-xs text-fg-2">{t('visitors.drawer.unverifiedParen')}</span>
+                )}
               </Row>
               <Row label={t('common.email')}>
-                <bdi>{p.fields.email?.value ?? '—'}</bdi> {p.fields.email?.value && !p.fields.email.verified && <span className="text-xs text-fg-2">{t('visitors.drawer.unverifiedParen')}</span>}
+                <bdi>{p.fields.email?.value ?? ''}</bdi>{' '}
+                {p.fields.email?.value && !p.fields.email.verified && (
+                  <span className="text-xs text-fg-2">{t('visitors.drawer.unverifiedParen')}</span>
+                )}
               </Row>
               <Row label={t('visitors.drawer.firstSeen')}>{formatDateTime(p.firstSeenAt)}</Row>
             </dl>
           </Section>
           <Section title={t('visitors.live.col.tags')}>
-            <TagEditor tags={p.tags} canEdit={canEdit && !p.erased} onSave={profile.saveTags} label={t('visitors.drawer.visitorTags')} />
+            <TagEditor
+              tags={p.tags}
+              canEdit={canEdit && !p.erased}
+              onSave={profile.saveTags}
+              label={t('visitors.drawer.visitorTags')}
+            />
           </Section>
           <Section title={t('visitors.drawer.customFields')}>
-            <CustomFieldValues compact visitor={p} onSaved={profile.setProfile} onReload={() => void profile.refetch()} />
+            <CustomFieldValues
+              compact
+              visitor={p}
+              onSaved={profile.setProfile}
+              onReload={() => void profile.refetch()}
+            />
           </Section>
         </>
       )}

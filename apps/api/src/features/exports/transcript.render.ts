@@ -79,7 +79,16 @@ const formatters = new Map<string, Intl.DateTimeFormat>();
 export function rfc3339(d: Date, tz: string): string {
   let f = formatters.get(tz);
   if (!f) {
-    f = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    f = new Intl.DateTimeFormat('en-US', {
+      timeZone: tz,
+      hourCycle: 'h23',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
     formatters.set(tz, f);
   }
   const p = Object.fromEntries(f.formatToParts(d).map((x) => [x.type, x.value])) as Record<string, string>;
@@ -122,7 +131,9 @@ function messageText(m: TranscriptMessage): string {
 }
 
 function attachmentLine(a: TranscriptAttachment): string {
-  return a.state === 'removed' ? '[attachment removed]' : `[attachment] ${a.name} (${humanSize(a.sizeBytes)}, ${a.mime}${a.state === 'clean' ? '' : `, ${a.state}`})`;
+  return a.state === 'removed'
+    ? '[attachment removed]'
+    : `[attachment] ${a.name} (${humanSize(a.sizeBytes)}, ${a.mime}${a.state === 'clean' ? '' : `, ${a.state}`})`;
 }
 
 function senderLabel(m: TranscriptMessage): string {
@@ -140,11 +151,16 @@ export function renderTxt(doc: TranscriptDoc): Buffer {
   for (const c of doc.chats) {
     L.push('', `=== Chat #${c.number} (${c.id}) ===`);
     L.push(`Site: ${c.site.name}`);
-    L.push(`Department: ${c.department?.name ?? '—'}`);
+    L.push(`Department: ${c.department?.name ?? 'N/A'}`);
     L.push(`Started: ${rfc3339(c.startedAt, doc.timezone)}`);
-    L.push(`Ended: ${c.endedAt ? rfc3339(c.endedAt, doc.timezone) : '—'}${c.closeReason ? ` (${c.closeReason})` : ''}`);
-    L.push(`Participants: ${c.participants.map((p) => `${p.name} (${p.role})`).join('; ') || '—'}`);
-    if (c.rating) L.push(`Rating: ${c.rating.rating}${c.rating.comment ? ` — "${c.rating.comment.replace(/\r?\n/g, ' ')}"` : ''}`);
+    L.push(
+      `Ended: ${c.endedAt ? rfc3339(c.endedAt, doc.timezone) : 'N/A'}${c.closeReason ? ` (${c.closeReason})` : ''}`,
+    );
+    L.push(`Participants: ${c.participants.map((p) => `${p.name} (${p.role})`).join('; ') || 'N/A'}`);
+    if (c.rating)
+      L.push(
+        `Rating: ${c.rating.rating}${c.rating.comment ? ` ("${c.rating.comment.replace(/\r?\n/g, ' ')}")` : ''}`,
+      );
     L.push('');
     for (const m of c.messages) {
       const lines = messageText(m).split(/\r?\n/);
@@ -180,7 +196,9 @@ export function renderJson(doc: TranscriptDoc): Buffer {
       ended_at: t(c.endedAt),
       close_reason: c.closeReason,
       participants: c.participants.map((p) => ({ role: p.role, name: p.name })),
-      rating: c.rating ? { rating: c.rating.rating, comment: c.rating.comment, submitted_at: t(c.rating.submittedAt) } : null,
+      rating: c.rating
+        ? { rating: c.rating.rating, comment: c.rating.comment, submitted_at: t(c.rating.submittedAt) }
+        : null,
       messages: c.messages.map((m) => ({
         id: m.id,
         seq: m.seq,
@@ -191,7 +209,13 @@ export function renderJson(doc: TranscriptDoc): Buffer {
         body: m.redacted ? null : m.body,
         redacted: m.redacted,
         system_event: m.systemEvent,
-        attachments: m.attachments.map((a) => ({ id: a.id, name: a.name, size_bytes: a.sizeBytes, mime: a.mime, state: a.state })),
+        attachments: m.attachments.map((a) => ({
+          id: a.id,
+          name: a.name,
+          size_bytes: a.sizeBytes,
+          mime: a.mime,
+          state: a.state,
+        })),
       })),
     })),
   };
@@ -278,7 +302,12 @@ export function renderPdf(doc: TranscriptDoc): Promise<Buffer> {
     const pdf = new PDFDocument({
       size: 'A4',
       margins: { top: 54, bottom: 54, left: 54, right: 54 },
-      info: { Title: `${doc.brand} chat transcript`, Producer: doc.brand, Creator: doc.brand, CreationDate: doc.generatedAt },
+      info: {
+        Title: `${doc.brand} chat transcript`,
+        Producer: doc.brand,
+        Creator: doc.brand,
+        CreationDate: doc.generatedAt,
+      },
       autoFirstPage: true,
       pdfVersion: '1.7',
     });
@@ -290,7 +319,9 @@ export function renderPdf(doc: TranscriptDoc): Promise<Buffer> {
       pdf.registerFont('body', fontPath('DejaVuSans.ttf'));
       pdf.registerFont('bold', fontPath('DejaVuSans-Bold.ttf'));
       pdf.font('body');
-      const glyphs = (pdf as unknown as { _font?: { font?: { hasGlyphForCodePoint?: (cp: number) => boolean } } })._font?.font;
+      const glyphs = (
+        pdf as unknown as { _font?: { font?: { hasGlyphForCodePoint?: (cp: number) => boolean } } }
+      )._font?.font;
       const safe = (s: string) => {
         if (!glyphs?.hasGlyphForCodePoint) return s;
         let out = '';
@@ -301,31 +332,58 @@ export function renderPdf(doc: TranscriptDoc): Promise<Buffer> {
         return out;
       };
       const grey = '#4C5D70';
-      pdf.font('bold').fontSize(16).fillColor('#17222E').text(safe(`${doc.brand} chat transcript`));
+      pdf
+        .font('bold')
+        .fontSize(16)
+        .fillColor('#17222E')
+        .text(safe(`${doc.brand} chat transcript`));
       pdf.moveDown(0.3);
-      pdf.font('body').fontSize(9).fillColor(grey).text(safe(`Generated ${rfc3339(doc.generatedAt, doc.timezone)} (${doc.timezone})${doc.exportId ? ` · Export ${doc.exportId}` : ''}`));
+      pdf
+        .font('body')
+        .fontSize(9)
+        .fillColor(grey)
+        .text(
+          safe(
+            `Generated ${rfc3339(doc.generatedAt, doc.timezone)} (${doc.timezone})${doc.exportId ? ` · Export ${doc.exportId}` : ''}`,
+          ),
+        );
       pdf.moveDown(0.3).text(safe(redactionNotice(doc)));
       doc.chats.forEach((c, idx) => {
         if (idx > 0) pdf.addPage();
         else pdf.moveDown(1);
-        pdf.font('bold').fontSize(13).fillColor('#17222E').text(safe(`Chat #${c.number}`));
+        pdf
+          .font('bold')
+          .fontSize(13)
+          .fillColor('#17222E')
+          .text(safe(`Chat #${c.number}`));
         pdf.font('body').fontSize(9).fillColor(grey);
         const meta = [
           `Chat ID: ${c.id}`,
           `Site: ${c.site.name}`,
-          `Department: ${c.department?.name ?? '—'}`,
+          `Department: ${c.department?.name ?? 'N/A'}`,
           `Started: ${rfc3339(c.startedAt, doc.timezone)}`,
-          `Ended: ${c.endedAt ? rfc3339(c.endedAt, doc.timezone) : '—'}${c.closeReason ? ` (${c.closeReason})` : ''}`,
-          `Participants: ${c.participants.map((p) => `${p.name} (${p.role})`).join('; ') || '—'}`,
-          ...(c.rating ? [`Rating: ${c.rating.rating}${c.rating.comment ? ` — “${c.rating.comment}”` : ''}`] : []),
+          `Ended: ${c.endedAt ? rfc3339(c.endedAt, doc.timezone) : 'N/A'}${c.closeReason ? ` (${c.closeReason})` : ''}`,
+          `Participants: ${c.participants.map((p) => `${p.name} (${p.role})`).join('; ') || 'N/A'}`,
+          ...(c.rating
+            ? [`Rating: ${c.rating.rating}${c.rating.comment ? ` (“${c.rating.comment}”)` : ''}`]
+            : []),
         ];
         for (const line of meta) pdf.text(safe(line));
         pdf.moveDown(0.6);
         for (const m of c.messages) {
-          pdf.font('bold').fontSize(9).fillColor(m.visibility === 'internal' ? '#8A5A00' : '#17222E').text(safe(`[${m.seq}] ${senderLabel(m)} · ${rfc3339(m.sentAt, doc.timezone)}`));
+          pdf
+            .font('bold')
+            .fontSize(9)
+            .fillColor(m.visibility === 'internal' ? '#8A5A00' : '#17222E')
+            .text(safe(`[${m.seq}] ${senderLabel(m)} · ${rfc3339(m.sentAt, doc.timezone)}`));
           const text = messageText(m);
           if (text) pdf.font('body').fontSize(10).fillColor('#17222E').text(safe(text), { lineGap: 1 });
-          for (const a of m.attachments) pdf.font('body').fontSize(9).fillColor(grey).text(safe(attachmentLine(a)), { indent: 12 });
+          for (const a of m.attachments)
+            pdf
+              .font('body')
+              .fontSize(9)
+              .fillColor(grey)
+              .text(safe(attachmentLine(a)), { indent: 12 });
           pdf.moveDown(0.4);
         }
       });

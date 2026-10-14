@@ -7,7 +7,20 @@
 import { ArrowLeft, GitMerge, ShieldBan, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Avatar, Badge, Banner, Button, Card, CardBody, CardHeader, EmptyState, Page, PageHeader, PanelError, Skeleton } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  EmptyState,
+  Page,
+  PageHeader,
+  PanelError,
+  Skeleton,
+} from '@/components/ui';
 import { useT } from '@/i18n';
 import { CustomFieldValues } from '@/components/custom-fields/values-editor';
 import { BanDialog } from '@/components/bans/ban-dialog';
@@ -68,7 +81,10 @@ export function VisitorProfilePage({ id }: { id: string }) {
             }
           />
         ) : (
-          <PanelError message={t('visitors.profile.loadError', { error: errorMessage(profile.error) })} onRetry={() => void profile.refetch()} />
+          <PanelError
+            message={t('visitors.profile.loadError', { error: errorMessage(profile.error) })}
+            onRetry={() => void profile.refetch()}
+          />
         )}
       </Page>
     );
@@ -78,7 +94,10 @@ export function VisitorProfilePage({ id }: { id: string }) {
   return (
     <Page>
       <div className="flex flex-col gap-3">
-        <Link href="/visitors" className="inline-flex min-h-8 items-center gap-1 self-start text-sm font-medium text-fg-2 hover:text-fg">
+        <Link
+          href="/visitors"
+          className="inline-flex min-h-8 items-center gap-1 self-start text-sm font-medium text-fg-2 hover:text-fg"
+        >
           <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden /> {t('visitors.page.title')}
         </Link>
         <PageHeader
@@ -92,7 +111,11 @@ export function VisitorProfilePage({ id }: { id: string }) {
           }
           description={
             <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              {p.online ? <Badge tone="success">{t('visitors.profile.onlineNow')}</Badge> : <span>{t('visitors.profile.lastSeenAgo', { time: formatRelative(p.lastSeenAt) })}</span>}
+              {p.online ? (
+                <Badge tone="success">{t('visitors.profile.onlineNow')}</Badge>
+              ) : (
+                <span>{t('visitors.profile.lastSeenAgo', { time: formatRelative(p.lastSeenAt) })}</span>
+              )}
               <span>{t('visitors.profile.visitsChats', { visits: p.visitCount, chats: p.chatCount })}</span>
             </span>
           }
@@ -124,13 +147,23 @@ export function VisitorProfilePage({ id }: { id: string }) {
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
-            <CardHeader title={t('visitors.profile.identity')} description={t('visitors.profile.identityHint')} />
+            <CardHeader
+              title={t('visitors.profile.identity')}
+              description={t('visitors.profile.identityHint')}
+            />
             <CardBody>
-              <IdentityCard profile={p} onSaved={profile.setProfile} onReload={() => void profile.refetch()} />
+              <IdentityCard
+                profile={p}
+                onSaved={profile.setProfile}
+                onReload={() => void profile.refetch()}
+              />
             </CardBody>
           </Card>
           <Card>
-            <CardHeader title={t('visitors.drawer.sessions')} description={t('visitors.profile.sessionsHint')} />
+            <CardHeader
+              title={t('visitors.drawer.sessions')}
+              description={t('visitors.profile.sessionsHint')}
+            />
             <CardBody>
               <SessionsTimeline visitorId={id} pageSize={10} />
             </CardBody>
@@ -146,13 +179,23 @@ export function VisitorProfilePage({ id }: { id: string }) {
           <Card>
             <CardHeader title={t('visitors.live.col.tags')} />
             <CardBody>
-              <TagEditor tags={p.tags} canEdit={canEdit && !p.erased} onSave={profile.saveTags} label={t('visitors.drawer.visitorTags')} />
+              <TagEditor
+                tags={p.tags}
+                canEdit={canEdit && !p.erased}
+                onSave={profile.saveTags}
+                label={t('visitors.drawer.visitorTags')}
+              />
             </CardBody>
           </Card>
           <Card>
             <CardHeader title={t('visitors.drawer.customFields')} />
             <CardBody>
-              <CustomFieldValues visitor={p} onSaved={profile.setProfile} onReload={() => void profile.refetch()} compact />
+              <CustomFieldValues
+                visitor={p}
+                onSaved={profile.setProfile}
+                onReload={() => void profile.refetch()}
+                compact
+              />
             </CardBody>
           </Card>
           <Card>
@@ -162,7 +205,12 @@ export function VisitorProfilePage({ id }: { id: string }) {
                 <Detail label={t('visitors.drawer.firstSeen')}>{formatDateTime(p.firstSeenAt)}</Detail>
                 <Detail label={t('visitors.profile.lastSeen')}>{formatDateTime(p.lastSeenAt)}</Detail>
                 <Detail label={t('visitors.drawer.sessions')}>
-                  {p.sessionSummary.open ? t('visitors.profile.sessionsOpen', { total: p.sessionSummary.total, open: p.sessionSummary.open }) : formatNumber(p.sessionSummary.total)}
+                  {p.sessionSummary.open
+                    ? t('visitors.profile.sessionsOpen', {
+                        total: p.sessionSummary.total,
+                        open: p.sessionSummary.open,
+                      })
+                    : formatNumber(p.sessionSummary.total)}
                 </Detail>
                 <Detail label={t('visitors.drawer.location')}>
                   {p.location ? (
@@ -188,8 +236,12 @@ export function VisitorProfilePage({ id }: { id: string }) {
                     )}
                   </span>
                 </Detail>
-                <Detail label={t('common.language')}>{p.language ? <span dir="ltr">{p.language}</span> : '—'}</Detail>
-                <Detail label={t('common.timezone')}>{p.timezone ? <span dir="ltr">{p.timezone}</span> : '—'}</Detail>
+                <Detail label={t('common.language')}>
+                  {p.language ? <span dir="ltr">{p.language}</span> : ''}
+                </Detail>
+                <Detail label={t('common.timezone')}>
+                  {p.timezone ? <span dir="ltr">{p.timezone}</span> : ''}
+                </Detail>
                 <Detail label={t('visitors.profile.visitorId')}>
                   <span className="font-mono text-xs" dir="ltr">
                     {p.id}
@@ -201,8 +253,20 @@ export function VisitorProfilePage({ id }: { id: string }) {
         </div>
       </div>
 
-      {canMerge && <MergeDialog open={mergeOpen} onOpenChange={setMergeOpen} source={{ id: p.id, displayName: p.displayName }} />}
-      {canBan && <BanDialog open={banOpen} onOpenChange={setBanOpen} visitor={{ id: p.id, displayName: p.displayName }} />}
+      {canMerge && (
+        <MergeDialog
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          source={{ id: p.id, displayName: p.displayName }}
+        />
+      )}
+      {canBan && (
+        <BanDialog
+          open={banOpen}
+          onOpenChange={setBanOpen}
+          visitor={{ id: p.id, displayName: p.displayName }}
+        />
+      )}
     </Page>
   );
 }

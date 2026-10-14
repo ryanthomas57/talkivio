@@ -14,7 +14,8 @@ export const sites = {
   'sites.install.neverVerified': 'Never verified',
   'sites.origins.duplicate': 'Same as origin {n}',
   'sites.origins.legend': 'Allowed origins',
-  'sites.origins.help': 'Exact scheme and host, with an optional port — no paths. HTTPS is required except on localhost. “Subdomains too” also allows any subdomain of that host.',
+  'sites.origins.help':
+    'Exact scheme and host, with an optional port, and no paths. HTTPS is required except on localhost. “Subdomains too” also allows any subdomain of that host.',
   'sites.origins.originN': 'Origin {n}',
   'sites.origins.matchN': 'Match for origin {n}',
   'sites.origins.exact': 'Exact origin',
@@ -30,15 +31,18 @@ export const sites = {
   'sites.create.created': '{name} created',
   'sites.create.fixOrigins': 'Fix the highlighted origins.',
   'sites.create.title': 'Add a website',
-  'sites.create.description': 'Each website gets its own widget configuration, install snippet and allowed origins.',
+  'sites.create.description':
+    'Each website gets its own widget configuration, install snippet and allowed origins.',
   'sites.create.submit': 'Create website',
   'sites.create.name': 'Website name',
   'sites.create.nameHint': 'Shown to your team, e.g. “Main store”.',
   'sites.list.title': 'Websites',
-  'sites.list.description': 'Where your chat widget runs. Each website has its own allowed origins, widget settings and install snippet.',
+  'sites.list.description':
+    'Where your chat widget runs. Each website has its own allowed origins, widget settings and install snippet.',
   'sites.list.add': 'Add website',
   'sites.list.emptyTitle': 'No websites yet',
-  'sites.list.emptyBody': 'Add your website and its allowed origins to get an install snippet for the chat widget.',
+  'sites.list.emptyBody':
+    'Add your website and its allowed origins to get an install snippet for the chat widget.',
   'sites.list.colWebsite': 'Website',
   'sites.list.colOrigins': 'Origins',
   'sites.list.colInstallation': 'Installation',
@@ -59,24 +63,30 @@ export const sites = {
   'sites.detail.allWebsites': 'All websites',
   'sites.detail.archived': 'Archived',
   'sites.detail.widgetDisabled': 'Widget disabled',
-  'sites.detail.meta': 'Added {date} · {count, plural, one {# allowed origin} other {# allowed origins}} · widget revision {revision}',
-  'sites.detail.archivedBanner': 'This website was archived on {date}. Its widget no longer loads and its settings are read-only.',
+  'sites.detail.meta':
+    'Added {date} · {count, plural, one {# allowed origin} other {# allowed origins}} · widget revision {revision}',
+  'sites.detail.archivedBanner':
+    'This website was archived on {date}. Its widget no longer loads and its settings are read-only.',
   'sites.general.description': 'Basic details and where chats from this website are routed.',
   'sites.general.fixFields': 'Fix the highlighted fields.',
   'sites.general.saved': 'Website settings saved',
-  'sites.general.notFoundChoose': '{error}. It may have been archived — choose another.',
+  'sites.general.notFoundChoose': '{error}. It may have been archived. Choose another.',
   'sites.general.widgetEnabledToast': 'Widget enabled on this website',
   'sites.general.widgetDisabledToast': 'Widget disabled on this website',
   'sites.general.archived': '{name} archived',
   'sites.general.conflictTitle': 'Someone else changed this website',
-  'sites.general.conflictBody': 'Your edits are still here but weren’t saved. Reload to see the latest settings (your unsaved edits are discarded), then make your change again.',
+  'sites.general.conflictBody':
+    'Your edits are still here but weren’t saved. Reload to see the latest settings (your unsaved edits are discarded), then make your change again.',
   'sites.general.widgetEnabled': 'Widget enabled',
   'sites.general.widgetOnHint': 'The widget loads on the allowed origins. Changes apply immediately.',
-  'sites.general.widgetOffHint': 'The widget is hidden everywhere and new visitors can’t start chats. Changes apply immediately.',
+  'sites.general.widgetOffHint':
+    'The widget is hidden everywhere and new visitors can’t start chats. Changes apply immediately.',
   'sites.general.defaultDepartment': 'Default department',
-  'sites.general.defaultDepartmentHint': 'New chats from this website go here unless the visitor or a trigger picks another.',
+  'sites.general.defaultDepartmentHint':
+    'New chats from this website go here unless the visitor or a trigger picks another.',
   'sites.general.noDefaultDepartment': 'No default department',
-  'sites.general.departmentOption': '{name}{state, select, archived { (archived)} disabled { (disabled)} other {}}',
+  'sites.general.departmentOption':
+    '{name}{state, select, archived { (archived)} disabled { (disabled)} other {}}',
   'sites.general.hours': 'Operating hours',
   'sites.general.noScheduleAccess': 'You don’t have permission to view schedules.',
   'sites.general.schedulesFailed': 'Schedules couldn’t be loaded.',
@@ -85,27 +95,36 @@ export const sites = {
   'sites.general.workspaceDefault': 'Workspace default',
   'sites.general.scheduleOption': '{name} · {zone}{archived, select, yes { (archived)} other {}}',
   'sites.general.currentSchedule': 'Current schedule',
-  'sites.general.noSchedules': 'No schedules exist yet, so the workspace default hours apply. Schedules are managed in Settings.',
-  'sites.general.originsDescription': 'The widget only loads, and visitors only get a session, on these origins. Saving replaces the whole list.',
+  'sites.general.noSchedules':
+    'No schedules exist yet, so the workspace default hours apply. Schedules are managed in Settings.',
+  'sites.general.originsDescription':
+    'The widget only loads, and visitors only get a session, on these origins. Saving replaces the whole list.',
   'sites.general.noOrigins': 'With no allowed origins the widget can’t load anywhere.',
   'sites.general.unsaved': 'Unsaved changes',
   'sites.general.allSaved': 'All changes saved',
   'sites.general.discard': 'Discard',
   'sites.general.archiveTitle': 'Archive website',
-  'sites.general.archiveDescription': 'Stops the widget on every origin and disconnects visitors. Chat history is kept.',
+  'sites.general.archiveDescription':
+    'Stops the widget on every origin and disconnects visitors. Chat history is kept.',
   'sites.general.archiveButton': 'Archive {name}',
   'sites.general.disableTitle': 'Disable the widget on {name}?',
   'sites.general.disableConfirm': 'Disable widget',
-  'sites.general.disableBody': 'The widget disappears from every allowed origin right away and connected visitors are disconnected. Agents keep access to existing chats. You can turn it back on at any time.',
+  'sites.general.disableBody':
+    'The widget disappears from every allowed origin right away and connected visitors are disconnected. Agents keep access to existing chats. You can turn it back on at any time.',
   'sites.general.archiveConfirmTitle': 'Archive {name}?',
-  'sites.general.archiveBody': 'The widget stops loading on {origins} and connected visitors are disconnected immediately. Chat history stays available. Archived websites can’t be restored from the dashboard.',
-  'sites.general.archiveBodyAll': 'The widget stops loading on all origins and connected visitors are disconnected immediately. Chat history stays available. Archived websites can’t be restored from the dashboard.',
+  'sites.general.archiveBody':
+    'The widget stops loading on {origins} and connected visitors are disconnected immediately. Chat history stays available. Archived websites can’t be restored from the dashboard.',
+  'sites.general.archiveBodyAll':
+    'The widget stops loading on all origins and connected visitors are disconnected immediately. Chat history stays available. Archived websites can’t be restored from the dashboard.',
   'sites.install.snippetTitle': 'Install snippet',
-  'sites.install.snippetHint': 'Paste this before the closing {slot0} tag on every page where chat should appear. It contains only the public site key — no secrets.',
+  'sites.install.snippetHint':
+    'Paste this before the closing {slot0} tag on every page where chat should appear. It contains only the public site key, no secrets.',
   'sites.install.whatSnippet': 'install snippet',
-  'sites.install.rotatedBanner': 'The site key was rotated. Replace the old snippet before {time} — after that, pages with the old key stop loading the widget.',
+  'sites.install.rotatedBanner':
+    'The site key was rotated. Replace the old snippet before {time}. After that, pages with the old key stop loading the widget.',
   'sites.install.checkTitle': 'Installation check',
-  'sites.install.checkDescription': 'Load any page with the snippet on an allowed origin; this updates within a few seconds.',
+  'sites.install.checkDescription':
+    'Load any page with the snippet on an allowed origin; this updates within a few seconds.',
   'sites.install.checking': 'Checking installation',
   'sites.install.checkingShort': 'Checking',
   'sites.install.checkingEvery': 'Checking every {seconds} seconds',
@@ -113,21 +132,24 @@ export const sites = {
   'sites.install.checklist': 'Installation checklist',
   'sites.install.originsConfigured': 'Allowed origins configured ({count})',
   'sites.install.addOrigin': 'Add at least one allowed origin on the General tab',
-  'sites.install.widgetDisabled': 'Widget is disabled — turn it on in General',
+  'sites.install.widgetDisabled': 'Widget is disabled. Turn it on in General',
   'sites.install.published': 'Widget settings published (revision {revision})',
   'sites.install.loadedOn': 'Widget loaded on {origin} {time}',
   'sites.install.loadedOnYourSite': 'Widget loaded on your site {time}',
-  'sites.install.lastSeenOn': 'Last seen {time} on {origin} — reload a page with the snippet to verify again',
-  'sites.install.lastSeen': 'Last seen {time} — reload a page with the snippet to verify again',
+  'sites.install.lastSeenOn': 'Last seen {time} on {origin}. Reload a page with the snippet to verify again',
+  'sites.install.lastSeen': 'Last seen {time}. Reload a page with the snippet to verify again',
   'sites.install.waiting': 'Waiting for the widget to load on an allowed origin…',
   'sites.install.diagnostics': 'Diagnostics',
   'sites.install.troubleTitle': 'Not showing up?',
-  'sites.install.troubleOrigin': 'The page’s origin must exactly match an allowed origin (scheme, host and port), e.g. https://www.example.com vs https://example.com.',
+  'sites.install.troubleOrigin':
+    'The page’s origin must exactly match an allowed origin (scheme, host and port), e.g. https://www.example.com vs https://example.com.',
   'sites.install.troubleHttp': 'Pages served over HTTP only work on localhost.',
   'sites.install.troubleCsp': 'If your site sends a Content-Security-Policy header, add the sources below.',
-  'sites.install.troubleVisibility': 'Check that the widget is enabled and that page visibility rules on the Widget tab include the page.',
+  'sites.install.troubleVisibility':
+    'Check that the widget is enabled and that page visibility rules on the Widget tab include the page.',
   'sites.install.cspTitle': 'Content Security Policy',
-  'sites.install.cspDescription': 'Only needed if your site sends a CSP header. Add these sources to the matching directives (merge with your existing ones).',
+  'sites.install.cspDescription':
+    'Only needed if your site sends a CSP header. Add these sources to the matching directives (merge with your existing ones).',
   'sites.install.whatCsp': 'CSP directives',
   'sites.install.loader': 'Loader',
   'sites.install.apiOrigin': 'Widget and API origin',
@@ -135,7 +157,8 @@ export const sites = {
   'sites.install.complete': '(complete)',
   'sites.install.notYet': '(not yet)',
   'sites.security.overlap.none': 'No overlap',
-  'sites.security.overlap.noneHint': 'The old key stops working immediately. Pages still using it lose the widget until updated.',
+  'sites.security.overlap.noneHint':
+    'The old key stops working immediately. Pages still using it lose the widget until updated.',
   'sites.security.overlap.15m': '15 minutes',
   'sites.security.overlap.1h': '1 hour',
   'sites.security.overlap.1hHint': 'Recommended for most sites.',
@@ -148,16 +171,21 @@ export const sites = {
   'sites.security.action.disableIdentity': 'turn off identity verification',
   'sites.security.rotated': 'Site key rotated',
   'sites.security.identityOff': 'Identity verification turned off',
-  'sites.security.keyDescription': 'The public key in your install snippet. It identifies this website but grants no administrative access.',
+  'sites.security.keyDescription':
+    'The public key in your install snippet. It identifies this website but grants no administrative access.',
   'sites.security.whatKey': 'site key',
   'sites.security.previousTitle': 'Previous key still accepted',
-  'sites.security.previousBody': 'Pages using the previous key keep working until {time} ({relative}). Update the snippet everywhere before then.',
-  'sites.security.rotateHelp': 'Rotate the key if it was copied somewhere it shouldn’t be, or to stop an old installation. During the overlap period both the old and the new key work, so you can deploy the new snippet without downtime; afterwards only the new key loads the widget.',
+  'sites.security.previousBody':
+    'Pages using the previous key keep working until {time} ({relative}). Update the snippet everywhere before then.',
+  'sites.security.rotateHelp':
+    'Rotate the key if it was copied somewhere it shouldn’t be, or to stop an old installation. During the overlap period both the old and the new key work, so you can deploy the new snippet without downtime; afterwards only the new key loads the widget.',
   'sites.security.rotateKey': 'Rotate site key',
   'sites.security.rotateKeyShort': 'Rotate key',
-  'sites.security.identityDescription': 'Lets your backend vouch for signed-in customers with a short-lived signed token, so agents see a verified identity and visitors can see their own past chats. Unsigned names and emails stay unverified.',
-  'sites.security.copySecretNow': 'Copy this secret now — it won’t be shown again',
-  'sites.security.storeSecret': 'Store it in your server’s secret manager or environment (for example {slot0}). Never put it in browser code, the install snippet or a public repository.',
+  'sites.security.identityDescription':
+    'Lets your backend vouch for signed-in customers with a short-lived signed token, so agents see a verified identity and visitors can see their own past chats. Unsigned names and emails stay unverified.',
+  'sites.security.copySecretNow': 'Copy this secret now. It won’t be shown again',
+  'sites.security.storeSecret':
+    'Store it in your server’s secret manager or environment (for example {slot0}). Never put it in browser code, the install snippet or a public repository.',
   'sites.security.whatSecret': 'identity secret',
   'sites.security.storedSafely': 'I’ve stored it safely',
   'sites.security.rotateSecret': 'Rotate secret',
@@ -165,24 +193,30 @@ export const sites = {
   'sites.security.enableAndCreate': 'Turn on and create secret',
   'sites.security.signTitle': 'Sign identity tokens on your server',
   'sites.security.serverOnly': 'Server-side only',
-  'sites.security.signBody': 'Create a token per page load for the signed-in customer (HS256, valid for at most 5 minutes, unique {slot0}), then pass it to the widget with {slot1}.',
+  'sites.security.signBody':
+    'Create a token per page load for the signed-in customer (HS256, valid for at most 5 minutes, unique {slot0}), then pass it to the widget with {slot1}.',
   'sites.security.whatNodeSample': 'Node.js identity token example',
   'sites.security.newKeyActive': 'New site key is active',
   'sites.security.rotateTitle': 'Rotate the key for {name}?',
   'sites.security.deployNew': 'Deploy the new snippet to every page that loads the widget.',
-  'sites.security.rotateDescription': 'A new public key is created. Choose how long the current key keeps working.',
+  'sites.security.rotateDescription':
+    'A new public key is created. Choose how long the current key keeps working.',
   'sites.security.newKey': 'New site key',
   'sites.security.whatNewKey': 'new site key',
   'sites.security.previousUntil': 'The previous key keeps working until {time}.',
-  'sites.security.previousGone': 'The previous key no longer works. Pages still using it won’t load the widget until you deploy the new snippet.',
+  'sites.security.previousGone':
+    'The previous key no longer works. Pages still using it won’t load the widget until you deploy the new snippet.',
   'sites.security.whatNewSnippet': 'new install snippet',
   'sites.security.overlapLegend': 'Overlap period',
-  'sites.security.passwordNote': 'You’ll be asked to confirm your password. Visitors already chatting keep their session.',
+  'sites.security.passwordNote':
+    'You’ll be asked to confirm your password. Visitors already chatting keep their session.',
   'sites.security.rotateSecretTitle': 'Rotate the identity secret?',
-  'sites.security.rotateSecretBody': 'A new secret is created and the current one stops working immediately — tokens your servers sign with it are rejected and customers appear unverified until you deploy the new secret.',
+  'sites.security.rotateSecretBody':
+    'A new secret is created and the current one stops working immediately. Tokens your servers sign with it are rejected and customers appear unverified until you deploy the new secret.',
   'sites.security.disableTitle': 'Turn off identity verification?',
-  'sites.security.disableBody': 'The secret is deleted. Identity tokens are no longer accepted, so returning customers are treated as anonymous visitors and can’t see their verified chat history. Turning it back on creates a new secret.',
-  'sites.widget.lang.auto': 'Automatic — match the visitor’s browser',
+  'sites.security.disableBody':
+    'The secret is deleted. Identity tokens are no longer accepted, so returning customers are treated as anonymous visitors and can’t see their verified chat history. Turning it back on creates a new secret.',
+  'sites.widget.lang.auto': 'Automatic: match the visitor’s browser',
   'sites.widget.lang.en': 'English',
   'sites.widget.lang.es': 'Spanish',
   'sites.widget.lang.fr': 'French',
@@ -194,22 +228,29 @@ export const sites = {
   'sites.widget.lang.ja': 'Japanese',
   'sites.widget.previewLang.follow': 'Follow the language setting',
   'sites.widget.previewLang.ar': 'Arabic (RTL)',
-  'sites.widget.notice.publishedByTeammateToast': 'Revision {revision} was published by a teammate; the editor now shows it.',
+  'sites.widget.notice.publishedByTeammateToast':
+    'Revision {revision} was published by a teammate; the editor now shows it.',
   'sites.widget.notice.publishedByTeammateTitle': 'Revision {revision} was just published by a teammate',
-  'sites.widget.notice.publishedByTeammateBody': 'Your unsaved edits are based on an older version. Reload to continue from the published settings (your edits are discarded), or save to create a new draft on top.',
-  'sites.widget.notice.fixFields': 'Fix the {count, plural, one {highlighted field} other {# highlighted fields}} before saving.',
+  'sites.widget.notice.publishedByTeammateBody':
+    'Your unsaved edits are based on an older version. Reload to continue from the published settings (your edits are discarded), or save to create a new draft on top.',
+  'sites.widget.notice.fixFields':
+    'Fix the {count, plural, one {highlighted field} other {# highlighted fields}} before saving.',
   'sites.widget.notice.savedAsTitle': 'Saved as draft revision {revision}',
-  'sites.widget.notice.savedAsBody': 'A teammate saved or published the widget while you were editing (you expected revision {expected}). Your settings replaced any unpublished draft of theirs — check the preview before publishing.',
+  'sites.widget.notice.savedAsBody':
+    'A teammate saved or published the widget while you were editing (you expected revision {expected}). Your settings replaced any unpublished draft of theirs. Check the preview before publishing.',
   'sites.widget.notice.draftChangedTitle': 'A teammate changed the draft while you were editing',
-  'sites.widget.notice.draftChangedBody': 'Reload to review their draft (your edits are discarded), or save again to replace it with your settings.',
+  'sites.widget.notice.draftChangedBody':
+    'Reload to review their draft (your edits are discarded), or save again to replace it with your settings.',
   'sites.widget.notice.notSaved': 'Draft not saved',
-  'sites.widget.notice.notSavedFields': '{error} {count, plural, one {# field needs} other {# fields need}} attention.',
+  'sites.widget.notice.notSavedFields':
+    '{error} {count, plural, one {# field needs} other {# fields need}} attention.',
   'sites.widget.notice.alreadyPublished': 'Revision {revision} was already published',
   'sites.widget.notice.published': 'Published revision {revision}. Installed widgets update within moments.',
   'sites.widget.notice.newerDraftTitle': 'A newer draft exists',
-  'sites.widget.notice.newerDraftBody': 'A teammate saved a newer draft or changed revision {revision}, so it wasn’t published. Reload to review the newest draft before publishing.',
+  'sites.widget.notice.newerDraftBody':
+    'A teammate saved a newer draft or changed revision {revision}, so it wasn’t published. Reload to review the newest draft before publishing.',
   'sites.widget.notice.notPublished': 'Not published',
-  'sites.widget.notice.discarded': 'Draft discarded — the editor shows published revision {revision}',
+  'sites.widget.notice.discarded': 'Draft discarded: the editor shows published revision {revision}',
   'sites.widget.notice.notDiscarded': 'Draft not discarded',
   'sites.widget.status.live': 'Live on your website',
   'sites.widget.status.publishedAgo': 'published {time}',
@@ -228,10 +269,13 @@ export const sites = {
   'sites.widget.rangeUnit': '{min}–{max} {unit}',
   'sites.widget.colorPicker': '{label} picker',
   'sites.widget.requirement.hidden': 'Hidden',
-  'sites.widget.contrast.primary': 'White text {white} · dark text {dark}. The widget uses {uses, select, white {white} other {dark}} text on this color.',
-  'sites.widget.contrast.primaryLow': 'Neither reaches {ratio}, so launcher and button labels may be hard to read — pick a darker or lighter shade.',
+  'sites.widget.contrast.primary':
+    'White text {white} · dark text {dark}. The widget uses {uses, select, white {white} other {dark}} text on this color.',
+  'sites.widget.contrast.primaryLow':
+    'Neither reaches {ratio}, so launcher and button labels may be hard to read. Pick a darker or lighter shade.',
   'sites.widget.contrast.pair': '{what} contrast {ratio}.',
-  'sites.widget.contrast.pairAuto': 'Below {ratio} the widget switches the header text to white or dark automatically.',
+  'sites.widget.contrast.pairAuto':
+    'Below {ratio} the widget switches the header text to white or dark automatically.',
   'sites.widget.contrast.pairLow': 'Below the {ratio} recommended for text.',
   'sites.widget.appearance.title': 'Appearance',
   'sites.widget.appearance.description': 'Colors, placement and branding.',
@@ -239,7 +283,8 @@ export const sites = {
   'sites.widget.appearance.brandColor': 'Brand color',
   'sites.widget.appearance.brandColorHint': 'Launcher, buttons and your visitors’ message bubbles.',
   'sites.widget.appearance.secondaryColor': 'Secondary color',
-  'sites.widget.appearance.secondaryColorHint': 'Stored with the configuration; the current widget derives accents from the brand color.',
+  'sites.widget.appearance.secondaryColorHint':
+    'Stored with the configuration; the current widget derives accents from the brand color.',
   'sites.widget.appearance.headerBackground': 'Header background',
   'sites.widget.appearance.headerText': 'Header text',
   'sites.widget.appearance.position': 'Position',
@@ -247,7 +292,8 @@ export const sites = {
   'sites.widget.appearance.bottomRight': 'Bottom right',
   'sites.widget.appearance.bottomLeft': 'Bottom left',
   'sites.widget.appearance.sideOffset': 'Side offset',
-  'sites.widget.appearance.sideOffsetHint': 'Distance from the left or right edge, {min}–{max} px. Mobile always uses {mobile} px.',
+  'sites.widget.appearance.sideOffsetHint':
+    'Distance from the left or right edge, {min}–{max} px. Mobile always uses {mobile} px.',
   'sites.widget.appearance.bottomOffset': 'Bottom offset',
   'sites.widget.appearance.bottomOffsetHint': 'Distance from the bottom edge, {min}–{max} px.',
   'sites.widget.appearance.launcher': 'Launcher',
@@ -258,9 +304,11 @@ export const sites = {
   'sites.widget.icon.wave': 'Wave',
   'sites.widget.icon.custom': 'Custom image',
   'sites.widget.appearance.customIconUrl': 'Custom icon URL',
-  'sites.widget.appearance.customIconUrlHint': 'Square image (https:// URL), at least {size} × {size} px. If it’s empty or fails to load, the chat icon is shown.',
+  'sites.widget.appearance.customIconUrlHint':
+    'Square image (https:// URL), at least {size} × {size} px. If it’s empty or fails to load, the chat icon is shown.',
   'sites.widget.appearance.launcherLabel': 'Launcher label',
-  'sites.widget.appearance.launcherLabelHint': 'Accessible name of the launcher, and its visible text when shown.',
+  'sites.widget.appearance.launcherLabelHint':
+    'Accessible name of the launcher, and its visible text when shown.',
   'sites.widget.appearance.showLauncherLabel': 'Show the label next to the launcher',
   'sites.widget.appearance.showLauncherLabelHint': 'Displays the label as a pill while the widget is closed.',
   'sites.widget.appearance.header': 'Header and branding',
@@ -270,7 +318,8 @@ export const sites = {
   'sites.widget.appearance.subtitle': 'Subtitle',
   'sites.widget.appearance.subtitleHint': 'For example your typical reply time.',
   'sites.widget.appearance.logoUrl': 'Logo URL',
-  'sites.widget.appearance.logoUrlHint': 'Optional square logo shown in the header and greetings (https:// URL).',
+  'sites.widget.appearance.logoUrlHint':
+    'Optional square logo shown in the header and greetings (https:// URL).',
   'sites.widget.appearance.showAvatars': 'Show agent photos',
   'sites.widget.appearance.showNames': 'Show agent names',
   'sites.widget.appearance.showNamesHint': 'When off, visitors see your company name instead.',
@@ -293,11 +342,14 @@ export const sites = {
   'sites.widget.theme.dark': 'Dark',
   'sites.widget.theme.auto': 'Match the visitor’s system',
   'sites.widget.content.title': 'Content',
-  'sites.widget.content.description': 'Language and every message visitors read. Messages are shown exactly as written (text direction adapts automatically); buttons and form labels follow the widget language.',
+  'sites.widget.content.description':
+    'Language and every message visitors read. Messages are shown exactly as written (text direction adapts automatically); buttons and form labels follow the widget language.',
   'sites.widget.content.language': 'Widget language',
-  'sites.widget.content.languageArabic': 'Arabic mirrors the layout right-to-left. Write your messages below in Arabic too.',
+  'sites.widget.content.languageArabic':
+    'Arabic mirrors the layout right-to-left. Write your messages below in Arabic too.',
   'sites.widget.content.languageSdk': 'Visitors can still be switched with the SDK’s setLocale.',
-  'sites.widget.content.languageUntranslated': 'The widget’s built-in labels aren’t translated into {language} yet; visitors see their browser language or English.',
+  'sites.widget.content.languageUntranslated':
+    'The widget’s built-in labels aren’t translated into {language} yet; visitors see their browser language or English.',
   'sites.widget.content.conversation': 'Conversation',
   'sites.widget.content.welcome': 'Welcome message',
   'sites.widget.content.welcomeHint': 'First message in a new conversation.',
@@ -326,7 +378,8 @@ export const sites = {
   'sites.widget.behavior.prechatEnabled': 'Ask questions before the chat',
   'sites.widget.behavior.phone': 'Phone',
   'sites.widget.behavior.offlineForm': 'Offline form',
-  'sites.widget.behavior.offlineFormHint': 'Shown when nobody is available. Name, email and message are always asked.',
+  'sites.widget.behavior.offlineFormHint':
+    'Shown when nobody is available. Name, email and message are always asked.',
   'sites.widget.behavior.offlineFormEnabled': 'Let visitors leave a message when offline',
   'sites.widget.behavior.during': 'During and after the chat',
   'sites.widget.behavior.attachments': 'Visitors can send files',
@@ -342,14 +395,16 @@ export const sites = {
   'sites.widget.behavior.hideWhenOffline': 'Hide when nobody is available',
   'sites.widget.behavior.hideWhenOfflineHint': 'Instead of showing the offline form.',
   'sites.widget.behavior.trackPages': 'Track pages visitors view',
-  'sites.widget.behavior.trackPagesHint': 'Shows page history to agents; subject to visitor consent settings.',
+  'sites.widget.behavior.trackPagesHint':
+    'Shows page history to agents; subject to visitor consent settings.',
   'sites.widget.behavior.pages': 'Pages',
   'sites.widget.behavior.pagesAll': 'All pages',
   'sites.widget.behavior.pagesInclude': 'Only pages matching a pattern',
   'sites.widget.behavior.pagesExclude': 'All pages except those matching a pattern',
   'sites.widget.behavior.showOn': 'Show on',
   'sites.widget.behavior.hideOn': 'Hide on',
-  'sites.widget.behavior.patternHelp': 'Full URLs or parts of one; * matches anything, e.g. https://shop.example.com/checkout/* or /pricing.',
+  'sites.widget.behavior.patternHelp':
+    'Full URLs or parts of one; * matches anything, e.g. https://shop.example.com/checkout/* or /pricing.',
   'sites.widget.behavior.patternN': 'Pattern {n}',
   'sites.widget.behavior.removePattern': 'Remove pattern {n}',
   'sites.widget.behavior.addPattern': 'Add pattern',
@@ -359,7 +414,8 @@ export const sites = {
   'sites.widget.preview.agentsAvailable': 'Agents available',
   'sites.widget.preview.online': 'Online: chats can start.',
   'sites.widget.preview.offline': 'Offline: shows the offline experience.',
-  'sites.widget.preview.note': 'The preview runs the real widget in an isolated test mode with sample messages. It never creates visitors or counts toward analytics. It shows unsaved edits.',
+  'sites.widget.preview.note':
+    'The preview runs the real widget in an isolated test mode with sample messages. It never creates visitors or counts toward analytics. It shows unsaved edits.',
   'sites.widget.bar.attention': '{count, plural, one {# field needs} other {# fields need}} attention',
   'sites.widget.bar.draftReady': 'Draft ready to publish',
   'sites.widget.bar.upToDate': 'Up to date',
@@ -370,8 +426,10 @@ export const sites = {
   'sites.widget.bar.publishRevision': 'Publish revision {revision}',
   'sites.widget.discard.title': 'Discard draft revision {revision}?',
   'sites.widget.discard.titleNoRevision': 'Discard draft revision?',
-  'sites.widget.discard.body': 'The unpublished draft is replaced with the published settings (revision {revision}). The live widget isn’t affected.',
-  'sites.widget.discard.bodyWithEdits': 'The unpublished draft and your unsaved edits are replaced with the published settings (revision {revision}). The live widget isn’t affected.',
+  'sites.widget.discard.body':
+    'The unpublished draft is replaced with the published settings (revision {revision}). The live widget isn’t affected.',
+  'sites.widget.discard.bodyWithEdits':
+    'The unpublished draft and your unsaved edits are replaced with the published settings (revision {revision}). The live widget isn’t affected.',
   'sites.widget.validation.hex': 'Use a 6-digit hex color, like {example}',
   'sites.widget.validation.wholeNumber': 'Enter a whole number from {min} to {max}',
   'sites.widget.validation.tooLongNow': 'Use {max} characters or fewer (now {now})',
@@ -379,5 +437,6 @@ export const sites = {
   'sites.widget.validation.https': 'Enter a full image URL starting with https:// (http:// isn’t accepted)',
   'sites.widget.validation.maxPatterns': 'Use at most {count, plural, one {# pattern} other {# patterns}}',
   'sites.widget.validation.tooLong': 'Use {max} characters or fewer',
-  'sites.widget.validation.needPattern': 'Add at least one page pattern, or the widget won’t show on any page',
+  'sites.widget.validation.needPattern':
+    'Add at least one page pattern, or the widget won’t show on any page',
 } satisfies Record<string, string>;

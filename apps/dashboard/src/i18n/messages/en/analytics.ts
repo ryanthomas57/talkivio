@@ -21,11 +21,13 @@ export const analytics = {
   'analytics.measure.offlineSubmissions': 'Offline submissions',
 
   'analytics.group.volume': 'Volume',
-  'analytics.group.volumeHint': 'Chat outcomes for chats requested in the range. Missed and abandoned can overlap — never add them.',
+  'analytics.group.volumeHint':
+    'Chat outcomes for chats requested in the range. Missed and abandoned can overlap, so never add them together.',
   'analytics.group.rates': 'Missed and abandoned rates',
   'analytics.group.ratesHint': 'Shares of requested chats.',
   'analytics.group.speed': 'Response and duration',
-  'analytics.group.speedHint': 'Medians with p90/p95 from ordered durations. Chats without a sample are excluded, never counted as zero.',
+  'analytics.group.speedHint':
+    'Medians with p90/p95 from ordered durations. Chats without a sample are excluded, never counted as zero.',
   'analytics.group.quality': 'Satisfaction',
   'analytics.group.qualityHint': 'Latest rating per chat; unrated chats are excluded from CSAT.',
   'analytics.group.invitations': 'Proactive invitations',
@@ -55,13 +57,19 @@ export const analytics = {
   'analytics.ratio.plain': '{num} ÷ {den}',
 
   'analytics.nullPolicy.zeroWhenNoEvents': 'Shows 0 when nothing happened in the range.',
-  'analytics.nullPolicy.denominatorZero': 'Not available: the denominator is 0 in this range (shown as —, not 0 %).',
-  'analytics.nullPolicy.unassignedExcluded': 'No assigned chats in this range. Unassigned chats are excluded, so there is no duration to report.',
-  'analytics.nullPolicy.unansweredExcluded': 'No chat received a human reply in this range. Unanswered chats are excluded rather than counted as 0 s.',
-  'analytics.nullPolicy.openExcluded': 'No chat closed in this range. Open chats are excluded until they close.',
+  'analytics.nullPolicy.denominatorZero':
+    'Not available: the denominator is 0 in this range (shown as N/A, not 0 %).',
+  'analytics.nullPolicy.unassignedExcluded':
+    'No assigned chats in this range. Unassigned chats are excluded, so there is no duration to report.',
+  'analytics.nullPolicy.unansweredExcluded':
+    'No chat received a human reply in this range. Unanswered chats are excluded rather than counted as 0 s.',
+  'analytics.nullPolicy.openExcluded':
+    'No chat closed in this range. Open chats are excluded until they close.',
   'analytics.nullPolicy.noRatings': 'No ratings in this range. Unrated chats are excluded from CSAT.',
-  'analytics.nullPolicy.noServedChats': 'No served chats in this range, so the rating response rate is undefined.',
-  'analytics.nullPolicy.filterNotApplicable': 'Not applicable while an agent or tag filter is active — this population has no agent or tag.',
+  'analytics.nullPolicy.noServedChats':
+    'No served chats in this range, so the rating response rate is undefined.',
+  'analytics.nullPolicy.filterNotApplicable':
+    'Not applicable while an agent or tag filter is active. This population has no agent or tag.',
   'analytics.nullPolicy.noSamples': 'No samples in this range.',
 
   'analytics.change.pts': '{value} pts',
@@ -83,14 +91,16 @@ export const analytics = {
   'analytics.card.orderedDurations': 'ordered durations',
 
   'analytics.freshness.behindTitle': 'Report data is behind',
-  'analytics.freshness.behindBody': 'Aggregation is {lag} behind. Figures include activity up to {time} and may change.',
-  'analytics.freshness.behindBodyUnknown': 'Aggregation is {lag} behind. Figures include activity up to an unknown time and may change.',
+  'analytics.freshness.behindBody':
+    'Aggregation is {lag} behind. Figures include activity up to {time} and may change.',
+  'analytics.freshness.behindBodyUnknown':
+    'Aggregation is {lag} behind. Figures include activity up to an unknown time and may change.',
   'analytics.freshness.behindBodyPending':
-    'Aggregation is {lag} behind — {count, plural, one {# chat is} other {# chats are}} still being processed. Figures include activity up to {time} and may change.',
+    'Aggregation is {lag} behind: {count, plural, one {# chat is} other {# chats are}} still being processed. Figures include activity up to {time} and may change.',
   'analytics.freshness.behindBodyPendingUnknown':
-    'Aggregation is {lag} behind — {count, plural, one {# chat is} other {# chats are}} still being processed. Figures include activity up to an unknown time and may change.',
+    'Aggregation is {lag} behind: {count, plural, one {# chat is} other {# chats are}} still being processed. Figures include activity up to an unknown time and may change.',
   'analytics.freshness.line':
-    'As of <time>{time}</time>, {source, select, raw {computed from raw records} cached {from aggregated facts (cached)} other {from aggregated facts}}{stale, select, yes { — behind} other {}}',
+    'As of <time>{time}</time>, {source, select, raw {computed from raw records} cached {from aggregated facts (cached)} other {from aggregated facts}}{stale, select, yes { (behind)} other {}}',
 
   'analytics.range.today': 'Today',
   'analytics.range.yesterday': 'Yesterday',
@@ -169,12 +179,15 @@ export const analytics = {
   'analytics.chats.halfOpen': 'Half-open interval [from, to); chats counted by request time.',
   'analytics.chats.limited': 'Limited to your departments.',
   'analytics.chats.noChats': 'No chats were requested in this range with the current filters.',
-  'analytics.chats.noChatsFiltered': 'No chats were requested in this range with the current filters — try clearing filters or widening the range.',
+  'analytics.chats.noChatsFiltered':
+    'No chats were requested in this range with the current filters. Try clearing filters or widening the range.',
   'analytics.chats.volumeTitle': 'Chat volume',
-  'analytics.chats.volumeHint': 'Requested, served and missed chats per bucket (missed may overlap abandoned).',
+  'analytics.chats.volumeHint':
+    'Requested, served and missed chats per bucket (missed may overlap abandoned).',
   'analytics.chats.volumeEmpty': 'No chats requested in this range.',
   'analytics.chats.responseTitle': 'First response time',
-  'analytics.chats.responseHint': 'Median and p90 per bucket for served chats; buckets without replies stay empty (never 0).',
+  'analytics.chats.responseHint':
+    'Median and p90 per bucket for served chats; buckets without replies stay empty (never 0).',
   'analytics.chats.sampleColumn': 'Sample (n)',
   'analytics.chats.responseEmpty': 'No replies in this range.',
   'analytics.chats.chartDisplay': 'Chart display',
@@ -197,20 +210,23 @@ export const analytics = {
   'analytics.agents.def.capacity': 'Capacity',
   'analytics.agents.hours': '{n} h',
   'analytics.agents.minutes': '{n} min',
-  'analytics.agents.noSamples': '— (no samples)',
+  'analytics.agents.noSamples': 'No samples',
   'analytics.agents.p90n': 'p90 {p90} · n {n}',
-  'analytics.agents.notOnline': '— (not online)',
+  'analytics.agents.notOnline': 'Not online',
   'analytics.agents.slotTime': '{used} ÷ {available} slot time',
   'analytics.agents.slotRatio': '{used} ÷ {available}',
-  'analytics.agents.capped': 'Raw {raw} — capped; data check needed',
+  'analytics.agents.capped': 'Raw {raw}: capped; data check needed',
   'analytics.agents.tooLongTitle': 'Range too long for the agents report',
-  'analytics.agents.tooLongBody': 'The agents report covers up to {days} days interactively. Narrow the range.',
+  'analytics.agents.tooLongBody':
+    'The agents report covers up to {days} days interactively. Narrow the range.',
   'analytics.agents.loadError': 'Could not load the agents report: {error}',
   'analytics.agents.title': 'Agent activity',
-  'analytics.agents.description': '{span} · {timezone}. Handled chats are attributed per ownership interval, so the sum ({sum}) can exceed distinct chats ({distinct}).',
+  'analytics.agents.description':
+    '{span} · {timezone}. Handled chats are attributed per ownership interval, so the sum ({sum}) can exceed distinct chats ({distinct}).',
   'analytics.agents.export': 'Export agents CSV',
   'analytics.agents.emptyTitle': 'No agents match these filters',
-  'analytics.agents.emptyBody': 'Only members who can serve chats in the selected department appear here. Clear the department or agent filter to see everyone in scope.',
+  'analytics.agents.emptyBody':
+    'Only members who can serve chats in the selected department appear here. Clear the department or agent filter to see everyone in scope.',
   'analytics.agents.caption': 'Per-agent activity for the selected range',
   'analytics.agents.col.handled': 'Chats handled',
   'analytics.agents.col.replies': 'Replies',
@@ -224,7 +240,7 @@ export const analytics = {
   'analytics.agents.rowMetaDisabled': '{role} · capacity {capacity} · disabled',
   'analytics.agents.owned': '{time} owned',
   'analytics.agents.inChats': 'in {count, plural, one {# chat} other {# chats}}',
-  'analytics.agents.noRatings': '— (no ratings)',
+  'analytics.agents.noRatings': 'No ratings',
   'analytics.agents.goodRated': '{good} good ÷ {rated} rated',
   'analytics.agents.totals': 'Totals ({count, plural, one {# agent} other {# agents}})',
   'analytics.agents.distinct': '{count} distinct',
@@ -240,13 +256,15 @@ export const analytics = {
   'analytics.invitations.rate.displayed': '{pct} of eligible',
   'analytics.invitations.rate.accepted': '{pct} of displayed',
   'analytics.invitations.rate.served': '{pct} of accepted',
-  'analytics.invitations.denominatorZero': '— (denominator 0)',
+  'analytics.invitations.denominatorZero': 'Not available (denominator 0)',
   'analytics.invitations.loadError': 'Could not load the invitations report: {error}',
   'analytics.invitations.title': 'Invitation funnel',
-  'analytics.invitations.description': '{span} · {timezone}. Invitations created in the range, followed through display, acceptance and a human reply.',
+  'analytics.invitations.description':
+    '{span} · {timezone}. Invitations created in the range, followed through display, acceptance and a human reply.',
   'analytics.invitations.export': 'Export invitations CSV',
   'analytics.invitations.emptyTitle': 'No proactive invitations in this range',
-  'analytics.invitations.emptyFiltered': 'No invitations matched the site or department filter. Clear filters or widen the range.',
+  'analytics.invitations.emptyFiltered':
+    'No invitations matched the site or department filter. Clear filters or widen the range.',
   'analytics.invitations.emptyBody': 'Invitations appear here once a proactive campaign targets visitors.',
   'analytics.invitations.stages': 'Funnel stages',
   'analytics.invitations.caption': 'Funnel by campaign',
@@ -260,7 +278,8 @@ export const analytics = {
   'analytics.view.noAccessTitle': 'Analytics is not available for your role',
   'analytics.view.noAccessBody': 'Ask a workspace admin for analytics access.',
   'analytics.view.title': 'Analytics',
-  'analytics.view.description': 'Chat outcomes, response times, satisfaction and agent activity for {range} ({timezone}). Every measure documents its population and definition.',
+  'analytics.view.description':
+    'Chat outcomes, response times, satisfaction and agent activity for {range} ({timezone}). Every measure documents its population and definition.',
   'analytics.view.exportCsv': 'Export CSV',
   'analytics.view.reports': 'Reports',
   'analytics.view.agents': 'Agents',
@@ -268,28 +287,32 @@ export const analytics = {
 
   'analytics.overview.title': 'Overview',
   'analytics.overview.yourWorkspace': 'your workspace',
-  'analytics.overview.descTodayWelcome': 'Welcome back, {name}. Today’s activity in {workspace}, updated live.',
+  'analytics.overview.descTodayWelcome':
+    'Welcome back, {name}. Today’s activity in {workspace}, updated live.',
   'analytics.overview.descToday': 'Today’s activity in {workspace}, updated live.',
   'analytics.overview.descWorkWelcome': 'Welcome back, {name}. Your workload in {workspace}, updated live.',
   'analytics.overview.descWork': 'Your workload in {workspace}, updated live.',
   'analytics.overview.yourWork': 'Your work',
   'analytics.overview.yourStatus': 'Your status:',
   'analytics.overview.connection':
-    '{state, select, live {connected, receiving live updates} connecting {connecting…} idle {connecting…} reconnecting {connection reconnecting — new chats are not offered until it recovers} offline {connection offline — new chats are not offered until it recovers} other {connection {state} — new chats are not offered until it recovers}}',
+    '{state, select, live {connected, receiving live updates} connecting {connecting…} idle {connecting…} reconnecting {connection reconnecting: new chats are not offered until it recovers} offline {connection offline: new chats are not offered until it recovers} other {connection {state}: new chats are not offered until it recovers}}',
   'analytics.overview.statusHint': 'Change your status from the status menu in the top bar.',
   'analytics.overview.myActive': 'My active chats',
   'analytics.overview.myActiveDef': 'Active chats you participate in, as owner or collaborator.',
   'analytics.overview.openMyChats': 'Open my chats',
   'analytics.overview.unread': 'Unread visitor messages',
-  'analytics.overview.unreadDef': 'Visitor messages in your active chats that arrived after your last read position.',
+  'analytics.overview.unreadDef':
+    'Visitor messages in your active chats that arrived after your last read position.',
   'analytics.overview.openInbox': 'Open inbox',
   'analytics.overview.waiting': 'Waiting in my departments',
-  'analytics.overview.waitingDef': 'Queued or offered chats not yet accepted, in the departments you serve plus chats without a department.',
+  'analytics.overview.waitingDef':
+    'Queued or offered chats not yet accepted, in the departments you serve plus chats without a department.',
   'analytics.overview.openQueue': 'Open queue',
   'analytics.overview.offers': 'Offers for you',
-  'analytics.overview.offersDef': 'Chats currently offered or transferred to you that you have not accepted or declined.',
+  'analytics.overview.offersDef':
+    'Chats currently offered or transferred to you that you have not accepted or declined.',
   'analytics.overview.liveQueues': 'Live queues',
-  'analytics.overview.stale': 'Stale — live updates have paused. Open the monitor for details.',
+  'analytics.overview.stale': 'Stale: live updates have paused. Open the monitor for details.',
   'analytics.overview.fresh': 'Updates within seconds.',
   'analytics.overview.openMonitor': 'Open monitor',
   'analytics.overview.countersUnavailable': 'Live counters are unavailable: {error}',

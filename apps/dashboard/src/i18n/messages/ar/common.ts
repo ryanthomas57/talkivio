@@ -33,6 +33,7 @@ export const common: Record<keyof typeof source, string> = {
   'common.filters': 'عوامل التصفية',
   'common.all': 'الكل',
   'common.none': 'لا شيء',
+  'common.notAvailable': 'غير متاح',
   'common.unknown': 'غير معروف',
   'common.other': 'أخرى',
   'common.yes': 'نعم',
@@ -79,8 +80,10 @@ export const common: Record<keyof typeof source, string> = {
   'common.language': 'اللغة',
   'common.languageFollowBrowser': 'مثل لغة المتصفح',
   'common.page': 'صفحة {page}',
-  'common.countItems': '{count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}',
-  'common.selected': '{count, plural, zero {لم يُحدَّد شيء} one {عنصر محدد} two {عنصران محددان} few {# عناصر محددة} many {# عنصرًا محددًا} other {# عنصر محدد}}',
+  'common.countItems':
+    '{count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}',
+  'common.selected':
+    '{count, plural, zero {لم يُحدَّد شيء} one {عنصر محدد} two {عنصران محددان} few {# عناصر محددة} many {# عنصرًا محددًا} other {# عنصر محدد}}',
   'common.characterCount': '{count} / {max} حرفًا',
   'common.learnMore': 'اعرف المزيد',
   'common.open': 'فتح',

@@ -26,12 +26,22 @@ export function formatTime(v: string | Date | null | undefined): string {
 export function formatDateTime(v: string | Date | null | undefined, timeZone?: string): string {
   const d = toDate(v);
   if (!d) return '';
-  return d.toLocaleString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit', timeZone });
+  return d.toLocaleString(intlLocale(), {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    second: '2-digit',
+    timeZone,
+  });
 }
 
 export function formatDate(v: string | Date | null | undefined, timeZone?: string): string {
   const d = toDate(v);
-  return d ? d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone }) : '';
+  return d
+    ? d.toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone })
+    : '';
 }
 
 /** Date separator label: Today / Yesterday / weekday + date. */
@@ -42,7 +52,12 @@ export function dayLabel(v: string | Date): string {
   const diff = Math.round((start(today) - start(d)) / 86_400_000);
   if (diff === 0) return t('format.today');
   if (diff === 1) return t('format.yesterday');
-  return d.toLocaleDateString(intlLocale(), { weekday: 'long', day: 'numeric', month: 'long', ...(d.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}) });
+  return d.toLocaleDateString(intlLocale(), {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    ...(d.getFullYear() !== today.getFullYear() ? { year: 'numeric' } : {}),
+  });
 }
 
 export function sameDay(a: string | Date, b: string | Date): boolean {
@@ -90,20 +105,25 @@ export function formatRelative(v: string | Date | null | undefined): string {
 }
 
 export function formatBytes(n: number): string {
-  const num = (v: number, digits: number) => v.toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
+  const num = (v: number, digits: number) =>
+    v.toLocaleString(intlLocale(), { minimumFractionDigits: digits, maximumFractionDigits: digits });
   if (n < 1024) return t('format.bytes.b', { n: num(n, 0) });
   if (n < 1024 * 1024) return t('format.bytes.kb', { n: num(n / 1024, n < 10 * 1024 ? 1 : 0) });
   return t('format.bytes.mb', { n: num(n / (1024 * 1024), 1) });
 }
 
 export function formatNumber(n: number | null | undefined, opts?: Intl.NumberFormatOptions): string {
-  if (n === null || n === undefined || !Number.isFinite(n)) return '—';
+  if (n === null || n === undefined || !Number.isFinite(n)) return t('common.notAvailable');
   return n.toLocaleString(intlLocale(), opts);
 }
 
 export function formatPercent(n: number | null | undefined, digits = 0): string {
-  if (n === null || n === undefined || !Number.isFinite(n)) return '—';
-  return n.toLocaleString(intlLocale(), { style: 'percent', minimumFractionDigits: digits, maximumFractionDigits: digits });
+  if (n === null || n === undefined || !Number.isFinite(n)) return t('common.notAvailable');
+  return n.toLocaleString(intlLocale(), {
+    style: 'percent',
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  });
 }
 
 /** Badge text capped at 99+ (the accessible label carries the full number). */

@@ -11,12 +11,22 @@ import { formatNumber } from '@/lib/format';
 import { toCamelKey } from '@/lib/wire';
 import { FreshnessBanner, FreshnessLine } from './freshness';
 import { MeasureCard, MeasureCardSkeleton } from './measure-card';
-import { formatSeconds, GROUP_LABELS, GROUP_ORDER, groupOf, seriesValue, type MeasureGroup } from './measures';
+import {
+  formatSeconds,
+  GROUP_LABELS,
+  GROUP_ORDER,
+  groupOf,
+  seriesValue,
+  type MeasureGroup,
+} from './measures';
 import { todayIn } from './range';
 import type { ChartRow, SeriesDef } from './series-chart';
 
 /** The chart (recharts) loads after the numbers: keeps /analytics within the initial-route budget (ch. 60). */
-const SeriesChart = dynamic(() => import('./series-chart').then((m) => m.SeriesChart), { ssr: false, loading: () => <Skeleton className="h-72 w-full" /> });
+const SeriesChart = dynamic(() => import('./series-chart').then((m) => m.SeriesChart), {
+  ssr: false,
+  loading: () => <Skeleton className="h-72 w-full" />,
+});
 import type { ChatsReport } from './types';
 import { chatsQuery, type AnalyticsParams } from './use-analytics-params';
 
@@ -48,7 +58,12 @@ export function useChatsReport(p: AnalyticsParams, enabled = true) {
 function dayIn(iso: string, tz: string, endExclusive = false): string {
   const t = new Date(iso).getTime() - (endExclusive ? 1 : 0);
   try {
-    return new Date(t).toLocaleDateString(intlLocale(), { day: 'numeric', month: 'short', year: 'numeric', timeZone: tz });
+    return new Date(t).toLocaleDateString(intlLocale(), {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      timeZone: tz,
+    });
   } catch {
     return new Date(t).toLocaleDateString(intlLocale());
   }
@@ -60,7 +75,13 @@ export function spanLabel(r: { from: string; to: string }, tz: string): string {
   return a === b ? a : tStatic('analytics.range.span', { from: a, to: b });
 }
 
-export function ChatsReportView({ params: p, update }: { params: AnalyticsParams; update: (patch: Record<string, string | null>) => void }) {
+export function ChatsReportView({
+  params: p,
+  update,
+}: {
+  params: AnalyticsParams;
+  update: (patch: Record<string, string | null>) => void;
+}) {
   const t = useT();
   const q = useChatsReport(p);
   const report = q.data;
@@ -101,7 +122,11 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
     return (
       <Card>
         <PanelError
-          message={field && field !== errorMessage(q.error) ? t('analytics.chats.loadErrorField', { error: errorMessage(q.error), field }) : t('analytics.chats.loadError', { error: errorMessage(q.error) })}
+          message={
+            field && field !== errorMessage(q.error)
+              ? t('analytics.chats.loadErrorField', { error: errorMessage(q.error), field })
+              : t('analytics.chats.loadError', { error: errorMessage(q.error) })
+          }
           onRetry={() => void q.refetch()}
         />
       </Card>
@@ -109,17 +134,26 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
   }
   if (!report) return null;
 
-  const multiDay = report.series.length > 0 && report.series[0]!.key.slice(0, 10) !== report.series[report.series.length - 1]!.key.slice(0, 10);
+  const multiDay =
+    report.series.length > 0 &&
+    report.series[0]!.key.slice(0, 10) !== report.series[report.series.length - 1]!.key.slice(0, 10);
   const tz = report.range.timezone;
   const requested = report.measures.requested?.value ?? 0;
-  const [reconcileBefore, reconcileCode, reconcileAfter] = t('analytics.chats.reconcileBody').split(/<code>|<\/code>/);
+  const [reconcileBefore, reconcileCode, reconcileAfter] = t('analytics.chats.reconcileBody').split(
+    /<code>|<\/code>/,
+  );
   const volumeSeries: SeriesDef[] = VOLUME.map((s) => ({ ...s, label: t(s.label) }));
   const responseSeries: SeriesDef[] = RESPONSE.map((s) => ({ ...s, label: t(s.label) }));
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-3">
-        <FreshnessBanner freshness={report.freshness} timezone={tz} onRefresh={() => void q.refetch()} refreshing={q.isFetching} />
+        <FreshnessBanner
+          freshness={report.freshness}
+          timezone={tz}
+          onRefresh={() => void q.refetch()}
+          refreshing={q.isFetching}
+        />
         {p.reconcile && (
           <Banner tone="info" title={t('analytics.chats.reconcileTitle')}>
             {reconcileBefore}
@@ -129,7 +163,11 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
             {reconcileAfter}
           </Banner>
         )}
-        {q.error && <Banner tone="danger">{t('analytics.report.refreshFailed', { error: errorMessage(q.error) })}</Banner>}
+        {q.error && (
+          <Banner tone="danger">
+            {t('analytics.report.refreshFailed', { error: errorMessage(q.error) })}
+          </Banner>
+        )}
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-0.5">
             <p className="text-sm font-medium text-fg">
@@ -139,7 +177,9 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
               </span>
             </p>
             <p className="text-xs text-fg-2">
-              {report.comparisonRange ? `${t('analytics.chats.comparedWith', { span: spanLabel(report.comparisonRange, tz) })} ` : ''}
+              {report.comparisonRange
+                ? `${t('analytics.chats.comparedWith', { span: spanLabel(report.comparisonRange, tz) })} `
+                : ''}
               {t('analytics.chats.halfOpen')}
               {report.scope.departmentIds !== 'all' ? ` ${t('analytics.chats.limited')}` : ''}
             </p>
@@ -150,10 +190,17 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
       </div>
 
       {requested === 0 && (report.measures.offlineSubmissions?.value ?? 0) === 0 && (
-        <Banner tone="info">{p.siteId || p.departmentId || p.currentDepartmentId || p.agentId || p.tagId ? t('analytics.chats.noChatsFiltered') : t('analytics.chats.noChats')}</Banner>
+        <Banner tone="info">
+          {p.siteId || p.departmentId || p.currentDepartmentId || p.agentId || p.tagId
+            ? t('analytics.chats.noChatsFiltered')
+            : t('analytics.chats.noChats')}
+        </Banner>
       )}
 
-      <div className={cn('grid grid-cols-1 gap-4', p.view === 'chart' && 'xl:grid-cols-2')} aria-busy={q.isFetching || undefined}>
+      <div
+        className={cn('grid grid-cols-1 gap-4', p.view === 'chart' && 'xl:grid-cols-2')}
+        aria-busy={q.isFetching || undefined}
+      >
         <Card>
           <CardBody>
             <SeriesChart
@@ -179,9 +226,15 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
               group={report.range.groupBy ?? p.group}
               multiDay={multiDay}
               view={p.view}
-              format={(v) => (v === null ? '—' : formatSeconds(v))}
+              format={(v) => (v === null ? t('common.notAvailable') : formatSeconds(v))}
               axisFormat={(v) => formatSeconds(v)}
-              extraColumns={[{ id: 'n', label: t('analytics.chats.sampleColumn'), render: (r) => formatNumber(r.n as number) }]}
+              extraColumns={[
+                {
+                  id: 'n',
+                  label: t('analytics.chats.sampleColumn'),
+                  render: (r) => formatNumber(r.n as number),
+                },
+              ]}
               emptyText={t('analytics.chats.responseEmpty')}
             />
           </CardBody>
@@ -194,7 +247,9 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
             <h2 id={`grp-${group}`} className="text-base font-semibold">
               {t(GROUP_LABELS[group].title)}
             </h2>
-            {GROUP_LABELS[group].description && <p className="text-sm text-fg-2">{t(GROUP_LABELS[group].description)}</p>}
+            {GROUP_LABELS[group].description && (
+              <p className="text-sm text-fg-2">{t(GROUP_LABELS[group].description)}</p>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
             {keys.map((k) => (
@@ -207,10 +262,20 @@ export function ChatsReportView({ params: p, update }: { params: AnalyticsParams
   );
 }
 
-export function ViewToggle({ value, onChange }: { value: 'chart' | 'table'; onChange: (v: 'chart' | 'table') => void }) {
+export function ViewToggle({
+  value,
+  onChange,
+}: {
+  value: 'chart' | 'table';
+  onChange: (v: 'chart' | 'table') => void;
+}) {
   const t = useT();
   return (
-    <div role="group" aria-label={t('analytics.chats.chartDisplay')} className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5">
+    <div
+      role="group"
+      aria-label={t('analytics.chats.chartDisplay')}
+      className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5"
+    >
       {(
         [
           { v: 'chart', label: t('analytics.chats.chart'), Icon: BarChart3 },
@@ -222,7 +287,12 @@ export function ViewToggle({ value, onChange }: { value: 'chart' | 'table'; onCh
           type="button"
           aria-pressed={value === v}
           onClick={() => onChange(v)}
-          className={cn('inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors', value === v ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'text-fg-2 hover:bg-surface-3 hover:text-fg')}
+          className={cn(
+            'inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-sm font-medium transition-colors',
+            value === v
+              ? 'bg-primary-tint text-primary-hover dark:text-primary'
+              : 'text-fg-2 hover:bg-surface-3 hover:text-fg',
+          )}
         >
           <Icon className="size-4" aria-hidden />
           {label}

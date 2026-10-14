@@ -5,14 +5,19 @@ export const monitor = {
   'monitor.wait.warning': 'Warning: waiting {seconds} s or more',
   'monitor.wait.critical': 'Critical: waiting {seconds} s or more',
 
-  'monitor.def.queued': 'Chats waiting for an agent: queued or currently offered, not yet accepted. Limited to your departments and chats without a department.',
-  'monitor.def.oldestWait': 'Time since the longest-waiting queued chat was requested. Warning at 60 s, critical at 180 s by default.',
+  'monitor.def.queued':
+    'Chats waiting for an agent: queued or currently offered, not yet accepted. Limited to your departments and chats without a department.',
+  'monitor.def.oldestWait':
+    'Time since the longest-waiting queued chat was requested. Warning at 60 s, critical at 180 s by default.',
   'monitor.def.active': 'Chats currently being served by an agent.',
   'monitor.def.agents':
     'Available = connected, status Online and below capacity (owned chats, collaborations and pending reserved offers across all departments count). Online = connected with status Online.',
-  'monitor.def.offered': 'Pending assigned or transfer offers that reserve agent capacity and have not expired.',
-  'monitor.def.backlog': 'Active chats whose latest public visitor message has no later human agent public reply. Automated messages and internal notes do not clear the backlog.',
-  'monitor.def.csat': 'Good ÷ (good + bad) latest ratings for chats requested since local midnight in the workspace timezone. Unrated chats are excluded.',
+  'monitor.def.offered':
+    'Pending assigned or transfer offers that reserve agent capacity and have not expired.',
+  'monitor.def.backlog':
+    'Active chats whose latest public visitor message has no later human agent public reply. Automated messages and internal notes do not clear the backlog.',
+  'monitor.def.csat':
+    'Good ÷ (good + bad) latest ratings for chats requested since local midnight in the workspace timezone. Unrated chats are excluded.',
 
   'monitor.card.stale': 'Stale',
   'monitor.card.definition': 'Definition',
@@ -37,7 +42,8 @@ export const monitor = {
   'monitor.view.noAccessTitle': 'Monitoring is not available for your role',
   'monitor.view.noAccessBody': 'Supervisors and admins can watch live queues and agent load here.',
   'monitor.view.title': 'Monitor',
-  'monitor.view.description': 'Live queues, wait times and agent load for your departments. Updates arrive within seconds.',
+  'monitor.view.description':
+    'Live queues, wait times and agent load for your departments. Updates arrive within seconds.',
   'monitor.view.allDepartments': 'All departments',
   'monitor.view.allMyDepartments': 'All my departments',
   'monitor.view.unavailable': 'Live monitoring is unavailable: {error}',
@@ -46,20 +52,22 @@ export const monitor = {
   'monitor.live.refreshNow': 'Refresh now',
   'monitor.live.silent': 'No update for more than {seconds} s.',
   'monitor.live.silentConn':
-    'No update for more than {seconds} s — live connection is {conn, select, idle {idle} connecting {connecting} reconnecting {reconnecting} offline {offline} other {{conn}}}.',
+    'No update for more than {seconds} s: live connection is {conn, select, idle {idle} connecting {connecting} reconnecting {reconnecting} offline {offline} other {{conn}}}.',
   'monitor.live.serverStale': 'The server marked this snapshot as stale.',
   'monitor.live.serverStaleConn':
-    'The server marked this snapshot as stale — live connection is {conn, select, idle {idle} connecting {connecting} reconnecting {reconnecting} offline {offline} other {{conn}}}.',
+    'The server marked this snapshot as stale. Live connection is {conn, select, idle {idle} connecting {connecting} reconnecting {reconnecting} offline {offline} other {{conn}}}.',
   'monitor.live.figuresAsOf': 'Figures are as of {date} and may be out of date.',
   'monitor.live.refreshFailed': 'Last refresh failed: {error}',
   'monitor.live.live': 'Live',
   'monitor.live.asOf': 'As of <time>{time}</time> ({timezone})',
   'monitor.live.limited': '· limited to your departments',
 
-  'monitor.announce.level': 'Oldest wait is {level, select, critical {critical} other {warning}}: {duration}. {count} queued.',
+  'monitor.announce.level':
+    'Oldest wait is {level, select, critical {critical} other {warning}}: {duration}. {count} queued.',
   'monitor.announce.back': 'Oldest wait is back within target.',
 
-  'monitor.departments.busy': '{count, plural, one {# department is busy} other {# departments are busy}}: chats waiting with no available agent or a long wait.',
+  'monitor.departments.busy':
+    '{count, plural, one {# department is busy} other {# departments are busy}}: chats waiting with no available agent or a long wait.',
   'monitor.departments.noneBusy': 'No department is busy right now.',
   'monitor.departments.emptyTitle': 'No departments in scope',
   'monitor.departments.emptyBody': 'You are not a member of any department that can be monitored.',
@@ -78,10 +86,12 @@ export const monitor = {
 
   'monitor.agents.sortBy': ', sort by {label}',
   'monitor.agents.title': 'Agents',
-  'monitor.agents.description': 'Status, capacity in use (owned + collaborations + reserved offers) and the oldest visitor message still waiting for a reply.',
+  'monitor.agents.description':
+    'Status, capacity in use (owned + collaborations + reserved offers) and the oldest visitor message still waiting for a reply.',
   'monitor.agents.emptyTitle': 'No agents in scope',
   'monitor.agents.emptyBody': 'No enabled agent can serve the selected departments.',
-  'monitor.agents.caption': 'Agent grid, sorted by {sort, select, load {load} backlog {response backlog} unanswered {oldest unanswered message} other {name}}',
+  'monitor.agents.caption':
+    'Agent grid, sorted by {sort, select, load {load} backlog {response backlog} unanswered {oldest unanswered message} other {name}}',
   'monitor.agents.accepting': 'Accepting chats',
   'monitor.agents.atCapacity': 'At capacity',
   'monitor.agents.notAccepting': 'Not accepting',

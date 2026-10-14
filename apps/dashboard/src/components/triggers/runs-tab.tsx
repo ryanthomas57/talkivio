@@ -7,7 +7,23 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { CheckCircle2, CircleSlash, Clock3, History, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { Badge, Button, Card, CardHeader, EmptyState, Field, Input, PanelError, Skeleton, Table, TableScroll, TD, TH, THead, TR } from '@/components/ui';
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  EmptyState,
+  Field,
+  Input,
+  PanelError,
+  Skeleton,
+  Table,
+  TableScroll,
+  TD,
+  TH,
+  THead,
+  TR,
+} from '@/components/ui';
 import { useT, type MessageKey } from '@/i18n';
 import { api, errorMessage } from '@/lib/api';
 import { formatDateTime, formatRelative } from '@/lib/format';
@@ -40,7 +56,12 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
     queryKey: tk.runs(triggerId, from, to),
     enabled: !invalidRange,
     initialPageParam: null as string | null,
-    queryFn: ({ pageParam, signal }) => api.page<TriggerRun>(`/triggers/${triggerId}/runs`, { from: from || undefined, to: to || undefined, cursor: pageParam ?? undefined, limit: 25 }, signal),
+    queryFn: ({ pageParam, signal }) =>
+      api.page<TriggerRun>(
+        `/triggers/${triggerId}/runs`,
+        { from: from || undefined, to: to || undefined, cursor: pageParam ?? undefined, limit: 25 },
+        signal,
+      ),
     getNextPageParam: (last) => (last.hasMore ? last.nextCursor : null),
   });
   const runs = q.data?.pages.flatMap((p) => p.items) ?? [];
@@ -50,10 +71,24 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
       <CardHeader title={t('triggers.runs.title')} description={t('triggers.runs.description')} />
       <div className="flex flex-wrap items-end gap-3 border-b border-line-subtle px-4 py-3 sm:px-6">
         <Field label={t('common.from')} className="w-full sm:w-44">
-          <Input type="date" value={fromDay} max={toDay || undefined} onChange={(e) => setFromDay(e.target.value)} />
+          <Input
+            type="date"
+            value={fromDay}
+            max={toDay || undefined}
+            onChange={(e) => setFromDay(e.target.value)}
+          />
         </Field>
-        <Field label={t('triggers.runs.toInclusive')} className="w-full sm:w-44" error={invalidRange ? t('triggers.runs.rangeError') : undefined}>
-          <Input type="date" value={toDay} min={fromDay || undefined} onChange={(e) => setToDay(e.target.value)} />
+        <Field
+          label={t('triggers.runs.toInclusive')}
+          className="w-full sm:w-44"
+          error={invalidRange ? t('triggers.runs.rangeError') : undefined}
+        >
+          <Input
+            type="date"
+            value={toDay}
+            min={fromDay || undefined}
+            onChange={(e) => setToDay(e.target.value)}
+          />
         </Field>
         {(fromDay || toDay) && (
           <Button
@@ -101,11 +136,18 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
                       <time dateTime={r.executedAt} title={formatDateTime(r.executedAt)} className="text-sm">
                         {formatDateTime(r.executedAt)}
                       </time>
-                      <p className="text-xs text-fg-2">{t('triggers.runs.timeMeta', { relative: formatRelative(r.executedAt), revision: r.triggerRevision })}</p>
+                      <p className="text-xs text-fg-2">
+                        {t('triggers.runs.timeMeta', {
+                          relative: formatRelative(r.executedAt),
+                          revision: r.triggerRevision,
+                        })}
+                      </p>
                     </TD>
                     <TD className="py-3 align-top text-sm">
                       {eventLabel(t, r.eventType)}
-                      {r.depth > 0 && <p className="text-xs text-fg-2">{t('triggers.runs.causedBy', { depth: r.depth })}</p>}
+                      {r.depth > 0 && (
+                        <p className="text-xs text-fg-2">{t('triggers.runs.causedBy', { depth: r.depth })}</p>
+                      )}
                     </TD>
                     <TD className="py-3 align-top">
                       {r.matched ? (
@@ -117,10 +159,12 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
                           {t('triggers.runs.notMatched')}
                         </Badge>
                       )}
-                      {r.result?.reason && r.result.reason !== 'fired' && <p className="mt-1 text-xs text-fg-2">{reasonLabel(t, r.result.reason)}</p>}
+                      {r.result?.reason && r.result.reason !== 'fired' && (
+                        <p className="mt-1 text-xs text-fg-2">{reasonLabel(t, r.result.reason)}</p>
+                      )}
                     </TD>
                     <TD className="py-3 align-top">
-                      {r.effects.length === 0 ? <span className="text-sm text-fg-2">—</span> : (
+                      {r.effects.length === 0 ? null : (
                         <ul className="flex flex-col gap-1.5">
                           {r.effects.map((e) => (
                             <EffectLine key={e.id} e={e} />
@@ -130,14 +174,15 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
                     </TD>
                     <TD className="py-3 align-top text-sm">
                       {r.chatId ? (
-                        <Link href={`/inbox/${r.chatId}`} className="font-medium text-primary underline-offset-4 hover:underline">
+                        <Link
+                          href={`/inbox/${r.chatId}`}
+                          className="font-medium text-primary underline-offset-4 hover:underline"
+                        >
                           {t('triggers.runs.openChat')}
                         </Link>
                       ) : r.visitorSessionId ? (
                         <span className="text-fg-2">{t('triggers.runs.visitorSession')}</span>
-                      ) : (
-                        <span className="text-fg-2">—</span>
-                      )}
+                      ) : null}
                     </TD>
                   </TR>
                 ))}
@@ -146,7 +191,11 @@ export function RunsTab({ triggerId }: { triggerId: string }) {
           </TableScroll>
           {q.hasNextPage && (
             <div className="flex justify-center border-t border-line-subtle p-3">
-              <Button variant="secondary" onClick={() => void q.fetchNextPage()} loading={q.isFetchingNextPage}>
+              <Button
+                variant="secondary"
+                onClick={() => void q.fetchNextPage()}
+                loading={q.isFetchingNextPage}
+              >
                 {t('triggers.runs.loadOlder')}
               </Button>
             </div>
@@ -168,8 +217,22 @@ const EFFECT_STATUS: Record<string, MessageKey> = {
 
 function EffectLine({ e }: { e: TriggerRunEffect }) {
   const t = useT();
-  const tone = e.status === 'applied' ? 'success' : e.status === 'pending' ? 'info' : e.status === 'failed' ? 'danger' : 'warning';
-  const Icon = e.status === 'applied' ? CheckCircle2 : e.status === 'pending' ? Clock3 : e.status === 'failed' ? XCircle : CircleSlash;
+  const tone =
+    e.status === 'applied'
+      ? 'success'
+      : e.status === 'pending'
+        ? 'info'
+        : e.status === 'failed'
+          ? 'danger'
+          : 'warning';
+  const Icon =
+    e.status === 'applied'
+      ? CheckCircle2
+      : e.status === 'pending'
+        ? Clock3
+        : e.status === 'failed'
+          ? XCircle
+          : CircleSlash;
   const reason = reasonLabel(t, e.reason);
   const statusKey = EFFECT_STATUS[e.status];
   return (

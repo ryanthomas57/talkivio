@@ -9,7 +9,28 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Trash2, Undo2, UserPlus, Users } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { Avatar, Badge, Banner, Button, Card, CardBody, CardHeader, Checkbox, EmptyState, Field, MultiCombobox, PanelError, Skeleton, StatusLabel, Table, TableScroll, TD, TH, THead, TR } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  Checkbox,
+  EmptyState,
+  Field,
+  MultiCombobox,
+  PanelError,
+  Skeleton,
+  StatusLabel,
+  Table,
+  TableScroll,
+  TD,
+  TH,
+  THead,
+  TR,
+} from '@/components/ui';
 import { isolate, useT, type MessageKey } from '@/i18n';
 import { api, errorMessage } from '@/lib/api';
 import { formatNumber } from '@/lib/format';
@@ -22,9 +43,16 @@ import { SERVING_ROLES, type DepartmentMember } from './dept-shared';
 
 type Members = Record<string, { canServe: boolean; canMonitor: boolean }>;
 
-const toMap = (list: DepartmentMember[]): Members => Object.fromEntries(list.map((m) => [m.membershipId, { canServe: m.canServe, canMonitor: m.canMonitor }]));
+const toMap = (list: DepartmentMember[]): Members =>
+  Object.fromEntries(list.map((m) => [m.membershipId, { canServe: m.canServe, canMonitor: m.canMonitor }]));
 
-const ROLE_LABEL: Record<Agent['role'], MessageKey> = { owner: 'settings.roles.owner', admin: 'settings.roles.admin', supervisor: 'settings.roles.supervisor', agent: 'settings.roles.agent', analyst: 'settings.roles.analyst' };
+const ROLE_LABEL: Record<Agent['role'], MessageKey> = {
+  owner: 'settings.roles.owner',
+  admin: 'settings.roles.admin',
+  supervisor: 'settings.roles.supervisor',
+  agent: 'settings.roles.agent',
+  analyst: 'settings.roles.analyst',
+};
 
 export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabProps) {
   const t = useT();
@@ -44,7 +72,8 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
     onDirtyChange(dirty);
   }, [dirty, onDirtyChange]);
 
-  const update = (fn: (m: Members) => Members) => setDraft((d) => ({ base: d?.base ?? server, value: fn({ ...(d?.value ?? server) }) }));
+  const update = (fn: (m: Members) => Members) =>
+    setDraft((d) => ({ base: d?.base ?? server, value: fn({ ...(d?.value ?? server) }) }));
 
   const setMember = (id: string, patch: Partial<{ canServe: boolean; canMonitor: boolean }> | null) =>
     update((m) => {
@@ -60,9 +89,15 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
     setSaving(true);
     setMessage(null);
     try {
-      const members = Object.entries(draft.value).map(([membershipId, p]) => ({ membershipId, canServe: p.canServe, canMonitor: p.canMonitor }));
+      const members = Object.entries(draft.value).map(([membershipId, p]) => ({
+        membershipId,
+        canServe: p.canServe,
+        canMonitor: p.canMonitor,
+      }));
       const next = await api.put<Department>(`/departments/${dept.id}/members`, { members });
-      qc.setQueryData<Department[]>(qk.departments, (list) => list?.map((d) => (d.id === next.id ? next : d)));
+      qc.setQueryData<Department[]>(qk.departments, (list) =>
+        list?.map((d) => (d.id === next.id ? next : d)),
+      );
       void qc.invalidateQueries({ queryKey: qk.agents });
       setDraft(null);
       toast.success(t('settings.departments.agents.saved'));
@@ -79,12 +114,16 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
   });
 
   const memberIds = Object.keys(value);
-  const rows = memberIds.map((id) => ({ id, perms: value[id], agent: agentMap.get(id) })).sort((a, b) => (a.agent?.displayName ?? '').localeCompare(b.agent?.displayName ?? ''));
+  const rows = memberIds
+    .map((id) => ({ id, perms: value[id], agent: agentMap.get(id) }))
+    .sort((a, b) => (a.agent?.displayName ?? '').localeCompare(b.agent?.displayName ?? ''));
   const removed = Object.keys(server).filter((id) => !(id in value));
   const added = memberIds.filter((id) => !(id in server));
   const changed = memberIds.filter((id) => id in server && !isEqual(server[id], value[id]));
   const pendingCount = removed.length + added.length + changed.length;
-  const servingCount = rows.filter((r) => r.perms.canServe && (!r.agent || (r.agent.enabled && SERVING_ROLES.has(r.agent.role)))).length;
+  const servingCount = rows.filter(
+    (r) => r.perms.canServe && (!r.agent || (r.agent.enabled && SERVING_ROLES.has(r.agent.role))),
+  ).length;
 
   const options = useMemo(
     () =>
@@ -100,7 +139,10 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
   if (!canView)
     return (
       <Card>
-        <CardHeader title={t('settings.departments.tabs.agents')} description={t('settings.departments.agents.memberCount', { count: dept.members.length })} />
+        <CardHeader
+          title={t('settings.departments.tabs.agents')}
+          description={t('settings.departments.agents.memberCount', { count: dept.members.length })}
+        />
         <CardBody>
           <Banner tone="info">{t('settings.departments.agents.noAccess')}</Banner>
         </CardBody>
@@ -109,7 +151,10 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
 
   return (
     <Card>
-      <CardHeader title={t('settings.departments.tabs.agents')} description={t('settings.departments.agents.description')} />
+      <CardHeader
+        title={t('settings.departments.tabs.agents')}
+        description={t('settings.departments.agents.description')}
+      />
       <CardBody className="flex flex-col gap-4">
         {remoteChanged && (
           <Banner
@@ -125,14 +170,22 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
         )}
         {message && <Banner tone="danger">{message}</Banner>}
         {canManage && (
-          <Field label={t('settings.departments.agents.pickerLabel')} description={t('settings.departments.agents.pickerHint')}>
+          <Field
+            label={t('settings.departments.agents.pickerLabel')}
+            description={t('settings.departments.agents.pickerHint')}
+          >
             <MultiCombobox
               values={memberIds}
               onChange={(ids) => {
                 const next = new Set(ids);
                 update((m) => {
                   for (const id of Object.keys(m)) if (!next.has(id)) delete m[id];
-                  for (const id of ids) if (!m[id]) m[id] = server[id] ?? { canServe: SERVING_ROLES.has(agentMap.get(id)?.role ?? 'agent'), canMonitor: false };
+                  for (const id of ids)
+                    if (!m[id])
+                      m[id] = server[id] ?? {
+                        canServe: SERVING_ROLES.has(agentMap.get(id)?.role ?? 'agent'),
+                        canMonitor: false,
+                      };
                   return m;
                 });
               }}
@@ -143,7 +196,9 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
             />
           </Field>
         )}
-        {!agents.isPending && servingCount === 0 && dept.enabled && !dept.archivedAt && <Banner tone="warning">{t('settings.departments.agents.nobodyServes')}</Banner>}
+        {!agents.isPending && servingCount === 0 && dept.enabled && !dept.archivedAt && (
+          <Banner tone="warning">{t('settings.departments.agents.nobodyServes')}</Banner>
+        )}
       </CardBody>
       {agents.isPending ? (
         <div className="flex flex-col gap-2 px-4 pb-4 sm:px-6">
@@ -153,7 +208,15 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
       ) : agents.isError ? (
         <PanelError message={errorMessage(agents.error)} onRetry={() => void agents.refetch()} />
       ) : rows.length === 0 ? (
-        <EmptyState icon={<Users />} title={t('settings.departments.agents.emptyTitle')} description={canManage ? t('settings.departments.agents.emptyManage') : t('settings.departments.agents.emptyView')} />
+        <EmptyState
+          icon={<Users />}
+          title={t('settings.departments.agents.emptyTitle')}
+          description={
+            canManage
+              ? t('settings.departments.agents.emptyManage')
+              : t('settings.departments.agents.emptyView')
+          }
+        />
       ) : (
         <TableScroll>
           <Table className="min-w-[760px]">
@@ -183,9 +246,15 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
                         <div className="min-w-0">
                           <p className="flex flex-wrap items-center gap-2 font-medium">
                             <bdi>{name}</bdi>
-                            {added.includes(id) && <Badge tone="info">{t('settings.departments.agents.new')}</Badge>}
-                            {changed.includes(id) && <Badge tone="info">{t('settings.departments.agents.changed')}</Badge>}
-                            {agent && !agent.enabled && <Badge tone="warning">{t('settings.departments.agents.suspended')}</Badge>}
+                            {added.includes(id) && (
+                              <Badge tone="info">{t('settings.departments.agents.new')}</Badge>
+                            )}
+                            {changed.includes(id) && (
+                              <Badge tone="info">{t('settings.departments.agents.changed')}</Badge>
+                            )}
+                            {agent && !agent.enabled && (
+                              <Badge tone="warning">{t('settings.departments.agents.suspended')}</Badge>
+                            )}
                           </p>
                           <p className="truncate text-xs text-fg-2">
                             {agent ? (
@@ -199,18 +268,34 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
                         </div>
                       </div>
                     </TD>
-                    <TD>{agent ? <StatusLabel status={agent.effectiveStatus} /> : '—'}</TD>
+                    <TD>{agent ? <StatusLabel status={agent.effectiveStatus} /> : ''}</TD>
                     <TD className="text-end tabular">
                       {agent ? (
                         <span>
                           <span aria-hidden>
-                            <span className={agent.activeChats >= agent.capacity ? 'font-semibold text-warning' : ''}>{formatNumber(agent.activeChats)}</span> / {formatNumber(agent.capacity)}
+                            <span
+                              className={
+                                agent.activeChats >= agent.capacity ? 'font-semibold text-warning' : ''
+                              }
+                            >
+                              {formatNumber(agent.activeChats)}
+                            </span>{' '}
+                            / {formatNumber(agent.capacity)}
                           </span>
-                          <span className="sr-only">{t('settings.departments.agents.loadSr', { active: agent.activeChats, capacity: agent.capacity })}</span>
-                          {agent.departmentIds.length > 1 && <span className="block text-xs text-fg-2">{t('settings.departments.agents.across', { count: agent.departmentIds.length })}</span>}
+                          <span className="sr-only">
+                            {t('settings.departments.agents.loadSr', {
+                              active: agent.activeChats,
+                              capacity: agent.capacity,
+                            })}
+                          </span>
+                          {agent.departmentIds.length > 1 && (
+                            <span className="block text-xs text-fg-2">
+                              {t('settings.departments.agents.across', { count: agent.departmentIds.length })}
+                            </span>
+                          )}
                         </span>
                       ) : (
-                        '—'
+                        ''
                       )}
                     </TD>
                     <TD className="text-center">
@@ -218,16 +303,36 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
                         checked={perms.canServe}
                         disabled={!canManage || cannotServe}
                         onCheckedChange={(c) => setMember(id, { canServe: c === true })}
-                        aria-label={t('settings.departments.agents.serveLabel', { name, department: dept.name })}
+                        aria-label={t('settings.departments.agents.serveLabel', {
+                          name,
+                          department: dept.name,
+                        })}
                         title={cannotServe ? t('settings.departments.agents.analystCannotServe') : undefined}
                       />
                     </TD>
                     <TD className="text-center">
-                      <Checkbox checked={perms.canMonitor} disabled={!canManage} onCheckedChange={(c) => setMember(id, { canMonitor: c === true })} aria-label={t('settings.departments.agents.monitorLabel', { name, department: dept.name })} />
+                      <Checkbox
+                        checked={perms.canMonitor}
+                        disabled={!canManage}
+                        onCheckedChange={(c) => setMember(id, { canMonitor: c === true })}
+                        aria-label={t('settings.departments.agents.monitorLabel', {
+                          name,
+                          department: dept.name,
+                        })}
+                      />
                     </TD>
                     {canManage && (
                       <TD>
-                        <Button size="icon" variant="ghost" className="size-11 sm:size-10" onClick={() => setMember(id, null)} aria-label={t('settings.departments.agents.removeLabel', { name, department: dept.name })}>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-11 sm:size-10"
+                          onClick={() => setMember(id, null)}
+                          aria-label={t('settings.departments.agents.removeLabel', {
+                            name,
+                            department: dept.name,
+                          })}
+                        >
                           <Trash2 className="size-4" aria-hidden />
                         </Button>
                       </TD>
@@ -241,16 +346,27 @@ export function AgentsTab({ dept, canManage, onDirtyChange, registerSave }: TabP
       )}
       {removed.length > 0 && (
         <div className="border-t border-line-subtle px-4 py-3 sm:px-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-fg-2">{t('settings.departments.agents.willBeRemoved')}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-fg-2">
+            {t('settings.departments.agents.willBeRemoved')}
+          </p>
           <ul className="mt-2 flex flex-wrap gap-2">
             {removed.map((id) => {
               const name = agentMap.get(id)?.displayName ?? t('settings.departments.agents.formerMember');
               return (
-                <li key={id} className="inline-flex h-9 items-center gap-1 rounded-full border border-line bg-surface-2 ps-3 pe-1 text-sm">
+                <li
+                  key={id}
+                  className="inline-flex h-9 items-center gap-1 rounded-full border border-line bg-surface-2 ps-3 pe-1 text-sm"
+                >
                   <span className="line-through decoration-fg-3" dir="auto">
                     {name}
                   </span>
-                  <Button size="icon-sm" variant="ghost" className="size-11 sm:size-8" onClick={() => restore(id)} aria-label={t('settings.departments.agents.keepLabel', { name, department: dept.name })}>
+                  <Button
+                    size="icon-sm"
+                    variant="ghost"
+                    className="size-11 sm:size-8"
+                    onClick={() => restore(id)}
+                    aria-label={t('settings.departments.agents.keepLabel', { name, department: dept.name })}
+                  >
                     <Undo2 className="size-3.5" aria-hidden />
                   </Button>
                 </li>

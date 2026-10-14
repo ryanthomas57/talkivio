@@ -79,11 +79,17 @@ export function groupOf(wireKey: string): MeasureGroup {
 }
 
 /** Look up a measure by its snake_case wire key (response objects are camelCased). */
-export function measureOf(report: Pick<ChatsReport, 'measures'>, wireKey: string): ReportedMeasure | undefined {
+export function measureOf(
+  report: Pick<ChatsReport, 'measures'>,
+  wireKey: string,
+): ReportedMeasure | undefined {
   return report.measures[toCamelKey(wireKey)];
 }
 
-export function seriesValue(measures: Record<string, MeasureValue>, wireKey: string): MeasureValue | undefined {
+export function seriesValue(
+  measures: Record<string, MeasureValue>,
+  wireKey: string,
+): MeasureValue | undefined {
   return measures[toCamelKey(wireKey)];
 }
 
@@ -91,7 +97,7 @@ const pad2 = (n: number) => formatNumber(n, { minimumIntegerDigits: 2 });
 
 /** "2m 41s", "42 s", "4.2 s", "1h 05m". */
 export function formatSeconds(s: number | null | undefined): string {
-  if (s === null || s === undefined || !Number.isFinite(s)) return '—';
+  if (s === null || s === undefined || !Number.isFinite(s)) return t('common.notAvailable');
   if (s < 10) return t('analytics.dur.s', { s: formatNumber(Math.round(s * 10) / 10) });
   const total = Math.round(s);
   if (total < 60) return t('analytics.dur.s', { s: formatNumber(total) });
@@ -112,18 +118,19 @@ export function spokenSeconds(s: number | null | undefined): string {
   const parts: string[] = [];
   if (h) parts.push(t('analytics.spoken.hours', { n: h }));
   if (m) parts.push(t('analytics.spoken.minutes', { n: m }));
-  if (sec || !parts.length) parts.push(t('analytics.spoken.seconds', { n: s < 10 ? Math.round(s * 10) / 10 : sec }));
+  if (sec || !parts.length)
+    parts.push(t('analytics.spoken.seconds', { n: s < 10 ? Math.round(s * 10) / 10 : sec }));
   return parts.join(t('analytics.spoken.joiner'));
 }
 
 /** A 0–100 percentage in the UI locale: "42.5%". */
 export function formatPct(v: number | null | undefined): string {
-  if (v === null || v === undefined || !Number.isFinite(v)) return '—';
+  if (v === null || v === undefined || !Number.isFinite(v)) return t('common.notAvailable');
   return formatNumber(v / 100, { style: 'percent', maximumFractionDigits: 1 });
 }
 
 export function formatValue(kind: MeasureKind, v: number | null | undefined): string {
-  if (v === null || v === undefined) return '—';
+  if (v === null || v === undefined) return t('common.notAvailable');
   if (kind === 'rate') return formatPct(v);
   if (kind === 'duration') return formatSeconds(v);
   return formatNumber(v);
@@ -152,7 +159,10 @@ const RATIO: Record<string, MessageKey> = {
 
 /** "1 good ÷ 3 rated" for rates. */
 export function ratioText(m: { key: string; numerator: number | null; denominator: number | null }): string {
-  return t(RATIO[m.key] ?? 'analytics.ratio.plain', { num: formatNumber(m.numerator ?? 0), den: formatNumber(m.denominator ?? 0) });
+  return t(RATIO[m.key] ?? 'analytics.ratio.plain', {
+    num: formatNumber(m.numerator ?? 0),
+    den: formatNumber(m.denominator ?? 0),
+  });
 }
 
 const NULL_POLICY_TEXT: Record<string, MessageKey> = {
@@ -184,7 +194,8 @@ const signOf = (n: number) => (n > 0 ? '+' : n < 0 ? '−' : '±');
 function absChange(kind: MeasureKind, change: number): string {
   const sign = signOf(change);
   const v = Math.abs(change);
-  if (kind === 'rate') return t('analytics.change.pts', { value: `${sign}${formatNumber(v, { maximumFractionDigits: 1 })}` });
+  if (kind === 'rate')
+    return t('analytics.change.pts', { value: `${sign}${formatNumber(v, { maximumFractionDigits: 1 })}` });
   if (kind === 'duration') return `${sign}${formatSeconds(v)}`;
   return `${sign}${formatNumber(v)}`;
 }
@@ -198,22 +209,34 @@ export function changeInfo(m: ReportedMeasure): ChangeInfo | null {
   const c = m.comparison;
   if (!c) return null;
   const prevValue = formatValue(m.kind, c.value);
-  const prev = m.kind === 'duration' ? t('analytics.change.valueWithN', { value: prevValue, n: c.n }) : prevValue;
+  const prev =
+    m.kind === 'duration' ? t('analytics.change.valueWithN', { value: prevValue, n: c.n }) : prevValue;
   if (c.label === 'comparable' && c.changePct !== null) {
     const direction = c.changePct > 0 ? 'up' : c.changePct < 0 ? 'down' : 'flat';
     const pct = `${signOf(c.changePct)}${formatNumber(Math.abs(c.changePct) / 100, { style: 'percent', maximumFractionDigits: 1 })}`;
     return {
       direction,
       text: t('analytics.change.pctVsPrevious', { change: pct }),
-      detail: c.change !== null ? t('analytics.change.detailWithAbs', { abs: absChange(m.kind, c.change), prev }) : t('analytics.change.detail', { prev }),
+      detail:
+        c.change !== null
+          ? t('analytics.change.detailWithAbs', { abs: absChange(m.kind, c.change), prev })
+          : t('analytics.change.detail', { prev }),
     };
   }
   if (c.label === 'new') {
     if (m.value === null || m.value === 0) return null;
-    return { direction: 'flat', text: t('analytics.change.newThisPeriod'), detail: t('analytics.change.detailNew', { prev }) };
+    return {
+      direction: 'flat',
+      text: t('analytics.change.newThisPeriod'),
+      detail: t('analytics.change.detailNew', { prev }),
+    };
   }
   if (c.change !== null && c.change !== 0) {
-    return { direction: c.change > 0 ? 'up' : 'down', text: t('analytics.change.pctVsPrevious', { change: absChange(m.kind, c.change) }), detail: t('analytics.change.detailZero', { prev }) };
+    return {
+      direction: c.change > 0 ? 'up' : 'down',
+      text: t('analytics.change.pctVsPrevious', { change: absChange(m.kind, c.change) }),
+      detail: t('analytics.change.detailZero', { prev }),
+    };
   }
   return null;
 }

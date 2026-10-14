@@ -9,7 +9,7 @@
   function render() {
     var v = new URLSearchParams(location.search).get('view') || 'overview';
     var data = views[v] || views.overview;
-    document.title = data[0] + ' — Northwind Goods (demo)';
+    document.title = data[0] + ' | Northwind Goods (demo)';
     document.getElementById('spa-title').textContent = 'Your account · ' + data[0];
     document.getElementById('spa-view').textContent = data[1];
   }

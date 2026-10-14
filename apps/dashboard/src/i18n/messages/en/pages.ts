@@ -10,7 +10,7 @@ export const pages = {
   'pages.title.offlineMessages': 'Offline messages',
   'pages.title.history': 'History',
   'pages.title.visitors': 'Visitors',
-  'pages.title.description': '{brand} — live chat for support and sales teams',
+  'pages.title.description': '{brand}: live chat for support and sales teams',
   'pages.noAccess.history': 'You don’t have access to chat history',
   'pages.noAccess.historyReadBody': 'Ask an admin if you need to read past chats.',
   'pages.noAccess.historySearchBody': 'Ask an admin if you need to search past chats.',
@@ -18,7 +18,8 @@ export const pages = {
   'pages.inbox.conversationRegion': 'Conversation',
   'pages.inbox.selectTitle': 'Select a chat',
   'pages.noAccess.integrations': 'You don’t have access to integrations',
-  'pages.noAccess.integrationsBody': 'Webhooks are managed by workspace admins with the integrations permission.',
+  'pages.noAccess.integrationsBody':
+    'Webhooks are managed by workspace admins with the integrations permission.',
   'pages.settings.opening': 'Opening settings',
   'pages.noAccess.sites': 'You don’t have access to website settings',
   'pages.noAccess.sitesBody': 'Ask an admin if you need to manage websites or the chat widget.',
@@ -28,8 +29,10 @@ export const pages = {
   'pages.noAccess.visitorRecordsBody': 'Ask an admin if you need to see visitor profiles.',
   'pages.noAccess.visitors': 'You don’t have access to visitors',
   'pages.noAccess.visitorsBody': 'Ask an admin if you need to see live visitors.',
-  'pages.inbox.waitingBody': '{count, plural, one {# visitor is waiting in Unassigned.} other {# visitors are waiting in Unassigned.}}',
-  'pages.inbox.selectBody': 'Choose a conversation from the list. New chats appear in Unassigned as they arrive.',
+  'pages.inbox.waitingBody':
+    '{count, plural, one {# visitor is waiting in Unassigned.} other {# visitors are waiting in Unassigned.}}',
+  'pages.inbox.selectBody':
+    'Choose a conversation from the list. New chats appear in Unassigned as they arrive.',
   'pages.notFound.title': 'Page not found',
   'pages.notFound.body': 'The address may be mistyped, or the page has moved.',
   'pages.notFound.home': 'Go to the inbox',

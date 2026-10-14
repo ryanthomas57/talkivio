@@ -12,10 +12,12 @@ export const pages: Record<keyof typeof source, string> = {
   'pages.title.offlineMessages': 'رسائل خارج الدوام',
   'pages.title.history': 'السجل',
   'pages.title.visitors': 'الزوار',
-  'pages.title.description': '{brand} — دردشة مباشرة لفرق الدعم والمبيعات',
+  'pages.title.description': '{brand}: دردشة مباشرة لفرق الدعم والمبيعات',
   'pages.noAccess.history': 'ليست لديك صلاحية الوصول إلى سجل المحادثات',
-  'pages.noAccess.historyReadBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى قراءة المحادثات السابقة.',
-  'pages.noAccess.historySearchBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى البحث في المحادثات السابقة.',
+  'pages.noAccess.historyReadBody':
+    'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى قراءة المحادثات السابقة.',
+  'pages.noAccess.historySearchBody':
+    'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى البحث في المحادثات السابقة.',
   'pages.inbox.listRegion': 'المحادثات',
   'pages.inbox.conversationRegion': 'المحادثة',
   'pages.inbox.selectTitle': 'اختر محادثة',
@@ -23,15 +25,20 @@ export const pages: Record<keyof typeof source, string> = {
   'pages.noAccess.integrationsBody': 'يدير Webhook مسؤولو مساحة العمل الذين لديهم صلاحية التكاملات.',
   'pages.settings.opening': 'جارٍ فتح الإعدادات',
   'pages.noAccess.sites': 'ليست لديك صلاحية الوصول إلى إعدادات المواقع',
-  'pages.noAccess.sitesBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى إدارة المواقع أو أداة الدردشة.',
+  'pages.noAccess.sitesBody':
+    'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى إدارة المواقع أو أداة الدردشة.',
   'pages.noAccess.team': 'ليست لديك صلاحية الوصول إلى قائمة الفريق',
   'pages.noAccess.teamBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى عرض زملائك أو إدارتهم.',
   'pages.noAccess.visitorRecords': 'ليست لديك صلاحية الوصول إلى سجلات الزوار',
-  'pages.noAccess.visitorRecordsBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى عرض ملفات الزوار.',
+  'pages.noAccess.visitorRecordsBody':
+    'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى عرض ملفات الزوار.',
   'pages.noAccess.visitors': 'ليست لديك صلاحية الوصول إلى الزوار',
-  'pages.noAccess.visitorsBody': 'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى عرض الزوار المباشرين.',
-  'pages.inbox.waitingBody': '{count, plural, zero {لا يوجد زوار في قائمة غير المُسندة.} one {زائر واحد ينتظر في قائمة غير المُسندة.} two {زائران ينتظران في قائمة غير المُسندة.} few {# زوار ينتظرون في قائمة غير المُسندة.} many {# زائرًا ينتظرون في قائمة غير المُسندة.} other {# زائر ينتظرون في قائمة غير المُسندة.}}',
-  'pages.inbox.selectBody': 'اختر محادثة من القائمة. تظهر المحادثات الجديدة في قائمة غير المُسندة فور وصولها.',
+  'pages.noAccess.visitorsBody':
+    'اطلب من أحد المسؤولين منحك الصلاحية إذا كنت بحاجة إلى عرض الزوار المباشرين.',
+  'pages.inbox.waitingBody':
+    '{count, plural, zero {لا يوجد زوار في قائمة غير المُسندة.} one {زائر واحد ينتظر في قائمة غير المُسندة.} two {زائران ينتظران في قائمة غير المُسندة.} few {# زوار ينتظرون في قائمة غير المُسندة.} many {# زائرًا ينتظرون في قائمة غير المُسندة.} other {# زائر ينتظرون في قائمة غير المُسندة.}}',
+  'pages.inbox.selectBody':
+    'اختر محادثة من القائمة. تظهر المحادثات الجديدة في قائمة غير المُسندة فور وصولها.',
   'pages.notFound.title': 'الصفحة غير موجودة',
   'pages.notFound.body': 'ربما كُتب العنوان بشكل خاطئ، أو نُقلت الصفحة.',
   'pages.notFound.home': 'الانتقال إلى صندوق الوارد',

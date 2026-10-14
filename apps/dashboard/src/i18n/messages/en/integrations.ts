@@ -5,9 +5,11 @@ export const integrations = {
   'integrations.form.maxChars': 'Use at most {max} characters.',
 
   'integrations.view.noAccessTitle': 'You don’t have access to integrations',
-  'integrations.view.noAccessBody': 'Integration tokens, webhooks and connectors are managed by workspace admins with the integrations permission.',
+  'integrations.view.noAccessBody':
+    'Integration tokens, webhooks and connectors are managed by workspace admins with the integrations permission.',
   'integrations.view.title': 'Integrations',
-  'integrations.view.description': 'Connect {brand} to your own systems with scoped API tokens and signed webhooks. Secrets are shown once and every change is recorded in the audit log.',
+  'integrations.view.description':
+    'Connect {brand} to your own systems with scoped API tokens and signed webhooks. Secrets are shown once and every change is recorded in the audit log.',
   'integrations.view.tabsLabel': 'Integration types',
   'integrations.view.tabTokens': 'API tokens',
   'integrations.view.tabWebhooks': 'Webhooks',
@@ -17,7 +19,8 @@ export const integrations = {
   'integrations.scopes.group.reporting': 'Reporting',
   'integrations.scopes.group.administration': 'Administration',
   'integrations.scopes.chatsRead.label': 'Read chats',
-  'integrations.scopes.chatsRead.description': 'Chat history, transcripts and internal notes, plus department and team names.',
+  'integrations.scopes.chatsRead.description':
+    'Chat history, transcripts and internal notes, plus department and team names.',
   'integrations.scopes.chatsWrite.label': 'Act on chats',
   'integrations.scopes.chatsWrite.description': 'Serve, monitor and transfer chats, and create tags.',
   'integrations.scopes.visitorsRead.label': 'Read visitors',
@@ -27,18 +30,21 @@ export const integrations = {
   'integrations.scopes.analyticsRead.label': 'Read analytics',
   'integrations.scopes.analyticsRead.description': 'Analytics reports, agent reports and the live monitor.',
   'integrations.scopes.webhooksManage.label': 'Manage webhooks',
-  'integrations.scopes.webhooksManage.description': 'Create, change and delete webhook endpoints and retry deliveries.',
+  'integrations.scopes.webhooksManage.description':
+    'Create, change and delete webhook endpoints and retry deliveries.',
   'integrations.scopes.grantsFallback': 'Grants: {permissions}.',
 
   'integrations.copy.ariaLabel': 'Copy {what}',
   'integrations.copy.failed': 'Copy failed',
   'integrations.copy.copiedStatus': 'Copied the {what} to the clipboard.',
   'integrations.copy.failedStatus': 'Copy failed. Select the text and copy it manually.',
-  'integrations.secret.warningTitle': 'Copy it now — you won’t see it again',
-  'integrations.secret.warningBody': '{brand} stores only a protected form of this {what}. If you lose it, rotate it to get a new one.',
+  'integrations.secret.warningTitle': 'Copy it now. You won’t see it again',
+  'integrations.secret.warningBody':
+    '{brand} stores only a protected form of this {what}. If you lose it, rotate it to get a new one.',
   'integrations.secret.doneStored': 'Done, I’ve stored it',
   'integrations.secret.goneTitle': 'The secret can’t be shown again',
-  'integrations.secret.goneBody': 'This request was already completed earlier, and secrets are only ever shown once. Rotate again to get a new secret.',
+  'integrations.secret.goneBody':
+    'This request was already completed earlier, and secrets are only ever shown once. Rotate again to get a new secret.',
   'integrations.secret.tokenLabel': 'Integration token',
   'integrations.secret.signingSecretLabel': 'Signing secret',
   'integrations.what.integrationToken': 'integration token',
@@ -53,7 +59,8 @@ export const integrations = {
   'integrations.reauth.wrongCode': 'That code is not valid. Try the current code from your app.',
   'integrations.reauth.rateLimited': 'Too many attempts. Wait a few minutes, then try again.',
   'integrations.reauth.title': 'Confirm it’s you',
-  'integrations.reauth.description': 'To {action}, confirm your password{mfa, select, yes { and authentication code} other {}}. You won’t be asked again for a few minutes.',
+  'integrations.reauth.description':
+    'To {action}, confirm your password{mfa, select, yes { and authentication code} other {}}. You won’t be asked again for a few minutes.',
   'integrations.reauth.signedInAs': 'Signed in as {email}',
   'integrations.reauth.password': 'Password',
   'integrations.reauth.code': 'Authentication code',
@@ -67,14 +74,17 @@ export const integrations = {
   'integrations.tokenStatus.expired': 'Expired',
   'integrations.tokenStatus.revoked': 'Revoked',
   'integrations.tokens.title': 'API tokens',
-  'integrations.tokens.description': 'Tenant-scoped tokens for your own systems. Each token’s secret is shown once; {brand} keeps only a hash. Tokens expire after {defaultDays} days by default (at most {maxDays}).',
+  'integrations.tokens.description':
+    'Tenant-scoped tokens for your own systems. Each token’s secret is shown once; {brand} keeps only a hash. Tokens expire after {defaultDays} days by default (at most {maxDays}).',
   'integrations.tokens.create': 'Create token',
   'integrations.tokens.showRevoked': 'Show revoked tokens',
   'integrations.tokens.loadError': 'Could not load integration tokens: {error}',
   'integrations.tokens.emptyTitle': 'No tokens yet',
-  'integrations.tokens.emptyBody': 'Create a token to let another system read chats, update visitors or manage webhooks through the API.',
+  'integrations.tokens.emptyBody':
+    'Create a token to let another system read chats, update visitors or manage webhooks through the API.',
   'integrations.tokens.emptyActiveTitle': 'No active or expired tokens',
-  'integrations.tokens.emptyActiveBody': 'Create a token to connect another system. Turn on “Show revoked tokens” to see tokens you revoked.',
+  'integrations.tokens.emptyActiveBody':
+    'Create a token to connect another system. Turn on “Show revoked tokens” to see tokens you revoked.',
   'integrations.tokens.colPrefix': 'Prefix',
   'integrations.tokens.colScopes': 'Scopes',
   'integrations.tokens.colCreatedBy': 'Created by',
@@ -94,16 +104,19 @@ export const integrations = {
   'integrations.tokens.createdTitle': 'Token “{name}” created',
   'integrations.tokens.rotateTitle': 'Rotate “{name}”?',
   'integrations.tokens.rotateTitleFallback': 'Rotate token',
-  'integrations.tokens.rotateBody': 'A new secret is issued and the current one stops working immediately. Integrations using this token fail until you update them with the new secret. Name, scopes and expiry stay the same.',
+  'integrations.tokens.rotateBody':
+    'A new secret is issued and the current one stops working immediately. Integrations using this token fail until you update them with the new secret. Name, scopes and expiry stay the same.',
   'integrations.tokens.rotateConfirm': 'Rotate secret',
   'integrations.tokens.newSecretTitle': 'New secret for “{name}”',
   'integrations.tokens.revokeTitle': 'Revoke “{name}”?',
   'integrations.tokens.revokeTitleFallback': 'Revoke token',
-  'integrations.tokens.revokeBody': 'Any system using {prefix} loses API access immediately. This can’t be undone — create a new token if you need access again.',
+  'integrations.tokens.revokeBody':
+    'Any system using {prefix} loses API access immediately. This can’t be undone. Create a new token if you need access again.',
   'integrations.tokens.revokeConfirm': 'Revoke token',
   'integrations.tokens.revoked': 'Revoked “{name}”',
   'integrations.tokens.secretSummary': 'Scopes: {scopes} · Expires {date}',
-  'integrations.tokens.secretUsage': 'Send it as {header}. Store it in a secret manager — anyone holding it has the access of its scopes until it expires or is revoked.',
+  'integrations.tokens.secretUsage':
+    'Send it as {header}. Store it in a secret manager. Anyone holding it has the access of its scopes until it expires or is revoked.',
 
   'integrations.tokenCreate.nameRequired': 'Give the token a name so you can recognise it later.',
   'integrations.tokenCreate.scopesRequired': 'Choose at least one scope.',
@@ -111,19 +124,24 @@ export const integrations = {
   'integrations.tokenCreate.expiryRequired': 'Pick an expiry date.',
   'integrations.tokenCreate.expiryTooSoon': 'The expiry must be at least one hour away.',
   'integrations.tokenCreate.title': 'Create integration token',
-  'integrations.tokenCreate.description': 'Tokens let your own systems call the {brand} API. A token can’t have more access than you do.',
+  'integrations.tokenCreate.description':
+    'Tokens let your own systems call the {brand} API. A token can’t have more access than you do.',
   'integrations.tokenCreate.nameHelp': 'For example, the system that will use it: “CRM sync”.',
   'integrations.tokenCreate.scopes': 'Scopes',
   'integrations.tokenCreate.scopesHelp': 'Grant only what the integration needs.',
-  'integrations.tokenCreate.scopesHelpUnavailable': 'Grant only what the integration needs. A token can’t have more access than you, so scopes needing permissions your role lacks are unavailable.',
+  'integrations.tokenCreate.scopesHelpUnavailable':
+    'Grant only what the integration needs. A token can’t have more access than you, so scopes needing permissions your role lacks are unavailable.',
   'integrations.tokenCreate.scopesLoadError': 'Could not load the available scopes: {error}',
   'integrations.tokenCreate.unavailable': 'Unavailable: it needs permissions your role doesn’t have.',
-  'integrations.tokenCreate.unavailableList': '{count, plural, one {Unavailable: it needs a permission your role doesn’t have ({permissions}).} other {Unavailable: it needs permissions your role doesn’t have ({permissions}).}}',
+  'integrations.tokenCreate.unavailableList':
+    '{count, plural, one {Unavailable: it needs a permission your role doesn’t have ({permissions}).} other {Unavailable: it needs permissions your role doesn’t have ({permissions}).}}',
   'integrations.tokenCreate.expires': 'Expires',
-  'integrations.tokenCreate.expiresOn': '{max, plural, one {On {date}. Maximum # day.} other {On {date}. Maximum # days.}}',
+  'integrations.tokenCreate.expiresOn':
+    '{max, plural, one {On {date}. Maximum # day.} other {On {date}. Maximum # days.}}',
   'integrations.tokenCreate.expiresMax': '{max, plural, one {Maximum # day.} other {Maximum # days.}}',
   'integrations.tokenCreate.presetDays': '{count, plural, one {# day} other {# days}}',
-  'integrations.tokenCreate.presetDaysRecommended': '{count, plural, one {# day (recommended)} other {# days (recommended)}}',
+  'integrations.tokenCreate.presetDaysRecommended':
+    '{count, plural, one {# day (recommended)} other {# days (recommended)}}',
   'integrations.tokenCreate.customDate': 'Custom date…',
   'integrations.tokenCreate.expiryDate': 'Expiry date',
 
@@ -132,17 +150,20 @@ export const integrations = {
   'integrations.event.chatStarted.label': 'Chat started',
   'integrations.event.chatStarted.description': 'An agent accepted a chat.',
   'integrations.event.chatClosed.label': 'Chat closed',
-  'integrations.event.chatClosed.description': 'A chat ended (ids, timings and close reason; no transcript text).',
+  'integrations.event.chatClosed.description':
+    'A chat ended (ids, timings and close reason; no transcript text).',
   'integrations.event.ratingUpdated.label': 'Rating updated',
   'integrations.event.ratingUpdated.description': 'A visitor rated a chat or changed the rating.',
   'integrations.event.offlineSubmitted.label': 'Offline message',
   'integrations.event.offlineSubmitted.description': 'A visitor left an offline message.',
   'integrations.event.privacyErased.label': 'Visitor erased',
-  'integrations.event.privacyErased.description': 'A privacy erasure completed — delete the visitor in your systems too.',
+  'integrations.event.privacyErased.description':
+    'A privacy erasure completed. Delete the visitor in your systems too.',
   'integrations.event.triggerWebhook.label': 'Trigger webhook',
   'integrations.event.triggerWebhook.description': 'A trigger ran its “send webhook” action.',
   'integrations.event.webhookTest.label': 'Test event',
-  'integrations.event.webhookTest.description': 'Sample event sent from this page. Contains no customer data.',
+  'integrations.event.webhookTest.description':
+    'Sample event sent from this page. Contains no customer data.',
 
   'integrations.delivery.status.pending': 'Pending',
   'integrations.delivery.status.sending': 'Sending',
@@ -154,11 +175,13 @@ export const integrations = {
   'integrations.delivery.filterAll': 'All statuses',
 
   'integrations.webhooks.title': 'Webhook endpoints',
-  'integrations.webhooks.description': '{brand} POSTs signed JSON events to your endpoints with at-least-once delivery and automatic retries for up to 24 hours. Each endpoint’s signing secret is shown once.',
+  'integrations.webhooks.description':
+    '{brand} POSTs signed JSON events to your endpoints with at-least-once delivery and automatic retries for up to 24 hours. Each endpoint’s signing secret is shown once.',
   'integrations.webhooks.add': 'Add endpoint',
   'integrations.webhooks.loadError': 'Could not load webhook endpoints: {error}',
   'integrations.webhooks.emptyTitle': 'No webhook endpoints',
-  'integrations.webhooks.emptyBody': 'Add an endpoint to be notified when chats start and end, ratings change, offline messages arrive or a visitor is erased.',
+  'integrations.webhooks.emptyBody':
+    'Add an endpoint to be notified when chats start and end, ratings change, offline messages arrive or a visitor is erased.',
   'integrations.webhooks.recentFailures': '{count, plural, one {# recent failure} other {# recent failures}}',
   'integrations.webhooks.eventSummary': '{count, plural, one {# event} other {# events}}: {events}',
   'integrations.webhooks.lastDelivery': 'Last delivery:',
@@ -166,41 +189,48 @@ export const integrations = {
   'integrations.webhooks.lastSuccess': '· last success {time}',
   'integrations.webhooks.openEndpoint': 'Open endpoint {host}',
   'integrations.webhooks.addedTitle': 'Endpoint added',
-  'integrations.webhooks.addedUsage': 'Configure your receiver with this secret and verify the {header} header on every request. The endpoint page has a verification example and lets you send a test event.',
+  'integrations.webhooks.addedUsage':
+    'Configure your receiver with this secret and verify the {header} header on every request. The endpoint page has a verification example and lets you send a test event.',
 
   'integrations.webhookForm.urlRequired': 'Enter the URL that should receive events.',
   'integrations.webhookForm.urlInvalid': 'Enter a full URL, for example {example}.',
   'integrations.webhookForm.eventsRequired': 'Choose at least one event.',
   'integrations.webhookForm.editTitle': 'Edit webhook endpoint',
   'integrations.webhookForm.addTitle': 'Add webhook endpoint',
-  'integrations.webhookForm.description': '{brand} sends a signed POST request to this URL for each selected event. Private, loopback and cloud metadata addresses are refused.',
+  'integrations.webhookForm.description':
+    '{brand} sends a signed POST request to this URL for each selected event. Private, loopback and cloud metadata addresses are refused.',
   'integrations.webhookForm.conflictTitle': 'Someone else changed this endpoint',
-  'integrations.webhookForm.conflictBody': 'Your changes were not saved. Reload to see the latest version, then make your changes again.',
+  'integrations.webhookForm.conflictBody':
+    'Your changes were not saved. Reload to see the latest version, then make your changes again.',
   'integrations.webhookForm.url': 'Endpoint URL',
   'integrations.webhookForm.urlHelp': 'Use HTTPS. The address must be reachable from the internet.',
   'integrations.webhookForm.events': 'Events',
-  'integrations.webhookForm.eventsHelp': 'Payloads carry ids and timings only — never transcript text, names or emails.',
+  'integrations.webhookForm.eventsHelp':
+    'Payloads carry ids and timings only, never transcript text, names or emails.',
   'integrations.webhookForm.clearAll': 'Clear all',
   'integrations.webhookForm.selectAll': 'Select all',
   'integrations.webhookForm.typesLoadError': 'Could not load event types: {error}',
   'integrations.webhookForm.eventFallback': 'Event from the {brand} event contract.',
-  'integrations.webhookForm.eventRetired': 'No longer offered — clear it to stop subscribing.',
+  'integrations.webhookForm.eventRetired': 'No longer offered. Clear it to stop subscribing.',
   'integrations.webhookForm.descriptionHelp': 'Optional. Helps your team recognise the endpoint.',
 
-  'integrations.detail.overlapNone': 'No overlap — stop using the old secret now',
+  'integrations.detail.overlapNone': 'No overlap: stop using the old secret now',
   'integrations.detail.overlapMinutes': '{count, plural, one {# minute} other {# minutes}}',
   'integrations.detail.overlapHours': '{count, plural, one {# hour} other {# hours}}',
-  'integrations.detail.overlapHoursRecommended': '{count, plural, one {# hour (recommended)} other {# hours (recommended)}}',
+  'integrations.detail.overlapHoursRecommended':
+    '{count, plural, one {# hour (recommended)} other {# hours (recommended)}}',
   'integrations.detail.enabledToast': 'Endpoint enabled',
   'integrations.detail.disabledToast': 'Endpoint disabled',
-  'integrations.detail.conflict': 'Someone else changed this endpoint. Reload to see the latest version, then try again.',
+  'integrations.detail.conflict':
+    'Someone else changed this endpoint. Reload to see the latest version, then try again.',
   'integrations.detail.enableFailed': 'Could not enable the endpoint: {error}',
   'integrations.detail.disableFailed': 'Could not disable the endpoint: {error}',
   'integrations.detail.testQueued': 'Test event queued (event {id}…)',
   'integrations.detail.testFailed': 'Could not send a test event: {error}',
   'integrations.detail.deletedReturning': 'Deleted the endpoint for {host}. Returning to webhooks…',
   'integrations.detail.notFoundTitle': 'Endpoint not found',
-  'integrations.detail.notFoundBody': 'It may have been deleted. Go back to the webhook list to see current endpoints.',
+  'integrations.detail.notFoundBody':
+    'It may have been deleted. Go back to the webhook list to see current endpoints.',
   'integrations.detail.backToWebhooks': 'Back to webhooks',
   'integrations.detail.loadError': 'Could not load this endpoint: {error}',
   'integrations.detail.sendTest': 'Send test event',
@@ -208,7 +238,8 @@ export const integrations = {
   'integrations.detail.url': 'URL',
   'integrations.detail.deliverLabel': 'Deliver events to this endpoint',
   'integrations.detail.deliveringOn': 'Events are delivered.',
-  'integrations.detail.deliveringOff': 'No events are delivered while disabled. Enabling resets the failure count.',
+  'integrations.detail.deliveringOff':
+    'No events are delivered while disabled. Enabling resets the failure count.',
   'integrations.detail.events': 'Events',
   'integrations.detail.signingSecret': 'Signing secret',
   'integrations.detail.generation': 'Generation {n}',
@@ -217,36 +248,48 @@ export const integrations = {
   'integrations.detail.lastSuccess': 'Last success',
   'integrations.detail.noSuccessYet': 'No successful delivery yet',
   'integrations.detail.deleteTitle': 'Delete endpoint',
-  'integrations.detail.deleteBody': 'Stops all deliveries to this URL and removes its delivery history. This can’t be undone.',
+  'integrations.detail.deleteBody':
+    'Stops all deliveries to this URL and removes its delivery history. This can’t be undone.',
   'integrations.detail.saved': 'Endpoint saved',
   'integrations.detail.deleteConfirmTitle': 'Delete this endpoint?',
-  'integrations.detail.deleteConfirmBody': '{brand} stops sending events to {url} immediately and its delivery history is removed. This can’t be undone.',
+  'integrations.detail.deleteConfirmBody':
+    '{brand} stops sending events to {url} immediately and its delivery history is removed. This can’t be undone.',
   'integrations.detail.deleted': 'Deleted the endpoint for {host}',
   'integrations.detail.newSecretTitle': 'New signing secret',
-  'integrations.detail.newSecretOverlap': 'Both secrets sign deliveries until {date}. Update your receiver before then.',
-  'integrations.detail.newSecretNoOverlap': 'The previous secret no longer signs deliveries. Update your receiver now.',
+  'integrations.detail.newSecretOverlap':
+    'Both secrets sign deliveries until {date}. Update your receiver before then.',
+  'integrations.detail.newSecretNoOverlap':
+    'The previous secret no longer signs deliveries. Update your receiver now.',
   'integrations.detail.back': 'Webhooks',
   'integrations.detail.rotateTitle': 'Rotate the signing secret for {host}?',
-  'integrations.detail.rotateBody': 'A new secret is issued and shown once. Use an overlap so your receiver keeps accepting deliveries while you update it.',
+  'integrations.detail.rotateBody':
+    'A new secret is issued and shown once. Use an overlap so your receiver keeps accepting deliveries while you update it.',
   'integrations.detail.overlap': 'Overlap',
-  'integrations.detail.overlapHelp': 'During the overlap every delivery carries both signatures — {header} — so a receiver that knows either secret accepts it. After the overlap only the new secret signs.',
-  'integrations.detail.overlapNoneHelp': 'The old secret stops signing immediately. Deliveries fail verification until your receiver uses the new secret.',
+  'integrations.detail.overlapHelp':
+    'During the overlap every delivery carries both signatures ({header}), so a receiver that knows either secret accepts it. After the overlap only the new secret signs.',
+  'integrations.detail.overlapNoneHelp':
+    'The old secret stops signing immediately. Deliveries fail verification until your receiver uses the new secret.',
 
   'integrations.signature.title': 'Verify signatures',
-  'integrations.signature.description': 'Every request carries {timestampHeader} and {signatureHeader}. Reject requests whose signature doesn’t match or whose timestamp is more than 5 minutes old, and deduplicate on the event id ({eventIdHeader}).',
+  'integrations.signature.description':
+    'Every request carries {timestampHeader} and {signatureHeader}. Reject requests whose signature doesn’t match or whose timestamp is more than 5 minutes old, and deduplicate on the event id ({eventIdHeader}).',
 
   'integrations.deliveries.redeliveryQueued': 'Redelivery queued for event {id}… (same event id)',
   'integrations.deliveries.retryFailed': 'Could not retry the {event} delivery: {error}',
   'integrations.deliveries.title': 'Deliveries',
-  'integrations.deliveries.description': 'Every attempt to deliver an event to this endpoint. Failed requests are retried at about 10 s, 1 min, 5 min, 30 min, 2 h, 8 h and 24 h, then moved to the dead letter. Retrying sends the same event id again.',
+  'integrations.deliveries.description':
+    'Every attempt to deliver an event to this endpoint. Failed requests are retried at about 10 s, 1 min, 5 min, 30 min, 2 h, 8 h and 24 h, then moved to the dead letter. Retrying sends the same event id again.',
   'integrations.deliveries.filterLabel': 'Filter deliveries by status',
-  'integrations.deliveries.disabledNotice': 'This endpoint is disabled. New events aren’t delivered and retries are refused until you enable it.',
+  'integrations.deliveries.disabledNotice':
+    'This endpoint is disabled. New events aren’t delivered and retries are refused until you enable it.',
   'integrations.deliveries.loadError': 'Could not load deliveries: {error}',
   'integrations.deliveries.emptyStatusTitle':
     '{status, select, pending {No pending deliveries} sending {No sending deliveries} retrying {No retrying deliveries} delivered {No succeeded deliveries} failed {No failed deliveries} dead {No dead letter deliveries} cancelled {No cancelled deliveries} other {No deliveries}}',
-  'integrations.deliveries.emptyStatusBody': 'No deliveries for this endpoint have that status. Choose “All statuses” to see every delivery.',
+  'integrations.deliveries.emptyStatusBody':
+    'No deliveries for this endpoint have that status. Choose “All statuses” to see every delivery.',
   'integrations.deliveries.emptyTitle': 'No deliveries yet',
-  'integrations.deliveries.emptyBody': 'Deliveries appear here when a subscribed event happens. Send a test event to try the endpoint now.',
+  'integrations.deliveries.emptyBody':
+    'Deliveries appear here when a subscribed event happens. Send a test event to try the endpoint now.',
   'integrations.deliveries.showAll': 'Show all deliveries',
   'integrations.deliveries.refreshFailed': 'Refresh failed: {error}',
   'integrations.deliveries.colEvent': 'Event',
@@ -266,7 +309,8 @@ export const integrations = {
   'integrations.deliveries.notDelivered': 'Not delivered',
   'integrations.deliveries.responseExcerpt': 'Response excerpt',
   'integrations.deliveries.noResponseBody': 'No response body recorded',
-  'integrations.deliveries.excerptNote': 'First {count} characters, with anything that looks like a credential masked.',
+  'integrations.deliveries.excerptNote':
+    'First {count} characters, with anything that looks like a credential masked.',
 
   'integrations.connectors.category.ticketing': 'Support tickets',
   'integrations.connectors.category.crm': 'CRM',
@@ -283,20 +327,23 @@ export const integrations = {
   'integrations.connectors.field.privateAppToken': 'Private app token',
   'integrations.connectors.field.webhookUrl': 'Incoming webhook URL',
   'integrations.connectors.status.notAvailable': 'Not available in this release',
-  'integrations.connectors.status.healthy': 'Connected — health check passed',
+  'integrations.connectors.status.healthy': 'Connected: health check passed',
   'integrations.connectors.status.unhealthy': 'Health check failed',
-  'integrations.connectors.status.unverified': 'Configured — not yet verified',
-  'integrations.connectors.status.notConfigured': 'Not configured — needs credentials',
-  'integrations.connectors.blockedAdapter': 'Health checks become available once a release includes this adapter.',
+  'integrations.connectors.status.unverified': 'Configured: not yet verified',
+  'integrations.connectors.status.notConfigured': 'Not configured: needs credentials',
+  'integrations.connectors.blockedAdapter':
+    'Health checks become available once a release includes this adapter.',
   'integrations.connectors.blockedCredentials': 'Add {name} credentials before running a health check.',
   'integrations.connectors.unavailable': '{message}. No data is sent to {name}.',
   'integrations.connectors.checkFailed': 'Health check could not run: {error}',
   'integrations.connectors.title': 'Connectors',
-  'integrations.connectors.description': 'Optional connections to third-party tools. A connector only sends data after credentials are configured and a health check passes; until then it stays disabled and nothing leaves {brand}.',
+  'integrations.connectors.description':
+    'Optional connections to third-party tools. A connector only sends data after credentials are configured and a health check passes; until then it stays disabled and nothing leaves {brand}.',
   'integrations.connectors.loadError': 'Could not load connectors: {error}',
   'integrations.connectors.emptyTitle': 'No connectors in this release',
   'integrations.connectors.emptyBody': 'This deployment doesn’t include any third-party connectors.',
-  'integrations.connectors.credentialsNotice': 'Connector credentials can’t be added from the dashboard in this release. Webhooks and API tokens are the supported way to connect other systems today.',
+  'integrations.connectors.credentialsNotice':
+    'Connector credentials can’t be added from the dashboard in this release. Webhooks and API tokens are the supported way to connect other systems today.',
   'integrations.connectors.wouldDo': 'Would do',
   'integrations.connectors.needs': 'Needs',
   'integrations.connectors.wouldSend': 'Data it would send',
@@ -305,5 +352,6 @@ export const integrations = {
   'integrations.connectors.checkPassed': 'Health check passed',
   'integrations.connectors.checkFailedTitle': 'Health check failed',
   'integrations.connectors.checked': 'Checked {time}',
-  'integrations.connectors.checkedUnhealthy': 'Checked {time} · Nothing is sent to {name} until a check passes.',
+  'integrations.connectors.checkedUnhealthy':
+    'Checked {time} · Nothing is sent to {name} until a check passes.',
 } satisfies Record<string, string>;

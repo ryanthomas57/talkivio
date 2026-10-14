@@ -1,54 +1,90 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>Stoneware mug set — Northwind Goods (demo)</title>
-  <link rel="stylesheet" href="/demo.css" />
-  <!-- Talkivio embed snippet (the loader tag itself is injected by /demo.js with the chosen site key) -->
-  <script>window.Talkivio = window.Talkivio || function () { (window.Talkivio.q = window.Talkivio.q || []).push(arguments); };</script>
-  <script src="/demo.js"></script>
-</head>
-<body>
-  <header class="site">
-    <a class="logo" href="/index.html">Northwind <span>Goods</span></a>
-    <nav class="site" aria-label="Main">
-      <a href="/index.html">Shop</a>
-      <a href="/product.html" aria-current="page">Product</a>
-      <a href="/pricing.html">Pricing</a>
-      <a href="/app.html">Account (SPA)</a>
-    </nav>
-  </header>
-  <main>
-    <section class="hero" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:32px;align-items:start">
-      <div class="swatch" style="height:320px;background:#dfe6e9"></div>
-      <div>
-        <h1>Stoneware mug set</h1>
-        <p class="price">$42</p>
-        <p class="muted">Set of four hand-glazed mugs, 350 ml. Dishwasher and microwave safe. Ships in 2-3 business days.</p>
-        <p><button class="btn" type="button">Add to cart</button> <button class="btn secondary" type="button" data-sdk="startChat" data-arg='{"message":"Is the stoneware mug set back in stock?"}'>Ask about this product</button></p>
-      </div>
-    </section>
-    <section class="console" aria-labelledby="console-title">
-      <h2 id="console-title">SDK console</h2>
-      <p class="muted">Calls <code>Talkivio(command, ...)</code> on this page. Events appear below.</p>
-      <div class="row">
-        <button type="button" data-sdk="open">open</button>
-        <button type="button" data-sdk="close">close</button>
-        <button type="button" data-sdk="hide">hide</button>
-        <button type="button" data-sdk="show">show</button>
-        <button type="button" data-sdk="identify" data-arg='{"name":"Pat Demo","email":"pat@example.com"}'>identify</button>
-        <button type="button" data-sdk="setTags" data-arg='["demo","vip"]'>setTags</button>
-        <button type="button" data-sdk="setCustomFields" data-arg='{"plan":"pro","cartValue":129}'>setCustomFields</button>
-        <button type="button" data-sdk="setLocale" data-arg='"ar"'>setLocale ar</button>
-        <button type="button" data-sdk="setLocale" data-arg='"en"'>setLocale en</button>
-        <button type="button" data-sdk="startChat" data-arg='{"message":"Hi! I have a question about my order."}'>startChat</button>
-        <button type="button" data-sdk="endChat">endChat</button>
-        <button type="button" data-sdk="getState">getState</button>
-        <button type="button" data-sdk="resetIdentity">resetIdentity</button>
-      </div>
-      <pre id="sdk-log" aria-live="off"></pre>
-    </section>
-  </main>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Stoneware mug set | Northwind Goods (demo)</title>
+    <link rel="stylesheet" href="/demo.css" />
+    <!-- Talkivio embed snippet (the loader tag itself is injected by /demo.js with the chosen site key) -->
+    <script>
+      window.Talkivio =
+        window.Talkivio ||
+        function () {
+          (window.Talkivio.q = window.Talkivio.q || []).push(arguments);
+        };
+    </script>
+    <script src="/demo.js"></script>
+  </head>
+  <body>
+    <header class="site">
+      <a class="logo" href="/index.html">Northwind <span>Goods</span></a>
+      <nav class="site" aria-label="Main">
+        <a href="/index.html">Shop</a>
+        <a href="/product.html" aria-current="page">Product</a>
+        <a href="/pricing.html">Pricing</a>
+        <a href="/app.html">Account (SPA)</a>
+      </nav>
+    </header>
+    <main>
+      <section
+        class="hero"
+        style="
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 32px;
+          align-items: start;
+        "
+      >
+        <div class="swatch" style="height: 320px; background: #dfe6e9"></div>
+        <div>
+          <h1>Stoneware mug set</h1>
+          <p class="price">$42</p>
+          <p class="muted">
+            Set of four hand-glazed mugs, 350 ml. Dishwasher and microwave safe. Ships in 2-3 business days.
+          </p>
+          <p>
+            <button class="btn" type="button">Add to cart</button>
+            <button
+              class="btn secondary"
+              type="button"
+              data-sdk="startChat"
+              data-arg='{"message":"Is the stoneware mug set back in stock?"}'
+            >
+              Ask about this product
+            </button>
+          </p>
+        </div>
+      </section>
+      <section class="console" aria-labelledby="console-title">
+        <h2 id="console-title">SDK console</h2>
+        <p class="muted">Calls <code>Talkivio(command, ...)</code> on this page. Events appear below.</p>
+        <div class="row">
+          <button type="button" data-sdk="open">open</button>
+          <button type="button" data-sdk="close">close</button>
+          <button type="button" data-sdk="hide">hide</button>
+          <button type="button" data-sdk="show">show</button>
+          <button type="button" data-sdk="identify" data-arg='{"name":"Pat Demo","email":"pat@example.com"}'>
+            identify
+          </button>
+          <button type="button" data-sdk="setTags" data-arg='["demo","vip"]'>setTags</button>
+          <button type="button" data-sdk="setCustomFields" data-arg='{"plan":"pro","cartValue":129}'>
+            setCustomFields
+          </button>
+          <button type="button" data-sdk="setLocale" data-arg='"ar"'>setLocale ar</button>
+          <button type="button" data-sdk="setLocale" data-arg='"en"'>setLocale en</button>
+          <button
+            type="button"
+            data-sdk="startChat"
+            data-arg='{"message":"Hi! I have a question about my order."}'
+          >
+            startChat
+          </button>
+          <button type="button" data-sdk="endChat">endChat</button>
+          <button type="button" data-sdk="getState">getState</button>
+          <button type="button" data-sdk="resetIdentity">resetIdentity</button>
+        </div>
+        <pre id="sdk-log" aria-live="off"></pre>
+      </section>
+    </main>
+  </body>
 </html>

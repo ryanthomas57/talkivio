@@ -210,10 +210,13 @@ export function WidgetEditor({
     setBusy('save');
     setNotice(null);
     try {
-      const r = await api.put<{ revision: number; config: WidgetConfig; etag: string }>(`/sites/${site.id}/widget-config`, {
-        config: toSave,
-        baseEtag: baseEtag.current,
-      });
+      const r = await api.put<{ revision: number; config: WidgetConfig; etag: string }>(
+        `/sites/${site.id}/widget-config`,
+        {
+          config: toSave,
+          baseEtag: baseEtag.current,
+        },
+      );
       baseEtag.current = r.etag;
       const saved = mergeWidgetConfig(r.config);
       setServer((s) =>
@@ -234,7 +237,15 @@ export function WidgetEditor({
       setSrvErrors({});
       qc.setQueryData(widgetConfigKey(site.id), (old: ConfigResponse | undefined) =>
         old
-          ? { ...old, draft: { revision: r.revision, config: saved, etag: r.etag, createdAt: new Date().toISOString() } }
+          ? {
+              ...old,
+              draft: {
+                revision: r.revision,
+                config: saved,
+                etag: r.etag,
+                createdAt: new Date().toISOString(),
+              },
+            }
           : old,
       );
       if (r.revision !== expected)
@@ -262,7 +273,9 @@ export function WidgetEditor({
       setNotice({
         tone: 'danger',
         title: t('sites.widget.notice.notSaved'),
-        body: Object.keys(fe).length ? t('sites.widget.notice.notSavedFields', { error: errorMessage(e), count: Object.keys(fe).length }) : errorMessage(e),
+        body: Object.keys(fe).length
+          ? t('sites.widget.notice.notSavedFields', { error: errorMessage(e), count: Object.keys(fe).length })
+          : errorMessage(e),
       });
       return null;
     } finally {
@@ -288,7 +301,11 @@ export function WidgetEditor({
       );
       await reload();
       void qc.invalidateQueries({ queryKey: qk.sites });
-      toast.success(r.alreadyPublished ? t('sites.widget.notice.alreadyPublished', { revision: r.revision }) : t('sites.widget.notice.published', { revision: r.revision }));
+      toast.success(
+        r.alreadyPublished
+          ? t('sites.widget.notice.alreadyPublished', { revision: r.revision })
+          : t('sites.widget.notice.published', { revision: r.revision }),
+      );
     } catch (e) {
       ownPublish.current = null;
       if (isApiError(e, 'VERSION_CONFLICT'))
@@ -315,7 +332,9 @@ export function WidgetEditor({
         const published = server.published;
         baseEtag.current = null;
         setServer({ ...server, draft: null });
-        qc.setQueryData(widgetConfigKey(site.id), (old: ConfigResponse | undefined) => (old ? { ...old, draft: null } : old));
+        qc.setQueryData(widgetConfigKey(site.id), (old: ConfigResponse | undefined) =>
+          old ? { ...old, draft: null } : old,
+        );
         setBaseline(published.config);
         setConfig(published.config);
         setSrvErrors({});
@@ -324,7 +343,12 @@ export function WidgetEditor({
       } catch (e) {
         setNotice(
           isApiError(e, 'VERSION_CONFLICT')
-            ? { tone: 'warning', title: t('sites.widget.notice.notDiscarded'), body: errorMessage(e), reload: true }
+            ? {
+                tone: 'warning',
+                title: t('sites.widget.notice.notDiscarded'),
+                body: errorMessage(e),
+                reload: true,
+              }
             : { tone: 'danger', title: t('sites.widget.notice.notDiscarded'), body: errorMessage(e) },
         );
       } finally {
@@ -460,7 +484,9 @@ export function WidgetEditor({
               <dd>
                 {server.published ? (
                   <>
-                    <span className="font-medium">{t('sites.list.revision', { revision: server.published.revision })}</span>
+                    <span className="font-medium">
+                      {t('sites.list.revision', { revision: server.published.revision })}
+                    </span>
                     {publishedAt && (
                       <>
                         {' · '}
@@ -477,13 +503,21 @@ export function WidgetEditor({
               <dt className="text-fg-2">{t('sites.widget.status.draft')}</dt>
               <dd>
                 {draftDiffers && server.draft ? (
-                  <span className="font-medium text-warning">{t('sites.widget.status.draftSaved', { revision: server.draft.revision })}</span>
+                  <span className="font-medium text-warning">
+                    {t('sites.widget.status.draftSaved', { revision: server.draft.revision })}
+                  </span>
                 ) : (
                   t('sites.widget.status.noDraft')
                 )}
               </dd>
               <dt className="text-fg-2">{t('sites.widget.status.editor')}</dt>
-              <dd>{dirty ? <span className="font-medium">{t('sites.widget.unsavedEdits')}</span> : t('sites.widget.status.matches')}</dd>
+              <dd>
+                {dirty ? (
+                  <span className="font-medium">{t('sites.widget.unsavedEdits')}</span>
+                ) : (
+                  t('sites.widget.status.matches')
+                )}
+              </dd>
             </dl>
           </div>
           {notice && (
@@ -512,7 +546,10 @@ export function WidgetEditor({
       <div className="grid items-start gap-6 min-[1200px]:grid-cols-[minmax(0,1fr)_420px]">
         <div className="flex min-w-0 flex-col gap-6">
           <Card>
-            <CardHeader title={t('sites.widget.appearance.title')} description={t('sites.widget.appearance.description')} />
+            <CardHeader
+              title={t('sites.widget.appearance.title')}
+              description={t('sites.widget.appearance.description')}
+            />
             <CardBody className="flex flex-col gap-5">
               <Group title={t('sites.widget.appearance.colors')}>
                 <div className="grid gap-5 md:grid-cols-2">
@@ -541,7 +578,11 @@ export function WidgetEditor({
                     error={errors['appearance.headerBackground']}
                     disabled={dis}
                   >
-                    <PairContrast bg={a.headerBackground} fg={a.headerTextColor} what={t('sites.widget.appearance.headerText')} />
+                    <PairContrast
+                      bg={a.headerBackground}
+                      fg={a.headerTextColor}
+                      what={t('sites.widget.appearance.headerText')}
+                    />
                   </ColorField>
                   <ColorField
                     label={t('sites.widget.appearance.headerText')}
@@ -564,8 +605,18 @@ export function WidgetEditor({
                   ]}
                 />
                 <div className="grid gap-5 sm:grid-cols-2">
-                  {number('appearance.offsetX', t('sites.widget.appearance.sideOffset'), px, t('sites.widget.appearance.sideOffsetHint', { min: 0, max: 200, mobile: 12 }))}
-                  {number('appearance.offsetY', t('sites.widget.appearance.bottomOffset'), px, t('sites.widget.appearance.bottomOffsetHint', { min: 0, max: 200 }))}
+                  {number(
+                    'appearance.offsetX',
+                    t('sites.widget.appearance.sideOffset'),
+                    px,
+                    t('sites.widget.appearance.sideOffsetHint', { min: 0, max: 200, mobile: 12 }),
+                  )}
+                  {number(
+                    'appearance.offsetY',
+                    t('sites.widget.appearance.bottomOffset'),
+                    px,
+                    t('sites.widget.appearance.bottomOffsetHint', { min: 0, max: 200 }),
+                  )}
                 </div>
               </Group>
               <Group title={t('sites.widget.appearance.launcher')}>
@@ -584,12 +635,20 @@ export function WidgetEditor({
                     </Select>
                   </Field>
                   {a.launcherIcon === 'custom' &&
-                    urlField('appearance.launcherIconUrl', t('sites.widget.appearance.customIconUrl'), t('sites.widget.appearance.customIconUrlHint', { size: 48 }))}
+                    urlField(
+                      'appearance.launcherIconUrl',
+                      t('sites.widget.appearance.customIconUrl'),
+                      t('sites.widget.appearance.customIconUrlHint', { size: 48 }),
+                    )}
                 </div>
                 {text('appearance.launcherLabel', t('sites.widget.appearance.launcherLabel'), {
                   description: t('sites.widget.appearance.launcherLabelHint'),
                 })}
-                {toggle('appearance.showLauncherLabel', t('sites.widget.appearance.showLauncherLabel'), t('sites.widget.appearance.showLauncherLabelHint'))}
+                {toggle(
+                  'appearance.showLauncherLabel',
+                  t('sites.widget.appearance.showLauncherLabel'),
+                  t('sites.widget.appearance.showLauncherLabelHint'),
+                )}
               </Group>
               <Group title={t('sites.widget.appearance.header')}>
                 <div className="grid gap-5 md:grid-cols-2">
@@ -601,17 +660,40 @@ export function WidgetEditor({
                 {text('appearance.subtitle', t('sites.widget.appearance.subtitle'), {
                   description: t('sites.widget.appearance.subtitleHint'),
                 })}
-                {urlField('appearance.logoUrl', t('sites.widget.appearance.logoUrl'), t('sites.widget.appearance.logoUrlHint'))}
+                {urlField(
+                  'appearance.logoUrl',
+                  t('sites.widget.appearance.logoUrl'),
+                  t('sites.widget.appearance.logoUrlHint'),
+                )}
                 {toggle('appearance.showAgentAvatars', t('sites.widget.appearance.showAvatars'))}
-                {toggle('appearance.showAgentNames', t('sites.widget.appearance.showNames'), t('sites.widget.appearance.showNamesHint'))}
+                {toggle(
+                  'appearance.showAgentNames',
+                  t('sites.widget.appearance.showNames'),
+                  t('sites.widget.appearance.showNamesHint'),
+                )}
                 {toggle('appearance.showBranding', t('sites.widget.appearance.showBranding'))}
               </Group>
               <Group title={t('sites.widget.appearance.shape')}>
                 <div className="grid gap-5 sm:grid-cols-2">
                   {number('appearance.borderRadius', t('sites.widget.appearance.windowRadius'), px)}
-                  {number('appearance.buttonRadius', t('sites.widget.appearance.launcherRadius'), px, t('sites.widget.appearance.launcherRadiusHint', { min: 0, max: 40, circle: 28 }))}
-                  {number('appearance.width', t('sites.widget.appearance.width'), px, t('sites.widget.appearance.widthHint', { min: 320, max: 480 }))}
-                  {number('appearance.height', t('sites.widget.appearance.height'), px, t('sites.widget.appearance.heightHint', { min: 420, max: 760 }))}
+                  {number(
+                    'appearance.buttonRadius',
+                    t('sites.widget.appearance.launcherRadius'),
+                    px,
+                    t('sites.widget.appearance.launcherRadiusHint', { min: 0, max: 40, circle: 28 }),
+                  )}
+                  {number(
+                    'appearance.width',
+                    t('sites.widget.appearance.width'),
+                    px,
+                    t('sites.widget.appearance.widthHint', { min: 320, max: 480 }),
+                  )}
+                  {number(
+                    'appearance.height',
+                    t('sites.widget.appearance.height'),
+                    px,
+                    t('sites.widget.appearance.heightHint', { min: 420, max: 760 }),
+                  )}
                   <Field label={t('sites.widget.appearance.font')}>
                     <Select
                       value={a.font}
@@ -654,7 +736,9 @@ export function WidgetEditor({
                     ? config.content.language === 'ar'
                       ? t('sites.widget.content.languageArabic')
                       : t('sites.widget.content.languageSdk')
-                    : t('sites.widget.content.languageUntranslated', { language: t(LANGUAGE_LABEL[config.content.language]) })
+                    : t('sites.widget.content.languageUntranslated', {
+                        language: t(LANGUAGE_LABEL[config.content.language]),
+                      })
                 }
               >
                 <Select
@@ -675,7 +759,9 @@ export function WidgetEditor({
                   description: t('sites.widget.content.welcomeHint'),
                 })}
                 {text('content.inputPlaceholder', t('sites.widget.content.inputPlaceholder'))}
-                {text('content.prechatGreeting', t('sites.widget.content.prechatGreeting'), { multiline: true })}
+                {text('content.prechatGreeting', t('sites.widget.content.prechatGreeting'), {
+                  multiline: true,
+                })}
                 {text('content.waitingMessage', t('sites.widget.content.waiting'), {
                   multiline: true,
                   description: t('sites.widget.content.waitingHint'),
@@ -685,7 +771,9 @@ export function WidgetEditor({
               </Group>
               <Group title={t('sites.widget.content.offline')}>
                 {text('content.offlineTitle', t('sites.widget.content.offlineTitle'))}
-                {text('content.offlineMessage', t('sites.widget.content.offlineMessage'), { multiline: true })}
+                {text('content.offlineMessage', t('sites.widget.content.offlineMessage'), {
+                  multiline: true,
+                })}
                 {text('content.offlineThanks', t('sites.widget.content.offlineThanks'), {
                   multiline: true,
                   description: t('sites.widget.content.offlineThanksHint'),
@@ -695,19 +783,33 @@ export function WidgetEditor({
           </Card>
 
           <Card>
-            <CardHeader title={t('sites.widget.behavior.title')} description={t('sites.widget.behavior.description')} />
+            <CardHeader
+              title={t('sites.widget.behavior.title')}
+              description={t('sites.widget.behavior.description')}
+            />
             <CardBody className="flex flex-col gap-5">
-              <Group title={t('sites.widget.behavior.greeting')} description={t('sites.widget.behavior.greetingHint')}>
+              <Group
+                title={t('sites.widget.behavior.greeting')}
+                description={t('sites.widget.behavior.greetingHint')}
+              >
                 {toggle('behavior.greeting.enabled', t('sites.widget.behavior.showGreeting'))}
                 {b.greeting.enabled && (
                   <>
                     {text('behavior.greeting.message', t('sites.widget.behavior.greetingMessage'))}
-                    {number('behavior.greeting.delaySeconds', t('sites.widget.behavior.delay'), t('sites.widget.unit.seconds'), t('sites.widget.behavior.delayHint', { min: 0, max: 600 }))}
+                    {number(
+                      'behavior.greeting.delaySeconds',
+                      t('sites.widget.behavior.delay'),
+                      t('sites.widget.unit.seconds'),
+                      t('sites.widget.behavior.delayHint', { min: 0, max: 600 }),
+                    )}
                     {toggle('behavior.greeting.showOnMobile', t('sites.widget.behavior.showOnMobile'))}
                   </>
                 )}
               </Group>
-              <Group title={t('sites.widget.behavior.prechat')} description={t('sites.widget.behavior.prechatHint')}>
+              <Group
+                title={t('sites.widget.behavior.prechat')}
+                description={t('sites.widget.behavior.prechatHint')}
+              >
                 {toggle('behavior.prechatForm.enabled', t('sites.widget.behavior.prechatEnabled'))}
                 <div className="grid gap-4 sm:grid-cols-2">
                   {requirement('behavior.prechatForm.name', t('common.name'))}
@@ -716,7 +818,10 @@ export function WidgetEditor({
                   {requirement('behavior.prechatForm.department', t('common.department'))}
                 </div>
               </Group>
-              <Group title={t('sites.widget.behavior.offlineForm')} description={t('sites.widget.behavior.offlineFormHint')}>
+              <Group
+                title={t('sites.widget.behavior.offlineForm')}
+                description={t('sites.widget.behavior.offlineFormHint')}
+              >
                 {toggle('behavior.offlineForm.enabled', t('sites.widget.behavior.offlineFormEnabled'))}
                 <div className="grid gap-4 sm:grid-cols-2">
                   {requirement('behavior.offlineForm.phone', t('sites.widget.behavior.phone'))}
@@ -724,17 +829,33 @@ export function WidgetEditor({
                 </div>
               </Group>
               <Group title={t('sites.widget.behavior.during')}>
-                {toggle('behavior.attachments.enabled', t('sites.widget.behavior.attachments'), t('sites.widget.behavior.attachmentsHint'))}
+                {toggle(
+                  'behavior.attachments.enabled',
+                  t('sites.widget.behavior.attachments'),
+                  t('sites.widget.behavior.attachmentsHint'),
+                )}
                 {toggle('behavior.ratings.enabled', t('sites.widget.behavior.ratings'))}
                 {toggle('behavior.transcripts.enabled', t('sites.widget.behavior.transcripts'))}
                 {toggle('behavior.sound', t('sites.widget.behavior.sound'))}
                 {toggle('behavior.openOnAgentMessage', t('sites.widget.behavior.openOnAgentMessage'))}
-                {toggle('behavior.showQueuePosition', t('sites.widget.behavior.queuePosition'), t('sites.widget.behavior.queuePositionHint'))}
+                {toggle(
+                  'behavior.showQueuePosition',
+                  t('sites.widget.behavior.queuePosition'),
+                  t('sites.widget.behavior.queuePositionHint'),
+                )}
               </Group>
               <Group title={t('sites.widget.behavior.visibility')}>
                 {toggle('behavior.hideOnMobile', t('sites.widget.behavior.hideOnMobile'))}
-                {toggle('behavior.hideWhenOffline', t('sites.widget.behavior.hideWhenOffline'), t('sites.widget.behavior.hideWhenOfflineHint'))}
-                {toggle('behavior.trackPages', t('sites.widget.behavior.trackPages'), t('sites.widget.behavior.trackPagesHint'))}
+                {toggle(
+                  'behavior.hideWhenOffline',
+                  t('sites.widget.behavior.hideWhenOffline'),
+                  t('sites.widget.behavior.hideWhenOfflineHint'),
+                )}
+                {toggle(
+                  'behavior.trackPages',
+                  t('sites.widget.behavior.trackPages'),
+                  t('sites.widget.behavior.trackPagesHint'),
+                )}
                 <RadioGroup
                   legend={t('sites.widget.behavior.pages')}
                   name="visibility-mode"
@@ -749,7 +870,9 @@ export function WidgetEditor({
                 {b.visibility.mode !== 'all' && (
                   <fieldset className="flex flex-col gap-2" disabled={dis}>
                     <legend className="mb-1 text-sm font-medium">
-                      {b.visibility.mode === 'include' ? t('sites.widget.behavior.showOn') : t('sites.widget.behavior.hideOn')}
+                      {b.visibility.mode === 'include'
+                        ? t('sites.widget.behavior.showOn')
+                        : t('sites.widget.behavior.hideOn')}
                     </legend>
                     <p className="-mt-1 text-xs text-fg-2">{t('sites.widget.behavior.patternHelp')}</p>
                     {errors['behavior.visibility.patterns'] && (
@@ -845,7 +968,9 @@ export function WidgetEditor({
               <div className="flex min-h-11 items-center justify-between gap-4">
                 <label htmlFor="preview-online" className="text-sm font-medium">
                   {t('sites.widget.preview.agentsAvailable')}
-                  <span className="block text-xs font-normal text-fg-2">{preview.online ? t('sites.widget.preview.online') : t('sites.widget.preview.offline')}</span>
+                  <span className="block text-xs font-normal text-fg-2">
+                    {preview.online ? t('sites.widget.preview.online') : t('sites.widget.preview.offline')}
+                  </span>
                 </label>
                 <Switch
                   id="preview-online"
@@ -863,9 +988,7 @@ export function WidgetEditor({
             locale={preview.locale}
             height={680}
           />
-          <p className="text-xs text-fg-2">
-            {t('sites.widget.preview.note')}
-          </p>
+          <p className="text-xs text-fg-2">{t('sites.widget.preview.note')}</p>
         </aside>
       </div>
 
@@ -873,7 +996,9 @@ export function WidgetEditor({
         <div className="sticky bottom-0 z-[3] flex flex-wrap items-center justify-end gap-2 rounded-[var(--radius-card)] border border-line bg-surface px-4 py-3">
           <span className="me-auto text-sm" role="status" aria-live="polite">
             {errorCount > 0 ? (
-              <span className="font-medium text-danger">{t('sites.widget.bar.attention', { count: errorCount })}</span>
+              <span className="font-medium text-danger">
+                {t('sites.widget.bar.attention', { count: errorCount })}
+              </span>
             ) : dirty ? (
               <span className="text-fg">{t('sites.widget.unsavedEdits')}</span>
             ) : draftDiffers ? (
@@ -904,7 +1029,11 @@ export function WidgetEditor({
             loading={busy === 'publish'}
             onClick={() => void publish()}
           >
-            {dirty ? t('sites.widget.bar.saveAndPublish') : draftDiffers && server.draft ? t('sites.widget.bar.publishRevision', { revision: server.draft.revision }) : t('common.publish')}
+            {dirty
+              ? t('sites.widget.bar.saveAndPublish')
+              : draftDiffers && server.draft
+                ? t('sites.widget.bar.publishRevision', { revision: server.draft.revision })
+                : t('common.publish')}
           </Button>
         </div>
       )}
@@ -912,10 +1041,16 @@ export function WidgetEditor({
       <ConfirmDialog
         open={confirmDiscard}
         onOpenChange={setConfirmDiscard}
-        title={server.draft ? t('sites.widget.discard.title', { revision: server.draft.revision }) : t('sites.widget.discard.titleNoRevision')}
+        title={
+          server.draft
+            ? t('sites.widget.discard.title', { revision: server.draft.revision })
+            : t('sites.widget.discard.titleNoRevision')
+        }
         danger
         confirmLabel={t('sites.widget.bar.discardDraft')}
-        description={t(dirty ? 'sites.widget.discard.bodyWithEdits' : 'sites.widget.discard.body', { revision: server.published?.revision ?? '—' })}
+        description={t(dirty ? 'sites.widget.discard.bodyWithEdits' : 'sites.widget.discard.body', {
+          revision: server.published?.revision ?? '',
+        })}
         onConfirm={discard}
       />
     </div>
