@@ -69,12 +69,16 @@ replace_app_services() {
 
 # Starts or updates Caddy. compose.yaml gives the edge network IPv6 (TALKIVIO_IPV6), and Docker never changes an
 # existing network: recent Compose versions recreate it when Caddy starts, older ones keep the old one, so a
-# network with the other setting is recreated here first (Caddy, its only member, stops for a few seconds).
+# network with the other setting is recreated here first (Caddy stops for a few seconds). Other stacks can join the
+# network too (infra/mail's webmail); while one does, it cannot be removed, so this stops before touching Caddy.
 start_caddy() {
-  local net want
+  local net want caddy others
   want=$(setting TALKIVIO_IPV6 true)
   net=$(docker network ls -q --filter label=com.docker.compose.project=talkivio --filter label=com.docker.compose.network=edge)
   if [ -n "$net" ] && [ "$(docker network inspect -f '{{.EnableIPv6}}' "$net")" != "$want" ]; then
+    caddy=$(container_of caddy)
+    others=$(docker ps --no-trunc --filter "network=$net" --format '{{.ID}} {{.Names}}' | awk -v c="${caddy:-none}" '$1 != c { print $2 }' | xargs)
+    [ -z "$others" ] || die "the edge network must be recreated with IPv6 $want, but other containers use it too: $others. Stop them first (the mail stack: infra/mail/scripts/mail.sh down), rerun this script, then start them again (infra/mail/scripts/mail.sh up -d). Caddy was not touched."
     note "recreating the edge network with IPv6 $want (Caddy restarts)"
     dc rm --stop --force caddy
     docker network rm "$net" > /dev/null || die "cannot remove the old edge network; docker network inspect $net shows what is still attached"
