@@ -45,14 +45,34 @@ const { WorkerModule } = require(resolve(buildDir, 'modules.js'));
 const { TombstoneService } = require(resolve(buildDir, 'features/privacy/tombstones.service.js'));
 const { TenantDestroyer } = require(resolve(buildDir, 'features/tenant-deletion/tenant-destroyer.js'));
 
-const app = await NestFactory.createApplicationContext(WorkerModule, { logger: ['error', 'warn'] });
+// Warnings and errors go to stderr: stdout carries only the report, so `--json` stays parseable even when a
+// background service logs while the context shuts down.
+const toStderr =
+  (level) =>
+  (message, ...rest) =>
+    process.stderr.write(
+      `[${level}] ${[message, ...rest].map((v) => (typeof v === 'string' ? v : JSON.stringify(v))).join(' ')}\n`,
+    );
+const quiet = () => undefined;
+const app = await NestFactory.createApplicationContext(WorkerModule, {
+  logger: {
+    error: toStderr('error'),
+    warn: toStderr('warn'),
+    log: quiet,
+    debug: quiet,
+    verbose: quiet,
+    fatal: toStderr('fatal'),
+  },
+});
 let code = 0;
 try {
   const report = await app
     .get(TombstoneService)
     .replay({ tenantId: tenantId ?? undefined, dryRun: flag('dry-run'), source });
   // Whole-workspace deletions (external ledger): destroy any workspace the restore brought back.
-  report.tenantDeletions = await app.get(TenantDestroyer).replayLedger({ dryRun: flag('dry-run'), tenantId: tenantId ?? undefined });
+  report.tenantDeletions = await app
+    .get(TenantDestroyer)
+    .replayLedger({ dryRun: flag('dry-run'), tenantId: tenantId ?? undefined });
   report.failures.push(...report.tenantDeletions.failures);
   if (flag('json')) console.log(JSON.stringify(report));
   else {
@@ -64,7 +84,9 @@ try {
     );
     for (const [k, n] of Object.entries(report.counts)) console.log(`  ${k}: ${n}`);
     const td = report.tenantDeletions;
-    console.log(`  workspace deletions: ${td.entries} ledger entries, ${td.resurrected.length} restored by the backup, ${td.destroyed.length} destroyed again`);
+    console.log(
+      `  workspace deletions: ${td.entries} ledger entries, ${td.resurrected.length} restored by the backup, ${td.destroyed.length} destroyed again`,
+    );
     if (report.failures.length) console.log(`  UNCONFIRMED: ${report.failures.join(', ')}`);
   }
   if (report.failures.length) code = 2;
