@@ -39,7 +39,7 @@ x-app-env: &app-env
   API_URL: https://${TALKIVIO_DOMAIN:?set TALKIVIO_DOMAIN in talkivio.env}
   APP_URL: https://${TALKIVIO_DOMAIN}
   CORS_ORIGINS: https://${TALKIVIO_DOMAIN}
-  # Caddy, on the private Docker network, is the only proxy hop.
+  # Caddy, on the private Docker network, is the only proxy hop (uniquelocal: 10/8, 172.16/12, 192.168/16, fc00::/7).
   TRUST_PROXY: uniquelocal
   COOKIE_SECURE: 'true'
   GATEWAY_SEPARATE: 'true'
@@ -394,12 +394,18 @@ services:
     networks: [backend, egress]
 
 networks:
-  # Service-to-service traffic; no route to the internet.
+  # Service-to-service traffic; no route to the internet. IPv4 is enough: Caddy reaches the services over it and
+  # forwards the visitor's address in X-Forwarded-For.
   backend:
     internal: true
-  # Inbound 80/443 (Caddy) and the ACME certificate exchange.
-  edge: {}
-  # Outbound internet for the services that need it (SMTP, webhooks, OAuth, signature updates, backups).
+  # Inbound 80/443 (Caddy) and the ACME certificate exchange. Dual-stack, so Docker forwards IPv6 connections to
+  # Caddy with ip6tables and Caddy sees each visitor's real address. On an IPv4-only network Docker relays them
+  # through docker-proxy instead, and every IPv6 visitor arrives as the bridge gateway (172.x). Docker 27+ picks a
+  # private ULA /64 (fc00::/7). TALKIVIO_IPV6=false only for a kernel with IPv6 turned off (then A records only).
+  edge:
+    enable_ipv6: ${TALKIVIO_IPV6:-true}
+  # Outbound internet for the services that need it (SMTP, webhooks, OAuth, signature updates, backups). IPv4 only:
+  # nothing is published on it, and the SMTP, OAuth, signature and backup endpoints all have IPv4 addresses.
   egress: {}
 
 volumes:

@@ -12,7 +12,7 @@ whole server, reinstalls and restores, and requires the same data byte for byte.
 
 | Item                 | Notes                                                                                                                                                                   |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A server             | Ubuntu 24.04 (any Linux with Docker works), **8 GB RAM**, 2+ vCPU, 80 GB disk. The virus scanner alone needs 2–3 GB.                                                    |
+| A server             | Ubuntu 24.04 (any Linux with Docker Engine 27 or newer works), **8 GB RAM**, 2+ vCPU, 80 GB disk. The virus scanner alone needs 2–3 GB.                                 |
 | A domain             | Two DNS records pointing at the server: `chat.yourcompany.com` and `files.chat.yourcompany.com` (A, and AAAA if the server has IPv6).                                   |
 | An e-mail provider   | Any SMTP service (Postmark, Amazon SES, Resend, Mailgun …) with your sending domain verified (SPF, DKIM, DMARC). Sign-up, invitations and password resets depend on it. |
 | An off-server bucket | Any S3-compatible bucket at another provider (AWS S3, Cloudflare R2, Backblaze B2 …) and a key limited to it, for backups.                                              |
@@ -38,9 +38,23 @@ To serve the bare domain (for example `talkivio.com`, with the public website at
 and `TALKIVIO_WWW_SITE=www.talkivio.com`, and point `talkivio.com`, `www.talkivio.com` and `files.talkivio.com` at the
 server: `www` then redirects to the bare domain with its own certificate.
 
-Publish **A records only** unless the Docker networks have IPv6 enabled: without it, Docker forwards IPv6 connections
-through a proxy, so every IPv6 visitor reaches Talkivio as the same internal address (`172.x`), which breaks the
-visitor IPs and locations on the Visitors page and per-address rate limits.
+**DNS.** Point each name at the server with an A record (its IPv4 address) and, when the server has an IPv6 address,
+an AAAA record too. For example, for a server at `203.0.113.10` and `2001:db8::10`:
+
+| Name                         | Type | Value          |
+| ---------------------------- | ---- | -------------- |
+| `chat.yourcompany.com`       | A    | `203.0.113.10` |
+| `chat.yourcompany.com`       | AAAA | `2001:db8::10` |
+| `files.chat.yourcompany.com` | A    | `203.0.113.10` |
+| `files.chat.yourcompany.com` | AAAA | `2001:db8::10` |
+
+IPv6 visitors keep their real addresses (Visitors page, locations, per-address rate limits and bans): Caddy's network
+(`edge` in `compose.yaml`) has IPv6, so Docker forwards IPv6 connections with ip6tables instead of relaying them
+through a proxy that would show every IPv6 visitor as one internal address (`172.x`). This needs Docker Engine 27 or
+newer (`check-env.sh` checks it). On a server installed before IPv6 was enabled, the next `deploy.sh` recreates that
+network once (Caddy restarts for a few seconds); confirm it before adding the AAAA records:
+`docker network inspect talkivio_edge -f '{{.EnableIPv6}}'` prints `true`. Only when the server's kernel has IPv6
+turned off: set `TALKIVIO_IPV6=false` in `talkivio.env` and publish A records only.
 
 To serve another site from this server (for example webmail, see `infra/mail/`), put a Caddy site block in
 `deploy/caddy.d/<name>.caddy` (ignored by git) and redeploy; Caddy gets and renews its certificate like the others.

@@ -61,8 +61,7 @@ done
 note "starting the application"
 dc up -d worker gateway api dashboard
 for svc in "${APP_SERVICES[@]}"; do wait_healthy "$svc" 300; done
-dc up -d caddy
-wait_healthy caddy 120
+start_caddy
 smoke
 
 taken=$(echo "$dump" | sed -E 's/talkivio-([0-9]{4})([0-9]{2})([0-9]{2})T([0-9]{2})([0-9]{2})([0-9]{2})Z\.dump/\1-\2-\3T\4:\5:\6Z/')

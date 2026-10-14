@@ -53,6 +53,22 @@ if command -v docker > /dev/null; then
   docker compose version > /dev/null 2>&1 || fail "the docker compose plugin is not installed"
 fi
 
+# The edge network is dual-stack (compose.yaml): the kernel needs IPv6, and Docker 27+ allocates the network's IPv6
+# subnet and forwards published ports with ip6tables, which keeps each visitor's real address.
+case "$(setting TALKIVIO_IPV6 true)" in
+  true)
+    if [ -d /proc/net ] && [ ! -e /proc/net/if_inet6 ]; then
+      fail "this kernel has IPv6 turned off: set TALKIVIO_IPV6=false in talkivio.env and publish A records only"
+    fi
+    engine=$(docker version -f '{{.Server.Version}}' 2> /dev/null || true)
+    if [ -n "$engine" ] && ! [ "${engine%%.*}" -ge 27 ] 2> /dev/null; then
+      fail "Docker Engine $engine is too old for the IPv6 edge network: upgrade it to 27 or newer (curl -fsSL https://get.docker.com | sh)"
+    fi
+    ;;
+  false) warn "TALKIVIO_IPV6=false: publish A records only (IPv6 visitors would all appear as one internal address)" ;;
+  *) fail "TALKIVIO_IPV6 must be true or false" ;;
+esac
+
 if [ "$tls" != internal ]; then
   for host in "$domain" "files.$domain"; do
     getent hosts "$host" > /dev/null 2>&1 || warn "$host does not resolve yet — create its DNS record (A/AAAA → this server) before deploying, or certificates cannot be issued"

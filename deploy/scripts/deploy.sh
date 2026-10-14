@@ -78,7 +78,6 @@ else
   note "rolling replacement"
   replace_app_services
 fi
-dc up -d caddy
-wait_healthy caddy 120
+start_caddy
 smoke
 note "Talkivio $sha is live at https://$(setting TALKIVIO_DOMAIN)"
