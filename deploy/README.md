@@ -84,7 +84,21 @@ It brings the files back first (they carry the privacy erasure ledger), recreate
 checks row-level security, re-applies recorded erasures before any traffic, starts everything and prints the
 recovery point and recovery time.
 
-## 5. Keep an eye on it
+## 5. Visitor locations
+
+Country and city on the Visitors page come from the free DB-IP "IP to City Lite" database (CC BY 4.0; the
+dashboard shows the required credit). `deploy.sh` installs it; refresh it monthly:
+
+```bash
+crontab -e
+0 4 3 * * cd /opt/talkivio/deploy && ./scripts/update-geoip.sh >> backups/geoip.log 2>&1
+```
+
+The API picks up the new file within an hour. If the site sits behind Cloudflare (or Vercel / Fastly) with
+location headers, set `TALKIVIO_GEO_TRUSTED_HEADERS=cloudflare` in `talkivio.env`; leave it `none` otherwise,
+so visitors cannot fake their country (it drives triggers).
+
+## 6. Keep an eye on it
 
 - An external uptime check on `https://chat.yourcompany.com/health/ready` (any uptime service) is the minimum.
 - Metrics for Prometheus are served on the private network only (`/health/metrics`, bearer `TALKIVIO_METRICS_TOKEN`);
@@ -92,7 +106,7 @@ recovery point and recovery time.
 - Logs: `docker compose --env-file talkivio.env --env-file release.env logs -f api worker`.
 - Keep the server patched (`unattended-upgrades`), SSH by key only.
 
-## 6. What this single-server setup does not give you
+## 7. What this single-server setup does not give you
 
 One server is one failure domain: a hardware or provider outage takes the service down until it is restored
 from backup. When you outgrow it, move PostgreSQL and object storage to managed services (set the connection

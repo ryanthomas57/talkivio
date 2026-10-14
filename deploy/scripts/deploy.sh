@@ -64,6 +64,8 @@ dc up -d clamav
 note "buckets and database migrations"
 dc --profile jobs run --rm minio-init
 dc --profile jobs run --rm migrate
+# Visitor locations: a failed download is not fatal (locations stay empty until scripts/update-geoip.sh succeeds).
+dc --profile jobs run --rm geoip || note "warning: the visitor-location database could not be downloaded; run scripts/update-geoip.sh later"
 
 first_install=0
 [ -z "$(container_of api)" ] && first_install=1

@@ -12,12 +12,14 @@ export const visitors = {
   'visitors.device.desktop': 'Desktop',
   'visitors.device.mobile': 'Mobile',
   'visitors.device.tablet': 'Tablet',
-  'visitors.display.approxTooltip': 'Approximate, derived from the network address. It may be wrong (VPNs, mobile carriers, offices).',
+  'visitors.display.approxTooltip':
+    'Approximate, derived from the network address. It may be wrong (VPNs, mobile carriers, offices).',
   'visitors.display.approxLabel': 'Approximately {country}',
   'visitors.display.verifiedTitle': 'Identity verified by a signed token from your site',
   'visitors.display.verified': 'Verified',
   'visitors.display.verifiedIdentity': 'Verified identity',
-  'visitors.display.unverifiedTitle': 'Name or email were provided by the visitor or an agent and are not verified',
+  'visitors.display.unverifiedTitle':
+    'Name or email were provided by the visitor or an agent and are not verified',
   'visitors.display.unverified': 'Unverified',
   'visitors.display.anonymousTitle': 'No name or email on record',
   'visitors.display.anonymous': 'Anonymous',
@@ -52,7 +54,9 @@ export const visitors = {
   'visitors.live.loadMoreError': 'More visitors could not be loaded.',
 
   'visitors.page.title': 'Visitors',
-  'visitors.page.description': 'People on your sites right now. Browsing details appear only for visitors who granted analytics consent; locations are approximate.',
+  'visitors.page.description':
+    'People on your sites right now. Browsing details appear only for visitors who granted analytics consent; locations are approximate.',
+  'visitors.page.geoCredit': 'IP geolocation by DB-IP',
   'visitors.page.liveOn': 'Live updates on',
   'visitors.page.livePaused': 'Live updates paused — reconnecting',
   'visitors.page.search': 'Search visitors',
@@ -72,14 +76,17 @@ export const visitors = {
   'visitors.page.highLoad': 'High-load mode',
   'visitors.page.highLoadHint': 'List incoming and served chats only',
   'visitors.page.highLoadBannerTitle': 'High-load mode: browsing visitors are omitted',
-  'visitors.page.highLoadBannerBody': 'Only incoming and served chats are listed. Browsing and idle visitors are not shown until you turn high-load mode off.',
+  'visitors.page.highLoadBannerBody':
+    'Only incoming and served chats are listed. Browsing and idle visitors are not shown until you turn high-load mode off.',
   'visitors.page.loading': 'Loading visitors',
   'visitors.page.emptyFilteredTitle': 'No visitors match these filters',
   'visitors.page.emptyHighLoadTitle': 'No incoming or served chats right now',
   'visitors.page.emptyTitle': 'No visitors on your sites right now',
-  'visitors.page.emptyFilteredBody': 'Live visitors appear here as soon as they match. Try removing a filter.',
+  'visitors.page.emptyFilteredBody':
+    'Live visitors appear here as soon as they match. Try removing a filter.',
   'visitors.page.emptyHighLoadBody': 'Browsing visitors are hidden in high-load mode.',
-  'visitors.page.emptyBody': 'Visitors who open a page with your widget appear here in real time. Browsing visitors appear only with analytics consent.',
+  'visitors.page.emptyBody':
+    'Visitors who open a page with your widget appear here in real time. Browsing visitors appear only with analytics consent.',
   'visitors.page.tableLabel': 'Live visitors, {count} loaded',
   'visitors.page.showing': '{count, plural, one {Showing # visitor} other {Showing # visitors}}',
   'visitors.page.showingOf': 'Showing {shown} of {total, plural, one {# visitor} other {# visitors}}',
@@ -87,10 +94,12 @@ export const visitors = {
 
   'visitors.drawer.notInLive': 'Not in the live list',
   'visitors.drawer.noLongerLive': 'No longer live',
-  'visitors.drawer.leftLive': 'This visitor left the live list (or is outside your filters). Their record is still available below.',
+  'visitors.drawer.leftLive':
+    'This visitor left the live list (or is outside your filters). Their record is still available below.',
   'visitors.drawer.openProfile': 'Open full profile',
   'visitors.drawer.rightNow': 'Right now',
-  'visitors.drawer.browsingHidden': 'Browsing details are hidden because this visitor has not granted analytics consent.',
+  'visitors.drawer.browsingHidden':
+    'Browsing details are hidden because this visitor has not granted analytics consent.',
   'visitors.drawer.onThisPage': 'On this page',
   'visitors.drawer.timeOnSite': 'Time on site',
   'visitors.drawer.location': 'Location',
@@ -117,7 +126,8 @@ export const visitors = {
   'visitors.sessions.lastSeenAt': 'last seen {time}',
   'visitors.sessions.detailsHidden': 'Details hidden',
   'visitors.sessions.pageCount': '{count, plural, one {# page} other {# pages}}',
-  'visitors.sessions.hiddenBody': 'Browsing details are hidden because the visitor did not grant analytics consent for this session.',
+  'visitors.sessions.hiddenBody':
+    'Browsing details are hidden because the visitor did not grant analytics consent for this session.',
   'visitors.sessions.referrer': 'Referrer:',
   'visitors.sessions.location': 'Location:',
   'visitors.sessions.visibleTime': 'Visible time:',
@@ -156,20 +166,25 @@ export const visitors = {
   'visitors.picker.resultMeta': '{who} · seen {seen} · {count, plural, one {# chat} other {# chats}}',
 
   'visitors.merge.errTargetRequired': 'Choose the verified visitor to merge into',
-  'visitors.merge.errTargetUnverified': 'The target has no verified identity. Merging requires verified identity proof.',
+  'visitors.merge.errTargetUnverified':
+    'The target has no verified identity. Merging requires verified identity proof.',
   'visitors.merge.errProofShort': 'Enter the proof reference (at least 3 characters)',
-  'visitors.merge.errProofEmail': 'An email address is not identity proof. Reference the verified login, order or ticket instead.',
+  'visitors.merge.errProofEmail':
+    'An email address is not identity proof. Reference the verified login, order or ticket instead.',
   'visitors.merge.errReason': 'Explain why these records are the same person',
   'visitors.merge.title': 'Request merge of {name}',
-  'visitors.merge.description': 'Requests are reviewed by an admin before anything changes. Records are never merged on matching email text alone.',
+  'visitors.merge.description':
+    'Requests are reviewed by an admin before anything changes. Records are never merged on matching email text alone.',
   'visitors.merge.submit': 'Submit for review',
   'visitors.merge.successTitle': 'Merge request submitted for admin review',
   'visitors.merge.successBody':
     'Request {id} is {state, select, pending_review {pending review} approved {approved} rejected {rejected} other {{stateText}}}. {name} stays a separate record until it is approved.',
   'visitors.merge.pickerLabel': 'Merge into (verified visitor)',
-  'visitors.merge.pickerDescription': 'The surviving record must have a verified identity from your site’s signed token.',
+  'visitors.merge.pickerDescription':
+    'The surviving record must have a verified identity from your site’s signed token.',
   'visitors.merge.proofLabel': 'Identity proof reference',
-  'visitors.merge.proofDescription': 'Where the verified identity comes from — e.g. the signed-in customer ID or support ticket. Not an email address.',
+  'visitors.merge.proofDescription':
+    'Where the verified identity comes from — e.g. the signed-in customer ID or support ticket. Not an email address.',
   'visitors.merge.reason': 'Reason',
 
   'visitors.identity.notProvided': 'Not provided',
@@ -184,9 +199,11 @@ export const visitors = {
   'visitors.identity.conflictBody': 'Someone else saved changes. Reload, then reapply your edits.',
   'visitors.identity.phone': 'Phone',
   'visitors.identity.verifiedLinks': 'Verified identity links',
-  'visitors.identity.linkLine': '{site} · {method, select, jwt_hs256 {signed token} other {{methodText}}} · linked {date}',
+  'visitors.identity.linkLine':
+    '{site} · {method, select, jwt_hs256 {signed token} other {{methodText}}} · linked {date}',
   'visitors.identity.editButton': 'Edit name and email',
-  'visitors.identity.notice': 'Details you enter are saved as unverified. Names already shown in past chat messages do not change.',
+  'visitors.identity.notice':
+    'Details you enter are saved as unverified. Names already shown in past chat messages do not change.',
   'visitors.identity.noticeWithVerified':
     'Details you enter are saved as unverified — the current verified values will become unverified too (the verified identity link is kept). Names already shown in past chat messages do not change.',
   'visitors.identity.displayName': 'Display name',
@@ -195,19 +212,23 @@ export const visitors = {
   'visitors.identity.saveDetails': 'Save details',
 
   'visitors.profile.notFoundTitle': 'Visitor not found',
-  'visitors.profile.notFoundBody': 'This visitor does not exist in this workspace, or the record was merged or removed.',
+  'visitors.profile.notFoundBody':
+    'This visitor does not exist in this workspace, or the record was merged or removed.',
   'visitors.profile.backToVisitors': 'Back to visitors',
   'visitors.profile.loadError': 'Visitor could not be loaded. {error}',
   'visitors.profile.onlineNow': 'Online now',
   'visitors.profile.lastSeenAgo': 'Last seen {time}',
-  'visitors.profile.visitsChats': '{visits, plural, one {# visit} other {# visits}} · {chats, plural, one {# chat} other {# chats}}',
+  'visitors.profile.visitsChats':
+    '{visits, plural, one {# visit} other {# visits}} · {chats, plural, one {# chat} other {# chats}}',
   'visitors.profile.requestMerge': 'Request merge',
   'visitors.profile.ban': 'Ban visitor',
   'visitors.profile.erasedTitle': 'Personal data erased',
-  'visitors.profile.erasedBody': 'This visitor’s personal data was erased under a privacy request. The record can no longer be edited.',
+  'visitors.profile.erasedBody':
+    'This visitor’s personal data was erased under a privacy request. The record can no longer be edited.',
   'visitors.profile.identity': 'Identity',
   'visitors.profile.identityHint': 'Verified values come only from your site’s signed identity token.',
-  'visitors.profile.sessionsHint': 'Browsing sessions with the pages viewed and time on each (server-measured).',
+  'visitors.profile.sessionsHint':
+    'Browsing sessions with the pages viewed and time on each (server-measured).',
   'visitors.profile.chatsHint': 'Chats you are allowed to see, newest first.',
   'visitors.profile.lastSeen': 'Last seen',
   'visitors.profile.sessionsOpen': '{total} ({open} open)',

@@ -14,12 +14,14 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.device.desktop': 'حاسوب مكتبي',
   'visitors.device.mobile': 'جوال',
   'visitors.device.tablet': 'جهاز لوحي',
-  'visitors.display.approxTooltip': 'موقع تقريبي مستنتج من عنوان الشبكة، وقد يكون غير دقيق (شبكات VPN، ومشغّلو الجوال، والمكاتب).',
+  'visitors.display.approxTooltip':
+    'موقع تقريبي مستنتج من عنوان الشبكة، وقد يكون غير دقيق (شبكات VPN، ومشغّلو الجوال، والمكاتب).',
   'visitors.display.approxLabel': 'تقريبًا: {country}',
   'visitors.display.verifiedTitle': 'تم التحقق من الهوية برمز موقَّع من موقعك',
   'visitors.display.verified': 'موثَّق',
   'visitors.display.verifiedIdentity': 'هوية موثَّقة',
-  'visitors.display.unverifiedTitle': 'قدّم الزائر أو أحد الموظفين الاسم أو البريد الإلكتروني، ولم يُتحقق منهما',
+  'visitors.display.unverifiedTitle':
+    'قدّم الزائر أو أحد الموظفين الاسم أو البريد الإلكتروني، ولم يُتحقق منهما',
   'visitors.display.unverified': 'غير موثَّق',
   'visitors.display.anonymousTitle': 'لا يوجد اسم أو بريد إلكتروني مسجَّل',
   'visitors.display.anonymous': 'مجهول',
@@ -44,8 +46,10 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.live.col.tags': 'الوسوم',
   'visitors.live.groupLoaded': '(تم تحميل {count})',
   'visitors.live.direct': 'مباشر',
-  'visitors.live.tabsOpen': '{count, plural, zero {لا علامات تبويب مفتوحة} one {علامة تبويب واحدة مفتوحة} two {علامتا تبويب مفتوحتان} few {# علامات تبويب مفتوحة} many {# علامة تبويب مفتوحة} other {# علامة تبويب مفتوحة}}',
-  'visitors.live.moreTags': '{count, plural, zero {لا وسوم أخرى} one {وسم آخر} two {وسمان آخران} few {# وسوم أخرى} many {# وسمًا آخر} other {# وسم آخر}}: {tags}',
+  'visitors.live.tabsOpen':
+    '{count, plural, zero {لا علامات تبويب مفتوحة} one {علامة تبويب واحدة مفتوحة} two {علامتا تبويب مفتوحتان} few {# علامات تبويب مفتوحة} many {# علامة تبويب مفتوحة} other {# علامة تبويب مفتوحة}}',
+  'visitors.live.moreTags':
+    '{count, plural, zero {لا وسوم أخرى} one {وسم آخر} two {وسمان آخران} few {# وسوم أخرى} many {# وسمًا آخر} other {# وسم آخر}}: {tags}',
   'visitors.live.waiting': 'ينتظر منذ {duration}',
   'visitors.live.inChat': 'في محادثة',
   'visitors.live.noDepartment': 'بلا قسم',
@@ -54,7 +58,9 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.live.loadMoreError': 'تعذّر تحميل مزيد من الزوار.',
 
   'visitors.page.title': 'الزوار',
-  'visitors.page.description': 'الأشخاص الموجودون على مواقعك الآن. تظهر تفاصيل التصفح فقط للزوار الذين وافقوا على التحليلات، والمواقع الجغرافية تقريبية.',
+  'visitors.page.description':
+    'الأشخاص الموجودون على مواقعك الآن. تظهر تفاصيل التصفح فقط للزوار الذين وافقوا على التحليلات، والمواقع الجغرافية تقريبية.',
+  'visitors.page.geoCredit': 'تحديد الموقع الجغرافي عبر IP بواسطة DB-IP',
   'visitors.page.liveOn': 'التحديثات المباشرة مفعّلة',
   'visitors.page.livePaused': 'التحديثات المباشرة متوقفة — جارٍ إعادة الاتصال',
   'visitors.page.search': 'البحث في الزوار',
@@ -74,22 +80,27 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.page.highLoad': 'وضع الضغط العالي',
   'visitors.page.highLoadHint': 'عرض المحادثات الواردة وقيد الخدمة فقط',
   'visitors.page.highLoadBannerTitle': 'وضع الضغط العالي: الزوار المتصفحون غير معروضين',
-  'visitors.page.highLoadBannerBody': 'تُعرض المحادثات الواردة وقيد الخدمة فقط. لن يظهر الزوار المتصفحون والخاملون حتى توقف وضع الضغط العالي.',
+  'visitors.page.highLoadBannerBody':
+    'تُعرض المحادثات الواردة وقيد الخدمة فقط. لن يظهر الزوار المتصفحون والخاملون حتى توقف وضع الضغط العالي.',
   'visitors.page.loading': 'جارٍ تحميل الزوار',
   'visitors.page.emptyFilteredTitle': 'لا يوجد زوار يطابقون عوامل التصفية هذه',
   'visitors.page.emptyHighLoadTitle': 'لا توجد محادثات واردة أو قيد الخدمة الآن',
   'visitors.page.emptyTitle': 'لا يوجد زوار على مواقعك الآن',
   'visitors.page.emptyFilteredBody': 'يظهر الزوار المباشرون هنا فور مطابقتهم. جرّب إزالة أحد عوامل التصفية.',
   'visitors.page.emptyHighLoadBody': 'الزوار المتصفحون مخفيون في وضع الضغط العالي.',
-  'visitors.page.emptyBody': 'يظهر هنا فورًا الزوار الذين يفتحون صفحة تحتوي على أداة الدردشة. لا يظهر الزوار المتصفحون إلا بعد موافقتهم على التحليلات.',
+  'visitors.page.emptyBody':
+    'يظهر هنا فورًا الزوار الذين يفتحون صفحة تحتوي على أداة الدردشة. لا يظهر الزوار المتصفحون إلا بعد موافقتهم على التحليلات.',
   'visitors.page.tableLabel': 'الزوار المباشرون، تم تحميل {count}',
-  'visitors.page.showing': '{count, plural, zero {لا يُعرض أي زائر} one {يُعرض زائر واحد} two {يُعرض زائران} few {يُعرض # زوار} many {يُعرض # زائرًا} other {يُعرض # زائر}}',
-  'visitors.page.showingOf': 'يُعرض {shown} من أصل {total, plural, zero {لا زوار} one {زائر واحد} two {زائرَين} few {# زوار} many {# زائرًا} other {# زائر}}',
+  'visitors.page.showing':
+    '{count, plural, zero {لا يُعرض أي زائر} one {يُعرض زائر واحد} two {يُعرض زائران} few {يُعرض # زوار} many {يُعرض # زائرًا} other {يُعرض # زائر}}',
+  'visitors.page.showingOf':
+    'يُعرض {shown} من أصل {total, plural, zero {لا زوار} one {زائر واحد} two {زائرَين} few {# زوار} many {# زائرًا} other {# زائر}}',
   'visitors.page.sortedAmongLoaded': 'الترتيب ضمن الزوار المحمَّلين فقط',
 
   'visitors.drawer.notInLive': 'ليس في القائمة المباشرة',
   'visitors.drawer.noLongerLive': 'لم يعد متصلًا',
-  'visitors.drawer.leftLive': 'غادر هذا الزائر القائمة المباشرة (أو أصبح خارج عوامل التصفية). سجله لا يزال متاحًا أدناه.',
+  'visitors.drawer.leftLive':
+    'غادر هذا الزائر القائمة المباشرة (أو أصبح خارج عوامل التصفية). سجله لا يزال متاحًا أدناه.',
   'visitors.drawer.openProfile': 'فتح الملف الكامل',
   'visitors.drawer.rightNow': 'الآن',
   'visitors.drawer.browsingHidden': 'تفاصيل التصفح مخفية لأن هذا الزائر لم يوافق على التحليلات.',
@@ -118,7 +129,8 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.sessions.endedAt': 'انتهت {time}',
   'visitors.sessions.lastSeenAt': 'آخر ظهور {time}',
   'visitors.sessions.detailsHidden': 'التفاصيل مخفية',
-  'visitors.sessions.pageCount': '{count, plural, zero {لا صفحات} one {صفحة واحدة} two {صفحتان} few {# صفحات} many {# صفحة} other {# صفحة}}',
+  'visitors.sessions.pageCount':
+    '{count, plural, zero {لا صفحات} one {صفحة واحدة} two {صفحتان} few {# صفحات} many {# صفحة} other {# صفحة}}',
   'visitors.sessions.hiddenBody': 'تفاصيل التصفح مخفية لأن الزائر لم يوافق على التحليلات في هذه الجلسة.',
   'visitors.sessions.referrer': 'مصدر الإحالة:',
   'visitors.sessions.location': 'الموقع الجغرافي:',
@@ -155,15 +167,19 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.picker.noMatches': 'لا يوجد زوار مطابقون.',
   'visitors.picker.noMatchesIdentified': 'لا يوجد زوار مطابقون لديهم اسم أو بريد إلكتروني.',
   'visitors.picker.resultsLegend': 'نتائج البحث',
-  'visitors.picker.resultMeta': '{who} · ظهر {seen} · {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}}',
+  'visitors.picker.resultMeta':
+    '{who} · ظهر {seen} · {count, plural, zero {لا محادثات} one {محادثة واحدة} two {محادثتان} few {# محادثات} many {# محادثة} other {# محادثة}}',
 
   'visitors.merge.errTargetRequired': 'اختر الزائر الموثَّق الذي سيُدمج فيه السجل',
-  'visitors.merge.errTargetUnverified': 'لا يملك الزائر المستهدف هوية موثَّقة. يتطلب الدمج إثبات هوية موثَّقًا.',
+  'visitors.merge.errTargetUnverified':
+    'لا يملك الزائر المستهدف هوية موثَّقة. يتطلب الدمج إثبات هوية موثَّقًا.',
   'visitors.merge.errProofShort': 'أدخل مرجع الإثبات (3 أحرف على الأقل)',
-  'visitors.merge.errProofEmail': 'عنوان البريد الإلكتروني ليس إثباتًا للهوية. أشر إلى تسجيل الدخول أو الطلب أو التذكرة الموثَّقة بدلًا منه.',
+  'visitors.merge.errProofEmail':
+    'عنوان البريد الإلكتروني ليس إثباتًا للهوية. أشر إلى تسجيل الدخول أو الطلب أو التذكرة الموثَّقة بدلًا منه.',
   'visitors.merge.errReason': 'وضّح لماذا تعود هذه السجلات إلى الشخص نفسه',
   'visitors.merge.title': 'طلب دمج {name}',
-  'visitors.merge.description': 'يراجع المسؤول الطلبات قبل تغيير أي شيء. لا تُدمج السجلات أبدًا لمجرد تطابق نص البريد الإلكتروني.',
+  'visitors.merge.description':
+    'يراجع المسؤول الطلبات قبل تغيير أي شيء. لا تُدمج السجلات أبدًا لمجرد تطابق نص البريد الإلكتروني.',
   'visitors.merge.submit': 'إرسال للمراجعة',
   'visitors.merge.successTitle': 'أُرسل طلب الدمج إلى المسؤول للمراجعة',
   'visitors.merge.successBody':
@@ -171,7 +187,8 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.merge.pickerLabel': 'الدمج في (زائر موثَّق)',
   'visitors.merge.pickerDescription': 'يجب أن يملك السجل المُبقى عليه هوية موثَّقة من الرمز الموقَّع لموقعك.',
   'visitors.merge.proofLabel': 'مرجع إثبات الهوية',
-  'visitors.merge.proofDescription': 'مصدر الهوية الموثَّقة — مثل معرّف العميل المسجّل دخوله أو تذكرة الدعم. ليس عنوان بريد إلكتروني.',
+  'visitors.merge.proofDescription':
+    'مصدر الهوية الموثَّقة — مثل معرّف العميل المسجّل دخوله أو تذكرة الدعم. ليس عنوان بريد إلكتروني.',
   'visitors.merge.reason': 'السبب',
 
   'visitors.identity.notProvided': 'غير متوفر',
@@ -186,9 +203,11 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.identity.conflictBody': 'حفظ شخص آخر تغييرات. أعد التحميل ثم أعد تطبيق تعديلاتك.',
   'visitors.identity.phone': 'الهاتف',
   'visitors.identity.verifiedLinks': 'روابط الهوية الموثَّقة',
-  'visitors.identity.linkLine': '{site} · {method, select, jwt_hs256 {رمز موقَّع} other {{methodText}}} · رُبط في {date}',
+  'visitors.identity.linkLine':
+    '{site} · {method, select, jwt_hs256 {رمز موقَّع} other {{methodText}}} · رُبط في {date}',
   'visitors.identity.editButton': 'تعديل الاسم والبريد الإلكتروني',
-  'visitors.identity.notice': 'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة. لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
+  'visitors.identity.notice':
+    'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة. لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
   'visitors.identity.noticeWithVerified':
     'تُحفظ البيانات التي تدخلها على أنها غير موثَّقة — وستصبح القيم الموثَّقة الحالية غير موثَّقة أيضًا (مع الإبقاء على رابط الهوية الموثَّقة). لا تتغير الأسماء الظاهرة في رسائل المحادثات السابقة.',
   'visitors.identity.displayName': 'الاسم المعروض',
@@ -207,7 +226,8 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.profile.requestMerge': 'طلب دمج',
   'visitors.profile.ban': 'حظر الزائر',
   'visitors.profile.erasedTitle': 'تم محو البيانات الشخصية',
-  'visitors.profile.erasedBody': 'مُحيت البيانات الشخصية لهذا الزائر بموجب طلب خصوصية. لم يعد بالإمكان تعديل السجل.',
+  'visitors.profile.erasedBody':
+    'مُحيت البيانات الشخصية لهذا الزائر بموجب طلب خصوصية. لم يعد بالإمكان تعديل السجل.',
   'visitors.profile.identity': 'الهوية',
   'visitors.profile.identityHint': 'لا تأتي القيم الموثَّقة إلا من رمز الهوية الموقَّع لموقعك.',
   'visitors.profile.sessionsHint': 'جلسات التصفح مع الصفحات المعروضة والمدة على كل منها (يقيسها الخادم).',

@@ -76,6 +76,8 @@ x-app-env: &app-env
   GOOGLE_CLIENT_SECRET: ${TALKIVIO_GOOGLE_CLIENT_SECRET:-}
   GITHUB_CLIENT_ID: ${TALKIVIO_GITHUB_CLIENT_ID:-}
   GITHUB_CLIENT_SECRET: ${TALKIVIO_GITHUB_CLIENT_SECRET:-}
+  # Location headers are trusted only from the edge named here (cloudflare, vercel, fastly, proxy); none by default.
+  GEO_TRUSTED_HEADERS: ${TALKIVIO_GEO_TRUSTED_HEADERS:-none}
   SENTRY_DSN: ${TALKIVIO_SENTRY_DSN:-}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${TALKIVIO_OTEL_EXPORTER_OTLP_ENDPOINT:-}
 
@@ -151,6 +153,10 @@ services:
     environment:
       <<: *app-env
       PORT: '4000'
+      # Visitor locations (DB-IP City Lite, refreshed by the geoip job); only the api looks locations up.
+      GEOIP_DB_PATH: /geoip/dbip-city-lite.mmdb
+    volumes:
+      - geoip_db:/geoip:ro
     healthcheck:
       test:
         [
@@ -252,6 +258,20 @@ services:
       S3_QUARANTINE_BUCKET: talkivio-quarantine
       S3_CLEAN_BUCKET: talkivio-clean
     networks: [backend]
+
+  # Visitor-location database (scripts/geoip-download.sh): installed by deploy.sh, refreshed monthly by
+  # scripts/update-geoip.sh. Runs as root only to write the volume; it has outbound internet and nothing else.
+  geoip:
+    image: curlimages/curl:8.22.0
+    restart: 'no'
+    logging: *logging
+    profiles: [jobs]
+    user: '0'
+    entrypoint: ['/bin/sh', '/geoip-download.sh']
+    volumes:
+      - geoip_db:/geoip
+      - ./scripts/geoip-download.sh:/geoip-download.sh:ro
+    networks: [egress]
 
   # Backups and restores (scripts/backup.sh, scripts/restore.sh): pg_dump/pg_restore + MinIO client.
   backup:
@@ -378,3 +398,4 @@ volumes:
   clamav_db:
   caddy_data:
   caddy_config:
+  geoip_db:

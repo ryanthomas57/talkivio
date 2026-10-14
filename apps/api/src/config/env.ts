@@ -83,7 +83,12 @@ const schema = z.object({
   STRIPE_PRICE_BUSINESS: z.string().optional(),
 
   // Geo
+  /** MaxMind-format city/country database (e.g. DB-IP City Lite, CC BY 4.0); reloaded when the file changes. */
   GEOIP_DB_PATH: z.string().optional(),
+  /** Edges whose location headers are trusted: comma list of cloudflare, vercel, fastly, proxy — or none. */
+  GEO_TRUSTED_HEADERS: z.string().default('none'),
+  /** Development only (ignored in production): public IP looked up for loopback/private visitors. */
+  GEO_DEV_IP: z.string().ip().optional(),
 
   // Observability
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
@@ -103,7 +108,12 @@ const schema = z.object({
   // Tenant deletion (ch. 41): cancellation window between the owner's request and destruction.
   TENANT_DELETION_GRACE_DAYS: z.coerce.number().int().min(1).max(30).default(14),
   /** Test-only override of the window in seconds (end-to-end tests). Refused in production. */
-  TENANT_DELETION_GRACE_SECONDS: z.coerce.number().int().min(1).max(30 * 86_400).optional(),
+  TENANT_DELETION_GRACE_SECONDS: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(30 * 86_400)
+    .optional(),
 });
 
 export type Env = z.infer<typeof schema>;
@@ -118,7 +128,10 @@ export function env(): Env {
     throw new Error(`Invalid environment configuration:\n${issues}`);
   }
   const refused = productionRefusals(parsed.data);
-  if (refused.length) throw new Error(`Invalid environment configuration for production:\n${refused.map((r) => `  - ${r}`).join('\n')}`);
+  if (refused.length)
+    throw new Error(
+      `Invalid environment configuration for production:\n${refused.map((r) => `  - ${r}`).join('\n')}`,
+    );
   cached = parsed.data;
   return cached;
 }
@@ -128,18 +141,29 @@ export function env(): Env {
  * accepted without sending it (and logs recipients); dev_unscanned marks files clean unscanned;
  * a seconds-long tenant deletion window removes the owner's chance to cancel.
  */
-export function productionRefusals(e: Pick<Env, 'NODE_ENV' | 'EMAIL_PROVIDER' | 'SCAN_MODE'> & Partial<Pick<Env, 'TENANT_DELETION_GRACE_SECONDS'>>): string[] {
+export function productionRefusals(
+  e: Pick<Env, 'NODE_ENV' | 'EMAIL_PROVIDER' | 'SCAN_MODE'> &
+    Partial<Pick<Env, 'TENANT_DELETION_GRACE_SECONDS'>>,
+): string[] {
   if (e.NODE_ENV !== 'production') return [];
   const out: string[] = [];
   if (e.EMAIL_PROVIDER === 'console') out.push('EMAIL_PROVIDER=console is refused in production (use smtp)');
-  if (e.SCAN_MODE === 'dev_unscanned') out.push('SCAN_MODE=dev_unscanned is refused in production (use clamav)');
-  if (e.TENANT_DELETION_GRACE_SECONDS !== undefined) out.push('TENANT_DELETION_GRACE_SECONDS is a test-only override and is refused in production (use TENANT_DELETION_GRACE_DAYS)');
+  if (e.SCAN_MODE === 'dev_unscanned')
+    out.push('SCAN_MODE=dev_unscanned is refused in production (use clamav)');
+  if (e.TENANT_DELETION_GRACE_SECONDS !== undefined)
+    out.push(
+      'TENANT_DELETION_GRACE_SECONDS is a test-only override and is refused in production (use TENANT_DELETION_GRACE_DAYS)',
+    );
   return out;
 }
 
 /** Cancellation window for tenant deletion requests, in seconds. */
-export function tenantDeletionGraceSeconds(e: Pick<Env, 'NODE_ENV' | 'TENANT_DELETION_GRACE_DAYS' | 'TENANT_DELETION_GRACE_SECONDS'> = env()): number {
-  return e.NODE_ENV !== 'production' && e.TENANT_DELETION_GRACE_SECONDS ? e.TENANT_DELETION_GRACE_SECONDS : e.TENANT_DELETION_GRACE_DAYS * 86_400;
+export function tenantDeletionGraceSeconds(
+  e: Pick<Env, 'NODE_ENV' | 'TENANT_DELETION_GRACE_DAYS' | 'TENANT_DELETION_GRACE_SECONDS'> = env(),
+): number {
+  return e.NODE_ENV !== 'production' && e.TENANT_DELETION_GRACE_SECONDS
+    ? e.TENANT_DELETION_GRACE_SECONDS
+    : e.TENANT_DELETION_GRACE_DAYS * 86_400;
 }
 
 export function widgetBaseUrl(): string {
@@ -153,9 +177,27 @@ export const isProd = () => env().NODE_ENV === 'production';
  * Origins the browser talks to directly for files (presigned upload PUTs, in-place downloads)
  * when objects live in S3-compatible storage — the widget frame CSP must allow them in connect-src.
  */
-export function storageBrowserOrigins(e: Pick<Env, 'STORAGE_DRIVER' | 'S3_BUCKET' | 'S3_QUARANTINE_BUCKET' | 'S3_CLEAN_BUCKET' | 'S3_ENDPOINT' | 'S3_PRESIGN_ENDPOINT' | 'S3_FORCE_PATH_STYLE' | 'S3_REGION'> = env()): string[] {
+export function storageBrowserOrigins(
+  e: Pick<
+    Env,
+    | 'STORAGE_DRIVER'
+    | 'S3_BUCKET'
+    | 'S3_QUARANTINE_BUCKET'
+    | 'S3_CLEAN_BUCKET'
+    | 'S3_ENDPOINT'
+    | 'S3_PRESIGN_ENDPOINT'
+    | 'S3_FORCE_PATH_STYLE'
+    | 'S3_REGION'
+  > = env(),
+): string[] {
   if (e.STORAGE_DRIVER !== 's3') return [];
-  const buckets = [...new Set([e.S3_QUARANTINE_BUCKET ?? e.S3_BUCKET, e.S3_CLEAN_BUCKET ?? e.S3_BUCKET].filter((b): b is string => !!b))];
+  const buckets = [
+    ...new Set(
+      [e.S3_QUARANTINE_BUCKET ?? e.S3_BUCKET, e.S3_CLEAN_BUCKET ?? e.S3_BUCKET].filter(
+        (b): b is string => !!b,
+      ),
+    ),
+  ];
   const endpoint = e.S3_PRESIGN_ENDPOINT ?? e.S3_ENDPOINT;
   if (endpoint) {
     const u = new URL(endpoint);

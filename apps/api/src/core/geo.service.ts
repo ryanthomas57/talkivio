@@ -1,4 +1,5 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { stat } from 'node:fs/promises';
 import type { IncomingHttpHeaders } from 'node:http';
 import { UAParser } from 'ua-parser-js';
 import type { DeviceType } from '@talkivio/contracts';
@@ -42,43 +43,121 @@ export function headerText(v: string | null | undefined): string | null {
   } catch {
     /* malformed escape: keep the raw header text rather than failing the request */
   }
-  s = s.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, 100);
+  s = s
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, 100);
   return s || null;
 }
 
+/** Location headers per edge. Only the edges named in GEO_TRUSTED_HEADERS are read: anywhere else they are client-controlled. */
+export const GEO_HEADER_SETS = {
+  cloudflare: { country: ['cf-ipcountry'], region: [] as string[], city: ['cf-ipcity'] },
+  vercel: {
+    country: ['x-vercel-ip-country'],
+    region: ['x-vercel-ip-country-region'],
+    city: ['x-vercel-ip-city'],
+  },
+  fastly: { country: ['fastly-geo-country'], region: [] as string[], city: [] as string[] },
+  proxy: { country: ['x-country-code'], region: ['x-geo-region'], city: ['x-geo-city'] },
+} as const;
+export type GeoHeaderSet = keyof typeof GEO_HEADER_SETS;
+
+/** Loopback, private, link-local and unique-local addresses (also IPv4-mapped): they have no location. */
+export function isPrivateIp(ip: string): boolean {
+  const v4 = ip.startsWith('::ffff:') ? ip.slice(7) : ip;
+  if (/^\d+\.\d+\.\d+\.\d+$/.test(v4)) {
+    const [a, b] = v4.split('.').map(Number);
+    return (
+      a === 127 ||
+      a === 10 ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 169 && b === 254) ||
+      a === 0
+    );
+  }
+  const v6 = ip.toLowerCase();
+  return v6 === '::1' || v6 === '::' || /^f[cd]/.test(v6) || /^fe[89ab]/.test(v6);
+}
+
+const RELOAD_CHECK_MS = 3600_000;
+
 /**
- * Coarse geolocation. Uses edge/CDN headers when present (Cloudflare, Vercel,
- * Fastly, or a reverse proxy) and an optional local MaxMind database. Only
- * country/region/city are derived; raw IPs are never stored.
+ * Coarse geolocation. Uses edge/CDN headers only from the edges named in GEO_TRUSTED_HEADERS (Cloudflare, Vercel,
+ * Fastly, or your own reverse proxy) — never by default, since a visitor can send any header and country drives
+ * triggers — and an optional local MaxMind-format database (GEOIP_DB_PATH, e.g. DB-IP City Lite, reloaded when the
+ * file changes). Only country/region/city are derived; raw IPs are never stored. Outside production, GEO_DEV_IP
+ * stands in for loopback/private client addresses so local testing shows real locations.
  */
 @Injectable()
-export class GeoService implements OnModuleInit {
+export class GeoService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger('Geo');
   private reader: { get(ip: string): unknown } | null = null;
+  private trusted: GeoHeaderSet[] = [];
+  private devIp: string | null = null;
+  private dbPath: string | null = null;
+  private dbMtimeMs = 0;
+  private reloadTimer: NodeJS.Timeout | null = null;
+
+  /** Header trust and the development stand-in address (onModuleInit reads them from the environment). */
+  configure(opts: { trustedHeaders?: GeoHeaderSet[]; devIp?: string | null }): void {
+    this.trusted = opts.trustedHeaders ?? [];
+    this.devIp = opts.devIp ?? null;
+  }
 
   async onModuleInit(): Promise<void> {
-    const path = env().GEOIP_DB_PATH;
-    if (!path) return;
+    const e = env();
+    this.configure({
+      trustedHeaders: e.GEO_TRUSTED_HEADERS.split(',')
+        .map((s) => s.trim())
+        .filter((s): s is GeoHeaderSet => s in GEO_HEADER_SETS),
+      devIp: e.NODE_ENV === 'production' ? null : (e.GEO_DEV_IP ?? null),
+    });
+    // Only the api process looks locations up (sign-in and widget sessions); the database is ~130 MB in memory.
+    if (!e.GEOIP_DB_PATH || (process.env.TALKIVIO_PROCESS ?? 'api') !== 'api') return;
+    this.dbPath = e.GEOIP_DB_PATH;
+    await this.loadDatabase();
+    // Monthly database updates replace the file; pick them up without a restart.
+    this.reloadTimer = setInterval(() => void this.loadDatabase(), RELOAD_CHECK_MS);
+    this.reloadTimer.unref();
+  }
+
+  onModuleDestroy(): void {
+    if (this.reloadTimer) clearInterval(this.reloadTimer);
+  }
+
+  private async loadDatabase(): Promise<void> {
+    if (!this.dbPath) return;
     try {
+      const { mtimeMs } = await stat(this.dbPath);
+      if (this.reader && mtimeMs === this.dbMtimeMs) return;
       const maxmind = await import('maxmind');
-      this.reader = await maxmind.open(path);
-      this.logger.log(`Loaded GeoIP database from ${path}`);
+      this.reader = await maxmind.open(this.dbPath, { watchForUpdates: false });
+      this.dbMtimeMs = mtimeMs;
+      this.logger.log(`Loaded GeoIP database from ${this.dbPath}`);
     } catch (err) {
-      this.logger.warn(`GeoIP database unavailable: ${(err as Error).message}`);
+      if (!this.reader) this.logger.warn(`GeoIP database unavailable: ${(err as Error).message}`);
     }
   }
 
   lookup(ip: string | null | undefined, headers: IncomingHttpHeaders): GeoInfo {
-    const h = (k: string) => {
-      const v = headers[k];
-      return (Array.isArray(v) ? v[0] : v) || null;
+    const h = (names: readonly string[]) => {
+      for (const k of names) {
+        const v = headers[k];
+        const s = (Array.isArray(v) ? v[0] : v) || null;
+        if (s) return s;
+      }
+      return null;
     };
-    let countryCode = h('cf-ipcountry') ?? h('x-vercel-ip-country') ?? h('fastly-geo-country') ?? h('x-country-code');
-    let region = h('x-vercel-ip-country-region') ?? h('x-geo-region');
-    let city = h('cf-ipcity') ?? h('x-vercel-ip-city') ?? h('x-geo-city');
-    if ((!countryCode || countryCode === 'XX') && ip && this.reader) {
+    const sets = this.trusted.map((t) => GEO_HEADER_SETS[t]);
+    let countryCode = h(sets.flatMap((s) => s.country));
+    let region = h(sets.flatMap((s) => s.region));
+    let city = h(sets.flatMap((s) => s.city));
+    const lookupIp = ip && this.devIp && isPrivateIp(ip) ? this.devIp : ip;
+    if ((!countryCode || countryCode === 'XX') && lookupIp && this.reader) {
       try {
-        const rec = this.reader.get(ip) as {
+        const rec = this.reader.get(lookupIp) as {
           country?: { iso_code?: string };
           subdivisions?: Array<{ names?: { en?: string } }>;
           city?: { names?: { en?: string } };
@@ -104,7 +183,13 @@ export class GeoService implements OnModuleInit {
     const r = new UAParser(ua).getResult();
     const type = r.device.type;
     const isBot = /bot|crawler|spider|crawling|headless/i.test(ua);
-    const deviceType: DeviceType = isBot ? 'bot' : type === 'mobile' ? 'mobile' : type === 'tablet' ? 'tablet' : 'desktop';
+    const deviceType: DeviceType = isBot
+      ? 'bot'
+      : type === 'mobile'
+        ? 'mobile'
+        : type === 'tablet'
+          ? 'tablet'
+          : 'desktop';
     return {
       browser: r.browser.name ? `${r.browser.name}${r.browser.major ? ` ${r.browser.major}` : ''}` : null,
       os: r.os.name ? `${r.os.name}${r.os.version ? ` ${r.os.version.split('.')[0]}` : ''}` : null,
