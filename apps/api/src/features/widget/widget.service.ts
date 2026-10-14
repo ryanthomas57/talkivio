@@ -556,6 +556,18 @@ export class WidgetService {
       });
     } else {
       const patch: Prisma.VisitorSessionUpdateInput = { lastSeenAt: new Date() };
+      // The workspace stopped requiring analytics consent after this session started: it now counts as a new
+      // session would (granted). An explicit denial or withdrawal is never overridden.
+      if (!settings.tracking.analyticsConsentRequired && session.analyticsConsent === 'unknown')
+        patch.analyticsConsent = 'granted';
+      // A session that started without a location (tracking not allowed yet, or no database then) gets one once allowed.
+      if (
+        (patch.analyticsConsent ?? session.analyticsConsent) === 'granted' &&
+        settings.tracking.locationEnabled &&
+        !session.country &&
+        a.geo.countryCode
+      )
+        Object.assign(patch, { country: a.geo.countryCode, city: a.geo.city });
       if (a.consent && typeof a.consent.analytics === 'boolean' && session.analyticsConsent !== analytics) {
         patch.analyticsConsent = analytics;
         if (!trackingAllowed)
@@ -967,7 +979,17 @@ export class WidgetService {
           reason: 'session_ended' as const,
           entered: null,
         };
-      if (session.analyticsConsent !== 'granted')
+      const settings = mergeOrgSettings(
+        (await tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }))
+          .settings,
+      );
+      let consent = session.analyticsConsent;
+      if (consent === 'unknown' && !settings.tracking.analyticsConsentRequired) {
+        // Consent stopped being required while this tab was open: same as a new session (granted).
+        await tx.visitorSession.update({ where: { id: session.id }, data: { analyticsConsent: 'granted' } });
+        consent = 'granted';
+      }
+      if (consent !== 'granted')
         return {
           accepted: 0,
           duplicates: 0,
@@ -975,10 +997,6 @@ export class WidgetService {
           reason: 'consent' as const,
           entered: null,
         };
-      const settings = mergeOrgSettings(
-        (await tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }))
-          .settings,
-      );
       const ids = [...new Set(events.map((e) => String(e.id).slice(0, 64)))];
       const seen = new Set(
         (
