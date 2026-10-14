@@ -1,4 +1,18 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { existsSync, statSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -13,8 +27,23 @@ import { frameAncestors } from './origins';
 import { WidgetService } from './widget.service';
 
 const uuid = z.string().uuid();
-const consentSchema = z.object({ analytics: z.boolean().optional(), service: z.boolean().optional(), policyVersion: z.string().max(40).optional() }).nullable().optional();
-const bootstrapSchema = z.object({ siteKey: z.string().min(4).max(80), hostOrigin: z.string().max(300).nullable().optional(), locale: z.string().max(20).nullable().optional(), clientInstanceId: z.string().max(64).optional(), consent: consentSchema }).strict();
+const consentSchema = z
+  .object({
+    analytics: z.boolean().optional(),
+    service: z.boolean().optional(),
+    policyVersion: z.string().max(40).optional(),
+  })
+  .nullable()
+  .optional();
+const bootstrapSchema = z
+  .object({
+    siteKey: z.string().min(4).max(80),
+    hostOrigin: z.string().max(300).nullable().optional(),
+    locale: z.string().max(20).nullable().optional(),
+    clientInstanceId: z.string().max(64).optional(),
+    consent: consentSchema,
+  })
+  .strict();
 const sessionSchema = z
   .object({
     siteKey: z.string().min(4).max(80),
@@ -24,7 +53,14 @@ const sessionSchema = z
     identityToken: z.string().max(4000).nullable().optional(),
     consent: consentSchema,
     clientInstanceId: z.string().max(64).optional(),
-    page: z.object({ url: z.string().max(4000).nullable().optional(), title: z.string().max(1000).nullable().optional(), referrer: z.string().max(4000).nullable().optional() }).nullable().optional(),
+    page: z
+      .object({
+        url: z.string().max(4000).nullable().optional(),
+        title: z.string().max(1000).nullable().optional(),
+        referrer: z.string().max(4000).nullable().optional(),
+      })
+      .nullable()
+      .optional(),
     locale: z.string().max(20).nullable().optional(),
     timezone: z.string().max(80).nullable().optional(),
     preview: z.boolean().optional(),
@@ -35,12 +71,27 @@ const chatCreateSchema = z
     clientRequestId: z.string().min(8).max(64),
     message: z.string().max(8000).nullable().optional(),
     departmentId: uuid.nullable().optional(),
-    fields: z.object({ name: z.string().max(100).optional(), email: z.string().max(200).optional(), phone: z.string().max(40).optional() }).strict().optional(),
+    fields: z
+      .object({
+        name: z.string().max(100).optional(),
+        email: z.string().max(200).optional(),
+        phone: z.string().max(40).optional(),
+      })
+      .strict()
+      .optional(),
     pageUrl: z.string().max(4000).nullable().optional(),
   })
   .strict();
-const messageSchema = z.object({ clientMessageId: z.string().min(1).max(64), body: z.string().max(8000).nullable().optional(), attachmentIds: z.array(uuid).max(5).default([]) }).strict();
-const ratingSchema = z.object({ rating: z.enum(['good', 'bad']), comment: z.string().max(2000).nullable().optional() }).strict();
+const messageSchema = z
+  .object({
+    clientMessageId: z.string().min(1).max(64),
+    body: z.string().max(8000).nullable().optional(),
+    attachmentIds: z.array(uuid).max(5).default([]),
+  })
+  .strict();
+const ratingSchema = z
+  .object({ rating: z.enum(['good', 'bad']), comment: z.string().max(2000).nullable().optional() })
+  .strict();
 const readSchema = z.object({ lastReadSeq: z.number().int().min(0) }).strict();
 const identifySchema = z
   .object({
@@ -51,7 +102,14 @@ const identifySchema = z
     externalIdToken: z.string().max(4000).nullable().optional(),
   })
   .strict();
-const pageInput = z.object({ url: z.string().max(4000).nullable().optional(), title: z.string().max(1000).nullable().optional(), referrer: z.string().max(4000).nullable().optional() }).nullable().optional();
+const pageInput = z
+  .object({
+    url: z.string().max(4000).nullable().optional(),
+    title: z.string().max(1000).nullable().optional(),
+    referrer: z.string().max(4000).nullable().optional(),
+  })
+  .nullable()
+  .optional();
 const resetSchema = z
   .object({
     anonymousToken: z.string().max(200).nullable().optional(),
@@ -82,15 +140,35 @@ const redeemSchema = z
     timezone: z.string().max(80).nullable().optional(),
   })
   .strict();
-const consentUpdateSchema = z.object({ purpose: z.enum(['analytics', 'service']), state: z.enum(['granted', 'denied', 'withdrawn']), policyVersion: z.string().min(1).max(40) }).strict();
+const consentUpdateSchema = z
+  .object({
+    purpose: z.enum(['analytics', 'service']),
+    state: z.enum(['granted', 'denied', 'withdrawn']),
+    policyVersion: z.string().min(1).max(40),
+  })
+  .strict();
 const eventsSchema = z
   .object({
     events: z
-      .array(z.object({ id: z.string().min(1).max(64), kind: z.enum(['entered', 'left', 'visible', 'hidden']), url: z.string().max(4000).nullable().optional(), title: z.string().max(1000).nullable().optional(), clientAt: z.string().max(40).nullable().optional() }).strict())
+      .array(
+        z
+          .object({
+            id: z.string().min(1).max(64),
+            kind: z.enum(['entered', 'left', 'visible', 'hidden']),
+            url: z.string().max(4000).nullable().optional(),
+            title: z.string().max(1000).nullable().optional(),
+            clientAt: z.string().max(40).nullable().optional(),
+          })
+          .strict(),
+      )
       .max(20),
   })
   .strict();
-const pageSchema = z.object({ afterSeq: z.coerce.number().int().min(0).optional(), beforeSeq: z.coerce.number().int().min(1).optional(), limit: z.coerce.number().int().min(1).max(100).default(50) });
+const pageSchema = z.object({
+  afterSeq: z.coerce.number().int().min(0).optional(),
+  beforeSeq: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(50),
+});
 
 /** Public widget API (ch. 46). Mounted at /widget/v1 (outside the agent API prefix). */
 @Controller('widget/v1')
@@ -106,13 +184,19 @@ export class WidgetController {
   @Post('bootstrap')
   @HttpCode(200)
   bootstrap(@Body(body(bootstrapSchema)) input: z.infer<typeof bootstrapSchema>, @Req() req: Request) {
-    return this.widget.bootstrap({ siteKey: input.siteKey, hostOrigin: input.hostOrigin ?? null, locale: input.locale }, { ip: req.ip ?? null });
+    return this.widget.bootstrap(
+      { siteKey: input.siteKey, hostOrigin: input.hostOrigin ?? null, locale: input.locale },
+      { ip: req.ip ?? null },
+    );
   }
 
   @Public()
   @Post('sessions')
   sessions(@Body(body(sessionSchema)) input: z.infer<typeof sessionSchema>, @Req() req: AppRequest) {
-    return this.widget.createSession({ ...input, hostOrigin: input.hostOrigin ?? null, isPreview: input.preview }, { ip: req.ip ?? null, headers: req.headers, requestId: req.requestId });
+    return this.widget.createSession(
+      { ...input, hostOrigin: input.hostOrigin ?? null, isPreview: input.preview },
+      { ip: req.ip ?? null, headers: req.headers, requestId: req.requestId },
+    );
   }
 
   /**
@@ -121,8 +205,15 @@ export class WidgetController {
    */
   @Public()
   @Post('identity/handoff')
-  handoff(@Headers('authorization') authorization: string | undefined, @Body(body(handoffSchema)) input: z.infer<typeof handoffSchema>, @Req() req: AppRequest) {
-    return this.handoffs.issue(authorization, input, { ipHash: visitorIpHash(req.ip), requestId: req.requestId ?? '' });
+  handoff(
+    @Headers('authorization') authorization: string | undefined,
+    @Body(body(handoffSchema)) input: z.infer<typeof handoffSchema>,
+    @Req() req: AppRequest,
+  ) {
+    return this.handoffs.issue(authorization, input, {
+      ipHash: visitorIpHash(req.ip),
+      requestId: req.requestId ?? '',
+    });
   }
 
   /** Destination widget redeems the code once → destination-scoped capability for the same visitor. */
@@ -130,7 +221,10 @@ export class WidgetController {
   @Post('identity/redeem')
   @HttpCode(200)
   redeem(@Body(body(redeemSchema)) input: z.infer<typeof redeemSchema>, @Req() req: AppRequest) {
-    return this.widget.redeemHandoff({ ...input, hostOrigin: input.hostOrigin ?? null }, { ip: req.ip ?? null, headers: req.headers, requestId: req.requestId });
+    return this.widget.redeemHandoff(
+      { ...input, hostOrigin: input.hostOrigin ?? null },
+      { ip: req.ip ?? null, headers: req.headers, requestId: req.requestId },
+    );
   }
 
   @Public()
@@ -152,22 +246,37 @@ export class WidgetController {
   @Post('identity')
   @HttpCode(200)
   identify(@Visitor() v: VisitorContext, @Body(body(identifySchema)) input: z.infer<typeof identifySchema>) {
-    return this.widget.identify(v, { name: input.name, email: input.email, verifiedToken: input.verifiedToken ?? input.externalIdToken ?? null });
+    return this.widget.identify(v, {
+      name: input.name,
+      email: input.email,
+      verifiedToken: input.verifiedToken ?? input.externalIdToken ?? null,
+    });
   }
 
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Post('identity/reset')
   @HttpCode(200)
-  reset(@Visitor() v: VisitorContext, @Body(body(resetSchema)) input: z.infer<typeof resetSchema>, @Req() req: AppRequest) {
-    return this.widget.resetIdentity(v, input, { ip: req.ip ?? null, headers: req.headers, requestId: req.requestId });
+  reset(
+    @Visitor() v: VisitorContext,
+    @Body(body(resetSchema)) input: z.infer<typeof resetSchema>,
+    @Req() req: AppRequest,
+  ) {
+    return this.widget.resetIdentity(v, input, {
+      ip: req.ip ?? null,
+      headers: req.headers,
+      requestId: req.requestId,
+    });
   }
 
   /** SDK setCustomFields: public_writable definitions only. */
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Put('visitor/custom-fields')
-  customFields(@Visitor() v: VisitorContext, @Body(body(visitorFieldsSchema)) input: z.infer<typeof visitorFieldsSchema>) {
+  customFields(
+    @Visitor() v: VisitorContext,
+    @Body(body(visitorFieldsSchema)) input: z.infer<typeof visitorFieldsSchema>,
+  ) {
     return this.widget.setVisitorCustomFields(v, input.customFields);
   }
 
@@ -175,15 +284,26 @@ export class WidgetController {
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Put('visitor/tags')
-  tags(@Visitor() v: VisitorContext, @Body(body(visitorTagsSchema)) input: z.infer<typeof visitorTagsSchema>) {
+  tags(
+    @Visitor() v: VisitorContext,
+    @Body(body(visitorTagsSchema)) input: z.infer<typeof visitorTagsSchema>,
+  ) {
     return this.widget.setVisitorTags(v, input.tags);
   }
 
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Put('consent')
-  consent(@Visitor() v: VisitorContext, @Body(body(consentUpdateSchema)) input: z.infer<typeof consentUpdateSchema>) {
-    return this.widget.setConsent(v, input);
+  consent(
+    @Visitor() v: VisitorContext,
+    @Body(body(consentUpdateSchema)) input: z.infer<typeof consentUpdateSchema>,
+    @Req() req: AppRequest,
+  ) {
+    return this.widget.setConsent(v, input, {
+      ip: req.ip ?? null,
+      headers: req.headers,
+      requestId: req.requestId,
+    });
   }
 
   @Public()
@@ -197,7 +317,11 @@ export class WidgetController {
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Post('chats')
-  async createChat(@Visitor() v: VisitorContext, @Body(body(chatCreateSchema)) input: z.infer<typeof chatCreateSchema>, @Res({ passthrough: true }) res: Response) {
+  async createChat(
+    @Visitor() v: VisitorContext,
+    @Body(body(chatCreateSchema)) input: z.infer<typeof chatCreateSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const r = await this.commands.admit(v, input);
     res.status(r.status);
     return r.body;
@@ -214,7 +338,11 @@ export class WidgetController {
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Get('chats/:id/messages')
-  async messages(@Visitor() v: VisitorContext, @Param('id', ParseUUIDPipe) id: string, @Query(body(pageSchema)) q: z.infer<typeof pageSchema>) {
+  async messages(
+    @Visitor() v: VisitorContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Query(body(pageSchema)) q: z.infer<typeof pageSchema>,
+  ) {
     await this.widget.assertChatOnSite(v, id);
     const r = await this.queries.visitorMessages(v, id, q);
     return { items: r.items, throughSeq: r.throughSeq, lastSeq: r.lastSeq, hasMore: r.hasMore };
@@ -223,14 +351,22 @@ export class WidgetController {
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Post('chats/:id/messages')
-  async send(@Visitor() v: VisitorContext, @Param('id', ParseUUIDPipe) id: string, @Body(body(messageSchema)) input: z.infer<typeof messageSchema>) {
+  async send(
+    @Visitor() v: VisitorContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(body(messageSchema)) input: z.infer<typeof messageSchema>,
+  ) {
     return this.commands.visitorSend(v, id, input);
   }
 
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Put('chats/:id/read-cursor')
-  read(@Visitor() v: VisitorContext, @Param('id', ParseUUIDPipe) id: string, @Body(body(readSchema)) input: z.infer<typeof readSchema>) {
+  read(
+    @Visitor() v: VisitorContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(body(readSchema)) input: z.infer<typeof readSchema>,
+  ) {
     return this.commands.readCursor({ visitor: v }, id, input.lastReadSeq);
   }
 
@@ -245,13 +381,19 @@ export class WidgetController {
   @Public()
   @UseGuards(ActiveVisitorGuard)
   @Put('chats/:id/rating')
-  rate(@Visitor() v: VisitorContext, @Param('id', ParseUUIDPipe) id: string, @Body(body(ratingSchema)) input: z.infer<typeof ratingSchema>) {
+  rate(
+    @Visitor() v: VisitorContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(body(ratingSchema)) input: z.infer<typeof ratingSchema>,
+  ) {
     return this.commands.rate(v, id, input);
   }
 }
 
 export function widgetDistDir(): string {
-  return process.env.WIDGET_DIST_DIR ? resolve(process.env.WIDGET_DIST_DIR) : resolve(__dirname, '../../../../widget/dist');
+  return process.env.WIDGET_DIST_DIR
+    ? resolve(process.env.WIDGET_DIST_DIR)
+    : resolve(__dirname, '../../../../widget/dist');
 }
 
 function assetVersion(file: string): string {
@@ -271,13 +413,23 @@ export class WidgetFrameController {
 
   @Public()
   @Get('frame/:siteKey')
-  async frame(@Param('siteKey') siteKey: string, @Query('preview') preview: string | undefined, @Res() res: Response) {
+  async frame(
+    @Param('siteKey') siteKey: string,
+    @Query('preview') preview: string | undefined,
+    @Res() res: Response,
+  ) {
     let ancestors: string;
     try {
       const site = await this.widget.resolveSite(siteKey);
       const rules = await this.widget.origins(site.tenantId, site.siteId);
       // Dashboard live preview: only the dashboard (plus localhost in development) may embed it.
-      ancestors = preview === '1' ? [new URL(env().APP_URL).origin, ...(isProd() ? [] : ['http://localhost:*', 'http://127.0.0.1:*'])].join(' ') : frameAncestors(rules);
+      ancestors =
+        preview === '1'
+          ? [
+              new URL(env().APP_URL).origin,
+              ...(isProd() ? [] : ['http://localhost:*', 'http://127.0.0.1:*']),
+            ].join(' ')
+          : frameAncestors(rules);
     } catch {
       res.status(404).type('text/plain').send('Unknown widget');
       return;
@@ -286,7 +438,10 @@ export class WidgetFrameController {
     const js = resolve(dist, 'frame/frame.js');
     const css = resolve(dist, 'frame/frame.css');
     if (!existsSync(js)) {
-      res.status(503).type('text/plain').send('Widget assets are not built. Run `pnpm --filter @talkivio/widget build`.');
+      res
+        .status(503)
+        .type('text/plain')
+        .send('Widget assets are not built. Run `pnpm --filter @talkivio/widget build`.');
       return;
     }
     const api = new URL(env().API_URL);
@@ -299,7 +454,9 @@ export class WidgetFrameController {
         "style-src 'self' 'unsafe-inline'",
         `img-src 'self' data: blob: https:${isProd() ? '' : ' http:'}`,
         "font-src 'self' data:",
-        `connect-src 'self' ${ws} ${api.origin}${storageBrowserOrigins().map((o) => ` ${o}`).join('')}`,
+        `connect-src 'self' ${ws} ${api.origin}${storageBrowserOrigins()
+          .map((o) => ` ${o}`)
+          .join('')}`,
         "object-src 'none'",
         "base-uri 'none'",
         "form-action 'none'",

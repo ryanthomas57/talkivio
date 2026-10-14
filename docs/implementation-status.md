@@ -1,50 +1,40 @@
-# Talkivio — implementation status
+# Talkivio: implementation status
 
-_Last updated: 2026-10-13 (evening). Authority: `docs/master-prompt.txt`. Ledger: `docs/traceability.csv` (254 rows,
-gate `scripts/ledger-check.mjs`). Sign-off: `docs/release-audit.md`._
+_Last updated: 2026-10-14. Authority: `docs/master-prompt.txt`. Ledger: `docs/traceability.csv` (256 rows, gate
+`scripts/ledger-check.mjs`). Sign-off: `docs/release-audit.md`. Code: https://github.com/ryanthomas57/talkivio (main);
+every push runs the full CI pipeline in `.github/workflows/ci.yml`._
 
-> The working tree is not yet a git repository, so evidence below is recorded against the working tree, not
-> commit SHAs. Release-audit rows stay `NOT ASSESSED` until evidence is reproduced at a commit.
->
-> **Working copy.** On 2026-10-13 the external exFAT volume holding the original copy zeroed files written while the
-> machine was short of memory — twice, the second time even after a full fsync. From 17:10 the work continued in an
-> APFS copy at `~/Talkivio-APFS/Live Chat` (same tree, `node_modules` from the local pnpm store). Every change since
-> is there; `~/Talkivio-APFS/sync-to-volume.sh` copies it back once the volume is repaired.
+> **Working copy.** The live tree is `~/Talkivio-APFS/Live Chat` (APFS). The external exFAT volume zeroed files
+> written under memory pressure on 2026-10-13; `~/Talkivio-APFS/sync-to-volume.sh` copies the tree back once it is
+> repaired.
 
 ## Current phase
 
-Release-audit hardening. Ledger: **234 verified · 10 partial · 6 not verified · 4 optional disabled** (254 rows, of
-which 119 are component rows such as `FILE01.scan`, `ROUTE01.offer`, `AUTH01.logout`, each citing the exact
-assertions that prove it). Everything still open needs something this machine does not have — see _Blocked_.
+Go-live readiness. The product is feature complete for this release; what remains before real customers is the
+production server itself (see _Go-live inputs_).
 
-Closed in this phase (each with a test that failed first or a negative control):
+Added on 2026-10-14 (each with tests that run in CI):
 
-- **Audit coverage (AUD-72-16):** a static gate (`apps/api/scripts/audit-coverage.mjs`) proves all 138 write
-  routes audit or are exempt with a reason; `audit.e2e.mjs` drives every ch. 54 category straight through the API.
-  Found and fixed: login failures, password change/reset, reset requests, MFA enable/recovery codes, session
-  revocation and failed re-authentication were not audited; tag creation was not audited; two audit writes lacked
-  the request id.
-- **Bounded text (AUD-72-01):** 174 CHECK constraints (closed value sets, identifier shapes, length bounds) in
-  migrations 25/26 (added `NOT VALID`, then validated); the drift gate fails on any unbounded text column; CHECK
-  violations answer 422. Found and fixed: edge geo headers could produce a non-ISO country (breaking an existing
-  CHECK) or throw on bad percent-encoding; OAuth avatar URLs were unbounded.
-- **Slow consumers (WS04):** a stalled reader was never actually disconnected — engine.io's close waited for the
-  stalled queue to drain, so the guard re-fired every second and the queue kept growing. Now discarded on close;
-  the overload counter (never exported before) and outbound-queue gauges are exported.
-- **Triggers (TRIG03):** a `visitor.page.changed` event processed after a later page view was evaluated on the later
-  page. It now uses the page the event entered; cooldowns proven end to end.
-- **Accessibility (A11Y04):** reduced motion and forced colors automated. Found and fixed: the widget kept
-  transitions and pulsing animations under reduced motion; the selected tab was invisible in forced colors; tab
-  panels hid their focus ring; date inputs lost the ring while their calendar button had focus.
-- **Routing at scale (ROUTE01):** 100 concurrent requests, 10 agents × capacity 3, two API processes and two
-  workers: 30 active / 70 queued, never above capacity, no double ownership.
-- **History (HIST01), late events (AUD-72-08), measures (AUD-72-07), derived caches (AUD-72-12), offline mail retry
-  (OFF01), malicious PDFs (SEC01), two-browser chat (CHAT01), shortcut insertion (SHORT01), log hygiene (AUD-72-11),
-  failover/PITR drill (AUD-72-34):** see the ledger rows for the evidence.
-- Billing and custom domains are recorded as **OPTIONAL DISABLED** (no module in this release); the docs no longer
-  suggest that setting `STRIPE_*` enables anything.
+- **Zendesk-style chat dock.** Chat windows along the bottom edge on every page (minimize, open in Inbox, close;
+  they survive navigation and reloads). Clicking a visitor on the Visitors list opens their chat there.
+- **Agents start chats with browsing visitors** (`POST /api/v1/visitors/:id/chats`). The chat starts active and owned
+  by the agent; the visitor's widget picks it up live and opens on the agent's message. Idempotent, one open chat
+  per visitor, refuses offline or unconsented visitors, full capacity and other workspaces; audited
+  (`engage.e2e.mjs`, 21 checks; `dock.spec.ts` DOCK01).
+- **Chat requests pop up with Accept on any page** (queued chats in broadcast/manual departments, plus assigned
+  offers); Accept opens a docked window (`dock.spec.ts` DOCK02).
+- **Visitors list simplified:** visitor with flag, IP address and network owner (DB-IP ASN Lite), page, time on site,
+  visits, chat; advanced filters behind one button. IPs are stored only when a workspace turns on "Show visitor IP
+  addresses" (off by default), are erased with the visitor and on consent withdrawal, and appear in access exports.
+- **Live visitor list fixes:** bursts of updates are no longer dropped (Socket.IO volatile frames replaced by a
+  congestion room), visitors appear the moment they land, country/region/city from DB-IP City Lite, consent upgrade
+  for workspaces that do not require consent.
+- **No em dashes in user-facing text** (dashboard EN/AR, widget, emails, transcripts, starter content, demo shop).
+- **Deployment:** `deploy/` bundle (Compose, Caddy with automatic HTTPS, env checks, deploy/rollback, backup,
+  off-server object backup, restore, GeoIP job), images published to GHCR with signed SLSA provenance and SBOM
+  attestations that `deploy.sh` verifies before running.
 
-## Verified on the integrated API (2026-10-13, all suites green on the same build)
+## Verified on the integrated API (all suites green on the same build; rerun by CI on every push)
 
 | Suite                     | Checks                                             | Scope                                                                                                                          |
 | ------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
@@ -60,8 +50,9 @@ Closed in this phase (each with a test that failed first or a negative control):
 | `triggers.e2e.mjs`        | 70                                                 | DSL engine, invitations, effect dedupe, simulator parity, cooldowns                                                            |
 | `shortcuts.e2e.mjs`       | 42                                                 | personal reply privacy, placeholders, CSV import/export                                                                        |
 | `analytics.e2e.mjs`       | 90                                                 | Fixture A, CSAT revisions, raw reconciliation, late/duplicate/out-of-order events, every measure's population/unit/null rule/n |
-| `files.e2e.mjs`           | 95                                                 | upload lifecycle, magic bytes, malicious PDF, grants, exports, CSV injection (scan mode `dev_unscanned`)                       |
-| `visitors.e2e.mjs`        | 139                                                | live monitoring, consent, identity, bans, high-load mode                                                                       |
+| `files.e2e.mjs`           | 96                                                 | upload lifecycle, magic bytes, malicious PDF, grants, exports, CSV injection; local and S3 (MinIO) storage, real ClamAV in CI  |
+| `visitors.e2e.mjs`        | 143                                                | live monitoring, consent, identity, bans, high-load mode                                                                       |
+| `engage.e2e.mjs`          | 21                                                 | agent-started chats: ownership, visitor tab notified, idempotency, refusals, audit                                             |
 | `contracts.e2e.mjs`       | all hold                                           | strict OpenAPI/AsyncAPI validation of REST responses, socket frames and outbox rows                                            |
 | `security.e2e.mjs`        | 424                                                | IDOR, roles, CSRF, sessions, XSS/CSV/SQLi/SSRF, socket boundaries, headers                                                     |
 | `roles.e2e.mjs`           | 31                                                 | permission matrix incl. in-handler checks                                                                                      |
@@ -95,7 +86,7 @@ restore point; RPO ≈ 1.3 s to the end of the WAL archive).
 
 ## Verified in a browser (Playwright, production build)
 
-**165 passed, 0 failed** (2 opt-in scale tests skipped) against the production dashboard build, the live API and the widget demo; report: `docs/accessibility/accessibility-report.md`.
+**167 passed, 0 failed** (2 opt-in scale tests skipped; includes the chat dock, `dock.spec.ts`) against the production dashboard build, the live API and the widget demo; report: `docs/accessibility/accessibility-report.md`.
 
 - Accessibility: axe WCAG 2.1 A/AA on 26 routes × light/dark + Arabic RTL (77 scans, 0 violations of any impact);
   reduced motion on 26 routes + the widget frame (no motion > 0.01 ms); forced colors: a focus outline at all 764 Tab
@@ -106,17 +97,18 @@ restore point; RPO ≈ 1.3 s to the end of the WAL archive).
   signatures, loader isolation and unapproved origins; every widget state; realtime ordering, duplicates, lost acks;
   outage retry; two-tab leadership; every link on the dashboard and public pages leads to a real page.
 
-## Blocked (needs access or a person, named precisely)
+## Go-live inputs (only the owner can provide these)
 
-- **Docker / Compose / staging:** DEPLOY01, DEPLOY02, AUD-72-29, AUD-72-32, AUD-72-33 — Docker is not installed and
-  there is no staging environment.
-- **Real ClamAV:** FILE01 / AUD-71-28 — verified with a protocol-faithful clamd stub; the CI job runs real ClamAV.
-- **Screen reader session:** A11Y02 / AUD-72-23 — live regions are asserted automatically; a VoiceOver/NVDA
-  walkthrough needs a person.
-- **Reference scale:** PERF01 — budgets pass at laptop scale; 1 000 agents / 10 000 visitors needs staging hardware.
-- **Previous release:** AUD-72-03 — migrations replay from empty; an upgrade from a previous release needs one.
-- **GitHub / registry:** AUD-72-30 (CI never run on GitHub — no git yet), AUD-72-31 (provenance attestations need
-  an image registry), AUD-72-28 (alert rules not evaluated by a running Prometheus — promtool not installed).
+- **A server:** Ubuntu 24.04 with Docker, 8 GB RAM, 2+ vCPU, 80 GB disk (`deploy/README.md`, section 1).
+- **A domain:** DNS records for `chat.<your domain>` and `files.chat.<your domain>` pointing at the server.
+- **SMTP:** any provider with the sending domain verified (SPF, DKIM, DMARC); sign-up, invitations and password
+  resets depend on it.
+- **An off-server backup bucket:** any S3-compatible bucket at another provider, with a key limited to it.
+
+## Descoped by the owner
+
+- Screen reader walkthrough (A11Y02 / AUD-72-23): the automated live-region contract stays as the evidence.
+- Reference-scale load test (PERF01): budgets pass at laptop scale.
 
 ## Known gaps / decisions recorded
 

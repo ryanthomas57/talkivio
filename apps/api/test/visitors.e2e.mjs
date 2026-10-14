@@ -1228,6 +1228,36 @@ ok(
 );
 await setConsentRequired(true);
 
+console.log('CONS04 — a visitor who consents after landing is recorded like one who consented at once');
+const setTracking = async (tracking) => {
+  const t = await owner.must('GET', '/tenants/current');
+  await owner.must('PATCH', '/tenants/current', { settings: { tracking }, expected_version: t.version });
+};
+await setTracking({ retain_ip: true });
+const consentsLater = (
+  await newSession(
+    { consent: undefined, page: { url: `${ORIGIN}/later`, title: 'Later' } },
+    { 'x-forwarded-for': '192.0.2.61' },
+  )
+).data;
+const addressOf = (visitorId) =>
+  sql(
+    `SELECT coalesce(ip_address, '') FROM visitor_sessions WHERE visitor_id = '${visitorId}' ORDER BY created_at DESC LIMIT 1`,
+  );
+ok(addressOf(consentsLater.visitor.id) === '', 'before consent the address is not stored');
+const consentFrom = (state) =>
+  W('PUT', '/consent', { purpose: 'analytics', state, policy_version: '2026-10' }, consentsLater.capability, {
+    'x-forwarded-for': '192.0.2.61',
+  });
+await consentFrom('granted');
+ok(
+  addressOf(consentsLater.visitor.id) !== '',
+  'granting consent stores the open tab’s address (the workspace shows visitor IPs)',
+);
+await consentFrom('withdrawn');
+ok(addressOf(consentsLater.visitor.id) === '', 'withdrawing consent erases it again');
+await setTracking({ retain_ip: false });
+
 for (const s of [ownerSock, vs1, vs2, wSock, pendingSock, declinedSock]) s.close();
 console.log(`\nVISITORS E2E PASSED (${passed} checks)`);
 process.exit(0);

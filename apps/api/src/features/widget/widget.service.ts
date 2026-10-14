@@ -887,7 +887,16 @@ export class WidgetService {
       state: 'granted' | 'denied' | 'withdrawn';
       policyVersion: string;
     },
+    req?: RequestInfo,
   ) {
+    // Where this request comes from, for the tab that is granting consent right now.
+    const here =
+      req && input.purpose === 'analytics' && input.state === 'granted'
+        ? {
+            geo: this.geo.lookup(req.ip, req.headers),
+            address: { ip: this.geo.effectiveIp(req.ip), network: this.geo.network(req.ip) },
+          }
+        : null;
     const r = await this.db.tx(v.tenantId, async (tx) => {
       const record = await tx.consentRecord.create({
         data: {
@@ -912,6 +921,27 @@ export class WidgetService {
             where: { tenantId: v.tenantId, id: { in: ids } },
             data: { analyticsConsent: 'granted' },
           });
+          // Tracking is allowed from now on: this tab's session gets the location, and the address when the
+          // workspace shows visitor IPs, exactly as a session that started with consent would have.
+          if (here) {
+            const settings = mergeOrgSettings(
+              (await tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }))
+                .settings,
+            );
+            const fill: Prisma.VisitorSessionUpdateManyMutationInput = {};
+            if (settings.tracking.locationEnabled && here.geo.countryCode)
+              Object.assign(fill, { country: here.geo.countryCode, city: here.geo.city });
+            if (settings.tracking.retainIp)
+              Object.assign(fill, {
+                ipAddress: here.address.ip?.slice(0, 45) ?? null,
+                network: here.address.network?.slice(0, 160) ?? null,
+              });
+            if (Object.keys(fill).length)
+              await tx.visitorSession.updateMany({
+                where: { tenantId: v.tenantId, id: v.sessionId, endedAt: null },
+                data: fill,
+              });
+          }
         } else {
           // Stop optional collection immediately and clear optional session fields.
           await tx.visitorSession.updateMany({
