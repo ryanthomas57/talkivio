@@ -1,6 +1,6 @@
 {
-  "operations": 226,
-  "json_typed": 194,
+  "operations": 227,
+  "json_typed": 195,
   "no_content": 22,
   "untyped_media": 10,
   "untyped_media_operations": [
@@ -15,7 +15,7 @@
     "GET /widget/v1/attachments/{id}/content (*/*)",
     "GET /widget/v1/exports/{id}/content (*/*)"
   ],
-  "components": 129,
+  "components": 130,
   "typed_operations": [
     "GET /api/v1/agents",
     "GET /api/v1/agents/invitations",
@@ -166,6 +166,7 @@
     "GET /api/v1/visitors/{id}",
     "PATCH /api/v1/visitors/{id}",
     "GET /api/v1/visitors/{id}/chats",
+    "POST /api/v1/visitors/{id}/chats",
     "GET /api/v1/visitors/{id}/sessions",
     "PUT /api/v1/visitors/{id}/tags",
     "POST /api/v1/webhook-deliveries/{id}/retry",

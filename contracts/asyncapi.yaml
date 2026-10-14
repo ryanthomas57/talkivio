@@ -188,6 +188,8 @@ channels:
         $ref: "#/components/messages/VisitorEventParticipantJoined"
       VisitorEventChatStarted:
         $ref: "#/components/messages/VisitorEventChatStarted"
+      VisitorEventChatOpenedByAgent:
+        $ref: "#/components/messages/VisitorEventChatOpenedByAgent"
       VisitorEventMessageRedacted:
         $ref: "#/components/messages/VisitorEventMessageRedacted"
       VisitorEventParticipantLeft:
@@ -492,6 +494,7 @@ operations:
       - $ref: "#/channels/visitor/messages/VisitorEventMessageRead"
       - $ref: "#/channels/visitor/messages/VisitorEventParticipantJoined"
       - $ref: "#/channels/visitor/messages/VisitorEventChatStarted"
+      - $ref: "#/channels/visitor/messages/VisitorEventChatOpenedByAgent"
       - $ref: "#/channels/visitor/messages/VisitorEventMessageRedacted"
       - $ref: "#/channels/visitor/messages/VisitorEventParticipantLeft"
       - $ref: "#/channels/visitor/messages/VisitorEventRatingUpdated"
@@ -1191,6 +1194,14 @@ components:
           type:
             - string
             - "null"
+        ip_address:
+          type:
+            - string
+            - "null"
+        network:
+          type:
+            - string
+            - "null"
         device_category:
           type:
             - string
@@ -1270,6 +1281,8 @@ components:
         - arrived_at
         - time_on_site_ms
         - country
+        - ip_address
+        - network
         - device_category
         - session_count
         - last_activity_at
@@ -2150,6 +2163,13 @@ components:
         - owner_public_profile
         - started_at
         - version
+    ChatOpenedByAgentPayload:
+      type: object
+      properties:
+        chat:
+          $ref: "#/components/schemas/PublicChat"
+      required:
+        - chat
     MessageRedactedPayload:
       type: object
       properties:
@@ -8080,6 +8100,69 @@ components:
       x-talkivio-event-type: chat.started
       x-talkivio-audience: public
       x-talkivio-aggregate: chat
+    VisitorEventChatOpenedByAgent:
+      name: event
+      title: chat.opened_by_agent
+      summary: An agent started a chat with this visitor from the Visitors list (active, already owned); the widget opens on it.
+      payload:
+        type: object
+        required:
+          - v
+          - event_id
+          - type
+          - tenant_id
+          - scope
+          - cursor
+          - occurred_at
+          - aggregate_version
+          - causation_id
+          - payload
+        properties:
+          v:
+            const: 1
+          event_id:
+            type: string
+            format: uuid
+            description: Deduplicate on this (at-least-once delivery)
+          type:
+            const: chat.opened_by_agent
+          tenant_id:
+            type: string
+            format: uuid
+            description: Server supplied; never client authority
+          scope:
+            type: object
+            required:
+              - kind
+              - id
+            properties:
+              kind:
+                type: string
+                enum:
+                  - visitor
+              id:
+                type: string
+                maxLength: 64
+          cursor:
+            type: string
+            description: Opaque monotonic stream cursor (pass as `last_cursor` to resume)
+          occurred_at:
+            type: string
+            format: date-time
+          aggregate_version:
+            type: integer
+            description: Ignore frames older than the cached aggregate version
+          causation_id:
+            type:
+              - string
+              - "null"
+            format: uuid
+          payload:
+            $ref: "#/components/schemas/ChatOpenedByAgentPayload"
+      x-socketio-event: event
+      x-talkivio-event-type: chat.opened_by_agent
+      x-talkivio-audience: public
+      x-talkivio-aggregate: chat
     VisitorEventMessageRedacted:
       name: event
       title: message.redacted
@@ -9329,6 +9412,16 @@ x-talkivio-outbox:
     public_payload:
       $ref: "#/components/schemas/ChatStartedPayload"
     summary: The visitor’s chat was accepted by an agent (public profile only, no selection trace).
+  chat.opened_by_agent:
+    aggregate: chat
+    staff_scopes: []
+    public_scopes:
+      - visitor
+    payload:
+      $ref: "#/components/schemas/ChatOpenedByAgentPayload"
+    public_payload:
+      $ref: "#/components/schemas/ChatOpenedByAgentPayload"
+    summary: An agent started a chat with this visitor from the Visitors list (active, already owned); the widget opens on it.
   message.redacted:
     aggregate: chat
     staff_scopes:

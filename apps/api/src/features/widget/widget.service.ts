@@ -87,6 +87,8 @@ interface StartSessionArgs {
   page?: PageInput;
   client: ReturnType<GeoService['parseUserAgent']>;
   geo: ReturnType<GeoService['lookup']>;
+  /** Visitor IP and its network owner; stored only when settings.tracking.retainIp is on and tracking is allowed. */
+  address: { ip: string | null; network: string | null };
   locale?: string | null;
   timezone?: string | null;
   isPreview?: boolean;
@@ -317,6 +319,7 @@ export class WidgetService {
     }
     const client = this.geo.parseUserAgent(String(req.headers['user-agent'] ?? ''));
     const geo = this.geo.lookup(req.ip, req.headers);
+    const address = { ip: this.geo.effectiveIp(req.ip), network: this.geo.network(req.ip) };
 
     const out = await this.db.tx(tenantId, async (tx) => {
       const settings = mergeOrgSettings(
@@ -426,6 +429,7 @@ export class WidgetService {
         page: input.page,
         client,
         geo,
+        address,
         locale: input.locale,
         timezone: input.timezone,
         isPreview: input.isPreview,
@@ -518,6 +522,10 @@ export class WidgetService {
           os: a.client.os,
           country: trackingAllowed && settings.tracking.locationEnabled ? a.geo.countryCode : null,
           city: trackingAllowed && settings.tracking.locationEnabled ? a.geo.city : null,
+          ipAddress:
+            trackingAllowed && settings.tracking.retainIp ? (a.address.ip?.slice(0, 45) ?? null) : null,
+          network:
+            trackingAllowed && settings.tracking.retainIp ? (a.address.network?.slice(0, 160) ?? null) : null,
           isPreview: !!a.isPreview,
         },
       });
@@ -568,6 +576,13 @@ export class WidgetService {
         a.geo.countryCode
       )
         Object.assign(patch, { country: a.geo.countryCode, city: a.geo.city });
+      // IP address and network: current while the workspace stores them (visitors change networks), gone once it stops.
+      if ((patch.analyticsConsent ?? session.analyticsConsent) === 'granted' && settings.tracking.retainIp)
+        Object.assign(patch, {
+          ipAddress: a.address.ip?.slice(0, 45) ?? null,
+          network: a.address.network?.slice(0, 160) ?? null,
+        });
+      else if (session.ipAddress || session.network) Object.assign(patch, { ipAddress: null, network: null });
       if (a.consent && typeof a.consent.analytics === 'boolean' && session.analyticsConsent !== analytics) {
         patch.analyticsConsent = analytics;
         if (!trackingAllowed)
@@ -579,6 +594,8 @@ export class WidgetService {
             utm: Prisma.DbNull,
             country: null,
             city: null,
+            ipAddress: null,
+            network: null,
           });
       }
       session = await tx.visitorSession.update({ where: { id: session.id }, data: patch });
@@ -804,6 +821,7 @@ export class WidgetService {
   ) {
     const client = this.geo.parseUserAgent(String(req.headers['user-agent'] ?? ''));
     const geo = this.geo.lookup(req.ip, req.headers);
+    const address = { ip: this.geo.effectiveIp(req.ip), network: this.geo.network(req.ip) };
     const out = await this.db.tx(v.tenantId, async (tx) => {
       const settings = mergeOrgSettings(
         (await tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }))
@@ -843,6 +861,7 @@ export class WidgetService {
         page: input.page,
         client,
         geo,
+        address,
         locale: input.locale,
         timezone: input.timezone,
         presentedCredential: null,
@@ -906,6 +925,8 @@ export class WidgetService {
               utm: Prisma.DbNull,
               country: null,
               city: null,
+              ipAddress: null,
+              network: null,
             },
           });
           const hadGrant = open.some((s) => s.analyticsConsent === 'granted');
@@ -1265,6 +1286,7 @@ export class WidgetService {
     );
     const client = this.geo.parseUserAgent(String(req.headers['user-agent'] ?? ''));
     const geo = this.geo.lookup(req.ip, req.headers);
+    const address = { ip: this.geo.effectiveIp(req.ip), network: this.geo.network(req.ip) };
     const out = await this.db.tx(site.tenantId, async (tx) => {
       const settings = mergeOrgSettings(
         (await tx.tenant.findUniqueOrThrow({ where: { id: site.tenantId }, select: { settings: true } }))
@@ -1286,6 +1308,7 @@ export class WidgetService {
         page: input.page,
         client,
         geo,
+        address,
         locale: input.locale,
         timezone: input.timezone,
         presentedCredential: null,

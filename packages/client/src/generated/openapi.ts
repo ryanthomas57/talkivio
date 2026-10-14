@@ -2508,7 +2508,8 @@ export interface paths {
         /** GET /api/v1/visitors/{id}/chats */
         get: operations["visitorsChats"];
         put?: never;
-        post?: never;
+        /** POST /api/v1/visitors/{id}/chats */
+        post: operations["visitorsStartChat"];
         delete?: never;
         options?: never;
         head?: never;
@@ -4073,6 +4074,10 @@ export interface components {
             chat: components["schemas"]["PublicChat"];
             initial_message: components["schemas"]["Message"] | null;
         };
+        AgentStartedChat: {
+            chat: components["schemas"]["StaffChat"];
+            message: components["schemas"]["Message"];
+        };
         ChatRating: {
             /** @enum {string} */
             rating: "good" | "bad";
@@ -4201,6 +4206,8 @@ export interface components {
                 os: string | null;
             };
             country: string | null;
+            ip_address: string | null;
+            network: string | null;
             referrer_origin: string | null;
             landing_url: string | null;
             page_view_count: number | null;
@@ -4263,6 +4270,8 @@ export interface components {
             arrived_at: string | null;
             time_on_site_ms: number | null;
             country: string | null;
+            ip_address: string | null;
+            network: string | null;
             device_category: string | null;
             session_count: number | null;
             last_activity_at: string | null;
@@ -5872,7 +5881,7 @@ export interface components {
          * @description Stable machine codes (ch. 76 inventory: AUTH_REQUIRED, MFA_REQUIRED, TOKEN_EXPIRED, TOKEN_USED, VALIDATION_FAILED, ORIGIN_NOT_ALLOWED, CONSENT_REQUIRED, PERMISSION_DENIED, NOT_FOUND, VERSION_CONFLICT, IDEMPOTENCY_MISMATCH, CHAT_CLOSED, CAPACITY_EXCEEDED, OFFER_EXPIRED, OFFER_WITHDRAWN, DEPARTMENT_UNAVAILABLE, QUEUE_FULL, FILE_TOO_LARGE, FILE_TYPE_BLOCKED, FILE_SCAN_PENDING, FILE_REJECTED, EXPORT_EXPIRED, RATE_LIMITED, CURSOR_EXPIRED, SERVICE_UNAVAILABLE, INTEGRATION_UNAVAILABLE; plus server extensions). Human messages localize; `retryable` only means a retry with the same command identity may help.
          * @enum {string}
          */
-        ErrorCode: "AUTH_REQUIRED" | "MFA_REQUIRED" | "RECENT_AUTH_REQUIRED" | "TOKEN_EXPIRED" | "TOKEN_USED" | "VALIDATION_FAILED" | "ORIGIN_NOT_ALLOWED" | "CONSENT_REQUIRED" | "PERMISSION_DENIED" | "NOT_FOUND" | "VERSION_CONFLICT" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_MISMATCH" | "IDEMPOTENCY_IN_PROGRESS" | "CHAT_CLOSED" | "CHAT_ALREADY_ASSIGNED" | "CAPACITY_EXCEEDED" | "OFFER_EXPIRED" | "OFFER_WITHDRAWN" | "DEPARTMENT_UNAVAILABLE" | "QUEUE_FULL" | "FILE_TOO_LARGE" | "FILE_TYPE_BLOCKED" | "FILE_SCAN_PENDING" | "FILE_REJECTED" | "EXPORT_EXPIRED" | "RATE_LIMITED" | "CURSOR_EXPIRED" | "SERVICE_UNAVAILABLE" | "INTEGRATION_UNAVAILABLE" | "CONFLICT" | "EMAIL_NOT_VERIFIED" | "INVALID_CREDENTIALS" | "PLAN_LIMIT" | "INTERNAL";
+        ErrorCode: "AUTH_REQUIRED" | "MFA_REQUIRED" | "RECENT_AUTH_REQUIRED" | "TOKEN_EXPIRED" | "TOKEN_USED" | "VALIDATION_FAILED" | "ORIGIN_NOT_ALLOWED" | "CONSENT_REQUIRED" | "PERMISSION_DENIED" | "NOT_FOUND" | "VERSION_CONFLICT" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_MISMATCH" | "IDEMPOTENCY_IN_PROGRESS" | "CHAT_CLOSED" | "CHAT_ALREADY_ASSIGNED" | "CAPACITY_EXCEEDED" | "OFFER_EXPIRED" | "OFFER_WITHDRAWN" | "DEPARTMENT_UNAVAILABLE" | "QUEUE_FULL" | "VISITOR_OFFLINE" | "CHAT_EXISTS" | "FILE_TOO_LARGE" | "FILE_TYPE_BLOCKED" | "FILE_SCAN_PENDING" | "FILE_REJECTED" | "EXPORT_EXPIRED" | "RATE_LIMITED" | "CURSOR_EXPIRED" | "SERVICE_UNAVAILABLE" | "INTEGRATION_UNAVAILABLE" | "CONFLICT" | "EMAIL_NOT_VERIFIED" | "INVALID_CREDENTIALS" | "PLAN_LIMIT" | "INTERNAL";
         ErrorEnvelope: {
             error: {
                 code: components["schemas"]["ErrorCode"];
@@ -12441,6 +12450,48 @@ export interface operations {
             401: components["responses"]["Unauthorized"];
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    visitorsStartChat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    client_request_id: string;
+                    message: string;
+                    /** Format: uuid */
+                    session_id?: string;
+                };
+            };
+        };
+        responses: {
+            /** @description 201: the chat starts active and owned by the agent; the visitor's tab opens it. 409 CHAT_EXISTS (details.chat_id), VISITOR_OFFLINE, CAPACITY_EXCEEDED. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["AgentStartedChat"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
             default: components["responses"]["Error"];

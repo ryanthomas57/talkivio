@@ -22,21 +22,46 @@ export const RESPONSES = {
   'HealthController.ready': {
     raw: {
       contentType: 'application/json',
-      description: 'Readiness (no `meta`); 503 with the same shape while a dependency is down or the socket gateway drains.',
+      description:
+        'Readiness (no `meta`); 503 with the same shape while a dependency is down or the socket gateway drains.',
       schema: {
         type: 'object',
         required: ['data'],
-        properties: { data: { type: 'object', required: ['status', 'checks'], properties: { status: { type: 'string', enum: ['ready', 'not_ready', 'draining'] }, checks: { type: 'object', additionalProperties: { type: 'string' } } } } },
+        properties: {
+          data: {
+            type: 'object',
+            required: ['status', 'checks'],
+            properties: {
+              status: { type: 'string', enum: ['ready', 'not_ready', 'draining'] },
+              checks: { type: 'object', additionalProperties: { type: 'string' } },
+            },
+          },
+        },
       },
       alt: [503],
     },
   },
-  'HealthController.scrape': { raw: { contentType: 'text/plain', description: 'Prometheus exposition (restricted by METRICS_TOKEN / network).' } },
+  'HealthController.scrape': {
+    raw: {
+      contentType: 'text/plain',
+      description: 'Prometheus exposition (restricted by METRICS_TOKEN / network).',
+    },
+  },
 
   // ───── auth ─────
   'AuthController.providers': { data: 'AuthProviders' },
-  'AuthController.signup': { data: 'SignupResult', headers: { 'Set-Cookie': { description: 'rd_session (HttpOnly) and rd_csrf cookies', schema: { type: 'string' } } } },
-  'AuthController.login': { data: 'Me', headers: { 'Set-Cookie': { description: 'rd_session (HttpOnly) and rd_csrf cookies', schema: { type: 'string' } } } },
+  'AuthController.signup': {
+    data: 'SignupResult',
+    headers: {
+      'Set-Cookie': { description: 'rd_session (HttpOnly) and rd_csrf cookies', schema: { type: 'string' } },
+    },
+  },
+  'AuthController.login': {
+    data: 'Me',
+    headers: {
+      'Set-Cookie': { description: 'rd_session (HttpOnly) and rd_csrf cookies', schema: { type: 'string' } },
+    },
+  },
   'AuthController.logout': { noContent: true },
   'AuthController.me': { data: 'Me' },
   'AuthController.profile': { data: 'Me' },
@@ -54,8 +79,16 @@ export const RESPONSES = {
   'AuthController.disable': { noContent: true },
   'AuthController.disableMfa': { noContent: true },
   'AuthController.recovery': { data: 'RecoveryCodes' },
-  'AuthController.oauthStart': { raw: { redirect: true, description: 'Redirect to the identity provider (no body).' } },
-  'AuthController.oauthCallback': { raw: { redirect: true, description: 'Redirect back to the dashboard with a session cookie, or to the login page with an error code.' } },
+  'AuthController.oauthStart': {
+    raw: { redirect: true, description: 'Redirect to the identity provider (no body).' },
+  },
+  'AuthController.oauthCallback': {
+    raw: {
+      redirect: true,
+      description:
+        'Redirect back to the dashboard with a session cookie, or to the login page with an error code.',
+    },
+  },
   'TenantSwitchController.switch': { data: 'Me' },
   'TenantSwitchController.create': { data: 'Me' },
 
@@ -64,19 +97,30 @@ export const RESPONSES = {
   'TenantController.update': { data: 'Tenant' },
   'TenantController.onboarding': { data: 'Tenant' },
   'TenantController.transfer': { data: 'Ok' },
-  'TenantDeletionController.create': { data: 'TenantDeletionRequest', status: 202, note: '202: destruction scheduled after the cancellation window, transcript archive started. 409 `CONFLICT` (details.request_id) while a request is already scheduled; an Idempotency-Key replays the original 202.' },
+  'TenantDeletionController.create': {
+    data: 'TenantDeletionRequest',
+    status: 202,
+    note: '202: destruction scheduled after the cancellation window, transcript archive started. 409 `CONFLICT` (details.request_id) while a request is already scheduled; an Idempotency-Key replays the original 202.',
+  },
   'TenantDeletionController.current': {
     raw: {
       contentType: 'application/json',
-      description: 'The scheduled (or failed) deletion request for the dashboard banner, or `data: null` when there is none. `export` is null for members other than owners and admins.',
+      description:
+        'The scheduled (or failed) deletion request for the dashboard banner, or `data: null` when there is none. `export` is null for members other than owners and admins.',
       schema: {
         type: 'object',
         required: ['data', 'meta'],
-        properties: { data: { anyOf: [{ $ref: '#/components/schemas/TenantDeletionRequest' }, { type: 'null' }] }, meta: { $ref: '#/components/schemas/Meta' } },
+        properties: {
+          data: { anyOf: [{ $ref: '#/components/schemas/TenantDeletionRequest' }, { type: 'null' }] },
+          meta: { $ref: '#/components/schemas/Meta' },
+        },
       },
     },
   },
-  'TenantDeletionController.cancel': { data: 'TenantDeletionRequest', note: 'Cancels a scheduled request (idempotent for an already-cancelled one); 409 once destruction has started.' },
+  'TenantDeletionController.cancel': {
+    data: 'TenantDeletionRequest',
+    note: 'Cancels a scheduled request (idempotent for an already-cancelled one); 409 once destruction has started.',
+  },
   'AgentsController.list': { list: 'Agent' },
   'AgentsController.me': { data: 'AgentMe' },
   'AgentsController.prefs': { data: 'AgentMe' },
@@ -134,7 +178,10 @@ export const RESPONSES = {
   'ChatsController.history': { page: 'HistoryChat' },
   'ChatsController.snapshot': { data: 'StaffChat' },
   'ChatsController.messages': { data: 'MessagePage' },
-  'ChatsController.send': { data: 'Message', note: 'Same client_message_id retry returns the original message (201).' },
+  'ChatsController.send': {
+    data: 'Message',
+    note: 'Same client_message_id retry returns the original message (201).',
+  },
   'ChatsController.accept': { data: 'StaffChat' },
   'ChatsController.readCursor': { data: 'ReadCursor' },
   'ChatsController.transfer': { data: 'TransferResult' },
@@ -154,6 +201,10 @@ export const RESPONSES = {
   'VisitorsController.update': { data: 'StaffVisitor' },
   'VisitorsController.sessions': { page: 'VisitorSession' },
   'VisitorsController.chats': { page: 'StaffChat' },
+  'VisitorsController.startChat': {
+    data: 'AgentStartedChat',
+    note: "201: the chat starts active and owned by the agent; the visitor's tab opens it. 409 CHAT_EXISTS (details.chat_id), VISITOR_OFFLINE, CAPACITY_EXCEEDED.",
+  },
   'VisitorsController.tags': { data: 'VisitorTags' },
   'BansController.list': { page: 'Ban' },
   'BansController.create': { data: 'Ban' },
@@ -167,15 +218,25 @@ export const RESPONSES = {
   'AttachmentsController.initUpload': { data: 'UploadInit' },
   'AttachmentsController.get': { data: 'Attachment' },
   'AttachmentsController.cancel': { noContent: true },
-  'AttachmentsController.content': { raw: { contentType: '*/*', description: 'Clean attachment bytes (signed `sig` grant; forced download headers).' } },
-  'AttachmentsController.upload': { data: 'Attachment', note: 'Local storage driver upload target (signed `sig`); the body is the raw file bytes.' },
+  'AttachmentsController.content': {
+    raw: {
+      contentType: '*/*',
+      description: 'Clean attachment bytes (signed `sig` grant; forced download headers).',
+    },
+  },
+  'AttachmentsController.upload': {
+    data: 'Attachment',
+    note: 'Local storage driver upload target (signed `sig`); the body is the raw file bytes.',
+  },
   'AttachmentsController.download': { data: 'AttachmentDownloadGrant' },
   'AttachmentsController.finalize': { data: 'Attachment' },
   'ExportsController.list': { list: 'Export' },
   'ExportsController.create': { data: 'Export', status: 202 },
   'ExportsController.preview': { data: 'ExportPreview' },
   'ExportsController.get': { data: 'Export' },
-  'ExportsController.content': { raw: { contentType: '*/*', description: 'Export file bytes (signed `sig` grant).' } },
+  'ExportsController.content': {
+    raw: { contentType: '*/*', description: 'Export file bytes (signed `sig` grant).' },
+  },
   'ExportsController.download': { data: 'DownloadGrant' },
   'TranscriptEmailController.send': { data: 'TranscriptEmailJob', status: 202 },
   'TranscriptEmailController.status': { data: 'TranscriptEmailJob' },
@@ -183,7 +244,9 @@ export const RESPONSES = {
   // ───── shortcuts & triggers ─────
   'ShortcutsController.list': { page: 'Shortcut' },
   'ShortcutsController.create': { data: 'Shortcut', headers: loc },
-  'ShortcutsController.exportCsv': { raw: { contentType: 'text/csv', description: 'Canned replies CSV (attachment).' } },
+  'ShortcutsController.exportCsv': {
+    raw: { contentType: 'text/csv', description: 'Canned replies CSV (attachment).' },
+  },
   'ShortcutsController.importCommit': { data: 'ShortcutImportResult' },
   'ShortcutsController.importPreview': { data: 'ShortcutImportPreview' },
   'ShortcutsController.get': { data: 'Shortcut', headers: etag },
@@ -210,7 +273,9 @@ export const RESPONSES = {
   'AnalyticsController.invitations': { data: 'InvitationsReport' },
   'AnalyticsController.createExport': { data: 'AnalyticsExport', status: 202 },
   'AnalyticsController.exportStatus': { data: 'AnalyticsExport' },
-  'AnalyticsController.download': { raw: { contentType: 'text/csv', description: 'Aggregate CSV (Digest: sha-256 header).' } },
+  'AnalyticsController.download': {
+    raw: { contentType: 'text/csv', description: 'Aggregate CSV (Digest: sha-256 header).' },
+  },
   'MonitorController.get': { data: 'MonitorSnapshot' },
 
   // ───── offline, notifications ─────
@@ -243,11 +308,15 @@ export const RESPONSES = {
 
   // ───── audit & privacy ─────
   'AuditEventsController.list': { page: 'AuditEvent' },
-  'AuditEventsController.export': { raw: { contentType: 'text/csv', description: 'Audit CSV export (same filters as the list).' } },
+  'AuditEventsController.export': {
+    raw: { contentType: 'text/csv', description: 'Audit CSV export (same filters as the list).' },
+  },
   'PrivacyController.list': { page: 'PrivacyRequest' },
   'PrivacyController.create': { data: 'PrivacyRequest' },
   'PrivacyController.get': { data: 'PrivacyRequest' },
-  'PrivacyController.download': { raw: { contentType: 'application/json', description: 'Subject access export (JSON document download).' } },
+  'PrivacyController.download': {
+    raw: { contentType: 'application/json', description: 'Subject access export (JSON document download).' },
+  },
   'PrivacyController.resume': { data: 'PrivacyRequest' },
   'PrivacyController.verify': { data: 'PrivacyRequest' },
   'PrivacyController.preview': { data: 'RetentionReport' },
@@ -267,34 +336,60 @@ export const RESPONSES = {
   'WidgetController.tags': { data: 'PublicVisitor' },
   'WidgetController.consent': { data: 'ConsentState' },
   'WidgetController.events': { data: 'EventsIngestResult' },
-  'WidgetController.createChat': { data: 'ChatAdmission', alt: [200], note: '201 for a new admission; 200 returns the already-open chat with `initial_message: null`.' },
+  'WidgetController.createChat': {
+    data: 'ChatAdmission',
+    alt: [200],
+    note: '201 for a new admission; 200 returns the already-open chat with `initial_message: null`.',
+  },
   'WidgetController.chat': { data: 'PublicChat' },
   'WidgetController.messages': { data: 'MessagePage' },
   'WidgetController.send': { data: 'Message' },
   'WidgetController.read': { data: 'ReadCursor' },
   'WidgetController.close': { data: 'PublicChat' },
   'WidgetController.rate': { data: 'ChatRating' },
-  'WidgetFrameController.frame': { raw: { contentType: 'text/html', description: 'Isolated widget frame document with CSP frame-ancestors from approved origins.' } },
+  'WidgetFrameController.frame': {
+    raw: {
+      contentType: 'text/html',
+      description: 'Isolated widget frame document with CSP frame-ancestors from approved origins.',
+    },
+  },
   'WidgetFilesController.initUpload': { data: 'UploadInit' },
   'WidgetFilesController.state': { data: 'Attachment' },
   'WidgetFilesController.cancel': { noContent: true },
-  'WidgetFilesController.upload': { data: 'Attachment', note: 'Local storage driver upload target (signed `sig`); the body is the raw file bytes.' },
+  'WidgetFilesController.upload': {
+    data: 'Attachment',
+    note: 'Local storage driver upload target (signed `sig`); the body is the raw file bytes.',
+  },
   'WidgetFilesController.finalize': { data: 'Attachment' },
   'WidgetFilesController.download': { data: 'AttachmentDownloadGrant' },
-  'WidgetFilesController.content': { raw: { contentType: '*/*', description: 'Clean attachment bytes (signed `sig` grant).' } },
+  'WidgetFilesController.content': {
+    raw: { contentType: '*/*', description: 'Clean attachment bytes (signed `sig` grant).' },
+  },
   'WidgetExportsController.create': { data: 'Export' },
   'WidgetExportsController.get': { data: 'Export' },
   'WidgetExportsController.download': { data: 'DownloadGrant' },
-  'WidgetExportsController.content': { raw: { contentType: '*/*', description: 'Public transcript bytes (signed `sig` grant).' } },
+  'WidgetExportsController.content': {
+    raw: { contentType: '*/*', description: 'Public transcript bytes (signed `sig` grant).' },
+  },
   'WidgetExportsController.email': { data: 'PublicTranscriptEmailJob' },
   'InvitationsWidgetController.displayed': { data: 'Invitation' },
-  'InvitationsWidgetController.accept': { data: 'ChatAdmission', alt: [200], note: '201 creates the chat once; 200 returns the chat already created for this invitation.' },
+  'InvitationsWidgetController.accept': {
+    data: 'ChatAdmission',
+    alt: [200],
+    note: '201 creates the chat once; 200 returns the chat already created for this invitation.',
+  },
   'InvitationsWidgetController.dismiss': { noContent: true },
   'OfflineWidgetController.submit': { data: 'OfflineReceipt' },
 };
 
 /** Request bodies that are not JSON (raw uploads). */
 export const RAW_REQUEST_BODIES = {
-  'AttachmentsController.upload': { contentType: 'application/octet-stream', description: 'File bytes; Content-Type must match the declared MIME type.' },
-  'WidgetFilesController.upload': { contentType: 'application/octet-stream', description: 'File bytes; Content-Type must match the declared MIME type.' },
+  'AttachmentsController.upload': {
+    contentType: 'application/octet-stream',
+    description: 'File bytes; Content-Type must match the declared MIME type.',
+  },
+  'WidgetFilesController.upload': {
+    contentType: 'application/octet-stream',
+    description: 'File bytes; Content-Type must match the declared MIME type.',
+  },
 };

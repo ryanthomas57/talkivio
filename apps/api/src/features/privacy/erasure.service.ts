@@ -198,10 +198,12 @@ export class ErasureService {
             UPDATE visitor_sessions
                SET current_url = NULL, current_title = NULL, landing_url = NULL, referrer_origin = NULL, utm = NULL,
                    country = NULL, city = NULL, browser = NULL, os = NULL, device_category = NULL,
+                   ip_address = NULL, network = NULL,
                    ended_at = COALESCE(ended_at, now())
              WHERE tenant_id = ${s.tenantId}::uuid AND visitor_id = ${s.visitorId}::uuid
                AND (current_url IS NOT NULL OR current_title IS NOT NULL OR landing_url IS NOT NULL OR referrer_origin IS NOT NULL
                     OR utm IS NOT NULL OR country IS NOT NULL OR city IS NOT NULL OR browser IS NOT NULL OR os IS NOT NULL
+                    OR ip_address IS NOT NULL OR network IS NOT NULL
                     OR device_category IS NOT NULL OR ended_at IS NULL)`,
             ),
           );
@@ -408,7 +410,11 @@ export class ErasureService {
         },
         select: { id: true },
       });
-      await scrubAttachments(tx, s.tenantId, list.map((a) => a.id));
+      await scrubAttachments(
+        tx,
+        s.tenantId,
+        list.map((a) => a.id),
+      );
       return list.length;
     });
     add('attachments_erased', elsewhere);
@@ -488,7 +494,14 @@ export class ErasureService {
   private async emitRedacted(tx: Tx, tenantId: string, rows: RedactedRow[]): Promise<void> {
     if (!rows.length) return;
     const chatIds = [...new Set(rows.map((r) => r.chat_id))];
-    const versions = new Map((await tx.chat.findMany({ where: { tenantId, id: { in: chatIds } }, select: { id: true, version: true } })).map((c) => [c.id, c.version]));
+    const versions = new Map(
+      (
+        await tx.chat.findMany({
+          where: { tenantId, id: { in: chatIds } },
+          select: { id: true, version: true },
+        })
+      ).map((c) => [c.id, c.version]),
+    );
     for (const r of rows) {
       await this.outbox.append(tx, tenantId, {
         aggregateType: 'chat',
@@ -498,7 +511,9 @@ export class ErasureService {
         payload: { chatId: r.chat_id, messageId: r.id, seq: Number(r.seq), reason: 'redacted' },
         scopes: [
           { kind: 'chat', id: r.chat_id, audience: 'staff' },
-          ...(r.visibility === 'public' ? [{ kind: 'chat' as const, id: r.chat_id, audience: 'public' as const }] : []),
+          ...(r.visibility === 'public'
+            ? [{ kind: 'chat' as const, id: r.chat_id, audience: 'public' as const }]
+            : []),
         ],
       });
     }

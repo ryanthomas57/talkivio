@@ -24,14 +24,16 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.form.rangePerHour': 'استخدم قيمة من {min} إلى {max} في الساعة.',
   'settings.form.rangeChats': 'استخدم قيمة من {min} إلى {max} محادثة.',
   'settings.form.chipDuplicate': '{value} موجود في القائمة بالفعل.',
-  'settings.form.chipsLimit': 'الحد الأقصى {count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}.',
+  'settings.form.chipsLimit':
+    'الحد الأقصى {count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}.',
   'settings.form.chipsCurrent': 'العناصر الحالية',
   'settings.form.chipRemove': 'إزالة {value}',
   'settings.form.chipsLimitReached': 'تم بلوغ الحد الأقصى ({max})',
   'settings.form.unsaved': 'تغييرات غير محفوظة',
   'settings.form.discard': 'تجاهل',
   'settings.form.conflictTitle': 'غيّر شخص آخر هذا',
-  'settings.form.conflictBody': 'لم تُحفظ تغييراتك لأن هذه الإعدادات تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.form.conflictBody':
+    'لم تُحفظ تغييراتك لأن هذه الإعدادات تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
   'settings.tenant.checkFields': 'راجع الحقول المميّزة.',
   'settings.tenant.saved': 'تم حفظ «{section}»',
   'settings.reauth.title': 'أكّد هويتك',
@@ -58,11 +60,14 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.days.short.5': 'جمعة',
   'settings.days.short.6': 'سبت',
   'settings.general.title': 'الإعدادات العامة',
-  'settings.general.description': 'هوية مساحة العمل، وسلوك المحادثة، وتتبّع الزوار، ورسائل خارج الدوام، والأمان، والاحتفاظ بالبيانات.',
+  'settings.general.description':
+    'هوية مساحة العمل، وسلوك المحادثة، وتتبّع الزوار، ورسائل خارج الدوام، والأمان، والاحتفاظ بالبيانات.',
   'settings.general.readOnly': 'يمكنك عرض هذه الإعدادات. لا يمكن تغييرها إلا للمالكين والمسؤولين.',
   'settings.general.dirtyWhat': 'الإعدادات العامة',
-  'settings.general.conflict': 'لم تُحفظ تغييراتك لأن إعدادات «{section}» تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
-  'settings.general.stale': 'حدّث شخص آخر هذه القيم، لذا تم تجاهل تعديلاتك غير المحفوظة هنا. راجع القيم الحالية.',
+  'settings.general.conflict':
+    'لم تُحفظ تغييراتك لأن إعدادات «{section}» تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.general.stale':
+    'حدّث شخص آخر هذه القيم، لذا تم تجاهل تعديلاتك غير المحفوظة هنا. راجع القيم الحالية.',
   'settings.general.unit.minutes': 'دقيقة',
   'settings.general.unit.seconds': 'ثانية',
   'settings.general.unit.hours': 'ساعة',
@@ -75,12 +80,14 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.general.workspace.nameRequired': 'أدخل اسمًا لمساحة العمل.',
   'settings.general.workspace.nameTooLong': 'استخدم {max} حرفًا كحد أقصى.',
   'settings.general.workspace.timezoneRequired': 'اختر منطقة زمنية.',
-  'settings.general.workspace.timezoneHint': 'تستخدم التقارير وتواريخ لوحة التحكم هذه المنطقة ما لم يحدّد جدول منطقته الخاصة.',
+  'settings.general.workspace.timezoneHint':
+    'تستخدم التقارير وتواريخ لوحة التحكم هذه المنطقة ما لم يحدّد جدول منطقته الخاصة.',
   'settings.general.workspace.weekStart': 'يبدأ الأسبوع يوم',
   'settings.general.chat.title': 'سلوك المحادثة',
   'settings.general.chat.description': 'كيف تبدأ المحادثات وتتوقف وتنتهي للزوار.',
   'settings.general.chat.idle': 'إنهاء المحادثات الخاملة بعد',
-  'settings.general.chat.idleHint': 'تنتهي المحادثة إذا لم يُبدِ الزائر أي نشاط طوال هذه المدة ({min}–{max}).',
+  'settings.general.chat.idleHint':
+    'تنتهي المحادثة إذا لم يُبدِ الزائر أي نشاط طوال هذه المدة ({min}–{max}).',
   'settings.general.chat.grace': 'مهلة إعادة الاتصال',
   'settings.general.chat.graceHint': 'يمكن للزائر المنقطع العودة خلال هذه المدة ({min}–{max}).',
   'settings.general.chat.offerOffline': 'عرض نموذج خارج الدوام بعد',
@@ -98,58 +105,80 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.general.chat.maxAttachmentHint': 'لكل ملف، من {min} إلى {max} ميغابايت.',
   'settings.general.chat.maxAttachmentOff': 'فعّل المرفقات لتغيير هذا.',
   'settings.general.tracking.title': 'التتبّع والموافقة',
-  'settings.general.tracking.description': 'ما يمكن لأداة الدردشة تسجيله عن التصفح. الإعدادات الافتراضية تفضّل جمع الحد الأدنى.',
+  'settings.general.tracking.description':
+    'ما يمكن لأداة الدردشة تسجيله عن التصفح. الإعدادات الافتراضية تفضّل جمع الحد الأدنى.',
   'settings.general.tracking.consent': 'اشتراط الموافقة على التحليلات',
-  'settings.general.tracking.consentHint': 'إلى أن يوافق الزائر على التحليلات، لا تُنشأ هوية تصفح ولا أحداث صفحات ولا دعوات مبنية على السلوك.',
+  'settings.general.tracking.consentHint':
+    'إلى أن يوافق الزائر على التحليلات، لا تُنشأ هوية تصفح ولا أحداث صفحات ولا دعوات مبنية على السلوك.',
   'settings.general.tracking.location': 'الموقع التقريبي',
   'settings.general.tracking.locationHint': 'استنتاج الدولة والمدينة من عنوان الشبكة.',
+  'settings.general.tracking.retainIp': 'إظهار عناوين IP للزوار',
+  'settings.general.tracking.retainIpHint':
+    'يعرض عنوان IP لكل زائر وشبكته (مثل مزود الإنترنت أو مزود استضافة أو VPN). عناوين IP بيانات شخصية: تُحفظ مع الزيارة وتُحذف مع الزائر.',
   'settings.general.tracking.params': 'معاملات الاستعلام المحتفظ بها',
-  'settings.general.tracking.paramsHint': 'تُخزَّن عناوين الصفحات بدون سلاسل الاستعلام باستثناء هذه الأسماء (حتى {count}). تُزال الأجزاء (#) دائمًا.',
+  'settings.general.tracking.paramsHint':
+    'تُخزَّن عناوين الصفحات بدون سلاسل الاستعلام باستثناء هذه الأسماء (حتى {count}). تُزال الأجزاء (#) دائمًا.',
   'settings.general.tracking.paramsList': 'المعاملات الحالية',
-  'settings.general.tracking.paramsLimit': 'الحد الأقصى {count, plural, zero {لا معاملات} one {معامل واحد} two {معاملان} few {# معاملات} many {# معاملًا} other {# معامل}}.',
+  'settings.general.tracking.paramsLimit':
+    'الحد الأقصى {count, plural, zero {لا معاملات} one {معامل واحد} two {معاملان} few {# معاملات} many {# معاملًا} other {# معامل}}.',
   'settings.general.tracking.paramInvalid': '«{value}» ليس اسم معامل صالحًا.',
   'settings.general.tracking.retention': 'الاحتفاظ بأحداث الصفحات لمدة',
   'settings.general.tracking.retentionHint': 'يُحذف سجل التصفح الأقدم من ذلك ({min}–{max}).',
   'settings.general.offline.title': 'رسائل خارج الدوام',
-  'settings.general.offline.description': 'الرسائل المتروكة عبر نموذج خارج الدوام عندما لا يتوفر أحد للمحادثة.',
+  'settings.general.offline.description':
+    'الرسائل المتروكة عبر نموذج خارج الدوام عندما لا يتوفر أحد للمحادثة.',
   'settings.general.offline.rate': 'عدد الإرسالات لكل زائر',
   'settings.general.offline.rateHint': 'الحد لكل زائر في الساعة ({min}–{max}). تُطبَّق حدود الشبكة أيضًا.',
   'settings.general.offline.email': 'إرسال رسائل خارج الدوام الجديدة بالبريد الإلكتروني',
   'settings.general.offline.emailHint': 'إشعار المستلمين أدناه بكل إرسال.',
   'settings.general.offline.recipients': 'مستلمو الإشعارات',
-  'settings.general.offline.recipientsHint': 'حتى {count, plural, zero {لا عناوين} one {عنوان واحد} two {عنوانين} few {# عناوين} many {# عنوانًا} other {# عنوان}}.',
+  'settings.general.offline.recipientsHint':
+    'حتى {count, plural, zero {لا عناوين} one {عنوان واحد} two {عنوانين} few {# عناوين} many {# عنوانًا} other {# عنوان}}.',
   'settings.general.offline.recipientsList': 'المستلمون الحاليون',
-  'settings.general.offline.recipientsLimit': 'الحد الأقصى {count, plural, zero {لا مستلمين} one {مستلم واحد} two {مستلمان} few {# مستلمين} many {# مستلمًا} other {# مستلم}}.',
+  'settings.general.offline.recipientsLimit':
+    'الحد الأقصى {count, plural, zero {لا مستلمين} one {مستلم واحد} two {مستلمان} few {# مستلمين} many {# مستلمًا} other {# مستلم}}.',
   'settings.general.offline.emailInvalid': '«{value}» ليس عنوان بريد إلكتروني صالحًا.',
-  'settings.general.offline.noRecipients': 'إشعارات البريد الإلكتروني مفعّلة لكن لا يوجد مستلمون، لذا لن يُرسل بريد لأحد.',
+  'settings.general.offline.noRecipients':
+    'إشعارات البريد الإلكتروني مفعّلة لكن لا يوجد مستلمون، لذا لن يُرسل بريد لأحد.',
   'settings.general.analytics.title': 'التحليلات',
   'settings.general.analytics.description': 'كيفية احتساب المقاييس في التقارير.',
   'settings.general.analytics.quickCancel': 'استبعاد الإلغاءات السريعة من المحادثات الفائتة',
-  'settings.general.analytics.quickCancelHint': 'لا يُحتسب الزوار الذين يلغون خلال 10 ثوانٍ من طلب المحادثة ضمن المحادثات الفائتة.',
+  'settings.general.analytics.quickCancelHint':
+    'لا يُحتسب الزوار الذين يلغون خلال 10 ثوانٍ من طلب المحادثة ضمن المحادثات الفائتة.',
   'settings.general.security.title': 'الأمان',
   'settings.general.security.description': 'متطلبات تسجيل الدخول لجميع أعضاء مساحة العمل هذه.',
   'settings.general.security.requireMfa': 'اشتراط التحقق بخطوتين',
-  'settings.general.security.requireMfaHint': 'يجب على الأعضاء الذين لا يملكون تطبيق مصادقة إعداده قبل استخدام مساحة العمل.',
-  'settings.general.security.mfaSelfWarning': 'لم تُعدّ التحقق بخطوتين لحسابك بعد. أعِدّه من «حسابي» قبل اشتراطه على الجميع.',
+  'settings.general.security.requireMfaHint':
+    'يجب على الأعضاء الذين لا يملكون تطبيق مصادقة إعداده قبل استخدام مساحة العمل.',
+  'settings.general.security.mfaSelfWarning':
+    'لم تُعدّ التحقق بخطوتين لحسابك بعد. أعِدّه من «حسابي» قبل اشتراطه على الجميع.',
   'settings.general.security.session': 'مدة الجلسة',
   'settings.general.security.sessionHint': 'الحد الأقصى لمدة جلسة الأعضاء ({min}–{max} ساعة).',
   'settings.general.security.sessionHintValue': 'الحد الأقصى لمدة جلسة الأعضاء: {length} ({min}–{max} ساعة).',
-  'settings.general.security.sessionDays': '{count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}',
-  'settings.general.security.sessionHours': '{count, plural, zero {لا ساعات} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
+  'settings.general.security.sessionDays':
+    '{count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}',
+  'settings.general.security.sessionHours':
+    '{count, plural, zero {لا ساعات} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
   'settings.general.security.networks': 'الشبكات المسموح بها',
-  'settings.general.security.networksHint': 'عناوين IPv4 أو IPv6 أو نطاقات CIDR. اتركه فارغًا للسماح بأي شبكة.',
+  'settings.general.security.networksHint':
+    'عناوين IPv4 أو IPv6 أو نطاقات CIDR. اتركه فارغًا للسماح بأي شبكة.',
   'settings.general.security.networksList': 'الشبكات الحالية',
-  'settings.general.security.networksLimit': 'الحد الأقصى {count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}.',
+  'settings.general.security.networksLimit':
+    'الحد الأقصى {count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}.',
   'settings.general.security.networkInvalid': '«{value}» ليس عنوان IP أو نطاق CIDR.',
-  'settings.general.security.networksWarning': 'تأكّد من تضمين الشبكة التي تستخدمها الآن، وإلا فقد تفقد الوصول عند تطبيق القائمة.',
+  'settings.general.security.networksWarning':
+    'تأكّد من تضمين الشبكة التي تستخدمها الآن، وإلا فقد تفقد الوصول عند تطبيق القائمة.',
   'settings.general.retention.title': 'الاحتفاظ بالبيانات',
   'settings.general.retention.description': 'مدة الاحتفاظ بسجلات المحادثات المغلقة ومرفقاتها.',
   'settings.general.retention.keep': 'الاحتفاظ بالمحادثات المغلقة لمدة',
-  'settings.general.retention.keepHint': 'تحذف مهمة الاحتفاظ نهائيًا رسائل وملفات المحادثات المغلقة منذ أكثر من هذه المدة ({min}–{max} يوم). تبقى البيانات الوصفية للمحادثات بدون محتوى شخصي لأغراض التحليلات.',
+  'settings.general.retention.keepHint':
+    'تحذف مهمة الاحتفاظ نهائيًا رسائل وملفات المحادثات المغلقة منذ أكثر من هذه المدة ({min}–{max} يوم). تبقى البيانات الوصفية للمحادثات بدون محتوى شخصي لأغراض التحليلات.',
   'settings.general.retention.ownersOnly': 'لا يمكن تغيير مدة الاحتفاظ بالبيانات إلا للمالكين والمسؤولين.',
   'settings.general.retention.confirmTitle': 'تقصير مدة الاحتفاظ بالبيانات؟',
-  'settings.general.retention.confirmLabel': 'الاحتفاظ {count, plural, zero {لا أيام} one {يومًا واحدًا} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
-  'settings.general.retention.confirmBody': 'ستُحذف نهائيًا المحادثات المغلقة الأقدم من {count, plural, zero {لا أيام} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} (حاليًا {current}) في التشغيل التالي لمهمة الاحتفاظ. لا يمكن التراجع عن ذلك.',
+  'settings.general.retention.confirmLabel':
+    'الاحتفاظ {count, plural, zero {لا أيام} one {يومًا واحدًا} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
+  'settings.general.retention.confirmBody':
+    'ستُحذف نهائيًا المحادثات المغلقة الأقدم من {count, plural, zero {لا أيام} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}} (حاليًا {current}) في التشغيل التالي لمهمة الاحتفاظ. لا يمكن التراجع عن ذلك.',
   'settings.account.dirtyWhat': 'حسابك',
   'settings.account.title': 'حسابي',
   'settings.account.description': 'ملفك الشخصي، وأمان تسجيل الدخول، وكيف يُعلمك {brand}.',
@@ -184,12 +213,14 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.prefs.title': 'الإشعارات والتفضيلات',
   'settings.prefs.description': 'تنطبق عليك في مساحة العمل هذه على جميع الأجهزة.',
   'settings.prefs.sound': 'التنبيهات الصوتية',
-  'settings.prefs.soundHint': 'تشغيل نغمة للمحادثات وعروض المحادثات والرسائل الجديدة. كتم الصوت لا يخفي قائمة الانتظار المرئية أبدًا.',
+  'settings.prefs.soundHint':
+    'تشغيل نغمة للمحادثات وعروض المحادثات والرسائل الجديدة. كتم الصوت لا يخفي قائمة الانتظار المرئية أبدًا.',
   'settings.prefs.playPreview': 'تشغيل معاينة',
   'settings.prefs.desktop': 'إشعارات سطح المكتب',
   'settings.prefs.desktopHint': 'إظهار إشعار من النظام عندما يعمل {brand} في الخلفية.',
   'settings.prefs.enable': 'تفعيل الإشعارات',
-  'settings.prefs.blocked': 'يحظر متصفحك الإشعارات لهذا الموقع. اسمح بها من إعدادات الموقع في المتصفح، ثم أعد التحميل.',
+  'settings.prefs.blocked':
+    'يحظر متصفحك الإشعارات لهذا الموقع. اسمح بها من إعدادات الموقع في المتصفح، ثم أعد التحميل.',
   'settings.prefs.notYetAllowed': 'لا تظهر الإشعارات إلا بعد السماح بها في هذا المتصفح.',
   'settings.prefs.privacy': 'وضع الخصوصية',
   'settings.prefs.privacyHint': 'تستخدم الإشعارات نصًا عامًا بدون أسماء الزوار أو محتوى الرسائل.',
@@ -218,18 +249,22 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.mfa.description': 'طلب رمز من تطبيق مصادقة عند تسجيل الدخول.',
   'settings.mfa.onToast': 'تم تفعيل التحقق بخطوتين',
   'settings.mfa.offToast': 'تم إيقاف التحقق بخطوتين',
-  'settings.mfa.enabledHint': 'يُطلب عند تسجيل الدخول رمز من 6 أرقام من تطبيق المصادقة. إذا فقدت التطبيق، فاستخدم أحد رموز الاسترداد أحادية الاستخدام.',
+  'settings.mfa.enabledHint':
+    'يُطلب عند تسجيل الدخول رمز من 6 أرقام من تطبيق المصادقة. إذا فقدت التطبيق، فاستخدم أحد رموز الاسترداد أحادية الاستخدام.',
   'settings.mfa.newCodes': 'رموز استرداد جديدة',
   'settings.mfa.turnOff': 'إيقاف',
   'settings.mfa.turnOn': 'تفعيل',
   'settings.mfa.required': 'تشترط مساحة العمل هذه التحقق بخطوتين. أعِدّه للحفاظ على وصولك.',
-  'settings.mfa.needApp': 'ستحتاج إلى تطبيق مصادقة مثل 1Password أو Authy أو Google Authenticator أو Microsoft Authenticator.',
+  'settings.mfa.needApp':
+    'ستحتاج إلى تطبيق مصادقة مثل 1Password أو Authy أو Google Authenticator أو Microsoft Authenticator.',
   'settings.mfa.setup': 'إعداد التحقق بخطوتين',
   'settings.mfa.disableTitle': 'إيقاف التحقق بخطوتين؟',
-  'settings.mfa.disableRequired': 'تشترط مساحة العمل هذه التحقق بخطوتين. قد يؤدي إيقافه إلى منع وصولك حتى تعيد إعداده.',
+  'settings.mfa.disableRequired':
+    'تشترط مساحة العمل هذه التحقق بخطوتين. قد يؤدي إيقافه إلى منع وصولك حتى تعيد إعداده.',
   'settings.mfa.disableBody': 'لن يُطلب عند تسجيل الدخول سوى كلمة المرور. وستُنسى الأجهزة الموثوقة.',
   'settings.mfa.regenTitle': 'إنشاء رموز استرداد جديدة؟',
-  'settings.mfa.regenBody': 'ستتوقف رموز الاسترداد الحالية عن العمل. أدخل رمزًا حاليًا من تطبيق المصادقة للمتابعة.',
+  'settings.mfa.regenBody':
+    'ستتوقف رموز الاسترداد الحالية عن العمل. أدخل رمزًا حاليًا من تطبيق المصادقة للمتابعة.',
   'settings.mfa.regenConfirm': 'إنشاء رموز جديدة',
   'settings.mfa.copyKeyUnavailable': 'النسخ غير متاح هنا. حدّد المفتاح وانسخه يدويًا.',
   'settings.mfa.enterSixDigits': 'أدخل الرمز المكوّن من 6 أرقام الظاهر في تطبيق المصادقة.',
@@ -251,7 +286,8 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.mfa.fileBody': 'يمكن استخدام كل رمز مرة واحدة لتسجيل الدخول بدون تطبيق المصادقة.',
   'settings.mfa.copyCodesUnavailable': 'النسخ غير متاح هنا. نزّل الرموز بدلًا من ذلك.',
   'settings.mfa.saveCodesTitle': 'احفظ رموز الاسترداد الآن',
-  'settings.mfa.saveCodesBody': 'تُعرض مرة واحدة فقط. ويعمل كل رمز مرة واحدة إذا فقدت الوصول إلى تطبيق المصادقة.',
+  'settings.mfa.saveCodesBody':
+    'تُعرض مرة واحدة فقط. ويعمل كل رمز مرة واحدة إذا فقدت الوصول إلى تطبيق المصادقة.',
   'settings.mfa.codesLabel': 'رموز الاسترداد',
   'settings.mfa.copyCodes': 'نسخ الرموز',
   'settings.mfa.downloadTxt': 'تنزيل ملف ‎.txt',
@@ -270,13 +306,16 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.sessions.signOut': 'تسجيل الخروج',
   'settings.sessions.revokeTitle': 'تسجيل خروج {browser}؟',
   'settings.sessions.revokeThisTitle': 'تسجيل خروج هذه الجلسة؟',
-  'settings.sessions.revokeBody': 'سيحتاج ذلك المتصفح إلى تسجيل الدخول مجددًا. تبقى المسودات غير المرسلة على ذلك الجهاز.',
+  'settings.sessions.revokeBody':
+    'سيحتاج ذلك المتصفح إلى تسجيل الدخول مجددًا. تبقى المسودات غير المرسلة على ذلك الجهاز.',
   'settings.sessions.revokeConfirm': 'تسجيل خروج الجلسة',
   'settings.sessions.revoked': 'تم تسجيل خروج الجلسة',
   'settings.sessions.othersTitle': 'تسجيل خروج جميع الجلسات الأخرى؟',
-  'settings.sessions.othersBody': '{count, plural, zero {لن تحتاج أي جلسة أخرى} one {ستحتاج جلسة أخرى واحدة} two {ستحتاج جلستان أخريان} few {ستحتاج # جلسات أخرى} many {ستحتاج # جلسة أخرى} other {ستحتاج # جلسة أخرى}} إلى تسجيل الدخول مجددًا. يبقى هذا الجهاز مسجّل الدخول.',
+  'settings.sessions.othersBody':
+    '{count, plural, zero {لن تحتاج أي جلسة أخرى} one {ستحتاج جلسة أخرى واحدة} two {ستحتاج جلستان أخريان} few {ستحتاج # جلسات أخرى} many {ستحتاج # جلسة أخرى} other {ستحتاج # جلسة أخرى}} إلى تسجيل الدخول مجددًا. يبقى هذا الجهاز مسجّل الدخول.',
   'settings.sessions.othersConfirm': 'تسجيل خروج الأخرى',
-  'settings.sessions.othersDone': '{count, plural, zero {لم يُسجَّل خروج أي جلسة} one {تم تسجيل خروج جلسة واحدة} two {تم تسجيل خروج جلستين} few {تم تسجيل خروج # جلسات} many {تم تسجيل خروج # جلسة} other {تم تسجيل خروج # جلسة}}',
+  'settings.sessions.othersDone':
+    '{count, plural, zero {لم يُسجَّل خروج أي جلسة} one {تم تسجيل خروج جلسة واحدة} two {تم تسجيل خروج جلستين} few {تم تسجيل خروج # جلسات} many {تم تسجيل خروج # جلسة} other {تم تسجيل خروج # جلسة}}',
   'settings.hours.closedEveryDay': 'مغلق كل يوم',
   'settings.hours.summaryDay': '{day} {ranges}',
   'settings.hours.weeklyHours': 'ساعات العمل الأسبوعية',
@@ -299,8 +338,10 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.closesAt': 'يُغلق {time}',
   'settings.hours.specialDate': 'تاريخ خاص',
   'settings.hours.specialDates': 'التواريخ الخاصة',
-  'settings.hours.preview.description': 'أوقات الفتح والإغلاق لمدة {count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} وبحسب توقيتك ({viewerZone}).',
-  'settings.hours.preview.descriptionZone': 'أوقات الفتح والإغلاق لمدة {count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} بتوقيت {zone} وبحسب توقيتك ({viewerZone}).',
+  'settings.hours.preview.description':
+    'أوقات الفتح والإغلاق لمدة {count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} وبحسب توقيتك ({viewerZone}).',
+  'settings.hours.preview.descriptionZone':
+    'أوقات الفتح والإغلاق لمدة {count, plural, zero {لا أيام} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}} بتوقيت {zone} وبحسب توقيتك ({viewerZone}).',
   'settings.hours.preview.startDate': 'تاريخ البدء',
   'settings.hours.preview.fromNow': 'من الآن',
   'settings.hours.preview.dirty': 'تعرض المعاينة الساعات المحفوظة. احفظ تغييراتك لمعاينتها.',
@@ -312,23 +353,27 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.preview.dstStarts': 'يبدأ التوقيت الصيفي:',
   'settings.hours.preview.dstEnds': 'ينتهي التوقيت الصيفي:',
   'settings.hours.preview.emptyTitle': 'لا أوقات فتح في هذه الفترة',
-  'settings.hours.preview.emptyBody': 'يبقى الجدول مغلقًا طوال هذه الأيام ({count}). أضف ساعات أعلاه أو اختر تاريخ بدء آخر.',
+  'settings.hours.preview.emptyBody':
+    'يبقى الجدول مغلقًا طوال هذه الأيام ({count}). أضف ساعات أعلاه أو اختر تاريخ بدء آخر.',
   'settings.hours.preview.colDate': 'تاريخ الجدول',
   'settings.hours.preview.colChange': 'التغيير',
   'settings.hours.preview.colTime': 'وقت الجدول',
   'settings.hours.preview.colYourTime': 'توقيتك',
   'settings.hours.preview.colYourTimeSame': 'توقيتك (المنطقة نفسها)',
   'settings.hours.title': 'ساعات العمل',
-  'settings.hours.description': 'تحدد الجداول متى تُقبل المحادثات. يتقدّم جدول القسم على جدول الموقع، الذي يتقدّم بدوره على الجدول الافتراضي لمساحة العمل. ويتقدّم الإغلاق الطارئ على كل شيء.',
+  'settings.hours.description':
+    'تحدد الجداول متى تُقبل المحادثات. يتقدّم جدول القسم على جدول الموقع، الذي يتقدّم بدوره على الجدول الافتراضي لمساحة العمل. ويتقدّم الإغلاق الطارئ على كل شيء.',
   'settings.hours.newSchedule': 'جدول جديد',
   'settings.hours.schedules': 'الجداول',
   'settings.hours.workspaceDefault': 'الجدول الافتراضي لمساحة العمل: {name}.',
-  'settings.hours.noWorkspaceDefault': 'لا يوجد جدول افتراضي لمساحة العمل. تقبل المواقع والأقسام التي ليس لها جدول خاص المحادثات كلما توفر موظفون.',
+  'settings.hours.noWorkspaceDefault':
+    'لا يوجد جدول افتراضي لمساحة العمل. تقبل المواقع والأقسام التي ليس لها جدول خاص المحادثات كلما توفر موظفون.',
   'settings.hours.schedulesHint': 'الساعات الأسبوعية والعطل والتواريخ الخاصة.',
   'settings.hours.showArchived': 'إظهار المؤرشفة',
   'settings.hours.emptyTitle': 'لا توجد جداول بعد',
   'settings.hours.emptyActiveTitle': 'لا توجد جداول نشطة',
-  'settings.hours.emptyBody': 'أنشئ جدولًا بساعات أسبوعية، ثم أسنده إلى الأقسام أو اجعله الجدول الافتراضي لمساحة العمل.',
+  'settings.hours.emptyBody':
+    'أنشئ جدولًا بساعات أسبوعية، ثم أسنده إلى الأقسام أو اجعله الجدول الافتراضي لمساحة العمل.',
   'settings.hours.colNow': 'الآن',
   'settings.hours.default': 'افتراضي',
   'settings.hours.archived': 'مؤرشف',
@@ -349,17 +394,25 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.saved': 'تم حفظ الساعات',
   'settings.hours.checkHours': 'راجع الساعات المميّزة قبل الحفظ.',
   'settings.hours.archivedBanner': 'هذا الجدول مؤرشف. لم يعد يتحكم في التوفر ولا يمكن تعديله.',
-  'settings.hours.weeklyHoursHint': 'مفتوح من كل وقت بدء حتى وقت الانتهاء دون أن يشمله. الأوقات محلية بحسب المنطقة الزمنية للجدول.',
-  'settings.hours.conflict': 'لم تُحفظ تغييراتك لأن هذا الجدول تغيّر منذ أن فتحته. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
-  'settings.hours.conflictWorkspace': 'لم تُحفظ تغييراتك لأن إعدادات مساحة العمل تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.hours.weeklyHoursHint':
+    'مفتوح من كل وقت بدء حتى وقت الانتهاء دون أن يشمله. الأوقات محلية بحسب المنطقة الزمنية للجدول.',
+  'settings.hours.conflict':
+    'لم تُحفظ تغييراتك لأن هذا الجدول تغيّر منذ أن فتحته. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.hours.conflictWorkspace':
+    'لم تُحفظ تغييراتك لأن إعدادات مساحة العمل تغيّرت منذ أن فتحتها. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
   'settings.hours.loadLatest': 'تحميل الأحدث',
-  'settings.hours.remoteChanged': 'غيّر شخص آخر هذه الساعات أثناء تعديلك. حمّل أحدث إصدار، ثم طبّق تعديلاتك مرة أخرى.',
-  'settings.hours.timezoneHint': 'تتبع الساعات التوقيت المحلي لهذه المنطقة، بما في ذلك تغييرات التوقيت الصيفي.',
-  'settings.hours.timezoneChanged': 'يحافظ تغيير المنطقة الزمنية على أوقات الساعة نفسها، لذا ينتقل كل وقت فتح إلى التوقيت المحلي لـ {zone}.',
-  'settings.hours.formatHelp': 'استخدم نظام 24 ساعة (HH:MM). وقت الانتهاء الأسبق من وقت البدء يمتد خلال الليل إلى اليوم التالي، مثل 22:00 إلى 02:00. استخدم 24:00 للإغلاق عند منتصف الليل. لا يجوز أن تتداخل الفترات خلال الأسبوع.',
+  'settings.hours.remoteChanged':
+    'غيّر شخص آخر هذه الساعات أثناء تعديلك. حمّل أحدث إصدار، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.hours.timezoneHint':
+    'تتبع الساعات التوقيت المحلي لهذه المنطقة، بما في ذلك تغييرات التوقيت الصيفي.',
+  'settings.hours.timezoneChanged':
+    'يحافظ تغيير المنطقة الزمنية على أوقات الساعة نفسها، لذا ينتقل كل وقت فتح إلى التوقيت المحلي لـ {zone}.',
+  'settings.hours.formatHelp':
+    'استخدم نظام 24 ساعة (HH:MM). وقت الانتهاء الأسبق من وقت البدء يمتد خلال الليل إلى اليوم التالي، مثل 22:00 إلى 02:00. استخدم 24:00 للإغلاق عند منتصف الليل. لا يجوز أن تتداخل الفترات خلال الأسبوع.',
   'settings.hours.saveHours': 'حفظ الساعات',
   'settings.hours.impactTitle': 'سيؤدي هذا إلى إغلاق الخدمة فورًا',
-  'settings.hours.impactBody': '«{name}» مستخدم ومفتوح الآن. بهذه الساعات سيُغلق فورًا. تستمر المحادثات الجارية، وتتبع الطلبات الجديدة سلوك ما بعد ساعات العمل.',
+  'settings.hours.impactBody':
+    '«{name}» مستخدم ومفتوح الآن. بهذه الساعات سيُغلق فورًا. تستمر المحادثات الجارية، وتتبع الطلبات الجديدة سلوك ما بعد ساعات العمل.',
   'settings.hours.impactConfirm': 'حفظ وإغلاق الآن',
   'settings.hours.nowDefault': 'أصبح {name} الجدول الافتراضي لمساحة العمل',
   'settings.hours.defaultRemoved': 'تمت إزالة الجدول الافتراضي لمساحة العمل',
@@ -369,28 +422,36 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.removeAsDefault': 'إزالة كافتراضي',
   'settings.hours.setAsDefault': 'تعيين كافتراضي لمساحة العمل',
   'settings.hours.unsetTitle': 'إزالة الجدول الافتراضي لمساحة العمل؟',
-  'settings.hours.unsetBody': 'لن تتبع المواقع والأقسام التي ليس لها جدول خاص ساعات العمل بعد ذلك؛ وسيعتمد التوفر فقط على وجود موظفين متصلين لديهم سعة متاحة.',
+  'settings.hours.unsetBody':
+    'لن تتبع المواقع والأقسام التي ليس لها جدول خاص ساعات العمل بعد ذلك؛ وسيعتمد التوفر فقط على وجود موظفين متصلين لديهم سعة متاحة.',
   'settings.hours.unsetConfirm': 'إزالة الافتراضي',
   'settings.hours.usage.workspaceDefault': 'الجدول الافتراضي لمساحة العمل',
-  'settings.hours.usage.siteCount': '{count, plural, zero {لا مواقع} one {موقعًا واحدًا} two {موقعين} few {# مواقع} many {# موقعًا} other {# موقع}}',
-  'settings.hours.usage.departmentCount': '{count, plural, zero {لا أقسام} one {قسمًا واحدًا} two {قسمين} few {# أقسام} many {# قسمًا} other {# قسم}}',
-  'settings.hours.usage.unused': 'غير مستخدم بعد. أسنده إلى قسم أو موقع، أو اجعله الجدول الافتراضي لمساحة العمل.',
+  'settings.hours.usage.siteCount':
+    '{count, plural, zero {لا مواقع} one {موقعًا واحدًا} two {موقعين} few {# مواقع} many {# موقعًا} other {# موقع}}',
+  'settings.hours.usage.departmentCount':
+    '{count, plural, zero {لا أقسام} one {قسمًا واحدًا} two {قسمين} few {# أقسام} many {# قسمًا} other {# قسم}}',
+  'settings.hours.usage.unused':
+    'غير مستخدم بعد. أسنده إلى قسم أو موقع، أو اجعله الجدول الافتراضي لمساحة العمل.',
   'settings.hours.usage.governs': 'يتحكم في {targets}',
   'settings.hours.usage.separator': '، ',
   'settings.hours.usage.sites': 'المواقع: {names}',
-  'settings.hours.usage.precedence': 'تتقدّم الأقسام على المواقع، والتي تتقدّم بدورها على الجدول الافتراضي لمساحة العمل.',
+  'settings.hours.usage.precedence':
+    'تتقدّم الأقسام على المواقع، والتي تتقدّم بدورها على الجدول الافتراضي لمساحة العمل.',
   'settings.hours.archive.done': 'تمت أرشفة {name}',
   'settings.hours.archive.title': 'أرشفة {name}؟',
-  'settings.hours.archive.body': 'تتوقف الجداول المؤرشفة عن التحكم في التوفر. لا يمكن أرشفة الجداول التي لا تزال مُسندة إلى قسم أو موقع أو كافتراضي لمساحة العمل.',
+  'settings.hours.archive.body':
+    'تتوقف الجداول المؤرشفة عن التحكم في التوفر. لا يمكن أرشفة الجداول التي لا تزال مُسندة إلى قسم أو موقع أو كافتراضي لمساحة العمل.',
   'settings.hours.archive.confirm': 'أرشفة الجدول',
   'settings.hours.archive.stillUsed': 'لا يزال مستخدمًا في:',
   'settings.hours.archive.site': 'الموقع: {name}',
   'settings.hours.archive.department': 'القسم:',
   'settings.hours.exceptions.title': 'العطل والتواريخ الخاصة',
-  'settings.hours.exceptions.description': 'تواريخ بتوقيت {zone} تحل محل الساعات الأسبوعية. التواريخ المغلقة تُغلق اليوم المحلي بأكمله.',
+  'settings.hours.exceptions.description':
+    'تواريخ بتوقيت {zone} تحل محل الساعات الأسبوعية. التواريخ المغلقة تُغلق اليوم المحلي بأكمله.',
   'settings.hours.exceptions.addDate': 'إضافة تاريخ',
   'settings.hours.exceptions.emptyTitle': 'لا توجد تواريخ خاصة',
-  'settings.hours.exceptions.emptyBody': 'أضف العطل أو الأيام ذات الساعات المختلفة. تتقدّم على الساعات الأسبوعية في ذلك التاريخ فقط.',
+  'settings.hours.exceptions.emptyBody':
+    'أضف العطل أو الأيام ذات الساعات المختلفة. تتقدّم على الساعات الأسبوعية في ذلك التاريخ فقط.',
   'settings.hours.exceptions.upcoming': 'القادمة',
   'settings.hours.exceptions.noUpcoming': 'لا توجد تواريخ خاصة قادمة.',
   'settings.hours.exceptions.past': 'آخر {count} يومًا',
@@ -398,7 +459,8 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.exceptions.removeThisTitle': 'إزالة هذا التاريخ؟',
   'settings.hours.exceptions.removeBody': 'ستُطبَّق الساعات الأسبوعية في ذلك التاريخ مجددًا.',
   'settings.hours.exceptions.removeConfirm': 'إزالة التاريخ',
-  'settings.hours.exceptions.removeConflict': 'تغيّر هذا الجدول منذ أن فتحته. تم تحميل أحدث إصدار الآن؛ حاول مرة أخرى.',
+  'settings.hours.exceptions.removeConflict':
+    'تغيّر هذا الجدول منذ أن فتحته. تم تحميل أحدث إصدار الآن؛ حاول مرة أخرى.',
   'settings.hours.exceptions.removed': 'تمت إزالة التاريخ الخاص',
   'settings.hours.exceptions.editLabel': 'تعديل {date}',
   'settings.hours.exceptions.removeLabel': 'إزالة {date}',
@@ -411,18 +473,22 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.exceptions.addTitle': 'إضافة تاريخ خاص',
   'settings.hours.exceptions.localDate': 'التاريخ المحلي بتوقيت {zone}.',
   'settings.hours.exceptions.saveDate': 'حفظ التاريخ',
-  'settings.hours.exceptions.conflict': 'تغيّر هذا الجدول منذ أن فتحت مربع الحوار هذا. أغلقه وحاول مرة أخرى بأحدث إصدار.',
+  'settings.hours.exceptions.conflict':
+    'تغيّر هذا الجدول منذ أن فتحت مربع الحوار هذا. أغلقه وحاول مرة أخرى بأحدث إصدار.',
   'settings.hours.exceptions.modeLegend': 'الساعات في هذا التاريخ',
   'settings.hours.exceptions.closedHint': 'تتبع المحادثات الجديدة سلوك ما بعد ساعات العمل طوال هذا التاريخ.',
   'settings.hours.exceptions.special': 'ساعات خاصة',
-  'settings.hours.exceptions.specialHint': 'مفتوح خلال هذه الفترات فقط. الانتهاء الأسبق من البدء يمتد خلال الليل.',
+  'settings.hours.exceptions.specialHint':
+    'مفتوح خلال هذه الفترات فقط. الانتهاء الأسبق من البدء يمتد خلال الليل.',
   'settings.hours.exceptions.interval': 'الفترة {n}',
   'settings.hours.exceptions.reason': 'السبب',
   'settings.hours.exceptions.reasonHint': 'اختياري، حتى {max} حرف. يظهر لفريقك.',
   'settings.hours.exceptions.reasonPlaceholder': 'عطلة رسمية',
-  'settings.hours.exceptions.impactBody': 'الخدمة التي يتحكم فيها «{name}» مفتوحة الآن وستُغلق بمجرد الحفظ. تستمر المحادثات الجارية، وتتبع الطلبات الجديدة سلوك ما بعد ساعات العمل.',
+  'settings.hours.exceptions.impactBody':
+    'الخدمة التي يتحكم فيها «{name}» مفتوحة الآن وستُغلق بمجرد الحفظ. تستمر المحادثات الجارية، وتتبع الطلبات الجديدة سلوك ما بعد ساعات العمل.',
   'settings.hours.closures.title': 'الإغلاق الطارئ',
-  'settings.hours.closures.description': 'أغلق فورًا بغض النظر عن الجداول — عند الأعطال أو الفعاليات أو الطوارئ. تستمر المحادثات الجارية.',
+  'settings.hours.closures.description':
+    'أغلق فورًا بغض النظر عن الجداول — عند الأعطال أو الفعاليات أو الطوارئ. تستمر المحادثات الجارية.',
   'settings.hours.closures.closeNow': 'إغلاق الآن',
   'settings.hours.closures.emptyTitle': 'لا يوجد إغلاق نشط',
   'settings.hours.closures.emptyBody': 'يتبع التوفر جداولك والموظفين المتصلين.',
@@ -455,13 +521,15 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.closures.endTooFar': 'يمكن أن ينتهي الإغلاق خلال سنة واحدة كحد أقصى.',
   'settings.hours.closures.created': 'تم إغلاق الخدمة',
   'settings.hours.closures.dialogTitle': 'إغلاق الخدمة الآن',
-  'settings.hours.closures.dialogBody': 'يتقدّم على كل الجداول فورًا. يرى الزوار تجربة خارج الدوام، وتستمر المحادثات الجارية.',
+  'settings.hours.closures.dialogBody':
+    'يتقدّم على كل الجداول فورًا. يرى الزوار تجربة خارج الدوام، وتستمر المحادثات الجارية.',
   'settings.hours.closures.whatToClose': 'ما المطلوب إغلاقه',
   'settings.hours.closures.site': 'الموقع',
   'settings.hours.closures.chooseSite': 'اختر موقعًا…',
   'settings.hours.closures.chooseDepartment': 'اختر قسمًا…',
   'settings.hours.closures.reopenAt': 'إعادة الفتح تلقائيًا في',
-  'settings.hours.closures.reopenAtHint': 'اختياري، بتوقيتك المحلي. اتركه فارغًا ليبقى مغلقًا حتى يعيد أحدهم الفتح.',
+  'settings.hours.closures.reopenAtHint':
+    'اختياري، بتوقيتك المحلي. اتركه فارغًا ليبقى مغلقًا حتى يعيد أحدهم الفتح.',
   'settings.hours.closures.reasonHint': 'يظهر لفريقك (حتى {max} حرف).',
   'settings.hours.closures.reasonPlaceholder': 'تعطّل مزوّد الدفع',
   'settings.roles.owner': 'المالك',
@@ -470,14 +538,20 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.roles.agent': 'موظف',
   'settings.roles.analyst': 'محلل',
   'settings.departments.routing.broadcast': 'بث للجميع',
-  'settings.departments.routing.broadcastHint': 'تظهر المحادثات الجديدة في قائمة الانتظار لكل موظف مؤهل في القسم؛ ومن يقبل أولًا يتولى المحادثة.',
+  'settings.departments.routing.broadcastHint':
+    'تظهر المحادثات الجديدة في قائمة الانتظار لكل موظف مؤهل في القسم؛ ومن يقبل أولًا يتولى المحادثة.',
   'settings.departments.routing.assigned': 'الإسناد التلقائي',
-  'settings.departments.routing.assignedHint': 'تُعرض كل محادثة على موظف مؤهل واحد لديه سعة متاحة — الأقل انشغالًا أولًا، ثم الأطول انتظارًا. وإن لم يقبلها في الوقت المحدد، تنتقل إلى الموظف التالي.',
+  'settings.departments.routing.assignedHint':
+    'تُعرض كل محادثة على موظف مؤهل واحد لديه سعة متاحة — الأقل انشغالًا أولًا، ثم الأطول انتظارًا. وإن لم يقبلها في الوقت المحدد، تنتقل إلى الموظف التالي.',
   'settings.departments.routing.manual': 'الاستلام اليدوي',
-  'settings.departments.routing.manualHint': 'تنتظر المحادثات في قائمة الانتظار حتى يستلمها موظف أو مشرف. لا يُعرض على أحد عرض محادثة تلقائيًا.',
-  'settings.departments.conflict': 'لم تُحفظ تغييراتك لأن هذا القسم تغيّر منذ أن فتحته. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
-  'settings.departments.remoteChanged': 'غيّر شخص آخر هذه الإعدادات أثناء تعديلك. حمّل أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
-  'settings.departments.rebased': 'تغيّرت إعدادات أخرى لهذا القسم في الأثناء. لم تتأثر تعديلاتك هنا — احفظ مرة أخرى.',
+  'settings.departments.routing.manualHint':
+    'تنتظر المحادثات في قائمة الانتظار حتى يستلمها موظف أو مشرف. لا يُعرض على أحد عرض محادثة تلقائيًا.',
+  'settings.departments.conflict':
+    'لم تُحفظ تغييراتك لأن هذا القسم تغيّر منذ أن فتحته. أعد التحميل لعرض أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.departments.remoteChanged':
+    'غيّر شخص آخر هذه الإعدادات أثناء تعديلك. حمّل أحدث القيم، ثم طبّق تعديلاتك مرة أخرى.',
+  'settings.departments.rebased':
+    'تغيّرت إعدادات أخرى لهذا القسم في الأثناء. لم تتأثر تعديلاتك هنا — احفظ مرة أخرى.',
   'settings.departments.tabs.general': 'عام',
   'settings.departments.tabs.agents': 'الموظفون',
   'settings.departments.tabs.routing': 'التوجيه',
@@ -491,34 +565,47 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.general.publicLabel': 'الاسم الظاهر للزوار',
   'settings.departments.general.publicLabelHint': 'اتركه فارغًا لعرض الاسم.',
   'settings.departments.general.descriptionHint': 'اختياري، حتى {max} حرف.',
-  'settings.departments.general.enabledHint': 'عند التعطيل، لا يستطيع الزوار اختيار هذا القسم ولا تُوجَّه إليه محادثات جديدة. تستمر المحادثات الجارية بشكل طبيعي.',
+  'settings.departments.general.enabledHint':
+    'عند التعطيل، لا يستطيع الزوار اختيار هذا القسم ولا تُوجَّه إليه محادثات جديدة. تستمر المحادثات الجارية بشكل طبيعي.',
   'settings.departments.general.disableWarning': 'بعد الحفظ، سيختفي {name} من أداة الدردشة.',
-  'settings.departments.general.disableWarningQueued': 'بعد الحفظ، سيختفي {name} من أداة الدردشة — {count, plural, zero {لا يوجد زوار} one {يوجد زائر واحد} two {يوجد زائران} few {يوجد # زوار} many {يوجد # زائرًا} other {يوجد # زائر}} في قائمة انتظاره الآن.',
+  'settings.departments.general.disableWarningQueued':
+    'بعد الحفظ، سيختفي {name} من أداة الدردشة — {count, plural, zero {لا يوجد زوار} one {يوجد زائر واحد} two {يوجد زائران} few {يوجد # زوار} many {يوجد # زائرًا} other {يوجد # زائر}} في قائمة انتظاره الآن.',
   'settings.departments.routing.saved': 'تم حفظ التوجيه',
   'settings.departments.routing.pathArrow': ' ← ',
   'settings.departments.routing.loop': 'سيؤدي هذا إلى حلقة: {path}.',
-  'settings.departments.routing.description': 'كيف تصل المحادثات الجديدة إلى الموظفين، وإلى أي حد يمكن أن تطول قائمة الانتظار، وما يحدث عندما ينتظر الزوار طويلًا.',
+  'settings.departments.routing.description':
+    'كيف تصل المحادثات الجديدة إلى الموظفين، وإلى أي حد يمكن أن تطول قائمة الانتظار، وما يحدث عندما ينتظر الزوار طويلًا.',
   'settings.departments.routing.mode': 'طريقة التوجيه',
   'settings.departments.routing.queueLimit': 'حد قائمة الانتظار',
-  'settings.departments.routing.queueLimitHint': 'لا تُقبل المحادثات الجديدة بعد بلوغ هذا العدد من المنتظرين ({min}–{max}).',
+  'settings.departments.routing.queueLimitHint':
+    'لا تُقبل المحادثات الجديدة بعد بلوغ هذا العدد من المنتظرين ({min}–{max}).',
   'settings.departments.routing.unitChats': 'محادثة',
   'settings.departments.routing.maxWait': 'أقصى مدة انتظار',
-  'settings.departments.routing.maxWaitHint': 'بعد هذه المدة في قائمة الانتظار، يُعرض على الزوار نموذج خارج الدوام ويمكنهم مواصلة الانتظار. القيمة 0 توقف ذلك ({min}–{max}).',
+  'settings.departments.routing.maxWaitHint':
+    'بعد هذه المدة في قائمة الانتظار، يُعرض على الزوار نموذج خارج الدوام ويمكنهم مواصلة الانتظار. القيمة 0 توقف ذلك ({min}–{max}).',
   'settings.departments.routing.overflow': 'عند تجاوز أقصى مدة انتظار',
   'settings.departments.routing.overflowOff': 'حدّد أقصى مدة انتظار أعلاه لاستخدام التحويل.',
-  'settings.departments.routing.overflowHint': 'تنتقل المحادثة مرة واحدة إلى قسم التحويل إذا كان مفعّلًا ولم تكن المحادثة فيه من قبل.',
+  'settings.departments.routing.overflowHint':
+    'تنتقل المحادثة مرة واحدة إلى قسم التحويل إذا كان مفعّلًا ولم تكن المحادثة فيه من قبل.',
   'settings.departments.routing.keepWaiting': 'مواصلة الانتظار هنا (عرض نموذج خارج الدوام فقط)',
-  'settings.departments.routing.overflowTo': 'التحويل إلى {name}{state, select, archived { (مؤرشف)} disabled { (معطّل)} other {}}{loops, select, yes { — سيؤدي إلى حلقة} other {}}',
-  'settings.departments.routing.targetArchived': '{name} مؤرشف، لذا يُتخطّى التحويل ويُعرض على الزوار نموذج خارج الدوام فقط.',
-  'settings.departments.routing.targetDisabled': '{name} معطّل، لذا يُتخطّى التحويل ويُعرض على الزوار نموذج خارج الدوام فقط.',
+  'settings.departments.routing.overflowTo':
+    'التحويل إلى {name}{state, select, archived { (مؤرشف)} disabled { (معطّل)} other {}}{loops, select, yes { — سيؤدي إلى حلقة} other {}}',
+  'settings.departments.routing.targetArchived':
+    '{name} مؤرشف، لذا يُتخطّى التحويل ويُعرض على الزوار نموذج خارج الدوام فقط.',
+  'settings.departments.routing.targetDisabled':
+    '{name} معطّل، لذا يُتخطّى التحويل ويُعرض على الزوار نموذج خارج الدوام فقط.',
   'settings.departments.hours.saved': 'تم حفظ الساعات',
-  'settings.departments.hours.description': 'متى يقبل هذا القسم المحادثات الجديدة. خارج هذه الساعات يرى الزوار تجربة خارج الدوام؛ وتستمر المحادثات الجارية.',
+  'settings.departments.hours.description':
+    'متى يقبل هذا القسم المحادثات الجديدة. خارج هذه الساعات يرى الزوار تجربة خارج الدوام؛ وتستمر المحادثات الجارية.',
   'settings.departments.hours.ownReadOnly': 'يستخدم هذا القسم جدوله الخاص.',
-  'settings.departments.hours.defaultReadOnly': 'يتبع هذا القسم جدول موقعه، أو الجدول الافتراضي لمساحة العمل.',
+  'settings.departments.hours.defaultReadOnly':
+    'يتبع هذا القسم جدول موقعه، أو الجدول الافتراضي لمساحة العمل.',
   'settings.departments.hours.schedule': 'الجدول',
   'settings.departments.hours.useDefault': 'استخدام جدول الموقع أو الافتراضي لمساحة العمل',
-  'settings.departments.hours.useDefaultHint': 'يتبع جدول الموقع إن وُجد، وإلا فالجدول الافتراضي لمساحة العمل ({name}).',
-  'settings.departments.hours.useDefaultNoDefault': 'يتبع جدول الموقع إن وُجد. لا يوجد جدول افتراضي لمساحة العمل، لذا تُقبل المحادثات في غير ذلك كلما توفر موظفون.',
+  'settings.departments.hours.useDefaultHint':
+    'يتبع جدول الموقع إن وُجد، وإلا فالجدول الافتراضي لمساحة العمل ({name}).',
+  'settings.departments.hours.useDefaultNoDefault':
+    'يتبع جدول الموقع إن وُجد. لا يوجد جدول افتراضي لمساحة العمل، لذا تُقبل المحادثات في غير ذلك كلما توفر موظفون.',
   'settings.departments.hours.useOwn': 'استخدام جدول محدد',
   'settings.departments.hours.useOwnHint': 'يتقدّم على جداول الموقع ومساحة العمل لهذا القسم.',
   'settings.departments.hours.noSchedules': 'لا توجد جداول بعد.',
@@ -526,17 +613,23 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.hours.option': '{name} ({zone})',
   'settings.departments.hours.optionArchived': '{name} ({zone}) — مؤرشف',
   'settings.departments.hours.viewSchedule': 'عرض هذا الجدول أو تعديله',
-  'settings.departments.hours.selectedArchived': 'الجدول المحدد مؤرشف ولم يعد يتحكم في التوفر. اختر جدولًا آخر أو استخدم الافتراضي.',
+  'settings.departments.hours.selectedArchived':
+    'الجدول المحدد مؤرشف ولم يعد يتحكم في التوفر. اختر جدولًا آخر أو استخدم الافتراضي.',
   'settings.departments.notFoundTitle': 'القسم غير موجود',
   'settings.departments.notFoundBody': 'ربما حُذف، أو أنه خارج الأقسام التي يمكنك رؤيتها.',
   'settings.departments.backToList': 'العودة إلى الأقسام',
-  'settings.departments.headerCounts': '{waiting} في الانتظار · {members, plural, zero {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضوًا} other {# عضو}}',
-  'settings.departments.archivedNote': 'هذا القسم مؤرشف. لم يعد يقبل المحادثات؛ وتحتفظ سجلات المحادثات السابقة باسمه.',
+  'settings.departments.headerCounts':
+    '{waiting} في الانتظار · {members, plural, zero {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضوًا} other {# عضو}}',
+  'settings.departments.archivedNote':
+    'هذا القسم مؤرشف. لم يعد يقبل المحادثات؛ وتحتفظ سجلات المحادثات السابقة باسمه.',
   'settings.departments.archive.title': 'أرشفة {name}؟',
   'settings.departments.archive.confirm': 'أرشفة القسم',
-  'settings.departments.archive.body': 'سيتوقف عن قبول المحادثات ويختفي من أداة الدردشة. تحتفظ سجلات المحادثات السابقة باسمه. لا يمكن أرشفة قسم لديه محادثات مفتوحة — أغلقها أو حوّلها أولًا.',
-  'settings.departments.archive.fallbackFrom': '{count, plural, zero {يستخدم {names}} one {يستخدم القسم {names}} two {يستخدم القسمان {names}} few {تستخدم الأقسام {names}} many {تستخدم الأقسام {names}} other {تستخدم الأقسام {names}}} هذا القسم كوجهة تحويل. يُتخطّى التحويل إلى قسم مؤرشف.',
-  'settings.departments.description': 'الفرق التي يمكن للزوار اختيارها وتُوجَّه إليها المحادثات. لكل قسم أعضاؤه وقواعد توجيهه وساعاته.',
+  'settings.departments.archive.body':
+    'سيتوقف عن قبول المحادثات ويختفي من أداة الدردشة. تحتفظ سجلات المحادثات السابقة باسمه. لا يمكن أرشفة قسم لديه محادثات مفتوحة — أغلقها أو حوّلها أولًا.',
+  'settings.departments.archive.fallbackFrom':
+    '{count, plural, zero {يستخدم {names}} one {يستخدم القسم {names}} two {يستخدم القسمان {names}} few {تستخدم الأقسام {names}} many {تستخدم الأقسام {names}} other {تستخدم الأقسام {names}}} هذا القسم كوجهة تحويل. يُتخطّى التحويل إلى قسم مؤرشف.',
+  'settings.departments.description':
+    'الفرق التي يمكن للزوار اختيارها وتُوجَّه إليها المحادثات. لكل قسم أعضاؤه وقواعد توجيهه وساعاته.',
   'settings.departments.new': 'قسم جديد',
   'settings.departments.search': 'البحث في الأقسام',
   'settings.departments.showArchived': 'إظهار المؤرشفة ({count})',
@@ -551,7 +644,8 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.ownSchedule': 'جدول خاص',
   'settings.departments.shownAs': 'يظهر للزوار باسم «{label}»',
   'settings.departments.noRosterAccess': 'ليس لديك صلاحية الوصول إلى قائمة الموظفين',
-  'settings.departments.availableSr': '{count, plural, zero {لا موظفين} one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفًا} other {# موظف}} متصلون ولديهم سعة متاحة، من أصل {servers} يمكنهم الخدمة',
+  'settings.departments.availableSr':
+    '{count, plural, zero {لا موظفين} one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفًا} other {# موظف}} متصلون ولديهم سعة متاحة، من أصل {servers} يمكنهم الخدمة',
   'settings.departments.siteOrDefault': 'جدول الموقع أو الافتراضي لمساحة العمل',
   'settings.departments.create.description': 'أضف الموظفين والساعات وقواعد التحويل بعد إنشائه.',
   'settings.departments.create.submit': 'إنشاء القسم',
@@ -561,16 +655,22 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.create.enabledHint': 'يمكن للزوار اختياره ويمكن توجيه المحادثات إليه.',
   'settings.departments.agents.saved': 'تم حفظ الأعضاء',
   'settings.departments.agents.suspended': 'موقوف',
-  'settings.departments.agents.memberCount': '{count, plural, zero {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضوًا} other {# عضو}}.',
-  'settings.departments.agents.noAccess': 'تحتاج إلى صلاحية الوصول إلى قائمة الفريق لرؤية أعضاء هذا القسم أو تغييرهم.',
-  'settings.departments.agents.description': 'يتولى الأعضاء القادرون على الخدمة محادثات هذا القسم؛ ويمكن للمراقبين متابعة محادثاته. السعة عامة: تُحتسب المحادثات في أي قسم ضمنها.',
-  'settings.departments.agents.remoteChanged': 'تغيّرت العضوية في مكان آخر أثناء تعديلك. سيستبدلها الحفظ بقائمتك.',
+  'settings.departments.agents.memberCount':
+    '{count, plural, zero {لا أعضاء} one {عضو واحد} two {عضوان} few {# أعضاء} many {# عضوًا} other {# عضو}}.',
+  'settings.departments.agents.noAccess':
+    'تحتاج إلى صلاحية الوصول إلى قائمة الفريق لرؤية أعضاء هذا القسم أو تغييرهم.',
+  'settings.departments.agents.description':
+    'يتولى الأعضاء القادرون على الخدمة محادثات هذا القسم؛ ويمكن للمراقبين متابعة محادثاته. السعة عامة: تُحتسب المحادثات في أي قسم ضمنها.',
+  'settings.departments.agents.remoteChanged':
+    'تغيّرت العضوية في مكان آخر أثناء تعديلك. سيستبدلها الحفظ بقائمتك.',
   'settings.departments.agents.pickerLabel': 'إضافة موظفين أو إزالتهم',
-  'settings.departments.agents.pickerHint': 'ابحث بالاسم أو البريد الإلكتروني. الموظفون المحددون أعضاء؛ وتُطبَّق التغييرات عند الحفظ.',
+  'settings.departments.agents.pickerHint':
+    'ابحث بالاسم أو البريد الإلكتروني. الموظفون المحددون أعضاء؛ وتُطبَّق التغييرات عند الحفظ.',
   'settings.departments.agents.pickerPlaceholder': 'اختر موظفين…',
   'settings.departments.agents.pickerSearch': 'البحث عن موظفين',
   'settings.departments.agents.pickerEmpty': 'لا يوجد موظفون مطابقون',
-  'settings.departments.agents.nobodyServes': 'لا يوجد من يمكنه خدمة هذا القسم، لذا ستنتظر محادثاته في قائمة الانتظار حتى تتم إضافة أحد.',
+  'settings.departments.agents.nobodyServes':
+    'لا يوجد من يمكنه خدمة هذا القسم، لذا ستنتظر محادثاته في قائمة الانتظار حتى تتم إضافة أحد.',
   'settings.departments.agents.emptyTitle': 'لا يوجد أعضاء بعد',
   'settings.departments.agents.emptyManage': 'استخدم أداة الاختيار أعلاه لإضافة موظفين.',
   'settings.departments.agents.emptyView': 'يمكن للمسؤول إضافة موظفين إلى هذا القسم.',
@@ -582,7 +682,8 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.agents.changed': 'معدّل',
   'settings.departments.agents.noLongerOnTeam': 'لم يعد في الفريق',
   'settings.departments.agents.loadSr': '{active} محادثة نشطة من السعة الإجمالية {capacity}',
-  'settings.departments.agents.across': 'عبر {count, plural, zero {لا أقسام} one {قسم واحد} two {قسمين} few {# أقسام} many {# قسمًا} other {# قسم}}',
+  'settings.departments.agents.across':
+    'عبر {count, plural, zero {لا أقسام} one {قسم واحد} two {قسمين} few {# أقسام} many {# قسمًا} other {# قسم}}',
   'settings.departments.agents.serveLabel': 'يمكن لـ {name} خدمة المحادثات في {department}',
   'settings.departments.agents.monitorLabel': 'يمكن لـ {name} مراقبة المحادثات في {department}',
   'settings.departments.agents.analystCannotServe': 'لا يمكن للمحللين خدمة المحادثات',
@@ -590,7 +691,8 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.departments.agents.willBeRemoved': 'ستتم إزالتهم',
   'settings.departments.agents.keepLabel': 'إبقاء {name} في {department}',
   'settings.departments.agents.saveMembers': 'حفظ الأعضاء',
-  'settings.departments.agents.pending': '{count, plural, zero {لا تغييرات معلّقة} one {تغيير معلّق واحد} two {تغييران معلّقان} few {# تغييرات معلّقة} many {# تغييرًا معلّقًا} other {# تغيير معلّق}}',
+  'settings.departments.agents.pending':
+    '{count, plural, zero {لا تغييرات معلّقة} one {تغيير معلّق واحد} two {تغييران معلّقان} few {# تغييرات معلّقة} many {# تغييرًا معلّقًا} other {# تغيير معلّق}}',
   'settings.departments.agents.adminsOnly': 'لا يمكن تغيير العضوية إلا للمسؤولين.',
   'settings.hours.validation.shape': 'يلزم وقت بدء ووقت انتهاء',
   'settings.hours.validation.startFormat': 'استخدم الصيغة HH:MM بين 00:00 و23:59',
@@ -600,5 +702,6 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.hours.validation.list': 'يلزم إدخال قائمة فترات',
   'settings.hours.validation.weekObject': 'يلزم إدخال الساعات لكل يوم من أيام الأسبوع',
   'settings.hours.validation.weekday': 'يوم أسبوع غير معروف',
-  'settings.hours.validation.maxIntervals': '{count, plural, zero {لا فترات} one {فترة واحدة} two {فترتان} few {# فترات} many {# فترة} other {# فترة}} في اليوم كحد أقصى',
+  'settings.hours.validation.maxIntervals':
+    '{count, plural, zero {لا فترات} one {فترة واحدة} two {فترتان} few {# فترات} many {# فترة} other {# فترة}} في اليوم كحد أقصى',
 };

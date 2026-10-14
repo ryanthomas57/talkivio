@@ -79,6 +79,7 @@ export const ResourceSchemas = {
   ChatCounts: chats.ChatCountsSchema,
   ReadCursor: chats.ReadCursorSchema,
   ChatAdmission: chats.ChatAdmissionSchema,
+  AgentStartedChat: chats.AgentStartedChatSchema,
   ChatRating: chats.ChatRatingSchema,
   // visitors
   VisitorTagRef: visitors.VisitorTagRefSchema,

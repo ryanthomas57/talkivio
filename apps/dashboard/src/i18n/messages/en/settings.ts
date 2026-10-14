@@ -29,7 +29,8 @@ export const settings = {
   'settings.form.unsaved': 'Unsaved changes',
   'settings.form.discard': 'Discard',
   'settings.form.conflictTitle': 'Someone else changed this',
-  'settings.form.conflictBody': 'Your changes were not saved because these settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
+  'settings.form.conflictBody':
+    'Your changes were not saved because these settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
   'settings.tenant.checkFields': 'Check the highlighted fields.',
   'settings.tenant.saved': '{section} saved',
   'settings.reauth.title': 'Confirm it’s you',
@@ -56,11 +57,14 @@ export const settings = {
   'settings.days.short.5': 'Fri',
   'settings.days.short.6': 'Sat',
   'settings.general.title': 'General',
-  'settings.general.description': 'Workspace identity, chat behaviour, visitor tracking, offline messages, security and data retention.',
+  'settings.general.description':
+    'Workspace identity, chat behaviour, visitor tracking, offline messages, security and data retention.',
   'settings.general.readOnly': 'You can view these settings. Only owners and admins can change them.',
   'settings.general.dirtyWhat': 'general settings',
-  'settings.general.conflict': 'Your changes were not saved because the {section} settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
-  'settings.general.stale': 'These values were updated by someone else, so your unsaved edits here were discarded. Review the current values.',
+  'settings.general.conflict':
+    'Your changes were not saved because the {section} settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
+  'settings.general.stale':
+    'These values were updated by someone else, so your unsaved edits here were discarded. Review the current values.',
   'settings.general.unit.minutes': 'minutes',
   'settings.general.unit.seconds': 'seconds',
   'settings.general.unit.hours': 'hours',
@@ -68,12 +72,14 @@ export const settings = {
   'settings.general.unit.mb': 'MB',
   'settings.general.unit.perHour': 'per hour',
   'settings.general.workspace.title': 'Workspace',
-  'settings.general.workspace.description': 'Name and time conventions used across the dashboard and reports.',
+  'settings.general.workspace.description':
+    'Name and time conventions used across the dashboard and reports.',
   'settings.general.workspace.name': 'Workspace name',
   'settings.general.workspace.nameRequired': 'Enter a workspace name.',
   'settings.general.workspace.nameTooLong': 'Use at most {max} characters.',
   'settings.general.workspace.timezoneRequired': 'Choose a timezone.',
-  'settings.general.workspace.timezoneHint': 'Reports and dashboard dates use this zone unless a schedule sets its own.',
+  'settings.general.workspace.timezoneHint':
+    'Reports and dashboard dates use this zone unless a schedule sets its own.',
   'settings.general.workspace.weekStart': 'Week starts on',
   'settings.general.chat.title': 'Chat behaviour',
   'settings.general.chat.description': 'How conversations start, pause and end for visitors.',
@@ -96,13 +102,19 @@ export const settings = {
   'settings.general.chat.maxAttachmentHint': 'Per file, {min}–{max} MB.',
   'settings.general.chat.maxAttachmentOff': 'Turn on attachments to change this.',
   'settings.general.tracking.title': 'Tracking and consent',
-  'settings.general.tracking.description': 'What the widget may record about browsing. Defaults favour collecting the minimum.',
+  'settings.general.tracking.description':
+    'What the widget may record about browsing. Defaults favour collecting the minimum.',
   'settings.general.tracking.consent': 'Require analytics consent',
-  'settings.general.tracking.consentHint': 'Until a visitor grants analytics consent, no browsing identity, page events or behaviour-based invitations are created.',
+  'settings.general.tracking.consentHint':
+    'Until a visitor grants analytics consent, no browsing identity, page events or behaviour-based invitations are created.',
   'settings.general.tracking.location': 'Approximate location',
   'settings.general.tracking.locationHint': 'Derive country and city from the network address.',
+  'settings.general.tracking.retainIp': 'Show visitor IP addresses',
+  'settings.general.tracking.retainIpHint':
+    "Shows each visitor's IP address and network (for example an ISP, or a hosting or VPN provider). IP addresses are personal data: they are kept with the visit and erased with the visitor.",
   'settings.general.tracking.params': 'Query parameters to keep',
-  'settings.general.tracking.paramsHint': 'Page URLs are stored without query strings except these names (up to {count}). Fragments are always removed.',
+  'settings.general.tracking.paramsHint':
+    'Page URLs are stored without query strings except these names (up to {count}). Fragments are always removed.',
   'settings.general.tracking.paramsList': 'Current parameters',
   'settings.general.tracking.paramsLimit': 'At most {count, plural, one {# parameter} other {# parameters}}.',
   'settings.general.tracking.paramInvalid': '“{value}” is not a valid parameter name.',
@@ -117,37 +129,48 @@ export const settings = {
   'settings.general.offline.recipients': 'Notification recipients',
   'settings.general.offline.recipientsHint': 'Up to {count, plural, one {# address} other {# addresses}}.',
   'settings.general.offline.recipientsList': 'Current recipients',
-  'settings.general.offline.recipientsLimit': 'At most {count, plural, one {# recipient} other {# recipients}}.',
+  'settings.general.offline.recipientsLimit':
+    'At most {count, plural, one {# recipient} other {# recipients}}.',
   'settings.general.offline.emailInvalid': '“{value}” is not a valid email address.',
-  'settings.general.offline.noRecipients': 'Email notifications are on but there are no recipients, so nobody will be emailed.',
+  'settings.general.offline.noRecipients':
+    'Email notifications are on but there are no recipients, so nobody will be emailed.',
   'settings.general.analytics.title': 'Analytics',
   'settings.general.analytics.description': 'How measures are calculated in reports.',
   'settings.general.analytics.quickCancel': 'Exclude quick cancellations from missed chats',
-  'settings.general.analytics.quickCancelHint': 'Visitors who cancel within 10 seconds of requesting a chat are not counted as missed.',
+  'settings.general.analytics.quickCancelHint':
+    'Visitors who cancel within 10 seconds of requesting a chat are not counted as missed.',
   'settings.general.security.title': 'Security',
   'settings.general.security.description': 'Sign-in requirements for everyone in this workspace.',
   'settings.general.security.requireMfa': 'Require two-factor authentication',
-  'settings.general.security.requireMfaHint': 'Members without an authenticator app must set one up before they can use the workspace.',
-  'settings.general.security.mfaSelfWarning': 'You have not set up two-factor authentication yourself. Set it up in My account before requiring it for everyone.',
+  'settings.general.security.requireMfaHint':
+    'Members without an authenticator app must set one up before they can use the workspace.',
+  'settings.general.security.mfaSelfWarning':
+    'You have not set up two-factor authentication yourself. Set it up in My account before requiring it for everyone.',
   'settings.general.security.session': 'Session length',
   'settings.general.security.sessionHint': 'Maximum session length for members ({min}–{max} hours).',
-  'settings.general.security.sessionHintValue': 'Maximum session length for members: {length} ({min}–{max} hours).',
+  'settings.general.security.sessionHintValue':
+    'Maximum session length for members: {length} ({min}–{max} hours).',
   'settings.general.security.sessionDays': '{count, plural, one {# day} other {# days}}',
   'settings.general.security.sessionHours': '{count, plural, one {# hour} other {# hours}}',
   'settings.general.security.networks': 'Allowed networks',
-  'settings.general.security.networksHint': 'IPv4 or IPv6 addresses or CIDR ranges. Leave empty to allow any network.',
+  'settings.general.security.networksHint':
+    'IPv4 or IPv6 addresses or CIDR ranges. Leave empty to allow any network.',
   'settings.general.security.networksList': 'Current networks',
   'settings.general.security.networksLimit': 'At most {count, plural, one {# entry} other {# entries}}.',
   'settings.general.security.networkInvalid': '“{value}” is not an IP address or CIDR range.',
-  'settings.general.security.networksWarning': 'Make sure the network you are using now is included, or you may lose access when the list takes effect.',
+  'settings.general.security.networksWarning':
+    'Make sure the network you are using now is included, or you may lose access when the list takes effect.',
   'settings.general.retention.title': 'Data retention',
-  'settings.general.retention.description': 'How long closed chat transcripts and their attachments are kept.',
+  'settings.general.retention.description':
+    'How long closed chat transcripts and their attachments are kept.',
   'settings.general.retention.keep': 'Keep closed chats for',
-  'settings.general.retention.keepHint': 'Messages and files of chats closed longer than this are deleted permanently by the retention job ({min}–{max} days). Chat metadata without personal content stays for analytics.',
+  'settings.general.retention.keepHint':
+    'Messages and files of chats closed longer than this are deleted permanently by the retention job ({min}–{max} days). Chat metadata without personal content stays for analytics.',
   'settings.general.retention.ownersOnly': 'Only owners and admins can change data retention.',
   'settings.general.retention.confirmTitle': 'Shorten data retention?',
   'settings.general.retention.confirmLabel': 'Keep {count, plural, one {# day} other {# days}}',
-  'settings.general.retention.confirmBody': 'Closed chats older than {count, plural, one {# day} other {# days}} (currently {current}) will be permanently deleted at the next retention run. This cannot be undone.',
+  'settings.general.retention.confirmBody':
+    'Closed chats older than {count, plural, one {# day} other {# days}} (currently {current}) will be permanently deleted at the next retention run. This cannot be undone.',
   'settings.account.dirtyWhat': 'your account',
   'settings.account.title': 'My account',
   'settings.account.description': 'Your profile, sign-in security and how {brand} notifies you.',
@@ -171,7 +194,8 @@ export const settings = {
   'settings.email.description': 'Used to sign in and for security notices.',
   'settings.email.verified': 'Verified',
   'settings.email.notVerified': 'Not verified',
-  'settings.email.verifyHint': 'Verify your address to invite teammates. Didn’t get the email? Send a new link.',
+  'settings.email.verifyHint':
+    'Verify your address to invite teammates. Didn’t get the email? Send a new link.',
   'settings.email.sent': 'Verification email sent to {email}.',
   'settings.email.resend': 'Resend verification email',
   'settings.prefs.permission.granted': 'Allowed in this browser',
@@ -182,12 +206,14 @@ export const settings = {
   'settings.prefs.title': 'Notifications and preferences',
   'settings.prefs.description': 'Applies to you in this workspace on every device.',
   'settings.prefs.sound': 'Sound alerts',
-  'settings.prefs.soundHint': 'Play a chime for new chats, offers and messages. Muting never hides the visual queue.',
+  'settings.prefs.soundHint':
+    'Play a chime for new chats, offers and messages. Muting never hides the visual queue.',
   'settings.prefs.playPreview': 'Play preview',
   'settings.prefs.desktop': 'Desktop notifications',
   'settings.prefs.desktopHint': 'Show a system notification when {brand} is in the background.',
   'settings.prefs.enable': 'Enable notifications',
-  'settings.prefs.blocked': 'Your browser is blocking notifications for this site. Allow them in the browser’s site settings, then reload.',
+  'settings.prefs.blocked':
+    'Your browser is blocking notifications for this site. Allow them in the browser’s site settings, then reload.',
   'settings.prefs.notYetAllowed': 'Notifications appear only after you allow them in this browser.',
   'settings.prefs.privacy': 'Privacy mode',
   'settings.prefs.privacyHint': 'Notifications use generic text without visitor names or message content.',
@@ -216,18 +242,22 @@ export const settings = {
   'settings.mfa.description': 'Ask for a code from an authenticator app when you sign in.',
   'settings.mfa.onToast': 'Two-factor authentication is on',
   'settings.mfa.offToast': 'Two-factor authentication is off',
-  'settings.mfa.enabledHint': 'Sign-ins ask for a 6-digit code from your authenticator app. If you lose the app, use one of your single-use recovery codes.',
+  'settings.mfa.enabledHint':
+    'Sign-ins ask for a 6-digit code from your authenticator app. If you lose the app, use one of your single-use recovery codes.',
   'settings.mfa.newCodes': 'New recovery codes',
   'settings.mfa.turnOff': 'Turn off',
   'settings.mfa.turnOn': 'Turn on',
   'settings.mfa.required': 'This workspace requires two-factor authentication. Set it up to keep access.',
-  'settings.mfa.needApp': 'You’ll need an authenticator app such as 1Password, Authy, Google Authenticator or Microsoft Authenticator.',
+  'settings.mfa.needApp':
+    'You’ll need an authenticator app such as 1Password, Authy, Google Authenticator or Microsoft Authenticator.',
   'settings.mfa.setup': 'Set up two-factor authentication',
   'settings.mfa.disableTitle': 'Turn off two-factor authentication?',
-  'settings.mfa.disableRequired': 'This workspace requires two-factor authentication. Turning it off may block your access until you set it up again.',
+  'settings.mfa.disableRequired':
+    'This workspace requires two-factor authentication. Turning it off may block your access until you set it up again.',
   'settings.mfa.disableBody': 'Sign-ins will only ask for your password. Trusted devices are forgotten.',
   'settings.mfa.regenTitle': 'Create new recovery codes?',
-  'settings.mfa.regenBody': 'Your existing recovery codes stop working. Enter a current code from your authenticator app to continue.',
+  'settings.mfa.regenBody':
+    'Your existing recovery codes stop working. Enter a current code from your authenticator app to continue.',
   'settings.mfa.regenConfirm': 'Create new codes',
   'settings.mfa.copyKeyUnavailable': 'Copy is not available here. Select the key and copy it manually.',
   'settings.mfa.enterSixDigits': 'Enter the 6-digit code shown in your authenticator app.',
@@ -235,7 +265,8 @@ export const settings = {
   'settings.mfa.invalidCode': 'That code is not valid.',
   'settings.mfa.expiredTitle': 'Setup expired',
   'settings.mfa.startAgain': 'Start again',
-  'settings.mfa.expiredBody': 'Setup codes are valid for {minutes} minutes. Start again to get a new QR code.',
+  'settings.mfa.expiredBody':
+    'Setup codes are valid for {minutes} minutes. Start again to get a new QR code.',
   'settings.mfa.qrAlt': 'QR code to add this account to your authenticator app',
   'settings.mfa.qrFailed': 'The QR code could not be drawn. Use the setup key instead.',
   'settings.mfa.step1': '1. Scan the QR code',
@@ -249,7 +280,8 @@ export const settings = {
   'settings.mfa.fileBody': 'Each code can be used once to sign in without your authenticator app.',
   'settings.mfa.copyCodesUnavailable': 'Copy is not available here. Download the codes instead.',
   'settings.mfa.saveCodesTitle': 'Save your recovery codes now',
-  'settings.mfa.saveCodesBody': 'They are shown only once. Each code works one time if you lose access to your authenticator app.',
+  'settings.mfa.saveCodesBody':
+    'They are shown only once. Each code works one time if you lose access to your authenticator app.',
   'settings.mfa.codesLabel': 'Recovery codes',
   'settings.mfa.copyCodes': 'Copy codes',
   'settings.mfa.downloadTxt': 'Download .txt',
@@ -268,11 +300,13 @@ export const settings = {
   'settings.sessions.signOut': 'Sign out',
   'settings.sessions.revokeTitle': 'Sign out {browser}?',
   'settings.sessions.revokeThisTitle': 'Sign out this session?',
-  'settings.sessions.revokeBody': 'That browser will need to sign in again. Unsent drafts on it stay on that device.',
+  'settings.sessions.revokeBody':
+    'That browser will need to sign in again. Unsent drafts on it stay on that device.',
   'settings.sessions.revokeConfirm': 'Sign out session',
   'settings.sessions.revoked': 'Session signed out',
   'settings.sessions.othersTitle': 'Sign out all other sessions?',
-  'settings.sessions.othersBody': '{count, plural, one {# other session} other {# other sessions}} will need to sign in again. This device stays signed in.',
+  'settings.sessions.othersBody':
+    '{count, plural, one {# other session} other {# other sessions}} will need to sign in again. This device stays signed in.',
   'settings.sessions.othersConfirm': 'Sign out others',
   'settings.sessions.othersDone': 'Signed out {count, plural, one {# session} other {# sessions}}',
   'settings.hours.closedEveryDay': 'Closed every day',
@@ -297,8 +331,10 @@ export const settings = {
   'settings.hours.closesAt': 'Closes {time}',
   'settings.hours.specialDate': 'Special date',
   'settings.hours.specialDates': 'Special dates',
-  'settings.hours.preview.description': 'Openings and closings for {count, plural, one {# day} other {# days}} and in your time ({viewerZone}).',
-  'settings.hours.preview.descriptionZone': 'Openings and closings for {count, plural, one {# day} other {# days}} in {zone} and in your time ({viewerZone}).',
+  'settings.hours.preview.description':
+    'Openings and closings for {count, plural, one {# day} other {# days}} and in your time ({viewerZone}).',
+  'settings.hours.preview.descriptionZone':
+    'Openings and closings for {count, plural, one {# day} other {# days}} in {zone} and in your time ({viewerZone}).',
   'settings.hours.preview.startDate': 'Start date',
   'settings.hours.preview.fromNow': 'From now',
   'settings.hours.preview.dirty': 'The preview shows saved hours. Save your changes to preview them.',
@@ -310,23 +346,27 @@ export const settings = {
   'settings.hours.preview.dstStarts': 'Daylight saving starts:',
   'settings.hours.preview.dstEnds': 'Daylight saving ends:',
   'settings.hours.preview.emptyTitle': 'No openings in this period',
-  'settings.hours.preview.emptyBody': 'The schedule stays closed for these {count} days. Add hours above or pick another start date.',
+  'settings.hours.preview.emptyBody':
+    'The schedule stays closed for these {count} days. Add hours above or pick another start date.',
   'settings.hours.preview.colDate': 'Schedule date',
   'settings.hours.preview.colChange': 'Change',
   'settings.hours.preview.colTime': 'Schedule time',
   'settings.hours.preview.colYourTime': 'Your time',
   'settings.hours.preview.colYourTimeSame': 'Your time (same zone)',
   'settings.hours.title': 'Operating hours',
-  'settings.hours.description': 'Schedules decide when chats are accepted. A department’s schedule overrides its site’s, which overrides the workspace default. Emergency closures override everything.',
+  'settings.hours.description':
+    'Schedules decide when chats are accepted. A department’s schedule overrides its site’s, which overrides the workspace default. Emergency closures override everything.',
   'settings.hours.newSchedule': 'New schedule',
   'settings.hours.schedules': 'Schedules',
   'settings.hours.workspaceDefault': 'Workspace default: {name}.',
-  'settings.hours.noWorkspaceDefault': 'No workspace default. Sites and departments without their own schedule accept chats whenever agents are available.',
+  'settings.hours.noWorkspaceDefault':
+    'No workspace default. Sites and departments without their own schedule accept chats whenever agents are available.',
   'settings.hours.schedulesHint': 'Weekly hours, holidays and special dates.',
   'settings.hours.showArchived': 'Show archived',
   'settings.hours.emptyTitle': 'No schedules yet',
   'settings.hours.emptyActiveTitle': 'No active schedules',
-  'settings.hours.emptyBody': 'Create a schedule with weekly hours, then assign it to departments or make it the workspace default.',
+  'settings.hours.emptyBody':
+    'Create a schedule with weekly hours, then assign it to departments or make it the workspace default.',
   'settings.hours.colNow': 'Now',
   'settings.hours.default': 'Default',
   'settings.hours.archived': 'Archived',
@@ -346,18 +386,26 @@ export const settings = {
   'settings.hours.nameRequired': 'Enter a name.',
   'settings.hours.saved': 'Hours saved',
   'settings.hours.checkHours': 'Check the highlighted hours before saving.',
-  'settings.hours.archivedBanner': 'This schedule is archived. It no longer governs availability and can’t be edited.',
-  'settings.hours.weeklyHoursHint': 'Open from each start time up to, but not including, the end time. Times are local to the schedule’s timezone.',
-  'settings.hours.conflict': 'Your changes were not saved because this schedule changed since you opened it. Reload to see the latest values, then apply your edits again.',
-  'settings.hours.conflictWorkspace': 'Your changes were not saved because workspace settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
+  'settings.hours.archivedBanner':
+    'This schedule is archived. It no longer governs availability and can’t be edited.',
+  'settings.hours.weeklyHoursHint':
+    'Open from each start time up to, but not including, the end time. Times are local to the schedule’s timezone.',
+  'settings.hours.conflict':
+    'Your changes were not saved because this schedule changed since you opened it. Reload to see the latest values, then apply your edits again.',
+  'settings.hours.conflictWorkspace':
+    'Your changes were not saved because workspace settings changed since you opened them. Reload to see the latest values, then apply your edits again.',
   'settings.hours.loadLatest': 'Load latest',
-  'settings.hours.remoteChanged': 'Someone else changed these hours while you were editing. Load the latest version, then apply your edits again.',
+  'settings.hours.remoteChanged':
+    'Someone else changed these hours while you were editing. Load the latest version, then apply your edits again.',
   'settings.hours.timezoneHint': 'Hours follow this zone’s local time, including daylight saving changes.',
-  'settings.hours.timezoneChanged': 'Changing the timezone keeps the same clock times, so every opening moves to {zone} local time.',
-  'settings.hours.formatHelp': 'Use 24-hour times (HH:MM). An end time earlier than the start runs overnight into the next day, for example 22:00 to 02:00. Use 24:00 to close at midnight. Intervals in a week may not overlap.',
+  'settings.hours.timezoneChanged':
+    'Changing the timezone keeps the same clock times, so every opening moves to {zone} local time.',
+  'settings.hours.formatHelp':
+    'Use 24-hour times (HH:MM). An end time earlier than the start runs overnight into the next day, for example 22:00 to 02:00. Use 24:00 to close at midnight. Intervals in a week may not overlap.',
   'settings.hours.saveHours': 'Save hours',
   'settings.hours.impactTitle': 'This closes service right now',
-  'settings.hours.impactBody': '“{name}” is in use and open now. With these hours it would close immediately. Chats already in progress continue; new requests follow your after-hours behaviour.',
+  'settings.hours.impactBody':
+    '“{name}” is in use and open now. With these hours it would close immediately. Chats already in progress continue; new requests follow your after-hours behaviour.',
   'settings.hours.impactConfirm': 'Save and close now',
   'settings.hours.nowDefault': '{name} is now the workspace default',
   'settings.hours.defaultRemoved': 'Workspace default removed',
@@ -367,28 +415,33 @@ export const settings = {
   'settings.hours.removeAsDefault': 'Remove as default',
   'settings.hours.setAsDefault': 'Set as workspace default',
   'settings.hours.unsetTitle': 'Remove the workspace default?',
-  'settings.hours.unsetBody': 'Sites and departments without their own schedule will no longer follow operating hours; availability then depends only on agents being online with free capacity.',
+  'settings.hours.unsetBody':
+    'Sites and departments without their own schedule will no longer follow operating hours; availability then depends only on agents being online with free capacity.',
   'settings.hours.unsetConfirm': 'Remove default',
   'settings.hours.usage.workspaceDefault': 'the workspace default',
   'settings.hours.usage.siteCount': '{count, plural, one {# site} other {# sites}}',
   'settings.hours.usage.departmentCount': '{count, plural, one {# department} other {# departments}}',
-  'settings.hours.usage.unused': 'Not used yet. Assign it to a department, a site, or make it the workspace default.',
+  'settings.hours.usage.unused':
+    'Not used yet. Assign it to a department, a site, or make it the workspace default.',
   'settings.hours.usage.governs': 'Governs {targets}',
   'settings.hours.usage.separator': ', ',
   'settings.hours.usage.sites': 'Sites: {names}',
   'settings.hours.usage.precedence': 'Departments override sites, which override the workspace default.',
   'settings.hours.archive.done': '{name} archived',
   'settings.hours.archive.title': 'Archive {name}?',
-  'settings.hours.archive.body': 'Archived schedules stop governing availability. Schedules still assigned to a department, a site or the workspace default can’t be archived.',
+  'settings.hours.archive.body':
+    'Archived schedules stop governing availability. Schedules still assigned to a department, a site or the workspace default can’t be archived.',
   'settings.hours.archive.confirm': 'Archive schedule',
   'settings.hours.archive.stillUsed': 'Still used by:',
   'settings.hours.archive.site': 'Site: {name}',
   'settings.hours.archive.department': 'Department:',
   'settings.hours.exceptions.title': 'Holidays and special dates',
-  'settings.hours.exceptions.description': 'Dates in {zone} that replace the weekly hours. Closed dates close the whole local day.',
+  'settings.hours.exceptions.description':
+    'Dates in {zone} that replace the weekly hours. Closed dates close the whole local day.',
   'settings.hours.exceptions.addDate': 'Add date',
   'settings.hours.exceptions.emptyTitle': 'No special dates',
-  'settings.hours.exceptions.emptyBody': 'Add holidays or days with different hours. They override the weekly hours for that date only.',
+  'settings.hours.exceptions.emptyBody':
+    'Add holidays or days with different hours. They override the weekly hours for that date only.',
   'settings.hours.exceptions.upcoming': 'Upcoming',
   'settings.hours.exceptions.noUpcoming': 'No upcoming special dates.',
   'settings.hours.exceptions.past': 'Past {count} days',
@@ -396,7 +449,8 @@ export const settings = {
   'settings.hours.exceptions.removeThisTitle': 'Remove this date?',
   'settings.hours.exceptions.removeBody': 'The weekly hours apply on that date again.',
   'settings.hours.exceptions.removeConfirm': 'Remove date',
-  'settings.hours.exceptions.removeConflict': 'This schedule changed since you opened it. The latest version is now loaded; try again.',
+  'settings.hours.exceptions.removeConflict':
+    'This schedule changed since you opened it. The latest version is now loaded; try again.',
   'settings.hours.exceptions.removed': 'Special date removed',
   'settings.hours.exceptions.editLabel': 'Edit {date}',
   'settings.hours.exceptions.removeLabel': 'Remove {date}',
@@ -409,18 +463,22 @@ export const settings = {
   'settings.hours.exceptions.addTitle': 'Add a special date',
   'settings.hours.exceptions.localDate': 'Local date in {zone}.',
   'settings.hours.exceptions.saveDate': 'Save date',
-  'settings.hours.exceptions.conflict': 'This schedule changed since you opened this dialog. Close it and try again with the latest version.',
+  'settings.hours.exceptions.conflict':
+    'This schedule changed since you opened this dialog. Close it and try again with the latest version.',
   'settings.hours.exceptions.modeLegend': 'Hours on this date',
   'settings.hours.exceptions.closedHint': 'New chats follow your after-hours behaviour for the whole date.',
   'settings.hours.exceptions.special': 'Special hours',
-  'settings.hours.exceptions.specialHint': 'Open only during these intervals. An end earlier than the start runs overnight.',
+  'settings.hours.exceptions.specialHint':
+    'Open only during these intervals. An end earlier than the start runs overnight.',
   'settings.hours.exceptions.interval': 'Interval {n}',
   'settings.hours.exceptions.reason': 'Reason',
   'settings.hours.exceptions.reasonHint': 'Optional, up to {max} characters. Shown to your team.',
   'settings.hours.exceptions.reasonPlaceholder': 'Public holiday',
-  'settings.hours.exceptions.impactBody': 'Service governed by “{name}” is open now and would close as soon as you save. Chats already in progress continue; new requests follow your after-hours behaviour.',
+  'settings.hours.exceptions.impactBody':
+    'Service governed by “{name}” is open now and would close as soon as you save. Chats already in progress continue; new requests follow your after-hours behaviour.',
   'settings.hours.closures.title': 'Emergency closures',
-  'settings.hours.closures.description': 'Close immediately regardless of schedules — for outages, events or emergencies. Chats in progress continue.',
+  'settings.hours.closures.description':
+    'Close immediately regardless of schedules — for outages, events or emergencies. Chats in progress continue.',
   'settings.hours.closures.closeNow': 'Close now',
   'settings.hours.closures.emptyTitle': 'No active closures',
   'settings.hours.closures.emptyBody': 'Availability follows your schedules and agents online.',
@@ -438,11 +496,16 @@ export const settings = {
   'settings.hours.closures.untilRevoked': 'Until revoked',
   'settings.hours.closures.reopen': 'Reopen',
   'settings.hours.closures.revokeTitle': 'End this closure?',
-  'settings.hours.closures.revokeBodyTenant': 'The whole workspace reopens according to its schedule as soon as you confirm.',
-  'settings.hours.closures.revokeBodySite': 'The site {name} reopens according to its schedule as soon as you confirm.',
-  'settings.hours.closures.revokeBodyOneSite': 'The site reopens according to its schedule as soon as you confirm.',
-  'settings.hours.closures.revokeBodyDepartment': 'The department {name} reopens according to its schedule as soon as you confirm.',
-  'settings.hours.closures.revokeBodyOneDepartment': 'The department reopens according to its schedule as soon as you confirm.',
+  'settings.hours.closures.revokeBodyTenant':
+    'The whole workspace reopens according to its schedule as soon as you confirm.',
+  'settings.hours.closures.revokeBodySite':
+    'The site {name} reopens according to its schedule as soon as you confirm.',
+  'settings.hours.closures.revokeBodyOneSite':
+    'The site reopens according to its schedule as soon as you confirm.',
+  'settings.hours.closures.revokeBodyDepartment':
+    'The department {name} reopens according to its schedule as soon as you confirm.',
+  'settings.hours.closures.revokeBodyOneDepartment':
+    'The department reopens according to its schedule as soon as you confirm.',
   'settings.hours.closures.revokeConfirm': 'End closure',
   'settings.hours.closures.revoked': 'Closure ended',
   'settings.hours.closures.siteRequired': 'Choose a site.',
@@ -453,13 +516,15 @@ export const settings = {
   'settings.hours.closures.endTooFar': 'Closures can end at most one year ahead.',
   'settings.hours.closures.created': 'Service closed',
   'settings.hours.closures.dialogTitle': 'Close service now',
-  'settings.hours.closures.dialogBody': 'Overrides every schedule immediately. Visitors see your offline experience; chats in progress continue.',
+  'settings.hours.closures.dialogBody':
+    'Overrides every schedule immediately. Visitors see your offline experience; chats in progress continue.',
   'settings.hours.closures.whatToClose': 'What to close',
   'settings.hours.closures.site': 'Site',
   'settings.hours.closures.chooseSite': 'Choose a site…',
   'settings.hours.closures.chooseDepartment': 'Choose a department…',
   'settings.hours.closures.reopenAt': 'Reopen automatically at',
-  'settings.hours.closures.reopenAtHint': 'Optional, in your local time. Leave empty to stay closed until someone reopens.',
+  'settings.hours.closures.reopenAtHint':
+    'Optional, in your local time. Leave empty to stay closed until someone reopens.',
   'settings.hours.closures.reasonHint': 'Visible to your team (up to {max} characters).',
   'settings.hours.closures.reasonPlaceholder': 'Payment provider outage',
   'settings.roles.owner': 'Owner',
@@ -468,14 +533,20 @@ export const settings = {
   'settings.roles.agent': 'Agent',
   'settings.roles.analyst': 'Analyst',
   'settings.departments.routing.broadcast': 'Broadcast',
-  'settings.departments.routing.broadcastHint': 'New chats appear in the queue for every eligible agent in the department; the first to accept takes the chat.',
+  'settings.departments.routing.broadcastHint':
+    'New chats appear in the queue for every eligible agent in the department; the first to accept takes the chat.',
   'settings.departments.routing.assigned': 'Automatic assignment',
-  'settings.departments.routing.assignedHint': 'Each chat is offered to one eligible agent with free capacity — lowest load first, then whoever has waited longest. If they don’t accept in time, it goes to the next agent.',
+  'settings.departments.routing.assignedHint':
+    'Each chat is offered to one eligible agent with free capacity — lowest load first, then whoever has waited longest. If they don’t accept in time, it goes to the next agent.',
   'settings.departments.routing.manual': 'Manual pickup',
-  'settings.departments.routing.manualHint': 'Chats wait in the queue until an agent or supervisor picks them up. Nobody is offered a chat automatically.',
-  'settings.departments.conflict': 'Your changes were not saved because this department changed since you opened it. Reload to see the latest values, then apply your edits again.',
-  'settings.departments.remoteChanged': 'Someone else changed these settings while you were editing. Load the latest values, then apply your edits again.',
-  'settings.departments.rebased': 'Other settings of this department changed meanwhile. Your edits here are unaffected — save again.',
+  'settings.departments.routing.manualHint':
+    'Chats wait in the queue until an agent or supervisor picks them up. Nobody is offered a chat automatically.',
+  'settings.departments.conflict':
+    'Your changes were not saved because this department changed since you opened it. Reload to see the latest values, then apply your edits again.',
+  'settings.departments.remoteChanged':
+    'Someone else changed these settings while you were editing. Load the latest values, then apply your edits again.',
+  'settings.departments.rebased':
+    'Other settings of this department changed meanwhile. Your edits here are unaffected — save again.',
   'settings.departments.tabs.general': 'General',
   'settings.departments.tabs.agents': 'Agents',
   'settings.departments.tabs.routing': 'Routing',
@@ -484,39 +555,53 @@ export const settings = {
   'settings.departments.unsavedDot': 'unsaved changes',
   'settings.departments.nameRequired': 'Enter a department name.',
   'settings.departments.general.saved': 'Department saved',
-  'settings.departments.general.description': 'How this department is named and whether it accepts new chats.',
+  'settings.departments.general.description':
+    'How this department is named and whether it accepts new chats.',
   'settings.departments.general.nameHint': 'Unique in the workspace; used by your team.',
   'settings.departments.general.publicLabel': 'Label shown to visitors',
   'settings.departments.general.publicLabelHint': 'Leave empty to show the name.',
   'settings.departments.general.descriptionHint': 'Optional, up to {max} characters.',
-  'settings.departments.general.enabledHint': 'When disabled, visitors can’t choose this department and new chats aren’t routed to it. Chats already in progress continue normally.',
+  'settings.departments.general.enabledHint':
+    'When disabled, visitors can’t choose this department and new chats aren’t routed to it. Chats already in progress continue normally.',
   'settings.departments.general.disableWarning': 'After saving, {name} disappears from the widget.',
-  'settings.departments.general.disableWarningQueued': 'After saving, {name} disappears from the widget — {count, plural, one {# visitor is} other {# visitors are}} waiting in its queue right now.',
+  'settings.departments.general.disableWarningQueued':
+    'After saving, {name} disappears from the widget — {count, plural, one {# visitor is} other {# visitors are}} waiting in its queue right now.',
   'settings.departments.routing.saved': 'Routing saved',
   'settings.departments.routing.pathArrow': ' → ',
   'settings.departments.routing.loop': 'This would create a loop: {path}.',
-  'settings.departments.routing.description': 'How new chats reach agents, how long the queue may grow, and what happens when visitors wait too long.',
+  'settings.departments.routing.description':
+    'How new chats reach agents, how long the queue may grow, and what happens when visitors wait too long.',
   'settings.departments.routing.mode': 'Routing mode',
   'settings.departments.routing.queueLimit': 'Queue limit',
-  'settings.departments.routing.queueLimitHint': 'New chats beyond this many waiting are not admitted ({min}–{max}).',
+  'settings.departments.routing.queueLimitHint':
+    'New chats beyond this many waiting are not admitted ({min}–{max}).',
   'settings.departments.routing.unitChats': 'chats',
   'settings.departments.routing.maxWait': 'Maximum wait',
-  'settings.departments.routing.maxWaitHint': 'After this long in the queue, visitors are offered the offline form and can keep waiting. 0 turns it off ({min}–{max}).',
+  'settings.departments.routing.maxWaitHint':
+    'After this long in the queue, visitors are offered the offline form and can keep waiting. 0 turns it off ({min}–{max}).',
   'settings.departments.routing.overflow': 'When the maximum wait passes',
   'settings.departments.routing.overflowOff': 'Set a maximum wait above to use overflow.',
-  'settings.departments.routing.overflowHint': 'The chat moves once to the overflow department if it is enabled and the chat hasn’t been there already.',
+  'settings.departments.routing.overflowHint':
+    'The chat moves once to the overflow department if it is enabled and the chat hasn’t been there already.',
   'settings.departments.routing.keepWaiting': 'Keep waiting here (offer the offline form only)',
-  'settings.departments.routing.overflowTo': 'Overflow to {name}{state, select, archived { (archived)} disabled { (disabled)} other {}}{loops, select, yes { — would create a loop} other {}}',
-  'settings.departments.routing.targetArchived': '{name} is archived, so overflow is skipped and visitors are only offered the offline form.',
-  'settings.departments.routing.targetDisabled': '{name} is disabled, so overflow is skipped and visitors are only offered the offline form.',
+  'settings.departments.routing.overflowTo':
+    'Overflow to {name}{state, select, archived { (archived)} disabled { (disabled)} other {}}{loops, select, yes { — would create a loop} other {}}',
+  'settings.departments.routing.targetArchived':
+    '{name} is archived, so overflow is skipped and visitors are only offered the offline form.',
+  'settings.departments.routing.targetDisabled':
+    '{name} is disabled, so overflow is skipped and visitors are only offered the offline form.',
   'settings.departments.hours.saved': 'Hours saved',
-  'settings.departments.hours.description': 'When this department accepts new chats. Outside these hours visitors get your offline experience; chats in progress continue.',
+  'settings.departments.hours.description':
+    'When this department accepts new chats. Outside these hours visitors get your offline experience; chats in progress continue.',
   'settings.departments.hours.ownReadOnly': 'This department uses its own schedule.',
-  'settings.departments.hours.defaultReadOnly': 'This department follows its site’s schedule, or the workspace default.',
+  'settings.departments.hours.defaultReadOnly':
+    'This department follows its site’s schedule, or the workspace default.',
   'settings.departments.hours.schedule': 'Schedule',
   'settings.departments.hours.useDefault': 'Use the site or workspace default',
-  'settings.departments.hours.useDefaultHint': 'Follows the site’s schedule if it has one, otherwise the workspace default ({name}).',
-  'settings.departments.hours.useDefaultNoDefault': 'Follows the site’s schedule if it has one. There is no workspace default, so otherwise chats are accepted whenever agents are available.',
+  'settings.departments.hours.useDefaultHint':
+    'Follows the site’s schedule if it has one, otherwise the workspace default ({name}).',
+  'settings.departments.hours.useDefaultNoDefault':
+    'Follows the site’s schedule if it has one. There is no workspace default, so otherwise chats are accepted whenever agents are available.',
   'settings.departments.hours.useOwn': 'Use a specific schedule',
   'settings.departments.hours.useOwnHint': 'Overrides the site and workspace schedules for this department.',
   'settings.departments.hours.noSchedules': 'No schedules yet.',
@@ -524,17 +609,24 @@ export const settings = {
   'settings.departments.hours.option': '{name} ({zone})',
   'settings.departments.hours.optionArchived': '{name} ({zone}) — archived',
   'settings.departments.hours.viewSchedule': 'View or edit this schedule',
-  'settings.departments.hours.selectedArchived': 'The selected schedule is archived and no longer governs availability. Choose another schedule or use the default.',
+  'settings.departments.hours.selectedArchived':
+    'The selected schedule is archived and no longer governs availability. Choose another schedule or use the default.',
   'settings.departments.notFoundTitle': 'Department not found',
-  'settings.departments.notFoundBody': 'It may have been removed, or it’s outside the departments you can see.',
+  'settings.departments.notFoundBody':
+    'It may have been removed, or it’s outside the departments you can see.',
   'settings.departments.backToList': 'Back to departments',
-  'settings.departments.headerCounts': '{waiting} waiting · {members, plural, one {# member} other {# members}}',
-  'settings.departments.archivedNote': 'This department is archived. It no longer accepts chats; past transcripts keep its name.',
+  'settings.departments.headerCounts':
+    '{waiting} waiting · {members, plural, one {# member} other {# members}}',
+  'settings.departments.archivedNote':
+    'This department is archived. It no longer accepts chats; past transcripts keep its name.',
   'settings.departments.archive.title': 'Archive {name}?',
   'settings.departments.archive.confirm': 'Archive department',
-  'settings.departments.archive.body': 'It stops accepting chats and disappears from the widget. Past transcripts keep its name. A department with open chats can’t be archived — close or transfer them first.',
-  'settings.departments.archive.fallbackFrom': '{names} {count, plural, one {uses} other {use}} this department as an overflow target. Overflow to an archived department is skipped.',
-  'settings.departments.description': 'Teams that visitors can choose and chats are routed to. Each department has its own members, routing rules and hours.',
+  'settings.departments.archive.body':
+    'It stops accepting chats and disappears from the widget. Past transcripts keep its name. A department with open chats can’t be archived — close or transfer them first.',
+  'settings.departments.archive.fallbackFrom':
+    '{names} {count, plural, one {uses} other {use}} this department as an overflow target. Overflow to an archived department is skipped.',
+  'settings.departments.description':
+    'Teams that visitors can choose and chats are routed to. Each department has its own members, routing rules and hours.',
   'settings.departments.new': 'New department',
   'settings.departments.search': 'Search departments',
   'settings.departments.showArchived': 'Show archived ({count})',
@@ -549,7 +641,8 @@ export const settings = {
   'settings.departments.ownSchedule': 'Own schedule',
   'settings.departments.shownAs': 'Shown to visitors as “{label}”',
   'settings.departments.noRosterAccess': 'You don’t have access to the agent roster',
-  'settings.departments.availableSr': '{count, plural, one {# agent} other {# agents}} online with free capacity, out of {servers} who can serve',
+  'settings.departments.availableSr':
+    '{count, plural, one {# agent} other {# agents}} online with free capacity, out of {servers} who can serve',
   'settings.departments.siteOrDefault': 'Site or workspace default',
   'settings.departments.create.description': 'Add agents, hours and fallback rules after creating it.',
   'settings.departments.create.submit': 'Create department',
@@ -560,15 +653,20 @@ export const settings = {
   'settings.departments.agents.saved': 'Members saved',
   'settings.departments.agents.suspended': 'Suspended',
   'settings.departments.agents.memberCount': '{count, plural, one {# member} other {# members}}.',
-  'settings.departments.agents.noAccess': 'You need access to the team roster to see or change who belongs to this department.',
-  'settings.departments.agents.description': 'Members who can serve take chats from this department; monitors can watch its chats. Capacity is global: chats in any department count toward it.',
-  'settings.departments.agents.remoteChanged': 'Membership changed elsewhere while you were editing. Saving replaces it with your list.',
+  'settings.departments.agents.noAccess':
+    'You need access to the team roster to see or change who belongs to this department.',
+  'settings.departments.agents.description':
+    'Members who can serve take chats from this department; monitors can watch its chats. Capacity is global: chats in any department count toward it.',
+  'settings.departments.agents.remoteChanged':
+    'Membership changed elsewhere while you were editing. Saving replaces it with your list.',
   'settings.departments.agents.pickerLabel': 'Add or remove agents',
-  'settings.departments.agents.pickerHint': 'Search by name or email. Selected agents are members; changes apply when you save.',
+  'settings.departments.agents.pickerHint':
+    'Search by name or email. Selected agents are members; changes apply when you save.',
   'settings.departments.agents.pickerPlaceholder': 'Choose agents…',
   'settings.departments.agents.pickerSearch': 'Search agents',
   'settings.departments.agents.pickerEmpty': 'No matching agents',
-  'settings.departments.agents.nobodyServes': 'Nobody can serve this department, so its chats will wait in the queue until someone is added.',
+  'settings.departments.agents.nobodyServes':
+    'Nobody can serve this department, so its chats will wait in the queue until someone is added.',
   'settings.departments.agents.emptyTitle': 'No members yet',
   'settings.departments.agents.emptyManage': 'Use the selector above to add agents.',
   'settings.departments.agents.emptyView': 'An admin can add agents to this department.',
@@ -598,5 +696,6 @@ export const settings = {
   'settings.hours.validation.list': 'Expected a list of intervals',
   'settings.hours.validation.weekObject': 'Expected hours for each weekday',
   'settings.hours.validation.weekday': 'Unknown weekday',
-  'settings.hours.validation.maxIntervals': 'At most {count, plural, one {# interval} other {# intervals}} per day',
+  'settings.hours.validation.maxIntervals':
+    'At most {count, plural, one {# interval} other {# intervals}} per day',
 } satisfies Record<string, string>;

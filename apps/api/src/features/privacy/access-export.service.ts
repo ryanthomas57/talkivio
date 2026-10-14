@@ -189,6 +189,8 @@ export class AccessExportService {
           analytics_consent: s.analyticsConsent,
           device: { browser: s.browser, os: s.os, category: s.deviceCategory },
           location: { country: s.country, city: s.city },
+          ip_address: s.ipAddress,
+          network: s.network,
         })),
         page_events: pageEvents.map((p) => ({
           session_id: p.sessionId,

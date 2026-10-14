@@ -13,7 +13,14 @@ import { ChatQueriesService } from '../chats/chat-queries.service';
 import { CustomFieldsService, trackSources } from './custom-fields.service';
 import { buildSessionTimeline, exclusiveVisibleMs, type TimelineEvent } from './page-timeline';
 import { PresenceReader } from './presence-reader';
-import { displayNameOf, EMAIL_RE, likePattern, normalizeEmail, pageLimit, staleVersion } from './visitor-common';
+import {
+  displayNameOf,
+  EMAIL_RE,
+  likePattern,
+  normalizeEmail,
+  pageLimit,
+  staleVersion,
+} from './visitor-common';
 import { VisitorMonitorService } from './visitor-monitor.service';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -55,11 +62,24 @@ export class VisitorRecordsService {
     return v;
   }
 
-  private async tagsFor(tx: Tx, tenantId: string, visitorIds: string[]): Promise<Map<string, VisitorTagRef[]>> {
+  private async tagsFor(
+    tx: Tx,
+    tenantId: string,
+    visitorIds: string[],
+  ): Promise<Map<string, VisitorTagRef[]>> {
     const out = new Map<string, VisitorTagRef[]>();
     if (!visitorIds.length) return out;
-    const rows = await tx.visitorTag.findMany({ where: { tenantId, visitorId: { in: visitorIds } }, select: { visitorId: true, tagId: true, source: true }, orderBy: { createdAt: 'asc' } });
-    const tags = rows.length ? await tx.tag.findMany({ where: { tenantId, id: { in: [...new Set(rows.map((r) => r.tagId))] }, archivedAt: null }, select: { id: true, slug: true, label: true } }) : [];
+    const rows = await tx.visitorTag.findMany({
+      where: { tenantId, visitorId: { in: visitorIds } },
+      select: { visitorId: true, tagId: true, source: true },
+      orderBy: { createdAt: 'asc' },
+    });
+    const tags = rows.length
+      ? await tx.tag.findMany({
+          where: { tenantId, id: { in: [...new Set(rows.map((r) => r.tagId))] }, archivedAt: null },
+          select: { id: true, slug: true, label: true },
+        })
+      : [];
     const byId = new Map(tags.map((t) => [t.id, t]));
     for (const r of rows) {
       const t = byId.get(r.tagId);
@@ -72,7 +92,11 @@ export class VisitorRecordsService {
 
   private async profile(tx: Tx, tenantId: string, v: Visitor) {
     const [identities, tags, sessionStats, settingsRow] = await Promise.all([
-      tx.visitorIdentity.findMany({ where: { tenantId, visitorId: v.id }, select: { issuerId: true, verificationMethod: true, linkedAt: true }, orderBy: { linkedAt: 'asc' } }),
+      tx.visitorIdentity.findMany({
+        where: { tenantId, visitorId: v.id },
+        select: { issuerId: true, verificationMethod: true, linkedAt: true },
+        orderBy: { linkedAt: 'asc' },
+      }),
       this.tagsFor(tx, tenantId, [v.id]),
       tx.$queryRaw<Array<{ total: bigint; open: bigint; last: Date | null }>>`
         SELECT COUNT(*)::bigint AS total, COUNT(*) FILTER (WHERE ended_at IS NULL)::bigint AS open, MAX(started_at) AS last
@@ -92,7 +116,11 @@ export class VisitorRecordsService {
       anonymousLabel: v.anonymousLabel,
       verified: v.verified,
       identityVerified: identities.length > 0,
-      identities: identities.map((i) => ({ issuerSiteId: i.issuerId, verificationMethod: i.verificationMethod, linkedAt: i.linkedAt })),
+      identities: identities.map((i) => ({
+        issuerSiteId: i.issuerId,
+        verificationMethod: i.verificationMethod,
+        linkedAt: i.linkedAt,
+      })),
       fields: {
         name: { value: name, verified: !!name && v.verified },
         email: { value: email, verified: !!email && v.verified },
@@ -107,7 +135,10 @@ export class VisitorRecordsService {
       lastSeenAt: v.lastSeenAt,
       visitCount: v.visitCount,
       chatCount: v.chatCount,
-      location: settings.tracking.locationEnabled && !erased ? { countryCode: v.countryCode, region: v.region, city: v.city, approximate: true } : null,
+      location:
+        settings.tracking.locationEnabled && !erased
+          ? { countryCode: v.countryCode, region: v.region, city: v.city, approximate: true }
+          : null,
       device: { category: v.deviceCategory, browser: v.browser, os: v.os },
       language: v.language,
       timezone: v.timezone,
@@ -125,10 +156,17 @@ export class VisitorRecordsService {
   }
 
   async get(auth: AuthContext, id: string) {
-    return this.db.read(auth.tenantId, async (tx) => this.profile(tx, auth.tenantId, await this.findVisitor(tx, auth.tenantId, id)));
+    return this.db.read(auth.tenantId, async (tx) =>
+      this.profile(tx, auth.tenantId, await this.findVisitor(tx, auth.tenantId, id)),
+    );
   }
 
-  async update(auth: AuthContext, id: string, expectedVersion: number, input: { displayName?: string | null; email?: string | null; customFields?: Record<string, unknown> }) {
+  async update(
+    auth: AuthContext,
+    id: string,
+    expectedVersion: number,
+    input: { displayName?: string | null; email?: string | null; customFields?: Record<string, unknown> },
+  ) {
     const result = await this.db.tx(auth.tenantId, async (tx) => {
       await lockForUpdate(tx, 'visitors', auth.tenantId, id);
       const v = await this.findVisitor(tx, auth.tenantId, id);
@@ -147,7 +185,8 @@ export class VisitorRecordsService {
       }
       if (input.email !== undefined) {
         const email = normalizeEmail(input.email);
-        if (email && !EMAIL_RE.test(email)) throw badRequest('Enter a valid email address', { email: ['Enter a valid email address.'] });
+        if (email && !EMAIL_RE.test(email))
+          throw badRequest('Enter a valid email address', { email: ['Enter a valid email address.'] });
         const current = safeDecrypt(v.emailCiphertext);
         if (email !== current) {
           data.emailCiphertext = email ? encrypt(email) : null;
@@ -159,19 +198,42 @@ export class VisitorRecordsService {
       // Manually entered identity is never verified; proof stays in visitor_identities.
       if (identityChanged) data.verified = false;
       if (input.customFields !== undefined) {
-        const { next, changedKeys } = await this.fields.applyPatch(tx, auth.tenantId, v.customFields, input.customFields, { publicOnly: false });
+        const { next, changedKeys } = await this.fields.applyPatch(
+          tx,
+          auth.tenantId,
+          v.customFields,
+          input.customFields,
+          { publicOnly: false },
+        );
         if (changedKeys.length) {
           data.customFields = next as Prisma.InputJsonValue;
-          data.customFieldSources = trackSources(v.customFieldSources, changedKeys, next, 'agent', auth.membershipId) as unknown as Prisma.InputJsonValue;
+          data.customFieldSources = trackSources(
+            v.customFieldSources,
+            changedKeys,
+            next,
+            'agent',
+            auth.membershipId,
+          ) as unknown as Prisma.InputJsonValue;
           changed.push(...changedKeys.map((k) => `custom_fields.${k}`));
         }
       }
       if (changed.length) {
-        const r = await tx.visitor.updateMany({ where: { tenantId: auth.tenantId, id, version: expectedVersion }, data: { ...data, version: { increment: 1 } } });
+        const r = await tx.visitor.updateMany({
+          where: { tenantId: auth.tenantId, id, version: expectedVersion },
+          data: { ...data, version: { increment: 1 } },
+        });
         if (!r.count) throw staleVersion();
-        await this.audit.inTx(tx, auth, { action: 'visitor.updated', objectType: 'visitor', objectId: id, safeDiff: { changed, verified_cleared: identityChanged && v.verified } });
+        await this.audit.inTx(tx, auth, {
+          action: 'visitor.updated',
+          objectType: 'visitor',
+          objectId: id,
+          safeDiff: { changed, verified_cleared: identityChanged && v.verified },
+        });
       }
-      return { profile: await this.profile(tx, auth.tenantId, await this.findVisitor(tx, auth.tenantId, id)), changed: changed.length > 0 };
+      return {
+        profile: await this.profile(tx, auth.tenantId, await this.findVisitor(tx, auth.tenantId, id)),
+        changed: changed.length > 0,
+      };
     });
     if (result.changed) await this.monitor.markDirty(auth.tenantId, [id]);
     return result.profile;
@@ -179,18 +241,31 @@ export class VisitorRecordsService {
 
   // ───────── Contacts list ─────────
 
-  async list(auth: AuthContext, q: { q?: string; identified?: boolean; tag?: string; siteId?: string; cursor?: string; limit?: number }) {
+  async list(
+    auth: AuthContext,
+    q: { q?: string; identified?: boolean; tag?: string; siteId?: string; cursor?: string; limit?: number },
+  ) {
     const limit = pageLimit(q.limit);
-    const filterHash = sha256(JSON.stringify({ q: q.q ?? null, i: q.identified ?? null, t: q.tag ?? null, s: q.siteId ?? null })).slice(0, 16);
+    const filterHash = sha256(
+      JSON.stringify({ q: q.q ?? null, i: q.identified ?? null, t: q.tag ?? null, s: q.siteId ?? null }),
+    ).slice(0, 16);
     const cur = decodeCursor<{ t: string; id: string }>(q.cursor, filterHash);
-    if (q.cursor && !cur) throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
+    if (q.cursor && !cur)
+      throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
     return this.db.read(auth.tenantId, async (tx) => {
       const and: Prisma.VisitorWhereInput[] = [{ tenantId: auth.tenantId, erasedAt: null }];
       if (q.siteId) and.push({ siteId: q.siteId });
-      if (q.identified === true) and.push({ OR: [{ name: { not: null } }, { emailCiphertext: { not: null } }, { verified: true }] });
+      if (q.identified === true)
+        and.push({ OR: [{ name: { not: null } }, { emailCiphertext: { not: null } }, { verified: true }] });
       if (q.identified === false) and.push({ name: null, emailCiphertext: null, verified: false });
       if (q.tag) {
-        const tag = await tx.tag.findFirst({ where: { tenantId: auth.tenantId, ...(UUID_RE.test(q.tag) ? { id: q.tag } : { slug: q.tag.toLowerCase() }) }, select: { id: true } });
+        const tag = await tx.tag.findFirst({
+          where: {
+            tenantId: auth.tenantId,
+            ...(UUID_RE.test(q.tag) ? { id: q.tag } : { slug: q.tag.toLowerCase() }),
+          },
+          select: { id: true },
+        });
         if (!tag) return page([], null);
         and.push({ tags: { some: { tagId: tag.id } } });
       }
@@ -208,13 +283,26 @@ export class VisitorRecordsService {
           and.push({ id: { in: rows.map((r) => r.id) } });
         }
       }
-      if (cur) and.push({ OR: [{ lastSeenAt: { lt: new Date(cur.t) } }, { lastSeenAt: new Date(cur.t), id: { lt: cur.id } }] });
-      const rows = await tx.visitor.findMany({ where: { AND: and }, orderBy: [{ lastSeenAt: 'desc' }, { id: 'desc' }], take: limit + 1 });
+      if (cur)
+        and.push({
+          OR: [{ lastSeenAt: { lt: new Date(cur.t) } }, { lastSeenAt: new Date(cur.t), id: { lt: cur.id } }],
+        });
+      const rows = await tx.visitor.findMany({
+        where: { AND: and },
+        orderBy: [{ lastSeenAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+      });
       const slice = rows.slice(0, limit);
       const ids = slice.map((v) => v.id);
       const [tags, identities] = await Promise.all([
         this.tagsFor(tx, auth.tenantId, ids),
-        ids.length ? tx.visitorIdentity.findMany({ where: { tenantId: auth.tenantId, visitorId: { in: ids } }, select: { visitorId: true }, distinct: ['visitorId'] }) : Promise.resolve([]),
+        ids.length
+          ? tx.visitorIdentity.findMany({
+              where: { tenantId: auth.tenantId, visitorId: { in: ids } },
+              select: { visitorId: true },
+              distinct: ['visitorId'],
+            })
+          : Promise.resolve([]),
       ]);
       const online = await this.presence.onlineVisitorIds(auth.tenantId, ids);
       const verifiedIds = new Set(identities.map((i) => i.visitorId));
@@ -236,7 +324,9 @@ export class VisitorRecordsService {
           countryCode: v.countryCode,
           online: online.has(v.id),
         })),
-        rows.length > limit && last ? encodeCursor({ t: last.lastSeenAt.toISOString(), id: last.id }, filterHash) : null,
+        rows.length > limit && last
+          ? encodeCursor({ t: last.lastSeenAt.toISOString(), id: last.id }, filterHash)
+          : null,
       );
     });
   }
@@ -250,16 +340,29 @@ export class VisitorRecordsService {
     if (q.cursor && !cur) throw badRequest('Invalid cursor', { cursor: ['Invalid cursor'] });
     const now = Date.now();
     const presence = (await this.reader.read(auth.tenantId, [id])).get(id);
-    const liveSessions = new Set(this.reader.isOnline(presence) ? presence!.connections.map((c) => c.sessionId) : []);
+    const liveSessions = new Set(
+      this.reader.isOnline(presence) ? presence!.connections.map((c) => c.sessionId) : [],
+    );
     return this.db.read(auth.tenantId, async (tx) => {
       const v = await this.findVisitor(tx, auth.tenantId, id);
-      const settings = mergeOrgSettings((await tx.tenant.findUniqueOrThrow({ where: { id: auth.tenantId }, select: { settings: true } })).settings);
+      const settings = mergeOrgSettings(
+        (await tx.tenant.findUniqueOrThrow({ where: { id: auth.tenantId }, select: { settings: true } }))
+          .settings,
+      );
       const and: Prisma.VisitorSessionWhereInput[] = [{ tenantId: auth.tenantId, visitorId: v.id }];
-      if (cur) and.push({ OR: [{ startedAt: { lt: new Date(cur.t) } }, { startedAt: new Date(cur.t), id: { lt: cur.id } }] });
-      const rows = await tx.visitorSession.findMany({ where: { AND: and }, orderBy: [{ startedAt: 'desc' }, { id: 'desc' }], take: limit + 1 });
+      if (cur)
+        and.push({
+          OR: [{ startedAt: { lt: new Date(cur.t) } }, { startedAt: new Date(cur.t), id: { lt: cur.id } }],
+        });
+      const rows = await tx.visitorSession.findMany({
+        where: { AND: and },
+        orderBy: [{ startedAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+      });
       const slice = rows.slice(0, limit);
       if (!slice.length) return page([], null);
-      const endOf = (s: { id: string; endedAt: Date | null; lastSeenAt: Date }) => (liveSessions.has(s.id) && !s.endedAt ? now : (s.endedAt ?? s.lastSeenAt).getTime());
+      const endOf = (s: { id: string; endedAt: Date | null; lastSeenAt: Date }) =>
+        liveSessions.has(s.id) && !s.endedAt ? now : (s.endedAt ?? s.lastSeenAt).getTime();
       const minStart = new Date(Math.min(...slice.map((s) => s.startedAt.getTime())));
       const maxEnd = new Date(Math.max(...slice.map(endOf)));
       // Concurrent sessions outside this page still count for cross-tab overlap.
@@ -282,9 +385,21 @@ export class VisitorRecordsService {
         select: { sessionId: true, kind: true, receivedAt: true, sanitizedUrl: true, title: true },
       });
       const bySession = new Map<string, TimelineEvent[]>();
-      for (const e of events) bySession.set(e.sessionId, [...(bySession.get(e.sessionId) ?? []), { kind: e.kind, at: e.receivedAt.getTime(), url: e.sanitizedUrl, title: e.title }]);
-      const timelines = new Map(all.map((s) => [s.id, buildSessionTimeline(bySession.get(s.id) ?? [], endOf(s))]));
-      const exclusive = exclusiveVisibleMs(all.map((s) => ({ id: s.id, startedAt: s.startedAt.getTime(), intervals: timelines.get(s.id)!.intervals })));
+      for (const e of events)
+        bySession.set(e.sessionId, [
+          ...(bySession.get(e.sessionId) ?? []),
+          { kind: e.kind, at: e.receivedAt.getTime(), url: e.sanitizedUrl, title: e.title },
+        ]);
+      const timelines = new Map(
+        all.map((s) => [s.id, buildSessionTimeline(bySession.get(s.id) ?? [], endOf(s))]),
+      );
+      const exclusive = exclusiveVisibleMs(
+        all.map((s) => ({
+          id: s.id,
+          startedAt: s.startedAt.getTime(),
+          intervals: timelines.get(s.id)!.intervals,
+        })),
+      );
       const last = slice[slice.length - 1];
       return page(
         slice.map((s) => {
@@ -302,17 +417,27 @@ export class VisitorRecordsService {
             browsingHidden: !granted,
             device: { category: s.deviceCategory, browser: s.browser, os: s.os },
             country: granted && settings.tracking.locationEnabled ? s.country : null,
+            ipAddress: granted ? s.ipAddress : null,
+            network: granted ? s.network : null,
             referrerOrigin: granted ? s.referrerOrigin : null,
             landingUrl: granted ? s.landingUrl : null,
             pageViewCount: granted ? s.pageViewCount : null,
-            pages: pages.map((p) => ({ url: p.url, title: p.title, enteredAt: new Date(p.enteredAt), leftAt: p.leftAt ? new Date(p.leftAt) : null, dwellMs: p.dwellMs })),
+            pages: pages.map((p) => ({
+              url: p.url,
+              title: p.title,
+              enteredAt: new Date(p.enteredAt),
+              leftAt: p.leftAt ? new Date(p.leftAt) : null,
+              dwellMs: p.dwellMs,
+            })),
             pagesTruncated: granted && tl.pages.length > MAX_PAGES_PER_SESSION,
             visibleMs: granted ? tl.visibleMs : null,
             exclusiveVisibleMs: granted ? (exclusive.get(s.id) ?? 0) : null,
             isPreview: s.isPreview,
           };
         }),
-        rows.length > limit && last ? encodeCursor({ t: last.startedAt.toISOString(), id: last.id }, filterHash) : null,
+        rows.length > limit && last
+          ? encodeCursor({ t: last.startedAt.toISOString(), id: last.id }, filterHash)
+          : null,
       );
     });
   }
@@ -327,17 +452,44 @@ export class VisitorRecordsService {
     if (q.cursor && !cur) throw badRequest('Invalid cursor', { cursor: ['Invalid cursor'] });
     return this.db.read(auth.tenantId, async (tx) => {
       const v = await this.findVisitor(tx, auth.tenantId, id);
-      const and: Prisma.ChatWhereInput[] = [{ tenantId: auth.tenantId, visitorId: v.id, isPreview: false }, this.queries.scopeWhere(auth)];
-      if (cur) and.push({ OR: [{ requestedAt: { lt: new Date(cur.t) } }, { requestedAt: new Date(cur.t), id: { lt: cur.id } }] });
-      const rows = await tx.chat.findMany({ where: { AND: and }, orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }], take: limit + 1, include: staffChatInclude });
+      const and: Prisma.ChatWhereInput[] = [
+        { tenantId: auth.tenantId, visitorId: v.id, isPreview: false },
+        this.queries.scopeWhere(auth),
+      ];
+      if (cur)
+        and.push({
+          OR: [
+            { requestedAt: { lt: new Date(cur.t) } },
+            { requestedAt: new Date(cur.t), id: { lt: cur.id } },
+          ],
+        });
+      const rows = await tx.chat.findMany({
+        where: { AND: and },
+        orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+        include: staffChatInclude,
+      });
       const slice = rows.slice(0, limit);
       const tagIds = [...new Set(slice.flatMap((c) => c.tags.map((t) => t.tagId)))];
-      const tags = tagIds.length ? await tx.tag.findMany({ where: { tenantId: auth.tenantId, id: { in: tagIds } }, select: { id: true, slug: true, label: true } }) : [];
+      const tags = tagIds.length
+        ? await tx.tag.findMany({
+            where: { tenantId: auth.tenantId, id: { in: tagIds } },
+            select: { id: true, slug: true, label: true },
+          })
+        : [];
       const tagById = new Map(tags.map((t) => [t.id, t]));
       const last = slice[slice.length - 1];
       return page(
-        slice.map((c) => staffChat(c, v, c.tags.map((t) => tagById.get(t.tagId)).filter((t): t is TagRef => !!t))),
-        rows.length > limit && last ? encodeCursor({ t: last.requestedAt.toISOString(), id: last.id }, filterHash) : null,
+        slice.map((c) =>
+          staffChat(
+            c,
+            v,
+            c.tags.map((t) => tagById.get(t.tagId)).filter((t): t is TagRef => !!t),
+          ),
+        ),
+        rows.length > limit && last
+          ? encodeCursor({ t: last.requestedAt.toISOString(), id: last.id }, filterHash)
+          : null,
       );
     });
   }
@@ -349,18 +501,43 @@ export class VisitorRecordsService {
     const out = await this.db.tx(auth.tenantId, async (tx) => {
       await lockForUpdate(tx, 'visitors', auth.tenantId, id);
       let version = (await this.findVisitor(tx, auth.tenantId, id)).version;
-      const valid = unique.length ? await tx.tag.findMany({ where: { tenantId: auth.tenantId, id: { in: unique }, archivedAt: null }, select: { id: true } }) : [];
+      const valid = unique.length
+        ? await tx.tag.findMany({
+            where: { tenantId: auth.tenantId, id: { in: unique }, archivedAt: null },
+            select: { id: true },
+          })
+        : [];
       if (valid.length !== unique.length) throw notFound('Tag');
-      const before = await tx.visitorTag.findMany({ where: { tenantId: auth.tenantId, visitorId: id }, select: { tagId: true } });
+      const before = await tx.visitorTag.findMany({
+        where: { tenantId: auth.tenantId, visitorId: id },
+        select: { tagId: true },
+      });
       const removed = before.filter((b) => !unique.includes(b.tagId)).map((b) => b.tagId);
       const added = unique.filter((t) => !before.some((b) => b.tagId === t));
-      if (removed.length) await tx.visitorTag.deleteMany({ where: { tenantId: auth.tenantId, visitorId: id, tagId: { in: removed } } });
+      if (removed.length)
+        await tx.visitorTag.deleteMany({
+          where: { tenantId: auth.tenantId, visitorId: id, tagId: { in: removed } },
+        });
       if (added.length) {
-        await tx.visitorTag.createMany({ data: added.map((tagId) => ({ tenantId: auth.tenantId, visitorId: id, tagId, source: 'agent' as const, addedBy: auth.membershipId })), skipDuplicates: true });
+        await tx.visitorTag.createMany({
+          data: added.map((tagId) => ({
+            tenantId: auth.tenantId,
+            visitorId: id,
+            tagId,
+            source: 'agent' as const,
+            addedBy: auth.membershipId,
+          })),
+          skipDuplicates: true,
+        });
       }
       if (removed.length || added.length) {
         version = (await tx.visitor.update({ where: { id }, data: { version: { increment: 1 } } })).version;
-        await this.audit.inTx(tx, auth, { action: 'visitor.tags_set', objectType: 'visitor', objectId: id, safeDiff: { added, removed } });
+        await this.audit.inTx(tx, auth, {
+          action: 'visitor.tags_set',
+          objectType: 'visitor',
+          objectId: id,
+          safeDiff: { added, removed },
+        });
       }
       return { tags: (await this.tagsFor(tx, auth.tenantId, [id])).get(id) ?? [], version };
     });
@@ -376,30 +553,66 @@ export class VisitorRecordsService {
    * email text alone: the target must carry verified identity proof and the
    * proof reference must not just be an email address.
    */
-  async mergeRequest(auth: AuthContext, input: { sourceId: string; targetId: string; proofReference: string; reason: string }) {
-    if (input.sourceId === input.targetId) throw badRequest('Choose two different visitors', { target_id: ['Must differ from source_id'] });
+  async mergeRequest(
+    auth: AuthContext,
+    input: { sourceId: string; targetId: string; proofReference: string; reason: string },
+  ) {
+    if (input.sourceId === input.targetId)
+      throw badRequest('Choose two different visitors', { target_id: ['Must differ from source_id'] });
     const proof = input.proofReference.trim();
-    if (EMAIL_RE.test(proof.toLowerCase())) throw badRequest('Matching email text is not identity proof', { proof_reference: ['Provide a verified identity proof reference, not an email address'] });
+    if (EMAIL_RE.test(proof.toLowerCase()))
+      throw badRequest('Matching email text is not identity proof', {
+        proof_reference: ['Provide a verified identity proof reference, not an email address'],
+      });
     return this.db.tx(auth.tenantId, async (tx) => {
-      const [source, target] = await Promise.all([this.findVisitor(tx, auth.tenantId, input.sourceId), this.findVisitor(tx, auth.tenantId, input.targetId)]);
+      const [source, target] = await Promise.all([
+        this.findVisitor(tx, auth.tenantId, input.sourceId),
+        this.findVisitor(tx, auth.tenantId, input.targetId),
+      ]);
       if (source.erasedAt || target.erasedAt) throw conflict('CONFLICT', 'Erased visitors cannot be merged');
-      const targetProof = await tx.visitorIdentity.count({ where: { tenantId: auth.tenantId, visitorId: target.id } });
-      if (!targetProof) throw badRequest('The target visitor has no verified identity; merging requires verified identity proof', { target_id: ['Target must be identity-verified'] });
+      const targetProof = await tx.visitorIdentity.count({
+        where: { tenantId: auth.tenantId, visitorId: target.id },
+      });
+      if (!targetProof)
+        throw badRequest(
+          'The target visitor has no verified identity; merging requires verified identity proof',
+          { target_id: ['Target must be identity-verified'] },
+        );
       const dedupeKey = `${source.id}:${target.id}`;
-      const existing = await tx.job.findUnique({ where: { tenantId_kind_dedupeKey: { tenantId: auth.tenantId, kind: 'visitor_merge', dedupeKey } } });
+      const existing = await tx.job.findUnique({
+        where: { tenantId_kind_dedupeKey: { tenantId: auth.tenantId, kind: 'visitor_merge', dedupeKey } },
+      });
       const job =
         existing && existing.state !== 'failed' && existing.state !== 'cancelled'
           ? existing
           : existing
             ? await tx.job.update({
                 where: { id: existing.id },
-                data: { state: 'queued', attempts: 0, lastErrorCode: null, requestedBy: auth.userId, payload: this.mergePayload(source.id, target.id, proof, input.reason, auth) },
+                data: {
+                  state: 'queued',
+                  attempts: 0,
+                  lastErrorCode: null,
+                  requestedBy: auth.userId,
+                  payload: this.mergePayload(source.id, target.id, proof, input.reason, auth),
+                },
               })
             : await tx.job.create({
-                data: { tenantId: auth.tenantId, kind: 'visitor_merge', dedupeKey, state: 'queued', requestedBy: auth.userId, payload: this.mergePayload(source.id, target.id, proof, input.reason, auth) },
+                data: {
+                  tenantId: auth.tenantId,
+                  kind: 'visitor_merge',
+                  dedupeKey,
+                  state: 'queued',
+                  requestedBy: auth.userId,
+                  payload: this.mergePayload(source.id, target.id, proof, input.reason, auth),
+                },
               });
       if (job !== existing) {
-        await this.audit.inTx(tx, auth, { action: 'visitor.merge_requested', objectType: 'visitor', objectId: target.id, safeDiff: { source_id: source.id, target_id: target.id, job_id: job.id } });
+        await this.audit.inTx(tx, auth, {
+          action: 'visitor.merge_requested',
+          objectType: 'visitor',
+          objectId: target.id,
+          safeDiff: { source_id: source.id, target_id: target.id, job_id: job.id },
+        });
       }
       const payload = job.payload as Record<string, unknown>;
       return {
@@ -416,7 +629,20 @@ export class VisitorRecordsService {
     });
   }
 
-  private mergePayload(sourceId: string, targetId: string, proof: string, reason: string, auth: AuthContext): Prisma.InputJsonValue {
-    return { sourceId, targetId, proofReference: proof.slice(0, 200), reason: reason.trim().slice(0, 500), reviewState: 'pending_review', requestedByMembershipId: auth.membershipId };
+  private mergePayload(
+    sourceId: string,
+    targetId: string,
+    proof: string,
+    reason: string,
+    auth: AuthContext,
+  ): Prisma.InputJsonValue {
+    return {
+      sourceId,
+      targetId,
+      proofReference: proof.slice(0, 200),
+      reason: reason.trim().slice(0, 500),
+      reviewState: 'pending_review',
+      requestedByMembershipId: auth.membershipId,
+    };
   }
 }

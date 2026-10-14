@@ -73,6 +73,8 @@ interface SessionLite {
   endedAt: Date | null;
   analyticsConsent: string;
   country: string | null;
+  ipAddress: string | null;
+  network: string | null;
 }
 
 interface Core {
@@ -124,6 +126,8 @@ export interface LiveVisitorItem {
   arrivedAt: Date | null;
   timeOnSiteMs: number | null;
   country: string | null;
+  ipAddress: string | null;
+  network: string | null;
   deviceCategory: string | null;
   sessionCount: number | null;
   lastActivityAt: Date | null;
@@ -444,9 +448,11 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
                 ended_at: Date | null;
                 analytics_consent: string;
                 country: string | null;
+                ip_address: string | null;
+                network: string | null;
               }>
             >`
-            SELECT id, visitor_id, site_id, started_at, last_seen_at, ended_at, analytics_consent, country
+            SELECT id, visitor_id, site_id, started_at, last_seen_at, ended_at, analytics_consent, country, ip_address, network
             FROM visitor_sessions WHERE tenant_id = ${tenantId}::uuid AND id = ANY(${[...sessionIds]}::uuid[])`,
         )
       : [];
@@ -462,6 +468,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
           endedAt: s.ended_at,
           analyticsConsent: s.analytics_consent,
           country: s.country,
+          ipAddress: s.ip_address,
+          network: s.network,
         },
       ]),
     );
@@ -647,6 +655,12 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         consenting && settings.tracking.locationEnabled
           ? (c.liveSessions.find((s) => s.country)?.country ?? null)
           : null;
+      // IP address and network of the most recent visit (stored only while the workspace keeps them).
+      const addressed = consenting
+        ? ([c.liveSessions.find((s) => s.id === recent?.sessionId), ...c.liveSessions].find(
+            (s) => s?.ipAddress,
+          ) ?? null)
+        : null;
       items.push({
         visitorId: c.visitorId,
         group: c.group,
@@ -666,6 +680,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         arrivedAt: consenting && c.arrivedAt ? new Date(c.arrivedAt) : null,
         timeOnSiteMs: consenting && c.arrivedAt ? Math.max(0, now - c.arrivedAt) : null,
         country,
+        ipAddress: addressed?.ipAddress ?? null,
+        network: addressed?.network ?? null,
         deviceCategory:
           sessionById.get(c.liveSessions[0]?.id ?? '')?.deviceCategory ?? v.deviceCategory ?? null,
         sessionCount: consenting ? v.visitCount : null,
@@ -1133,7 +1149,7 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         DELETE FROM page_events WHERE tenant_id = ${tenantId}::uuid AND received_at <= ${before}
           AND session_id IN (SELECT id FROM visitor_sessions WHERE tenant_id = ${tenantId}::uuid AND visitor_id = ${visitorId}::uuid)`;
       const cleared = await tx.$executeRaw`
-        UPDATE visitor_sessions SET current_url = NULL, current_title = NULL, landing_url = NULL, referrer_origin = NULL, utm = NULL, country = NULL, city = NULL
+        UPDATE visitor_sessions SET current_url = NULL, current_title = NULL, landing_url = NULL, referrer_origin = NULL, utm = NULL, country = NULL, city = NULL, ip_address = NULL, network = NULL
         WHERE tenant_id = ${tenantId}::uuid AND visitor_id = ${visitorId}::uuid AND analytics_consent <> 'granted'`;
       await tx.job.update({
         where: { id: jobId },

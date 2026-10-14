@@ -2,10 +2,19 @@
 import { z } from 'zod';
 import { DateTime, JsonObject, Uuid } from './common.ts';
 
-export const VisitorTagRefSchema = z.object({ source: z.string(), id: Uuid, slug: z.string(), label: z.string() });
+export const VisitorTagRefSchema = z.object({
+  source: z.string(),
+  id: Uuid,
+  slug: z.string(),
+  label: z.string(),
+});
 
 const ContactField = z.object({ value: z.string().nullable(), verified: z.boolean() });
-const Device = z.object({ category: z.string().nullable(), browser: z.string().nullable(), os: z.string().nullable() });
+const Device = z.object({
+  category: z.string().nullable(),
+  browser: z.string().nullable(),
+  os: z.string().nullable(),
+});
 
 /** Staff visitor profile (`GET /visitors/{id}`). `fields` is an opaque map (keys kept verbatim). */
 export const StaffVisitorSchema = z.object({
@@ -21,17 +30,30 @@ export const StaffVisitorSchema = z.object({
   tags: z.array(VisitorTagRefSchema),
   customFields: JsonObject,
   /** Per custom-field key: who set the value — `visitor` (the site's page via the SDK, unverified), `agent` (membership id) or `trigger` (trigger id). */
-  customFieldSources: z.record(z.object({ source: z.enum(['visitor', 'agent', 'trigger']), by: Uuid.nullable(), at: DateTime })),
+  customFieldSources: z.record(
+    z.object({ source: z.enum(['visitor', 'agent', 'trigger']), by: Uuid.nullable(), at: DateTime }),
+  ),
   firstSeenAt: DateTime,
   lastSeenAt: DateTime,
   visitCount: z.number().int(),
   chatCount: z.number().int(),
-  location: z.object({ countryCode: z.string().nullable(), region: z.string().nullable(), city: z.string().nullable(), approximate: z.boolean() }).nullable(),
+  location: z
+    .object({
+      countryCode: z.string().nullable(),
+      region: z.string().nullable(),
+      city: z.string().nullable(),
+      approximate: z.boolean(),
+    })
+    .nullable(),
   device: Device,
   language: z.string().nullable(),
   timezone: z.string().nullable(),
   online: z.boolean(),
-  sessionSummary: z.object({ total: z.number().int(), open: z.number().int(), lastStartedAt: DateTime.nullable() }),
+  sessionSummary: z.object({
+    total: z.number().int(),
+    open: z.number().int(),
+    lastStartedAt: DateTime.nullable(),
+  }),
   erased: z.boolean(),
   version: z.number().int(),
   createdAt: DateTime,
@@ -66,10 +88,21 @@ export const VisitorSessionSchema = z.object({
   browsingHidden: z.boolean(),
   device: Device,
   country: z.string().nullable(),
+  /** Present only while the workspace stores visitor IP addresses (settings.tracking.retainIp). */
+  ipAddress: z.string().nullable(),
+  network: z.string().nullable(),
   referrerOrigin: z.string().nullable(),
   landingUrl: z.string().nullable(),
   pageViewCount: z.number().int().nullable(),
-  pages: z.array(z.object({ url: z.string(), title: z.string().nullable(), enteredAt: DateTime, leftAt: DateTime.nullable(), dwellMs: z.number() })),
+  pages: z.array(
+    z.object({
+      url: z.string(),
+      title: z.string().nullable(),
+      enteredAt: DateTime,
+      leftAt: DateTime.nullable(),
+      dwellMs: z.number(),
+    }),
+  ),
   pagesTruncated: z.boolean(),
   visibleMs: z.number().nullable(),
   exclusiveVisibleMs: z.number().nullable(),
@@ -77,7 +110,11 @@ export const VisitorSessionSchema = z.object({
 });
 
 /** `version` is the visitor's new entity version (keeps the profile If-Match token current). */
-export const VisitorTagsSchema = z.object({ visitorId: Uuid, tags: z.array(VisitorTagRefSchema), version: z.number().int() });
+export const VisitorTagsSchema = z.object({
+  visitorId: Uuid,
+  tags: z.array(VisitorTagRefSchema),
+  version: z.number().int(),
+});
 
 export const LiveSessionItemSchema = z.object({
   sessionId: Uuid,
@@ -114,13 +151,24 @@ export const LiveVisitorItemSchema = z.object({
   arrivedAt: DateTime.nullable(),
   timeOnSiteMs: z.number().nullable(),
   country: z.string().nullable(),
+  /** Most recent visit's IP address and network owner, while the workspace stores them (settings.tracking.retainIp). */
+  ipAddress: z.string().nullable(),
+  network: z.string().nullable(),
   deviceCategory: z.string().nullable(),
   sessionCount: z.number().int().nullable(),
   lastActivityAt: DateTime.nullable(),
   idle: z.boolean(),
   tags: z.array(z.object({ id: Uuid, slug: z.string(), label: z.string() })),
   chat: z
-    .object({ id: Uuid, status: z.string(), departmentId: Uuid.nullable(), departmentName: z.string().nullable(), ownerMembershipId: Uuid.nullable(), requestedAt: DateTime, waitMs: z.number() })
+    .object({
+      id: Uuid,
+      status: z.string(),
+      departmentId: Uuid.nullable(),
+      departmentName: z.string().nullable(),
+      ownerMembershipId: Uuid.nullable(),
+      requestedAt: DateTime,
+      waitMs: z.number(),
+    })
     .nullable(),
   sessions: z.array(LiveSessionItemSchema),
 });
@@ -134,11 +182,19 @@ export const LiveVisitorsSchema = z.object({
   mode: z.string(),
   omittedBrowsing: z.boolean(),
   counts: z.union([
-    z.object({ served: z.number().int(), incoming: z.number().int(), browsing: z.number().int(), idle: z.number().int() }),
+    z.object({
+      served: z.number().int(),
+      incoming: z.number().int(),
+      browsing: z.number().int(),
+      idle: z.number().int(),
+    }),
     z.object({ incoming: z.number().int(), served: z.number().int() }),
   ]),
   idleAfterMs: z.number(),
-  realtime: z.object({ unscopedRoom: z.object({ kind: z.string(), id: z.string() }), departmentRooms: z.string() }),
+  realtime: z.object({
+    unscopedRoom: z.object({ kind: z.string(), id: z.string() }),
+    departmentRooms: z.string(),
+  }),
 });
 
 export const VisitorMergeJobSchema = z.object({
@@ -155,7 +211,10 @@ export const VisitorMergeJobSchema = z.object({
 
 export const BanSchema = z.object({
   id: Uuid,
-  target: z.union([z.object({ kind: z.literal('visitor'), visitorId: Uuid, displayName: z.string().nullable() }), z.object({ kind: z.literal('ip'), masked: z.string() })]),
+  target: z.union([
+    z.object({ kind: z.literal('visitor'), visitorId: Uuid, displayName: z.string().nullable() }),
+    z.object({ kind: z.literal('ip'), masked: z.string() }),
+  ]),
   siteId: Uuid.nullable(),
   reason: z.string(),
   expiresAt: DateTime.nullable(),

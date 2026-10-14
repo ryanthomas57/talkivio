@@ -85,6 +85,8 @@ const schema = z.object({
   // Geo
   /** MaxMind-format city/country database (e.g. DB-IP City Lite, CC BY 4.0); reloaded when the file changes. */
   GEOIP_DB_PATH: z.string().optional(),
+  /** MaxMind-format ASN database (e.g. DB-IP ASN Lite): the network owner shown with a visitor's IP address. */
+  GEOIP_ASN_DB_PATH: z.string().optional(),
   /** Edges whose location headers are trusted: comma list of cloudflare, vercel, fastly, proxy — or none. */
   GEO_TRUSTED_HEADERS: z.string().default('none'),
   /** Development only (ignored in production): public IP looked up for loopback/private visitors. */

@@ -155,6 +155,7 @@ services:
       PORT: '4000'
       # Visitor locations (DB-IP City Lite, refreshed by the geoip job); only the api looks locations up.
       GEOIP_DB_PATH: /geoip/dbip-city-lite.mmdb
+      GEOIP_ASN_DB_PATH: /geoip/dbip-asn-lite.mmdb
     volumes:
       - geoip_db:/geoip:ro
     healthcheck:

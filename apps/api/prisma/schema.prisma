@@ -754,6 +754,10 @@ model VisitorSession {
   os               String?
   country          String?
   city             String?
+  /// Only while settings.tracking.retainIp is on and the visit may be tracked; erased with the visitor.
+  ipAddress        String?   @map("ip_address") @db.VarChar(45)
+  /// Network owner of the IP (autonomous system organisation, e.g. an ISP or a hosting/VPN provider).
+  network          String?   @db.VarChar(160)
   pageViewCount    Int       @default(0) @map("page_view_count")
   isPreview        Boolean   @default(false) @map("is_preview")
   createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)

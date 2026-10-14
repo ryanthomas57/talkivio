@@ -106,7 +106,9 @@ export const Auth = () => fromReq('auth');
 export const CurrentUser = () => fromReq('user');
 export const Visitor = () => fromReq('visitor');
 
-export const RequestId = createParamDecorator((_d: unknown, ctx: ExecutionContext) => ctx.switchToHttp().getRequest<AppRequest>().requestId ?? '');
+export const RequestId = createParamDecorator(
+  (_d: unknown, ctx: ExecutionContext) => ctx.switchToHttp().getRequest<AppRequest>().requestId ?? '',
+);
 
 // ───────── Errors ─────────
 export type ErrorCode =
@@ -131,6 +133,8 @@ export type ErrorCode =
   | 'OFFER_WITHDRAWN'
   | 'DEPARTMENT_UNAVAILABLE'
   | 'QUEUE_FULL'
+  | 'VISITOR_OFFLINE'
+  | 'CHAT_EXISTS'
   | 'FILE_TOO_LARGE'
   | 'FILE_TYPE_BLOCKED'
   | 'FILE_SCAN_PENDING'
@@ -151,21 +155,31 @@ export class AppError extends HttpException {
     status: number,
     readonly code: ErrorCode,
     message: string,
-    readonly extra: { retryable?: boolean; fieldErrors?: Record<string, string[]>; details?: unknown; retryAfter?: number } = {},
+    readonly extra: {
+      retryable?: boolean;
+      fieldErrors?: Record<string, string[]>;
+      details?: unknown;
+      retryAfter?: number;
+    } = {},
   ) {
     super({ code, message }, status);
   }
 }
 
 export const notFound = (what = 'Resource') => new AppError(404, 'NOT_FOUND', `${what} not found`);
-export const denied = (message = 'You do not have permission to do that') => new AppError(403, 'PERMISSION_DENIED', message);
+export const denied = (message = 'You do not have permission to do that') =>
+  new AppError(403, 'PERMISSION_DENIED', message);
 export const badRequest = (message: string, fieldErrors?: Record<string, string[]>) =>
   new AppError(422, 'VALIDATION_FAILED', message, { fieldErrors });
 export const conflict = (code: ErrorCode, message: string, retryable = false, details?: unknown) =>
   new AppError(409, code, message, { retryable, details });
-export const unauthorized = (message = 'Sign in to continue', code: ErrorCode = 'AUTH_REQUIRED') => new AppError(401, code, message);
+export const unauthorized = (message = 'Sign in to continue', code: ErrorCode = 'AUTH_REQUIRED') =>
+  new AppError(401, code, message);
 export const rateLimited = (retryAfter: number) =>
-  new AppError(429, 'RATE_LIMITED', 'Too many requests. Please wait and try again.', { retryable: true, retryAfter });
+  new AppError(429, 'RATE_LIMITED', 'Too many requests. Please wait and try again.', {
+    retryable: true,
+    retryAfter,
+  });
 
 // ───────── Validation (wire → internal) ─────────
 @Injectable()
@@ -194,13 +208,19 @@ export function containsNul(value: unknown, depth = 0): boolean {
   if (typeof value === 'string') return value.includes('\u0000');
   if (depth > 32 || !value || typeof value !== 'object') return false;
   if (Array.isArray(value)) return value.some((v) => containsNul(v, depth + 1));
-  return Object.entries(value as Record<string, unknown>).some(([k, v]) => k.includes('\u0000') || containsNul(v, depth + 1));
+  return Object.entries(value as Record<string, unknown>).some(
+    ([k, v]) => k.includes('\u0000') || containsNul(v, depth + 1),
+  );
 }
 
 /** Rejects NUL in the URL, query or JSON body with a field-level 422 instead of a database error. */
 export function nulGuardMiddleware(req: Request, res: Response, next: NextFunction): void {
   if (/%00/.test(req.originalUrl ?? req.url ?? '') || containsNul(req.body)) {
-    const e = errorBody(new AppError(422, 'VALIDATION_FAILED', 'Text cannot contain control character NUL (U+0000).', { fieldErrors: { _: ['Remove the NUL character'] } }));
+    const e = errorBody(
+      new AppError(422, 'VALIDATION_FAILED', 'Text cannot contain control character NUL (U+0000).', {
+        fieldErrors: { _: ['Remove the NUL character'] },
+      }),
+    );
     res.status(e.status).json(e.body);
     return;
   }
@@ -210,7 +230,8 @@ export function nulGuardMiddleware(req: Request, res: Response, next: NextFuncti
 // ───────── Request id ─────────
 export function requestIdMiddleware(req: AppRequest, res: Response, next: NextFunction): void {
   const incoming = req.header('x-request-id');
-  req.requestId = incoming && /^[\w.-]{6,64}$/.test(incoming) ? incoming : `req-${randomBytes(6).toString('hex')}`;
+  req.requestId =
+    incoming && /^[\w.-]{6,64}$/.test(incoming) ? incoming : `req-${randomBytes(6).toString('hex')}`;
   res.setHeader('X-Request-Id', req.requestId);
   next();
 }
@@ -229,7 +250,11 @@ export class EnvelopeInterceptor implements NestInterceptor {
         if (isPage(value)) {
           return {
             data: toWire(value.items),
-            page: { next_cursor: value.nextCursor, has_more: value.hasMore, ...(value.total !== undefined ? { total: value.total } : {}) },
+            page: {
+              next_cursor: value.nextCursor,
+              has_more: value.hasMore,
+              ...(value.total !== undefined ? { total: value.total } : {}),
+            },
             meta,
           };
         }
@@ -258,9 +283,20 @@ export function reportError(err: unknown): void {
  * because they can quote query arguments (message bodies, emails, tokens).
  */
 export function loggableError(err: unknown): string {
-  const frames = (e: Error) => (e.stack ?? '').split('\n').filter((l) => l.trimStart().startsWith('at ')).slice(0, 20).join('\n');
-  if (err instanceof Prisma.PrismaClientKnownRequestError) return `PrismaClientKnownRequestError ${err.code} model=${String(err.meta?.modelName ?? '?')} (message redacted)\n${frames(err)}`;
-  if (err instanceof Prisma.PrismaClientValidationError || err instanceof Prisma.PrismaClientUnknownRequestError || err instanceof Prisma.PrismaClientRustPanicError || err instanceof Prisma.PrismaClientInitializationError)
+  const frames = (e: Error) =>
+    (e.stack ?? '')
+      .split('\n')
+      .filter((l) => l.trimStart().startsWith('at '))
+      .slice(0, 20)
+      .join('\n');
+  if (err instanceof Prisma.PrismaClientKnownRequestError)
+    return `PrismaClientKnownRequestError ${err.code} model=${String(err.meta?.modelName ?? '?')} (message redacted)\n${frames(err)}`;
+  if (
+    err instanceof Prisma.PrismaClientValidationError ||
+    err instanceof Prisma.PrismaClientUnknownRequestError ||
+    err instanceof Prisma.PrismaClientRustPanicError ||
+    err instanceof Prisma.PrismaClientInitializationError
+  )
     return `${err.name} (message redacted)\n${frames(err)}`;
   if (err instanceof Error) return err.stack ?? `${err.name}: ${err.message}`;
   return `non-Error thrown: ${typeof err}`;
@@ -270,20 +306,28 @@ export function loggableError(err: unknown): string {
 // P1017 server closed the connection, P2024 pool timeout) and PostgreSQL SQLSTATEs for shutdown, connection failure
 // and connection limits, as they appear in driver messages.
 const DB_UNAVAILABLE_CODES = new Set(['P1001', 'P1002', 'P1008', 'P1017', 'P2024']);
-const DB_UNAVAILABLE_TEXT = /\b(?:57P01|57P02|57P03|53300|08000|08001|08003|08006)\b|not currently accepting connections|can't reach database server|server has closed the connection|connection terminated|ECONNREFUSED|ECONNRESET/i;
+const DB_UNAVAILABLE_TEXT =
+  /\b(?:57P01|57P02|57P03|53300|08000|08001|08003|08006)\b|not currently accepting connections|can't reach database server|server has closed the connection|connection terminated|ECONNREFUSED|ECONNRESET/i;
 
 /** True when the error means the database is unreachable (an outage), not that the request was wrong. */
 export function isDatabaseUnavailable(err: unknown): boolean {
   if (err instanceof Prisma.PrismaClientInitializationError) return true;
   if (err instanceof Prisma.PrismaClientKnownRequestError && DB_UNAVAILABLE_CODES.has(err.code)) return true;
-  if (err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientUnknownRequestError) return DB_UNAVAILABLE_TEXT.test(err.message);
+  if (
+    err instanceof Prisma.PrismaClientKnownRequestError ||
+    err instanceof Prisma.PrismaClientUnknownRequestError
+  )
+    return DB_UNAVAILABLE_TEXT.test(err.message);
   return false;
 }
 
 /** Seconds a client should wait before retrying after a dependency outage. */
 const DEPENDENCY_RETRY_AFTER_S = 5;
 
-export function errorBody(err: unknown, requestId?: string): { status: number; body: Record<string, unknown>; retryAfter?: number } {
+export function errorBody(
+  err: unknown,
+  requestId?: string,
+): { status: number; body: Record<string, unknown>; retryAfter?: number } {
   const meta = { request_id: requestId };
   if (err instanceof AppError) {
     return {
@@ -304,41 +348,114 @@ export function errorBody(err: unknown, requestId?: string): { status: number; b
   if (err instanceof ZodError) return errorBody(zodError(err), requestId);
   // Dependency outages are reported as such (503, retryable), never as a generic server fault.
   if (isDatabaseUnavailable(err)) {
-    return errorBody(new AppError(503, 'SERVICE_UNAVAILABLE', 'The service is temporarily unavailable. Please retry shortly.', { retryable: true, retryAfter: DEPENDENCY_RETRY_AFTER_S }), requestId);
+    return errorBody(
+      new AppError(
+        503,
+        'SERVICE_UNAVAILABLE',
+        'The service is temporarily unavailable. Please retry shortly.',
+        { retryable: true, retryAfter: DEPENDENCY_RETRY_AFTER_S },
+      ),
+      requestId,
+    );
   }
   if ((err as Error | null)?.name === 'StorageUnavailableError') {
-    return errorBody(new AppError(503, 'SERVICE_UNAVAILABLE', 'File storage is temporarily unavailable. Please retry shortly.', { retryable: true, retryAfter: DEPENDENCY_RETRY_AFTER_S }), requestId);
+    return errorBody(
+      new AppError(
+        503,
+        'SERVICE_UNAVAILABLE',
+        'File storage is temporarily unavailable. Please retry shortly.',
+        { retryable: true, retryAfter: DEPENDENCY_RETRY_AFTER_S },
+      ),
+      requestId,
+    );
   }
   // express.json / body-parser failures (raised before any controller runs).
   const bodyError = (err as { type?: unknown } | null)?.type;
-  if (bodyError === 'entity.too.large') return { status: 413, body: { error: { code: 'VALIDATION_FAILED', message: 'Request body is too large.', retryable: false }, meta } };
-  if (bodyError === 'entity.parse.failed') return { status: 400, body: { error: { code: 'VALIDATION_FAILED', message: 'Request body is not valid JSON.', retryable: false }, meta } };
-  if (bodyError === 'charset.unsupported' || bodyError === 'encoding.unsupported') return { status: 415, body: { error: { code: 'VALIDATION_FAILED', message: 'Unsupported request encoding.', retryable: false }, meta } };
+  if (bodyError === 'entity.too.large')
+    return {
+      status: 413,
+      body: {
+        error: { code: 'VALIDATION_FAILED', message: 'Request body is too large.', retryable: false },
+        meta,
+      },
+    };
+  if (bodyError === 'entity.parse.failed')
+    return {
+      status: 400,
+      body: {
+        error: { code: 'VALIDATION_FAILED', message: 'Request body is not valid JSON.', retryable: false },
+        meta,
+      },
+    };
+  if (bodyError === 'charset.unsupported' || bodyError === 'encoding.unsupported')
+    return {
+      status: 415,
+      body: {
+        error: { code: 'VALIDATION_FAILED', message: 'Unsupported request encoding.', retryable: false },
+        meta,
+      },
+    };
   // PostgreSQL rejects NUL / invalid UTF-8 in text (SQLSTATE 22021): bad input, not a server fault.
-  if ((err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientUnknownRequestError) && /22021|invalid byte sequence/i.test(err.message)) {
-    return errorBody(new AppError(422, 'VALIDATION_FAILED', 'Text contains characters that cannot be stored.'), requestId);
+  if (
+    (err instanceof Prisma.PrismaClientKnownRequestError ||
+      err instanceof Prisma.PrismaClientUnknownRequestError) &&
+    /22021|invalid byte sequence/i.test(err.message)
+  ) {
+    return errorBody(
+      new AppError(422, 'VALIDATION_FAILED', 'Text contains characters that cannot be stored.'),
+      requestId,
+    );
   }
   // A value outside the database bounds — CHECK constraint (23514 / P2004) or over-long value (22001 / P2000) — is
   // input the API should have refused: a client error, never a retryable server fault.
   if (
     (err instanceof Prisma.PrismaClientKnownRequestError && (err.code === 'P2004' || err.code === 'P2000')) ||
-    ((err instanceof Prisma.PrismaClientKnownRequestError || err instanceof Prisma.PrismaClientUnknownRequestError) && /\b(23514|22001)\b|violates check constraint|value too long/i.test(err.message))
+    ((err instanceof Prisma.PrismaClientKnownRequestError ||
+      err instanceof Prisma.PrismaClientUnknownRequestError) &&
+      /\b(23514|22001)\b|violates check constraint|value too long/i.test(err.message))
   ) {
-    return errorBody(new AppError(422, 'VALIDATION_FAILED', 'A value is outside the allowed length or set of values.'), requestId);
+    return errorBody(
+      new AppError(422, 'VALIDATION_FAILED', 'A value is outside the allowed length or set of values.'),
+      requestId,
+    );
   }
   if (err instanceof Prisma.PrismaClientKnownRequestError) {
     if (err.code === 'P2025') return errorBody(notFound(), requestId);
-    if (err.code === 'P2002') return errorBody(conflict('CONFLICT', 'A record with these details already exists'), requestId);
-    if (err.code === 'P2034') return errorBody(conflict('VERSION_CONFLICT', 'Please retry the request', true), requestId);
+    if (err.code === 'P2002')
+      return errorBody(conflict('CONFLICT', 'A record with these details already exists'), requestId);
+    if (err.code === 'P2034')
+      return errorBody(conflict('VERSION_CONFLICT', 'Please retry the request', true), requestId);
   }
   if (err instanceof HttpException) {
     const status = err.getStatus();
-    const code: ErrorCode = status === 404 ? 'NOT_FOUND' : status === 413 ? 'VALIDATION_FAILED' : status === 429 ? 'RATE_LIMITED' : status >= 500 ? 'INTERNAL' : 'VALIDATION_FAILED';
+    const code: ErrorCode =
+      status === 404
+        ? 'NOT_FOUND'
+        : status === 413
+          ? 'VALIDATION_FAILED'
+          : status === 429
+            ? 'RATE_LIMITED'
+            : status >= 500
+              ? 'INTERNAL'
+              : 'VALIDATION_FAILED';
     const r = err.getResponse();
-    const message = typeof r === 'string' ? r : ((r as { message?: string | string[] }).message ?? err.message);
-    return { status, body: { error: { code, message: Array.isArray(message) ? message[0] : message, retryable: status >= 500 }, meta } };
+    const message =
+      typeof r === 'string' ? r : ((r as { message?: string | string[] }).message ?? err.message);
+    return {
+      status,
+      body: {
+        error: { code, message: Array.isArray(message) ? message[0] : message, retryable: status >= 500 },
+        meta,
+      },
+    };
   }
-  return { status: 500, body: { error: { code: 'INTERNAL', message: 'Something went wrong. Please try again.', retryable: true }, meta } };
+  return {
+    status: 500,
+    body: {
+      error: { code: 'INTERNAL', message: 'Something went wrong. Please try again.', retryable: true },
+      meta,
+    },
+  };
 }
 
 @Catch()

@@ -10709,6 +10709,77 @@ paths:
       x-talkivio-permissions:
         - visitors.view
         - history.view
+    post:
+      operationId: visitorsStartChat
+      tags:
+        - Visitors
+      summary: POST /api/v1/visitors/{id}/chats
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                client_request_id:
+                  type: string
+                  minLength: 8
+                  maxLength: 64
+                message:
+                  type: string
+                  maxLength: 8000
+                session_id:
+                  type: string
+                  format: uuid
+              required:
+                - client_request_id
+                - message
+              additionalProperties: false
+      responses:
+        "201":
+          description: "201: the chat starts active and owned by the agent; the visitor's tab opens it. 409 CHAT_EXISTS (details.chat_id), VISITOR_OFFLINE, CAPACITY_EXCEEDED."
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/AgentStartedChat"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: VisitorsController.startChat
+      x-talkivio-permissions:
+        - visitors.view
+        - chats.serve
   /api/v1/visitors/{id}/sessions:
     get:
       operationId: visitorsSessions
@@ -16220,6 +16291,16 @@ components:
       required:
         - chat
         - initial_message
+    AgentStartedChat:
+      type: object
+      properties:
+        chat:
+          $ref: "#/components/schemas/StaffChat"
+        message:
+          $ref: "#/components/schemas/Message"
+      required:
+        - chat
+        - message
     ChatRating:
       type: object
       properties:
@@ -16587,6 +16668,14 @@ components:
           type:
             - string
             - "null"
+        ip_address:
+          type:
+            - string
+            - "null"
+        network:
+          type:
+            - string
+            - "null"
         referrer_origin:
           type:
             - string
@@ -16649,6 +16738,8 @@ components:
         - browsing_hidden
         - device
         - country
+        - ip_address
+        - network
         - referrer_origin
         - landing_url
         - page_view_count
@@ -16806,6 +16897,14 @@ components:
           type:
             - string
             - "null"
+        ip_address:
+          type:
+            - string
+            - "null"
+        network:
+          type:
+            - string
+            - "null"
         device_category:
           type:
             - string
@@ -16885,6 +16984,8 @@ components:
         - arrived_at
         - time_on_site_ms
         - country
+        - ip_address
+        - network
         - device_category
         - session_count
         - last_activity_at
@@ -21836,6 +21937,8 @@ components:
         - OFFER_WITHDRAWN
         - DEPARTMENT_UNAVAILABLE
         - QUEUE_FULL
+        - VISITOR_OFFLINE
+        - CHAT_EXISTS
         - FILE_TOO_LARGE
         - FILE_TYPE_BLOCKED
         - FILE_SCAN_PENDING

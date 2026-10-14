@@ -372,6 +372,11 @@ jobs:
         run: |
           redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
           node apps/api/test/visitors.e2e.mjs 2>&1 | tee reports/integration/visitors.log
+      - name: 'e2e: agent-started chats (Visitors list → chat window: ownership, visitor tab notified, idempotency, refusals)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/engage.e2e.mjs 2>&1 | tee reports/integration/engage.log
       - name: 'e2e: team administration, re-scoping, suspension requeue, widget draft etags'
         if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         run: |
@@ -890,7 +895,7 @@ jobs:
         # depends_on conditions gate startup (migrate/minio-init must complete, data services healthy);
         # then poll readiness through the proxy. First run downloads ClamAV signatures.
         run: |
-          docker compose up -d --build reverse-proxy webhook-receiver
+          docker compose up -d --build reverse-proxy worker webhook-receiver
           for i in $(seq 1 180); do
             if curl -fsS http://localhost:8080/health/ready; then echo; exit 0; fi
             sleep 5
@@ -995,7 +1000,7 @@ jobs:
       - name: Start the previous release, seed it and give it history
         run: |
           for i in api migrate dashboard; do docker tag "talkivio/$i:prev" "talkivio/$i:local"; done
-          docker compose up -d --no-build reverse-proxy webhook-receiver
+          docker compose up -d --no-build reverse-proxy worker webhook-receiver
           for i in $(seq 1 180); do
             if curl -fsS http://localhost:8080/health/ready > /dev/null; then break; fi
             if [ "$i" = 180 ]; then docker compose ps -a; docker compose logs --no-color --tail 100; exit 1; fi

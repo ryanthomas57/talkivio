@@ -94,10 +94,13 @@ const RELOAD_CHECK_MS = 3600_000;
 export class GeoService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger('Geo');
   private reader: { get(ip: string): unknown } | null = null;
+  private asnReader: { get(ip: string): unknown } | null = null;
   private trusted: GeoHeaderSet[] = [];
   private devIp: string | null = null;
-  private dbPath: string | null = null;
-  private dbMtimeMs = 0;
+  private readonly files = {
+    city: { path: null as string | null, mtimeMs: 0 },
+    asn: { path: null as string | null, mtimeMs: 0 },
+  };
   private reloadTimer: NodeJS.Timeout | null = null;
 
   /** Header trust and the development stand-in address (onModuleInit reads them from the environment). */
@@ -114,12 +117,14 @@ export class GeoService implements OnModuleInit, OnModuleDestroy {
         .filter((s): s is GeoHeaderSet => s in GEO_HEADER_SETS),
       devIp: e.NODE_ENV === 'production' ? null : (e.GEO_DEV_IP ?? null),
     });
-    // Only the api process looks locations up (sign-in and widget sessions); the database is ~130 MB in memory.
-    if (!e.GEOIP_DB_PATH || (process.env.TALKIVIO_PROCESS ?? 'api') !== 'api') return;
-    this.dbPath = e.GEOIP_DB_PATH;
-    await this.loadDatabase();
-    // Monthly database updates replace the file; pick them up without a restart.
-    this.reloadTimer = setInterval(() => void this.loadDatabase(), RELOAD_CHECK_MS);
+    // Only the api process looks locations up (sign-in and widget sessions); the city database is ~130 MB in memory.
+    if ((process.env.TALKIVIO_PROCESS ?? 'api') !== 'api') return;
+    this.files.city.path = e.GEOIP_DB_PATH ?? null;
+    this.files.asn.path = e.GEOIP_ASN_DB_PATH ?? null;
+    if (!this.files.city.path && !this.files.asn.path) return;
+    await this.loadDatabases();
+    // Monthly database updates replace the files; pick them up without a restart.
+    this.reloadTimer = setInterval(() => void this.loadDatabases(), RELOAD_CHECK_MS);
     this.reloadTimer.unref();
   }
 
@@ -127,17 +132,40 @@ export class GeoService implements OnModuleInit, OnModuleDestroy {
     if (this.reloadTimer) clearInterval(this.reloadTimer);
   }
 
-  private async loadDatabase(): Promise<void> {
-    if (!this.dbPath) return;
+  private async loadDatabases(): Promise<void> {
+    for (const kind of ['city', 'asn'] as const) {
+      const f = this.files[kind];
+      if (!f.path) continue;
+      const current = kind === 'city' ? this.reader : this.asnReader;
+      try {
+        const { mtimeMs } = await stat(f.path);
+        if (current && mtimeMs === f.mtimeMs) continue;
+        const maxmind = await import('maxmind');
+        const opened = await maxmind.open(f.path, { watchForUpdates: false });
+        if (kind === 'city') this.reader = opened;
+        else this.asnReader = opened;
+        f.mtimeMs = mtimeMs;
+        this.logger.log(`Loaded GeoIP ${kind} database from ${f.path}`);
+      } catch (err) {
+        if (!current) this.logger.warn(`GeoIP ${kind} database unavailable: ${(err as Error).message}`);
+      }
+    }
+  }
+
+  /** The address to look up and record: outside production GEO_DEV_IP stands in for loopback/private visitors. */
+  effectiveIp(ip: string | null | undefined): string | null {
+    return ip && this.devIp && isPrivateIp(ip) ? this.devIp : (ip ?? null);
+  }
+
+  /** Network owner of an address (autonomous system organisation: an ISP, or a hosting/VPN provider), if known. */
+  network(ip: string | null | undefined): string | null {
+    const address = this.effectiveIp(ip);
+    if (!address || !this.asnReader) return null;
     try {
-      const { mtimeMs } = await stat(this.dbPath);
-      if (this.reader && mtimeMs === this.dbMtimeMs) return;
-      const maxmind = await import('maxmind');
-      this.reader = await maxmind.open(this.dbPath, { watchForUpdates: false });
-      this.dbMtimeMs = mtimeMs;
-      this.logger.log(`Loaded GeoIP database from ${this.dbPath}`);
-    } catch (err) {
-      if (!this.reader) this.logger.warn(`GeoIP database unavailable: ${(err as Error).message}`);
+      const rec = this.asnReader.get(address) as { autonomous_system_organization?: string } | null;
+      return headerText(rec?.autonomous_system_organization ?? null);
+    } catch {
+      return null;
     }
   }
 
@@ -154,7 +182,7 @@ export class GeoService implements OnModuleInit, OnModuleDestroy {
     let countryCode = h(sets.flatMap((s) => s.country));
     let region = h(sets.flatMap((s) => s.region));
     let city = h(sets.flatMap((s) => s.city));
-    const lookupIp = ip && this.devIp && isPrivateIp(ip) ? this.devIp : ip;
+    const lookupIp = this.effectiveIp(ip);
     if ((!countryCode || countryCode === 'XX') && lookupIp && this.reader) {
       try {
         const rec = this.reader.get(lookupIp) as {

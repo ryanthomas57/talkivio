@@ -43,7 +43,9 @@ export const StaffChatSchema = z.object({
   awaitingReply: z.boolean(),
   pageUrl: z.string().nullable(),
   tags: z.array(TagRefSchema),
-  rating: z.object({ rating: z.enum(['good', 'bad']), comment: z.string().nullable(), submittedAt: DateTime }).nullable(),
+  rating: z
+    .object({ rating: z.enum(['good', 'bad']), comment: z.string().nullable(), submittedAt: DateTime })
+    .nullable(),
   visitor: VisitorSummarySchema,
   unreadCount: z.number().int().optional(),
 });
@@ -57,7 +59,12 @@ export const HistoryChatSchema = StaffChatSchema.extend({
   snippetHighlights: z.array(z.tuple([z.number().int().min(0), z.number().int().min(0)])),
 });
 
-export const PublicAgentProfileSchema = z.object({ id: Uuid, displayName: z.string(), avatarUrl: z.string().nullable(), title: z.string().nullable() });
+export const PublicAgentProfileSchema = z.object({
+  id: Uuid,
+  displayName: z.string(),
+  avatarUrl: z.string().nullable(),
+  title: z.string().nullable(),
+});
 
 export const PublicChatSchema = z.object({
   id: Uuid,
@@ -72,21 +79,34 @@ export const PublicChatSchema = z.object({
   queue: z.object({ position: z.number().int(), approximate: z.literal(true) }).nullable(),
 });
 
-export const AttachmentRefSchema = z.object({ id: Uuid, name: z.string(), sizeBytes: z.number().int(), mime: z.string(), state: z.string(), isImage: z.boolean() });
+export const AttachmentRefSchema = z.object({
+  id: Uuid,
+  name: z.string(),
+  sizeBytes: z.number().int(),
+  mime: z.string(),
+  state: z.string(),
+  isImage: z.boolean(),
+});
 
 export const MessageSchema = z.object({
   id: Uuid,
   chatId: Uuid,
   seq: z.number().int(),
   clientMessageId: z.string().nullable(),
-  sender: z.object({ type: z.enum(['visitor', 'agent', 'system']), id: Uuid.nullable(), displayName: z.string() }),
+  sender: z.object({
+    type: z.enum(['visitor', 'agent', 'system']),
+    id: Uuid.nullable(),
+    displayName: z.string(),
+  }),
   automated: z.boolean(),
   visibility: z.enum(['public', 'internal']),
   type: z.enum(['text', 'attachment', 'system']),
   body: z.string().nullable(),
   options: z.array(z.string()),
   /** params: public-safe display values (name, department, variant, by) for rendering the line in the reader's language. */
-  systemEvent: z.object({ kind: z.string(), data: JsonObject, params: z.record(z.string(), z.string()).optional() }).nullable(),
+  systemEvent: z
+    .object({ kind: z.string(), data: JsonObject, params: z.record(z.string(), z.string()).optional() })
+    .nullable(),
   attachments: z.array(AttachmentRefSchema),
   sentAt: DateTime,
   redacted: z.boolean(),
@@ -132,8 +152,17 @@ export const ChatCountsSchema = z.record(z.number().int());
 export const ReadCursorSchema = z.object({ lastReadSeq: z.number().int() });
 
 /** Admission result (ch. 76): `{chat, initial_message}`, `initial_message` null when the visitor sent no text. */
-export const ChatAdmissionSchema = z.object({ chat: PublicChatSchema, initialMessage: MessageSchema.nullable() });
-export const ChatRatingSchema = z.object({ rating: z.enum(['good', 'bad']), comment: z.string().nullable(), revisionCount: z.number().int() });
+export const ChatAdmissionSchema = z.object({
+  chat: PublicChatSchema,
+  initialMessage: MessageSchema.nullable(),
+});
+/** Agent-started chat (POST /visitors/{id}/chats): the active chat owned by the agent and their first message. */
+export const AgentStartedChatSchema = z.object({ chat: StaffChatSchema, message: MessageSchema });
+export const ChatRatingSchema = z.object({
+  rating: z.enum(['good', 'bad']),
+  comment: z.string().nullable(),
+  revisionCount: z.number().int(),
+});
 
 export type StaffChat = z.infer<typeof StaffChatSchema>;
 export type PublicChat = z.infer<typeof PublicChatSchema>;

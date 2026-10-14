@@ -5,7 +5,13 @@ import { mkdir, open, rename, rm, stat } from 'node:fs/promises';
 import { dirname, resolve, sep } from 'node:path';
 import { Readable, Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
-import { DeleteObjectCommand, GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '../config/env';
 import { hmacSha256, safeEqual } from '../common/crypto';
@@ -26,7 +32,9 @@ import { hmacSha256, safeEqual } from '../common/crypto';
  *  - `local` (development): the API emulates the same flow with HMAC-signed, expiring
  *    URLs on API routes (`?sig=`), storing bytes under `STORAGE_LOCAL_DIR/<area>/`.
  *
- * Object keys are generated server-side and are never returned to clients.
+ * Object keys are generated server-side and no API field returns them. The one place a client sees
+ * a key is the path of an S3 presigned upload URL, which names its single quarantine object and only
+ * allows a PUT of the declared bytes for a few minutes.
  */
 export type StorageArea = 'quarantine' | 'clean' | 'exports';
 
@@ -74,7 +82,9 @@ export class StorageLimitError extends Error {
     readonly reason: 'too_large' | 'incomplete',
     readonly received: number,
   ) {
-    super(reason === 'too_large' ? 'Upload exceeded the declared size' : 'Upload ended before the declared size');
+    super(
+      reason === 'too_large' ? 'Upload exceeded the declared size' : 'Upload ended before the declared size',
+    );
   }
 }
 
@@ -86,7 +96,14 @@ export class StorageLimitError extends Error {
 export class StorageUnavailableError extends Error {
   constructor(operation: string, cause: unknown) {
     const c = cause as { code?: unknown; name?: unknown; $metadata?: { httpStatusCode?: number } };
-    const reason = typeof c?.code === 'string' ? c.code : c?.$metadata?.httpStatusCode ? `HTTP ${c.$metadata.httpStatusCode}` : typeof c?.name === 'string' ? c.name : 'unknown error';
+    const reason =
+      typeof c?.code === 'string'
+        ? c.code
+        : c?.$metadata?.httpStatusCode
+          ? `HTTP ${c.$metadata.httpStatusCode}`
+          : typeof c?.name === 'string'
+            ? c.name
+            : 'unknown error';
     super(`Object storage unavailable (${operation}: ${reason})`);
     this.name = 'StorageUnavailableError';
   }
@@ -96,7 +113,12 @@ class StorageKeyError extends Error {}
 
 /** Re-throws limit / key / already-classified errors as they are; anything else means the store is unavailable. */
 function unavailable(operation: string, err: unknown): never {
-  if (err instanceof StorageLimitError || err instanceof StorageUnavailableError || err instanceof StorageKeyError) throw err;
+  if (
+    err instanceof StorageLimitError ||
+    err instanceof StorageUnavailableError ||
+    err instanceof StorageKeyError
+  )
+    throw err;
   throw new StorageUnavailableError(operation, err);
 }
 
@@ -110,7 +132,10 @@ function grantKey(): string {
 export function contentDisposition(filename: string): string {
   const cleaned = filename.replace(/[\u0000-\u001f\u007f"\\]/g, '').trim() || 'download';
   const ascii = cleaned.replace(/[^\w.\- ]/g, '_').slice(0, 150) || 'download';
-  const encoded = encodeURIComponent(cleaned).replace(/['()*]/g, (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`);
+  const encoded = encodeURIComponent(cleaned).replace(
+    /['()*]/g,
+    (c) => `%${c.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
   return `attachment; filename="${ascii}"; filename*=UTF-8''${encoded}`;
 }
 
@@ -121,7 +146,12 @@ export function keyHash(key: string): string {
 
 function isNotFound(err: unknown): boolean {
   const e = err as { name?: string; code?: string; $metadata?: { httpStatusCode?: number } };
-  return e?.name === 'NotFound' || e?.name === 'NoSuchKey' || e?.code === 'ENOENT' || e?.$metadata?.httpStatusCode === 404;
+  return (
+    e?.name === 'NotFound' ||
+    e?.name === 'NoSuchKey' ||
+    e?.code === 'ENOENT' ||
+    e?.$metadata?.httpStatusCode === 404
+  );
 }
 
 @Injectable()
@@ -141,9 +171,22 @@ export class StorageService {
 
   // ───────────────────────── Signed API grants (local driver / proxy mode) ─────────────────────────
 
-  signGrant(target: GrantTarget, kind: GrantKind, objectKey: string, ttlSeconds: number): { token: string; url: string; expiresAt: Date } {
+  signGrant(
+    target: GrantTarget,
+    kind: GrantKind,
+    objectKey: string,
+    ttlSeconds: number,
+  ): { token: string; url: string; expiresAt: Date } {
     const exp = Math.floor(Date.now() / 1000) + Math.max(1, Math.floor(ttlSeconds));
-    const claims: GrantClaims = { t: target.tenantId, r: target.resourceId, k: kind, s: target.scope, h: keyHash(objectKey), exp, n: randomBytes(9).toString('base64url') };
+    const claims: GrantClaims = {
+      t: target.tenantId,
+      r: target.resourceId,
+      k: kind,
+      s: target.scope,
+      h: keyHash(objectKey),
+      exp,
+      n: randomBytes(9).toString('base64url'),
+    };
     const body = Buffer.from(JSON.stringify(claims)).toString('base64url');
     const token = `${GRANT_PREFIX}.${body}.${hmacSha256(grantKey(), body, 'base64url')}`;
     const url = `${env().API_URL.replace(/\/$/, '')}${target.path}?sig=${encodeURIComponent(token)}`;
@@ -151,7 +194,10 @@ export class StorageService {
   }
 
   /** Verifies signature, expiry, kind, scope and resource binding. Returns claims or null (never throws). */
-  verifyGrant(token: string | undefined | null, expect: { kind: GrantKind; resourceId: string; scope: string }): GrantClaims | null {
+  verifyGrant(
+    token: string | undefined | null,
+    expect: { kind: GrantKind; resourceId: string; scope: string },
+  ): GrantClaims | null {
     if (!token || token.length > 2048 || !token.startsWith(`${GRANT_PREFIX}.`)) return null;
     const [, body, sig] = token.split('.');
     if (!body || !sig || !safeEqual(hmacSha256(grantKey(), body, 'base64url'), sig)) return null;
@@ -187,21 +233,40 @@ export class StorageService {
       });
       const url = await getSignedUrl(this.presignClient(), cmd, {
         expiresIn: input.ttlSeconds,
-        signableHeaders: new Set(['content-type', 'content-length', ...(checksum ? ['x-amz-checksum-sha256'] : [])]),
+        signableHeaders: new Set([
+          'content-type',
+          'content-length',
+          ...(checksum ? ['x-amz-checksum-sha256'] : []),
+        ]),
         unhoistableHeaders: new Set(checksum ? ['x-amz-checksum-sha256'] : []),
       });
       return {
         url,
         method: 'PUT',
-        headers: { 'content-type': input.contentType, ...(checksum ? { 'x-amz-checksum-sha256': checksum } : {}) },
+        headers: {
+          'content-type': input.contentType,
+          ...(checksum ? { 'x-amz-checksum-sha256': checksum } : {}),
+        },
         expiresAt: new Date(Date.now() + input.ttlSeconds * 1000),
       };
     }
     const g = this.signGrant(input.grant, 'upload', input.key, input.ttlSeconds);
-    return { url: g.url, method: 'PUT', headers: { 'content-type': input.contentType }, expiresAt: g.expiresAt };
+    return {
+      url: g.url,
+      method: 'PUT',
+      headers: { 'content-type': input.contentType },
+      expiresAt: g.expiresAt,
+    };
   }
 
-  async presignDownload(input: { area: StorageArea; key: string; filename: string; contentType: string; ttlSeconds: number; grant: GrantTarget }): Promise<DownloadGrant> {
+  async presignDownload(input: {
+    area: StorageArea;
+    key: string;
+    filename: string;
+    contentType: string;
+    ttlSeconds: number;
+    grant: GrantTarget;
+  }): Promise<DownloadGrant> {
     if (!this.proxiesDownloads) {
       const cmd = new GetObjectCommand({
         Bucket: this.bucket(input.area),
@@ -223,8 +288,14 @@ export class StorageService {
    * Local driver only: receive an upload body, enforcing the exact declared size while
    * streaming (aborts as soon as the body exceeds it). Atomic rename on success.
    */
-  async receive(area: StorageArea, key: string, source: Readable, expectedBytes: number): Promise<{ sizeBytes: number; sha256: string }> {
-    if (this.driver !== 'local') throw new Error('Direct uploads are only accepted by the local storage driver');
+  async receive(
+    area: StorageArea,
+    key: string,
+    source: Readable,
+    expectedBytes: number,
+  ): Promise<{ sizeBytes: number; sha256: string }> {
+    if (this.driver !== 'local')
+      throw new Error('Direct uploads are only accepted by the local storage driver');
     const final = this.localPath(area, key);
     await mkdir(dirname(final), { recursive: true }).catch((err) => unavailable('receive', err));
     const temp = `${final}.part-${randomBytes(6).toString('hex')}`;
@@ -246,7 +317,10 @@ export class StorageService {
     } catch (err) {
       await rm(temp, { force: true }).catch(() => undefined);
       if (err instanceof StorageLimitError) throw err;
-      if ((err as NodeJS.ErrnoException).code === 'ERR_STREAM_PREMATURE_CLOSE' || (err as NodeJS.ErrnoException).code === 'ECONNRESET') {
+      if (
+        (err as NodeJS.ErrnoException).code === 'ERR_STREAM_PREMATURE_CLOSE' ||
+        (err as NodeJS.ErrnoException).code === 'ECONNRESET'
+      ) {
         throw new StorageLimitError('incomplete', received);
       }
       unavailable('receive', err);
@@ -256,7 +330,9 @@ export class StorageService {
   async stat(area: StorageArea, key: string): Promise<{ sizeBytes: number } | null> {
     try {
       if (this.driver === 's3') {
-        const r = await this.client().send(new HeadObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }));
+        const r = await this.client().send(
+          new HeadObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }),
+        );
         return { sizeBytes: Number(r.ContentLength ?? 0) };
       }
       const s = await stat(this.localPath(area, key));
@@ -271,7 +347,9 @@ export class StorageService {
   async read(area: StorageArea, key: string, maxBytes: number): Promise<Buffer | null> {
     try {
       if (this.driver === 's3') {
-        const r = await this.client().send(new GetObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }));
+        const r = await this.client().send(
+          new GetObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }),
+        );
         if (Number(r.ContentLength ?? 0) > maxBytes) {
           (r.Body as Readable | undefined)?.destroy?.();
           throw new StorageLimitError('too_large', Number(r.ContentLength));
@@ -304,7 +382,9 @@ export class StorageService {
   async openRead(area: StorageArea, key: string): Promise<{ stream: Readable; sizeBytes: number } | null> {
     try {
       if (this.driver === 's3') {
-        const r = await this.client().send(new GetObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }));
+        const r = await this.client().send(
+          new GetObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }),
+        );
         return { stream: r.Body as Readable, sizeBytes: Number(r.ContentLength ?? 0) };
       }
       const path = this.localPath(area, key);
@@ -324,7 +404,12 @@ export class StorageService {
     }
   }
 
-  private async writeObject(area: StorageArea, key: string, body: Buffer, contentType: string): Promise<void> {
+  private async writeObject(
+    area: StorageArea,
+    key: string,
+    body: Buffer,
+    contentType: string,
+  ): Promise<void> {
     if (this.driver === 's3') {
       await this.client().send(
         new PutObjectCommand({
@@ -353,7 +438,10 @@ export class StorageService {
   /** Idempotent delete (missing objects are fine). */
   async delete(area: StorageArea, key: string): Promise<void> {
     try {
-      if (this.driver === 's3') await this.client().send(new DeleteObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }));
+      if (this.driver === 's3')
+        await this.client().send(
+          new DeleteObjectCommand({ Bucket: this.bucket(area), Key: this.objectName(area, key) }),
+        );
       else await rm(this.localPath(area, key), { force: true });
     } catch (err) {
       if (isNotFound(err)) return;
@@ -374,7 +462,11 @@ export class StorageService {
     if (this.driver === 's3') {
       const url = await getSignedUrl(
         this.presignClient(),
-        new GetObjectCommand({ Bucket: this.bucket('clean'), Key: this.objectName('clean', key), ResponseContentDisposition: contentDisposition(filename) }),
+        new GetObjectCommand({
+          Bucket: this.bucket('clean'),
+          Key: this.objectName('clean', key),
+          ResponseContentDisposition: contentDisposition(filename),
+        }),
         { expiresIn: 60 },
       );
       return { redirect: url };
@@ -392,14 +484,20 @@ export class StorageService {
 
   private bucket(area: StorageArea): string {
     const e = env();
-    const b = area === 'quarantine' ? (e.S3_QUARANTINE_BUCKET ?? e.S3_BUCKET) : (e.S3_CLEAN_BUCKET ?? e.S3_BUCKET);
+    const b =
+      area === 'quarantine' ? (e.S3_QUARANTINE_BUCKET ?? e.S3_BUCKET) : (e.S3_CLEAN_BUCKET ?? e.S3_BUCKET);
     if (!b) throw new Error(`No S3 bucket configured for the ${area} area`);
     return b;
   }
 
   private objectName(area: StorageArea, key: string): string {
     const e = env();
-    const prefix = area === 'quarantine' ? e.S3_QUARANTINE_PREFIX : area === 'exports' ? e.S3_EXPORTS_PREFIX : e.S3_CLEAN_PREFIX;
+    const prefix =
+      area === 'quarantine'
+        ? e.S3_QUARANTINE_PREFIX
+        : area === 'exports'
+          ? e.S3_EXPORTS_PREFIX
+          : e.S3_CLEAN_PREFIX;
     return `${prefix}${key}`;
   }
 
@@ -416,7 +514,9 @@ export class StorageService {
       region: e.S3_REGION,
       endpoint,
       forcePathStyle: e.S3_FORCE_PATH_STYLE,
-      credentials: e.S3_ACCESS_KEY_ID ? { accessKeyId: e.S3_ACCESS_KEY_ID, secretAccessKey: e.S3_SECRET_ACCESS_KEY ?? '' } : undefined,
+      credentials: e.S3_ACCESS_KEY_ID
+        ? { accessKeyId: e.S3_ACCESS_KEY_ID, secretAccessKey: e.S3_SECRET_ACCESS_KEY ?? '' }
+        : undefined,
       // Presigned PUTs must not carry an SDK-computed checksum of an empty body.
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
