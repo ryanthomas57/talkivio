@@ -86,6 +86,9 @@ const patchSchema = z
   .object({
     displayName: z.string().trim().max(100).nullable().optional(),
     email: z.string().trim().max(200).nullable().optional(),
+    phone: z.string().trim().max(40).nullable().optional(),
+    /** Staff notes about the visitor (classic live chat "Notes"), never shown to the visitor. */
+    notes: z.string().max(5000).nullable().optional(),
     customFields: z.record(z.unknown()).optional(),
     expectedVersion: z.number().int().positive().optional(),
   })

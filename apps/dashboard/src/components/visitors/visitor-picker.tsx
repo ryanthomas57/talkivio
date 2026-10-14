@@ -40,7 +40,12 @@ export function VisitorPicker({
   }, [text]);
   const results = useQuery({
     queryKey: ['visitor-search', q, !!identifiedOnly],
-    queryFn: () => api.page<VisitorListItem>('/visitors', { q, identified: identifiedOnly ? 'true' : undefined, limit: 8 }),
+    queryFn: () =>
+      api.page<VisitorListItem>('/visitors', {
+        q,
+        identified: identifiedOnly ? 'true' : undefined,
+        limit: 8,
+      }),
     enabled: q.length >= 2,
     staleTime: 10_000,
   });
@@ -50,34 +55,67 @@ export function VisitorPicker({
     <div className="flex flex-col gap-2">
       <Field label={label} description={description} error={error}>
         <div className="relative">
-          <Search className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-2" aria-hidden />
-          <Input type="search" value={text} onChange={(e) => setText(e.target.value)} placeholder={t('visitors.picker.placeholder')} className="ps-9" maxLength={100} />
+          <Search
+            className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-2"
+            aria-hidden
+          />
+          <Input
+            type="search"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t('visitors.picker.placeholder')}
+            className="ps-9"
+            maxLength={100}
+          />
         </div>
       </Field>
       <div aria-live="polite" className="text-sm">
         {q.length < 2 ? null : results.isLoading ? (
           <Spinner label={t('visitors.picker.searching')} />
         ) : results.isError ? (
-          <p className="text-danger">{t('visitors.picker.searchFailed', { error: errorMessage(results.error) })}</p>
+          <p className="text-danger">
+            {t('visitors.picker.searchFailed', { error: errorMessage(results.error) })}
+          </p>
         ) : !items.length ? (
-          <p className="text-fg-2">{identifiedOnly ? t('visitors.picker.noMatchesIdentified') : t('visitors.picker.noMatches')}</p>
+          <p className="text-fg-2">
+            {identifiedOnly ? t('visitors.picker.noMatchesIdentified') : t('visitors.picker.noMatches')}
+          </p>
         ) : (
           <fieldset className="flex flex-col gap-1">
             <legend className="sr-only">{t('visitors.picker.resultsLegend')}</legend>
             {items.map((v) => {
               const id = `${name}-${v.id}`;
               return (
-                <label key={v.id} htmlFor={id} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-3 py-2 hover:bg-surface-2 has-[:checked]:border-primary has-[:checked]:bg-primary-tint">
-                  <input id={id} type="radio" name={name} checked={value?.id === v.id} onChange={() => onChange(v)} className="size-4 accent-[var(--primary)]" />
+                <label
+                  key={v.id}
+                  htmlFor={id}
+                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md border border-line px-3 py-2 hover:bg-surface-2 has-[:checked]:border-primary has-[:checked]:bg-primary-tint"
+                >
+                  <input
+                    id={id}
+                    type="radio"
+                    name={name}
+                    checked={value?.id === v.id}
+                    onChange={() => onChange(v)}
+                    className="size-4 accent-[var(--primary)]"
+                  />
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate font-medium text-fg" dir="auto">
                       {v.displayName}
                     </span>
                     <span className="truncate text-xs text-fg-2">
-                      {t('visitors.picker.resultMeta', { who: isolate(v.email ?? v.anonymousLabel), seen: formatRelative(v.lastSeenAt), count: v.chatCount })}
+                      {t('visitors.picker.resultMeta', {
+                        who: isolate(v.email ?? v.anonymousLabel),
+                        seen: formatRelative(v.lastSeenAt),
+                        count: v.chatCount,
+                      })}
                     </span>
                   </span>
-                  <IdentityBadge verified={v.identityVerified} identified={!!v.email || v.displayName !== v.anonymousLabel} compact />
+                  <IdentityBadge
+                    verified={v.identityVerified}
+                    identified={!!v.email || v.displayName !== v.anonymousLabel}
+                    compact
+                  />
                 </label>
               );
             })}

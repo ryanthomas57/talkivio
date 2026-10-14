@@ -27,29 +27,47 @@ export interface VerifiedClaims {
   claims: Record<string, unknown>;
 }
 
-const invalid = (message = 'Identity token is invalid or expired') => new AppError(401, 'TOKEN_EXPIRED', message);
+const invalid = (message = 'Identity token is invalid or expired') =>
+  new AppError(401, 'TOKEN_EXPIRED', message);
 
 @Injectable()
 export class IdentityTokenVerifier {
   constructor(private readonly redis: RedisService) {}
 
   /** Validate signature and claims (no side effects). */
-  verify(token: string, ctx: { secret: string; tenantId: string; siteId: string; siteKeys: string[]; audience: string; maxLifetimeS: number }): VerifiedClaims {
+  verify(
+    token: string,
+    ctx: {
+      secret: string;
+      tenantId: string;
+      siteId: string;
+      siteKeys: string[];
+      audience: string;
+      maxLifetimeS: number;
+    },
+  ): VerifiedClaims {
     if (!token || token.length > 4000) throw invalid();
     const c = verifyJwtHS256(token, ctx.secret);
     if (!c) throw invalid();
     const now = Math.floor(Date.now() / 1000);
     const iat = c.iat;
     const exp = c.exp;
-    if (typeof iat !== 'number' || typeof exp !== 'number' || !Number.isFinite(iat) || !Number.isFinite(exp)) throw invalid('Identity token must carry iat and exp');
-    if (exp <= iat || exp - iat > ctx.maxLifetimeS) throw invalid(`Identity token lifetime must be at most ${ctx.maxLifetimeS} seconds`);
+    if (typeof iat !== 'number' || typeof exp !== 'number' || !Number.isFinite(iat) || !Number.isFinite(exp))
+      throw invalid('Identity token must carry iat and exp');
+    if (exp <= iat || exp - iat > ctx.maxLifetimeS)
+      throw invalid(`Identity token lifetime must be at most ${ctx.maxLifetimeS} seconds`);
     if (exp + SKEW_S < now || iat - SKEW_S > now) throw invalid();
     const aud = c.aud;
-    if (!(aud === ctx.audience || (Array.isArray(aud) && aud.includes(ctx.audience)))) throw invalid('Identity token audience is not accepted');
-    if (typeof c.iss !== 'string' || !(c.iss === ctx.siteId || ctx.siteKeys.includes(c.iss))) throw invalid('Identity token issuer does not match this site');
-    if (c.tenant_id !== undefined && c.tenant_id !== ctx.tenantId) throw invalid('Identity token is for another workspace');
-    if (c.site_id !== undefined && c.site_id !== ctx.siteId) throw invalid('Identity token is for another site');
-    if (c.site_ids !== undefined && !(Array.isArray(c.site_ids) && c.site_ids.includes(ctx.siteId))) throw invalid('Identity token is for another site');
+    if (!(aud === ctx.audience || (Array.isArray(aud) && aud.includes(ctx.audience))))
+      throw invalid('Identity token audience is not accepted');
+    if (typeof c.iss !== 'string' || !(c.iss === ctx.siteId || ctx.siteKeys.includes(c.iss)))
+      throw invalid('Identity token issuer does not match this site');
+    if (c.tenant_id !== undefined && c.tenant_id !== ctx.tenantId)
+      throw invalid('Identity token is for another workspace');
+    if (c.site_id !== undefined && c.site_id !== ctx.siteId)
+      throw invalid('Identity token is for another site');
+    if (c.site_ids !== undefined && !(Array.isArray(c.site_ids) && c.site_ids.includes(ctx.siteId)))
+      throw invalid('Identity token is for another site');
     const sub = typeof c.sub === 'string' ? c.sub.trim() : '';
     if (!sub || sub.length > 200) throw invalid('Identity token has no valid subject');
     const jti = typeof c.jti === 'string' ? c.jti : '';
@@ -63,7 +81,13 @@ export class IdentityTokenVerifier {
   /** Mark the jti used. Throws TOKEN_USED on replay. Call only after every other check passed. */
   async consume(siteId: string, audience: string, v: VerifiedClaims): Promise<void> {
     const ttl = Math.max(60, v.exp - Math.floor(Date.now() / 1000) + SKEW_S * 2);
-    const fresh = await this.redis.client.set(`rd:jti:${audience === HANDOFF_AUDIENCE ? 'h' : 'i'}:${siteId}:${sha256(v.jti)}`, '1', 'EX', ttl, 'NX');
+    const fresh = await this.redis.client.set(
+      `rd:jti:${audience === HANDOFF_AUDIENCE ? 'h' : 'i'}:${siteId}:${sha256(v.jti)}`,
+      '1',
+      'EX',
+      ttl,
+      'NX',
+    );
     if (!fresh) throw new AppError(401, 'TOKEN_USED', 'Identity token was already used');
   }
 }

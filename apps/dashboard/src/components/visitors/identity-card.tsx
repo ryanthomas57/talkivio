@@ -26,7 +26,10 @@ function FieldRow({ label, field }: { label: string; field: FieldValue | undefin
     <div className="flex flex-col gap-1 py-2 sm:flex-row sm:items-center sm:justify-between">
       <dt className="text-sm text-fg-2">{label}</dt>
       <dd className="flex min-w-0 flex-wrap items-center gap-2 text-sm">
-        <span className={value ? 'font-medium text-fg break-anywhere' : 'text-fg-3'} dir={value ? 'auto' : undefined}>
+        <span
+          className={value ? 'font-medium text-fg break-anywhere' : 'text-fg-3'}
+          dir={value ? 'auto' : undefined}
+        >
           {value ?? t('visitors.identity.notProvided')}
         </span>
         {value &&
@@ -44,7 +47,15 @@ function FieldRow({ label, field }: { label: string; field: FieldValue | undefin
   );
 }
 
-export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorProfile; onSaved: (p: VisitorProfile) => void; onReload: () => void }) {
+export function IdentityCard({
+  profile,
+  onSaved,
+  onReload,
+}: {
+  profile: VisitorProfile;
+  onSaved: (p: VisitorProfile) => void;
+  onReload: () => void;
+}) {
   const t = useT();
   const canEdit = useCan('visitors.edit') && !profile.erased;
   const sites = byId(useSites().data);
@@ -58,7 +69,8 @@ export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorP
 
   const baseName = profile.fields.name?.value ?? '';
   const baseEmail = profile.fields.email?.value ?? '';
-  const dirty = editing && (name.trim() !== baseName || email.trim().toLowerCase() !== baseEmail.toLowerCase());
+  const dirty =
+    editing && (name.trim() !== baseName || email.trim().toLowerCase() !== baseEmail.toLowerCase());
   const anyVerified = !!(profile.fields.name?.verified || profile.fields.email?.verified);
 
   const save = async (): Promise<boolean> => {
@@ -78,7 +90,9 @@ export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorP
     setFailure(null);
     setConflict(false);
     try {
-      const next = await api.patch<VisitorProfile>(`/visitors/${profile.id}`, patch, { ifMatch: profile.version });
+      const next = await api.patch<VisitorProfile>(`/visitors/${profile.id}`, patch, {
+        ifMatch: profile.version,
+      });
       onSaved(next);
       setEditing(false);
       toast.success(t('visitors.identity.savedToast'));
@@ -109,7 +123,9 @@ export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorP
             {t('visitors.identity.identityNotVerified')}
           </Badge>
         )}
-        <span className="text-xs text-fg-2">{t('visitors.identity.labelLine', { label: isolate(profile.anonymousLabel) })}</span>
+        <span className="text-xs text-fg-2">
+          {t('visitors.identity.labelLine', { label: isolate(profile.anonymousLabel) })}
+        </span>
       </div>
       {conflict && (
         <Banner
@@ -142,7 +158,9 @@ export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorP
           </dl>
           {profile.identities.length > 0 && (
             <div className="flex flex-col gap-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-fg-2">{t('visitors.identity.verifiedLinks')}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-fg-2">
+                {t('visitors.identity.verifiedLinks')}
+              </p>
               <ul className="flex flex-col gap-1 text-sm">
                 {profile.identities.map((i, n) => (
                   <li key={`${i.issuerSiteId}-${n}`} className="text-fg-2">
@@ -183,12 +201,31 @@ export function IdentityCard({ profile, onSaved, onReload }: { profile: VisitorP
             void save();
           }}
         >
-          <Banner tone="info">{anyVerified ? t('visitors.identity.noticeWithVerified') : t('visitors.identity.notice')}</Banner>
-          <Field label={t('visitors.identity.displayName')} error={errors.name} description={t('visitors.identity.displayNameHint')}>
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={100} autoComplete="off" dir="auto" />
+          <Banner tone="info">
+            {anyVerified ? t('visitors.identity.noticeWithVerified') : t('visitors.identity.notice')}
+          </Banner>
+          <Field
+            label={t('visitors.identity.displayName')}
+            error={errors.name}
+            description={t('visitors.identity.displayNameHint')}
+          >
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={100}
+              autoComplete="off"
+              dir="auto"
+            />
           </Field>
           <Field label={t('visitors.identity.contactEmail')} error={errors.email}>
-            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} maxLength={200} autoComplete="off" dir="ltr" />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              maxLength={200}
+              autoComplete="off"
+              dir="ltr"
+            />
           </Field>
           <div className="flex flex-wrap gap-2">
             <Button type="submit" variant="primary" loading={saving} disabled={!dirty}>

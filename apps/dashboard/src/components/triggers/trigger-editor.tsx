@@ -11,7 +11,16 @@
  * The definition is held in wire form (snake_case) throughout — see triggers-api.ts.
  */
 import { useQueryClient } from '@tanstack/react-query';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Copy, MoreHorizontal, Rocket, Save, Trash2 } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle2,
+  Copy,
+  MoreHorizontal,
+  Rocket,
+  Save,
+  Trash2,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -62,15 +71,41 @@ import { byId, useDepartments, useSites, useTags } from '@/lib/queries';
 import { useCan } from '@/stores/session';
 import { ActionList } from './action-list';
 import { ConditionBuilder, TagDatalist, type RefData } from './condition-builder';
-import { blankDefinition, departmentNamer, describeAction, eventLabel, fieldGroups, IssueIndex, localizeIssues, issuesFromFieldErrors, validationContext } from './dsl-ui';
+import {
+  blankDefinition,
+  departmentNamer,
+  describeAction,
+  eventLabel,
+  fieldGroups,
+  IssueIndex,
+  localizeIssues,
+  issuesFromFieldErrors,
+  validationContext,
+} from './dsl-ui';
 import { FunnelPanel, FunnelRangeSelect, type FunnelRange } from './funnel';
 import { CharCount, IssueList, NumberBox } from './inputs';
 import { RevisionHistory } from './revision-history';
 import { RunsTab } from './runs-tab';
 import { Simulator } from './simulator';
-import { archiveTrigger, createTrigger, patchTriggerMeta, publishTrigger, saveTriggerDraft, setTriggerEnabled } from './trigger-commands';
+import {
+  archiveTrigger,
+  createTrigger,
+  patchTriggerMeta,
+  publishTrigger,
+  saveTriggerDraft,
+  setTriggerEnabled,
+} from './trigger-commands';
 import { StatusBadge } from './trigger-list';
-import { fetchTrigger, hasInvitation, tk, useCustomFields, useTrigger, useTriggersRealtime, type TriggerChange, type TriggerDetail } from './triggers-api';
+import {
+  fetchTrigger,
+  hasInvitation,
+  tk,
+  useCustomFields,
+  useTrigger,
+  useTriggersRealtime,
+  type TriggerChange,
+  type TriggerDetail,
+} from './triggers-api';
 
 interface Form {
   name: string;
@@ -88,7 +123,10 @@ function isEqualJson(a: unknown, b: unknown): boolean {
 function BackLink() {
   const t = useT();
   return (
-    <Link href="/settings/triggers" className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg">
+    <Link
+      href="/settings/triggers"
+      className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg"
+    >
       <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
       {t('triggers.editor.back')}
     </Link>
@@ -161,7 +199,10 @@ function NewTrigger() {
   const params = useSearchParams();
   const from = params.get('from');
   const eventParam = params.get('event');
-  const event: DslEvent = eventParam && (DSL_EVENTS as readonly string[]).includes(eventParam) ? (eventParam as DslEvent) : 'visitor.timer.elapsed';
+  const event: DslEvent =
+    eventParam && (DSL_EVENTS as readonly string[]).includes(eventParam)
+      ? (eventParam as DslEvent)
+      : 'visitor.timer.elapsed';
   const source = useTrigger(from);
   if (from && source.isPending) return <EditorSkeleton />;
   if (from && source.isError)
@@ -169,20 +210,33 @@ function NewTrigger() {
       <Page>
         <BackLink />
         <Card>
-          <PanelError message={t('triggers.editor.copyLoadError', { error: errorMessage(source.error) })} onRetry={() => void source.refetch()} />
+          <PanelError
+            message={t('triggers.editor.copyLoadError', { error: errorMessage(source.error) })}
+            onRetry={() => void source.refetch()}
+          />
         </Card>
       </Page>
     );
   const src = from ? source.data : undefined;
   const def = src?.draft?.definition ?? src?.published?.definition ?? blankDefinition(event);
-  const initial: Form = src ? { name: t('triggers.editor.copyOf', { name: src.name }).slice(0, 120), description: src.description ?? '', def } : { name: '', description: '', def };
+  const initial: Form = src
+    ? {
+        name: t('triggers.editor.copyOf', { name: src.name }).slice(0, 120),
+        description: src.description ?? '',
+        def,
+      }
+    : { name: '', description: '', def };
   return <Editor key={from ?? event} initial={initial} />;
 }
 
 // ───────────────────────── Editor ─────────────────────────
 
 function formOf(t: TriggerDetail): Form {
-  return { name: t.name, description: t.description ?? '', def: (t.draft?.definition ?? t.published?.definition)! };
+  return {
+    name: t.name,
+    description: t.description ?? '',
+    def: (t.draft?.definition ?? t.published?.definition)!,
+  };
 }
 
 function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form }) {
@@ -203,7 +257,8 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
   const [nameError, setNameError] = useState<string | null>(null);
   // `info` marks the neutral "edits re-based" notice; everything else is an error.
   const [message, setMessageState] = useState<{ text: string; info: boolean } | null>(null);
-  const setMessage = (text: string | null, info = false) => setMessageState(text === null ? null : { text, info });
+  const setMessage = (text: string | null, info = false) =>
+    setMessageState(text === null ? null : { text, info });
   const [conflict, setConflict] = useState(false);
   const [remoteChanged, setRemoteChanged] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -284,8 +339,17 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
   );
   const groups = useMemo(() => fieldGroups(t, form.def.event, custom.data), [t, form.def.event, custom.data]);
   const validation = useMemo(() => validateDslDefinition(form.def, ctx), [form.def, ctx]);
-  const issues = useMemo(() => new IssueIndex(localizeIssues(t, [...(validation.ok ? [] : validation.issues), ...serverIssues])), [validation, serverIssues, t]);
-  const nameProblem = nameError ?? (!form.name.trim() ? t('triggers.editor.nameRequired') : [...form.name].length > 120 ? t('triggers.editor.maxChars', { max: 120 }) : null);
+  const issues = useMemo(
+    () => new IssueIndex(localizeIssues(t, [...(validation.ok ? [] : validation.issues), ...serverIssues])),
+    [validation, serverIssues, t],
+  );
+  const nameProblem =
+    nameError ??
+    (!form.name.trim()
+      ? t('triggers.editor.nameRequired')
+      : [...form.name].length > 120
+        ? t('triggers.editor.maxChars', { max: 120 })
+        : null);
   const descProblem = [...form.description].length > 500 ? t('triggers.editor.maxChars', { max: 500 }) : null;
   const valid = validation.ok && !nameProblem && !descProblem;
   const problemCount = issues.count + (nameProblem ? 1 : 0) + (descProblem ? 1 : 0);
@@ -294,8 +358,13 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
   const deptName = departmentNamer(t, (id) => deptById.get(id)?.name);
 
   const tabParam = params.get('tab') as Tab | null;
-  const showInvitations = !isNew && (hasInvitation(form.def) || hasInvitation(trigger?.published?.definition));
-  const tab: Tab = isNew ? 'builder' : tabParam && TABS.includes(tabParam) && (tabParam !== 'invitations' || showInvitations) ? tabParam : 'builder';
+  const showInvitations =
+    !isNew && (hasInvitation(form.def) || hasInvitation(trigger?.published?.definition));
+  const tab: Tab = isNew
+    ? 'builder'
+    : tabParam && TABS.includes(tabParam) && (tabParam !== 'invitations' || showInvitations)
+      ? tabParam
+      : 'builder';
   const setTab = (value: string) => {
     const next = new URLSearchParams(params.toString());
     if (value === 'builder') next.delete('tab');
@@ -378,7 +447,10 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
     setSaving(true);
     try {
       if (isNew) {
-        const d = await createTrigger({ name: form.name.trim(), description: form.description.trim() || null, definition: form.def }, createKey.current);
+        const d = await createTrigger(
+          { name: form.name.trim(), description: form.description.trim() || null, definition: form.def },
+          createKey.current,
+        );
         qc.setQueryData(tk.detail(d.id), d);
         void qc.invalidateQueries({ queryKey: tk.root, predicate: (q) => q.queryKey[1] === 'list' });
         setBase(form); // clean before navigating so the guard does not prompt
@@ -390,7 +462,8 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
       let detail: TriggerDetail | null = null;
       const meta: { name?: string; description?: string | null } = {};
       if (form.name.trim() !== base.name) meta.name = form.name.trim();
-      if (form.description.trim() !== base.description.trim()) meta.description = form.description.trim() || null;
+      if (form.description.trim() !== base.description.trim())
+        meta.description = form.description.trim() || null;
       if (Object.keys(meta).length) {
         detail = await patchTriggerMeta(trigger!.id, meta, version);
         version = detail.version;
@@ -415,7 +488,10 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
   };
 
   const save = async (): Promise<boolean> => (await persist()) !== null;
-  const guard = useDirtyGuard(dirty && canManage, { what: form.name ? isolate(form.name) : t('triggers.editor.thisTrigger'), onSave: save });
+  const guard = useDirtyGuard(dirty && canManage, {
+    what: form.name ? isolate(form.name) : t('triggers.editor.thisTrigger'),
+    onSave: save,
+  });
 
   const needsPublish = !isNew && (dirty || !trigger!.publishedRevision || trigger!.draftPending);
 
@@ -426,16 +502,26 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
       <BackLink />
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1.5">
-          <h1 className="break-words text-xl" dir="auto">
+          <h1
+            className="w-fit max-w-full break-words rounded-md bg-primary px-3 py-1 text-lg font-semibold leading-7 text-primary-fg"
+            dir="auto"
+          >
             {isNew ? (form.name.trim() ? form.name : t('triggers.editor.newTrigger')) : base.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-fg-2">
-            {trigger ? <StatusBadge t={trigger} /> : <Badge tone="warning">{t('triggers.editor.notSaved')}</Badge>}
+            {trigger ? (
+              <StatusBadge t={trigger} />
+            ) : (
+              <Badge tone="warning">{t('triggers.editor.notSaved')}</Badge>
+            )}
             <span>{eventLabel(t, form.def.event)}</span>
             {trigger && (
               <span className="tabular">
                 {trigger.publishedRevision
-                  ? t('triggers.editor.revisionsPublished', { draft: trigger.currentRevision, published: trigger.publishedRevision })
+                  ? t('triggers.editor.revisionsPublished', {
+                      draft: trigger.currentRevision,
+                      published: trigger.publishedRevision,
+                    })
                   : t('triggers.editor.revisions', { draft: trigger.currentRevision })}
               </span>
             )}
@@ -449,7 +535,11 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
               </Button>
             )}
             {needsPublish && (
-              <Button variant={dirty ? 'secondary' : 'primary'} onClick={() => setPublishOpen(true)} disabled={!valid}>
+              <Button
+                variant={dirty ? 'secondary' : 'primary'}
+                onClick={() => setPublishOpen(true)}
+                disabled={!valid}
+              >
                 <Rocket className="size-4" aria-hidden />
                 {t('triggers.editor.publishEllipsis')}
               </Button>
@@ -462,7 +552,10 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
                   </Button>
                 </MenuTrigger>
                 <MenuContent>
-                  <MenuItem icon={<Copy />} onSelect={() => router.push(`/settings/triggers/new?from=${trigger.id}`)}>
+                  <MenuItem
+                    icon={<Copy />}
+                    onSelect={() => router.push(`/settings/triggers/new?from=${trigger.id}`)}
+                  >
                     {t('triggers.list.duplicate')}
                   </MenuItem>
                   <MenuSeparator />
@@ -512,7 +605,11 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
             </div>
           }
         >
-          {remoteChanged ? t('triggers.editor.remoteChangedBody') : dirty ? t('triggers.editor.remoteKeptBody') : t('triggers.editor.remoteLatestBody')}
+          {remoteChanged
+            ? t('triggers.editor.remoteChangedBody')
+            : dirty
+              ? t('triggers.editor.remoteKeptBody')
+              : t('triggers.editor.remoteLatestBody')}
         </Banner>
       )}
       {remoteChanged && !remoteNotice && !conflict && (
@@ -538,7 +635,11 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
           <TabsTrigger value="builder">
             {t('triggers.editor.tabBuilder')}
             {issues.count > 0 && (
-              <Badge tone="danger" className="h-5 px-1.5" aria-label={t('triggers.editor.problemsLabel', { count: issues.count })}>
+              <Badge
+                tone="danger"
+                className="h-5 px-1.5"
+                aria-label={t('triggers.editor.problemsLabel', { count: issues.count })}
+              >
                 {issues.count}
               </Badge>
             )}
@@ -546,18 +647,38 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
           {!isNew && <TabsTrigger value="simulator">{t('triggers.editor.tabSimulator')}</TabsTrigger>}
           {!isNew && <TabsTrigger value="runs">{t('triggers.editor.tabRuns')}</TabsTrigger>}
           {!isNew && <TabsTrigger value="history">{t('triggers.editor.tabHistory')}</TabsTrigger>}
-          {showInvitations && <TabsTrigger value="invitations">{t('triggers.editor.tabInvitations')}</TabsTrigger>}
+          {showInvitations && (
+            <TabsTrigger value="invitations">{t('triggers.editor.tabInvitations')}</TabsTrigger>
+          )}
         </TabsList>
 
         <TabsContent value="builder" className="mt-6 flex flex-col gap-6">
           <Card>
             <CardHeader title={t('triggers.editor.basics')} description={t('triggers.editor.basicsHelp')} />
             <CardBody className="grid gap-5 md:grid-cols-2">
-              <Field label={t('common.name')} required error={nameProblem && (dirty || nameError || isNew) ? nameProblem : undefined}>
-                <Input value={form.name} onChange={(e) => update({ name: e.target.value })} maxLength={140} disabled={readOnly} dir="auto" />
+              <Field
+                label={t('common.name')}
+                required
+                error={nameProblem && (dirty || nameError || isNew) ? nameProblem : undefined}
+              >
+                <Input
+                  value={form.name}
+                  onChange={(e) => update({ name: e.target.value })}
+                  maxLength={140}
+                  disabled={readOnly}
+                  dir="auto"
+                />
               </Field>
-              <Field label={t('triggers.label.event')} error={issues.first('event')} description={t('triggers.editor.eventHelp')}>
-                <Select value={form.def.event} onChange={(e) => setDef({ ...form.def, event: e.target.value as DslEvent })} disabled={readOnly}>
+              <Field
+                label={t('triggers.label.event')}
+                error={issues.first('event')}
+                description={t('triggers.editor.eventHelp')}
+              >
+                <Select
+                  value={form.def.event}
+                  onChange={(e) => setDef({ ...form.def, event: e.target.value as DslEvent })}
+                  disabled={readOnly}
+                >
                   {DSL_EVENTS.map((e) => (
                     <option key={e} value={e}>
                       {eventLabel(t, e)}
@@ -565,14 +686,46 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
                   ))}
                 </Select>
               </Field>
-              <Field label={t('common.description')} className="md:col-span-2" error={descProblem ?? undefined}>
-                <Textarea value={form.description} onChange={(e) => update({ description: e.target.value })} rows={2} disabled={readOnly} dir="auto" className="min-h-16" />
+              <Field
+                label={t('common.description')}
+                className="md:col-span-2"
+                error={descProblem ?? undefined}
+              >
+                <Textarea
+                  value={form.description}
+                  onChange={(e) => update({ description: e.target.value })}
+                  rows={2}
+                  disabled={readOnly}
+                  dir="auto"
+                  className="min-h-16"
+                />
               </Field>
-              <Field label={t('triggers.label.priority')} error={issues.first('priority')} description={t('triggers.editor.priorityHelp', { max: DSL_PRIORITY_MAX })}>
-                <NumberBox value={form.def.priority} min={0} max={DSL_PRIORITY_MAX} onChange={(v) => setDef({ ...form.def, priority: v })} disabled={readOnly} />
+              <Field
+                label={t('triggers.label.priority')}
+                error={issues.first('priority')}
+                description={t('triggers.editor.priorityHelp', { max: DSL_PRIORITY_MAX })}
+              >
+                <NumberBox
+                  value={form.def.priority}
+                  min={0}
+                  max={DSL_PRIORITY_MAX}
+                  onChange={(v) => setDef({ ...form.def, priority: v })}
+                  disabled={readOnly}
+                />
               </Field>
-              <Field label={t('triggers.label.cooldown')} error={issues.first('cooldown_seconds')} description={t('triggers.editor.cooldownHelp')}>
-                <NumberBox value={form.def.cooldown_seconds} min={0} max={DSL_MAX_COOLDOWN_SECONDS} suffix={t('triggers.label.seconds')} onChange={(v) => setDef({ ...form.def, cooldown_seconds: v })} disabled={readOnly} />
+              <Field
+                label={t('triggers.label.cooldown')}
+                error={issues.first('cooldown_seconds')}
+                description={t('triggers.editor.cooldownHelp')}
+              >
+                <NumberBox
+                  value={form.def.cooldown_seconds}
+                  min={0}
+                  max={DSL_MAX_COOLDOWN_SECONDS}
+                  suffix={t('triggers.label.seconds')}
+                  onChange={(v) => setDef({ ...form.def, cooldown_seconds: v })}
+                  disabled={readOnly}
+                />
               </Field>
               <SwitchField
                 className="md:col-span-2"
@@ -583,22 +736,45 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
                 disabled={readOnly}
               />
               <div className="md:col-span-2">
-                <IssueList messages={[...issues.at(''), ...issues.at('dsl_version'), ...issues.at('stop_processing')].map((i) => i.message)} />
+                <IssueList
+                  messages={[
+                    ...issues.at(''),
+                    ...issues.at('dsl_version'),
+                    ...issues.at('stop_processing'),
+                  ].map((i) => i.message)}
+                />
               </div>
             </CardBody>
           </Card>
 
           <Card>
-            <CardHeader title={t('triggers.label.conditions')} description={t('triggers.editor.conditionsHelp')} />
+            <CardHeader
+              title={t('triggers.label.conditions')}
+              description={t('triggers.editor.conditionsHelp')}
+            />
             <CardBody>
-              <ConditionBuilder def={form.def} onChange={setDef} groups={groups} issues={issues} refs={refs} disabled={readOnly} />
+              <ConditionBuilder
+                def={form.def}
+                onChange={setDef}
+                groups={groups}
+                issues={issues}
+                refs={refs}
+                disabled={readOnly}
+              />
             </CardBody>
           </Card>
 
           <Card>
             <CardHeader title={t('triggers.label.actions')} description={t('triggers.editor.actionsHelp')} />
             <CardBody>
-              <ActionList def={form.def} onChange={setDef} issues={issues} refs={refs} customDefs={custom.data} disabled={readOnly} />
+              <ActionList
+                def={form.def}
+                onChange={setDef}
+                issues={issues}
+                refs={refs}
+                customDefs={custom.data}
+                disabled={readOnly}
+              />
             </CardBody>
           </Card>
         </TabsContent>
@@ -616,7 +792,9 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
                 onDefinitionIssues={(list) => {
                   // The builder already shows local validator issues; keep only what the server adds.
                   const local = validation.ok ? [] : validation.issues;
-                  setServerIssues(list.filter((i) => !local.some((l) => l.path === i.path && l.message === i.message)));
+                  setServerIssues(
+                    list.filter((i) => !local.some((l) => l.path === i.path && l.message === i.message)),
+                  );
                 }}
                 onShowBuilder={() => setTab('builder')}
               />
@@ -625,12 +803,23 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
               <RunsTab triggerId={trigger.id} />
             </TabsContent>
             <TabsContent value="history" className="mt-6">
-              <RevisionHistory trigger={trigger} canManage={canManage} dirty={dirty} onRestored={adopt} refs={refs} customDefs={custom.data} />
+              <RevisionHistory
+                trigger={trigger}
+                canManage={canManage}
+                dirty={dirty}
+                onRestored={adopt}
+                refs={refs}
+                customDefs={custom.data}
+              />
             </TabsContent>
             {showInvitations && (
               <TabsContent value="invitations" className="mt-6">
                 <Card>
-                  <CardHeader title={t('triggers.editor.funnel')} description={t('triggers.editor.funnelHelp')} action={<FunnelRangeSelect value={funnelRange} onChange={setFunnelRange} />} />
+                  <CardHeader
+                    title={t('triggers.editor.funnel')}
+                    description={t('triggers.editor.funnelHelp')}
+                    action={<FunnelRangeSelect value={funnelRange} onChange={setFunnelRange} />}
+                  />
                   <CardBody>
                     <FunnelPanel triggerId={trigger.id} range={funnelRange} />
                   </CardBody>
@@ -648,14 +837,18 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
               {problemCount > 0 ? (
                 <>
                   <AlertTriangle className="size-4 text-danger" aria-hidden />
-                  <span className="font-medium text-danger">{t('triggers.editor.problemsToFix', { count: problemCount })}</span>
+                  <span className="font-medium text-danger">
+                    {t('triggers.editor.problemsToFix', { count: problemCount })}
+                  </span>
                 </>
               ) : dirty ? (
                 <span className="text-fg-2">{t('triggers.editor.unsavedChanges')}</span>
               ) : (
                 <>
                   <CheckCircle2 className="size-4 text-success" aria-hidden />
-                  <span className="text-fg-2">{isNew ? t('triggers.editor.validNotSaved') : t('common.saved')}</span>
+                  <span className="text-fg-2">
+                    {isNew ? t('triggers.editor.validNotSaved') : t('common.saved')}
+                  </span>
                 </>
               )}
             </p>
@@ -664,7 +857,12 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
                 {t('triggers.editor.discard')}
               </Button>
             )}
-            <Button variant="primary" onClick={() => void persist()} loading={saving} disabled={(!dirty && !isNew) || !valid}>
+            <Button
+              variant="primary"
+              onClick={() => void persist()}
+              loading={saving}
+              disabled={(!dirty && !isNew) || !valid}
+            >
               <Save className="size-4" aria-hidden />
               {t('triggers.editor.saveDraft')}
             </Button>
@@ -691,7 +889,11 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
               try {
                 const d = await publishTrigger(trigger.id, revision, enabled);
                 adopt(d);
-                toast.success(t(enabled ? 'triggers.editor.publishedEnabled' : 'triggers.editor.publishedDisabled', { n: revision }));
+                toast.success(
+                  t(enabled ? 'triggers.editor.publishedEnabled' : 'triggers.editor.publishedDisabled', {
+                    n: revision,
+                  }),
+                );
               } catch (e) {
                 if (isApiError(e, 'VERSION_CONFLICT')) {
                   void reload();
@@ -708,11 +910,19 @@ function Editor({ trigger, initial }: { trigger?: TriggerDetail; initial?: Form 
         <ConfirmDialog
           open={toggleOpen}
           onOpenChange={setToggleOpen}
-          title={t(trigger.enabled ? 'triggers.list.disableTitle' : 'triggers.list.enableTitle', { name: isolate(trigger.name) })}
+          title={t(trigger.enabled ? 'triggers.list.disableTitle' : 'triggers.list.enableTitle', {
+            name: isolate(trigger.name),
+          })}
           description={
             trigger.enabled
-              ? t('triggers.editor.disableBody', { revision: trigger.publishedRevision, event: eventLabel(t, trigger.event) })
-              : t(trigger.draftPending ? 'triggers.list.enableBodyDraft' : 'triggers.list.enableBody', { revision: trigger.publishedRevision, event: eventLabel(t, trigger.event) })
+              ? t('triggers.editor.disableBody', {
+                  revision: trigger.publishedRevision,
+                  event: eventLabel(t, trigger.event),
+                })
+              : t(trigger.draftPending ? 'triggers.list.enableBodyDraft' : 'triggers.list.enableBody', {
+                  revision: trigger.publishedRevision,
+                  event: eventLabel(t, trigger.event),
+                })
           }
           confirmLabel={trigger.enabled ? t('common.disable') : t('common.enable')}
           danger={trigger.enabled}
@@ -770,8 +980,12 @@ function remoteChangeText(t: Translate, before: TriggerDetail, c: TriggerChange)
     return t('triggers.remote.changed');
   }
   const p = c.event.payload;
-  if (p.revision && p.revision !== before.publishedRevision) return t(p.enabled ? 'triggers.remote.publishedRunning' : 'triggers.remote.publishedDisabled', { n: p.revision });
-  if (p.enabled !== before.enabled) return t(p.enabled ? 'triggers.remote.enabled' : 'triggers.remote.disabled');
+  if (p.revision && p.revision !== before.publishedRevision)
+    return t(p.enabled ? 'triggers.remote.publishedRunning' : 'triggers.remote.publishedDisabled', {
+      n: p.revision,
+    });
+  if (p.enabled !== before.enabled)
+    return t(p.enabled ? 'triggers.remote.enabled' : 'triggers.remote.disabled');
   return t('triggers.remote.changed');
 }
 
@@ -802,7 +1016,10 @@ function PublishDialog({
   const replaces = trigger.publishedRevision
     ? newRevision
       ? t('triggers.publish.replaceNew', { published: trigger.publishedRevision })
-      : t('triggers.publish.replace', { revision: trigger.currentRevision, published: trigger.publishedRevision })
+      : t('triggers.publish.replace', {
+          revision: trigger.currentRevision,
+          published: trigger.publishedRevision,
+        })
     : t('triggers.publish.first');
   const description = dirty ? `${t('triggers.publish.savedFirst')} ${replaces}` : replaces;
   const run = async () => {
@@ -849,9 +1066,15 @@ function PublishDialog({
                   : t('triggers.publish.conditionsAll', { all: def.all.length })}
             </dd>
             <dt className="text-fg-2">{t('triggers.label.afterwards')}</dt>
-            <dd className="text-fg">{def.stop_processing ? t('triggers.label.stopsLower') : t('triggers.label.lowerStillRun')}</dd>
+            <dd className="text-fg">
+              {def.stop_processing ? t('triggers.label.stopsLower') : t('triggers.label.lowerStillRun')}
+            </dd>
             <dt className="text-fg-2">{t('triggers.label.cooldown')}</dt>
-            <dd className="text-fg">{def.cooldown_seconds ? t('triggers.label.cooldownValue', { count: def.cooldown_seconds }) : t('common.none')}</dd>
+            <dd className="text-fg">
+              {def.cooldown_seconds
+                ? t('triggers.label.cooldownValue', { count: def.cooldown_seconds })
+                : t('common.none')}
+            </dd>
           </dl>
           <div>
             <p className="font-medium text-fg">{t('triggers.label.whenMatches')}</p>
@@ -863,7 +1086,11 @@ function PublishDialog({
           </div>
           <SwitchField
             label={t('triggers.publish.enableAfter')}
-            description={enabled ? t('triggers.publish.enableAfterOn', { event: eventLabel(t, def.event) }) : t('triggers.publish.enableAfterOff')}
+            description={
+              enabled
+                ? t('triggers.publish.enableAfterOn', { event: eventLabel(t, def.event) })
+                : t('triggers.publish.enableAfterOff')
+            }
             checked={enabled}
             onCheckedChange={setEnabled}
           />

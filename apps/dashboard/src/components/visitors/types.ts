@@ -136,6 +136,8 @@ export interface VisitorProfile {
   /** Opaque map on the wire (keys kept): name / email / phone. */
   fields: Record<string, FieldValue | undefined>;
   allowedContactFields: string[];
+  /** Staff notes about the visitor; never shown to the visitor. */
+  notes: string | null;
   tags: VisitorTag[];
   customFields: Record<string, unknown>;
   /** Opaque map on the wire: who set each custom-field value. */

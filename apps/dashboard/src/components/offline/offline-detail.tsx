@@ -234,7 +234,7 @@ export function OfflineDetailView({ id }: { id: string }) {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="flex flex-wrap items-center gap-3 text-xl">
-            <span className="font-mono" dir="ltr">
+            <span className="rounded-md bg-primary px-3 py-1 font-mono text-lg text-primary-fg" dir="ltr">
               {d.reference}
             </span>
             <OfflineStatusBadge status={d.status} />

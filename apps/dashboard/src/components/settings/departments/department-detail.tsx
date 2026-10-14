@@ -5,7 +5,19 @@ import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useCallback, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Button, Card, ConfirmDialog, EmptyState, Page, PanelError, Skeleton, Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui';
+import {
+  Button,
+  Card,
+  ConfirmDialog,
+  EmptyState,
+  Page,
+  PanelError,
+  Skeleton,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui';
 import { useDirtyGuard } from '@/hooks/use-dirty-guard';
 import { intlLocale, isolate, useT, type MessageKey } from '@/i18n';
 import { api } from '@/lib/api';
@@ -45,7 +57,10 @@ export function DepartmentDetail({ id }: { id: string }) {
 function BackLink() {
   const t = useT();
   return (
-    <Link href="/settings/departments" className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg">
+    <Link
+      href="/settings/departments"
+      className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg"
+    >
       <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
       {t('common.departments')}
     </Link>
@@ -104,12 +119,25 @@ function Loaded({ dept, all }: { dept: DepartmentResource; all: DepartmentResour
   const canManage = useCan('departments.manage') && !dept.archivedAt;
   const tabParam = params.get('tab');
   const tab: TabId = TABS.some((x) => x.id === tabParam) ? (tabParam as TabId) : 'general';
-  const [dirty, setDirty] = useState<Record<TabId, boolean>>({ general: false, agents: false, routing: false, hours: false });
+  const [dirty, setDirty] = useState<Record<TabId, boolean>>({
+    general: false,
+    agents: false,
+    routing: false,
+    hours: false,
+  });
   const saves = useRef<Partial<Record<TabId, () => Promise<boolean>>>>({});
   const [archiveOpen, setArchiveOpen] = useState(false);
 
-  const dirtySetter = useCallback((id: TabId) => (d: boolean) => setDirty((prev) => (prev[id] === d ? prev : { ...prev, [id]: d })), []);
-  const onDirty = useRef({ general: dirtySetter('general'), agents: dirtySetter('agents'), routing: dirtySetter('routing'), hours: dirtySetter('hours') }).current;
+  const dirtySetter = useCallback(
+    (id: TabId) => (d: boolean) => setDirty((prev) => (prev[id] === d ? prev : { ...prev, [id]: d })),
+    [],
+  );
+  const onDirty = useRef({
+    general: dirtySetter('general'),
+    agents: dirtySetter('agents'),
+    routing: dirtySetter('routing'),
+    hours: dirtySetter('hours'),
+  }).current;
   const register = useRef({
     general: (fn: () => Promise<boolean>) => {
       saves.current.general = fn;
@@ -150,12 +178,17 @@ function Loaded({ dept, all }: { dept: DepartmentResource; all: DepartmentResour
       <BackLink />
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="break-words text-xl" dir="auto">
+          <h1
+            className="w-fit max-w-full break-words rounded-md bg-primary px-3 py-1 text-lg font-semibold leading-7 text-primary-fg"
+            dir="auto"
+          >
             {dept.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-fg-2">
             <DepartmentStatus d={dept} />
-            <span>{t('settings.departments.headerCounts', { waiting: dept.queued, members: dept.members.length })}</span>
+            <span>
+              {t('settings.departments.headerCounts', { waiting: dept.queued, members: dept.members.length })}
+            </span>
           </div>
         </div>
         {canManage && (
@@ -172,22 +205,49 @@ function Loaded({ dept, all }: { dept: DepartmentResource; all: DepartmentResour
           {TABS.map((x) => (
             <TabsTrigger key={x.id} value={x.id}>
               {t(x.label)}
-              {dirty[x.id] && <span className="size-1.5 rounded-full bg-warning" aria-label={t('settings.departments.unsavedDot')} role="img" />}
+              {dirty[x.id] && (
+                <span
+                  className="size-1.5 rounded-full bg-warning"
+                  aria-label={t('settings.departments.unsavedDot')}
+                  role="img"
+                />
+              )}
             </TabsTrigger>
           ))}
         </TabsList>
         {/* Tabs stay mounted so unsaved edits survive switching tabs. */}
         <TabsContent value="general" forceMount className="data-[state=inactive]:hidden">
-          <GeneralTab dept={dept} canManage={canManage} onDirtyChange={onDirty.general} registerSave={register.general} />
+          <GeneralTab
+            dept={dept}
+            canManage={canManage}
+            onDirtyChange={onDirty.general}
+            registerSave={register.general}
+          />
         </TabsContent>
         <TabsContent value="agents" forceMount className="data-[state=inactive]:hidden">
-          <AgentsTab dept={dept} canManage={canManage} onDirtyChange={onDirty.agents} registerSave={register.agents} />
+          <AgentsTab
+            dept={dept}
+            canManage={canManage}
+            onDirtyChange={onDirty.agents}
+            registerSave={register.agents}
+          />
         </TabsContent>
         <TabsContent value="routing" forceMount className="data-[state=inactive]:hidden">
-          <RoutingTab dept={dept} all={all} canManage={canManage} onDirtyChange={onDirty.routing} registerSave={register.routing} />
+          <RoutingTab
+            dept={dept}
+            all={all}
+            canManage={canManage}
+            onDirtyChange={onDirty.routing}
+            registerSave={register.routing}
+          />
         </TabsContent>
         <TabsContent value="hours" forceMount className="data-[state=inactive]:hidden">
-          <HoursTab dept={dept} canManage={canManage} onDirtyChange={onDirty.hours} registerSave={register.hours} />
+          <HoursTab
+            dept={dept}
+            canManage={canManage}
+            onDirtyChange={onDirty.hours}
+            registerSave={register.hours}
+          />
         </TabsContent>
       </Tabs>
 
@@ -207,7 +267,12 @@ function Loaded({ dept, all }: { dept: DepartmentResource; all: DepartmentResour
       >
         {fallbackFrom.length > 0 && (
           <p className="text-sm text-fg-2">
-            {t('settings.departments.archive.fallbackFrom', { names: new Intl.ListFormat(intlLocale(), { style: 'short', type: 'unit' }).format(fallbackFrom.map((d) => isolate(d.name))), count: fallbackFrom.length })}
+            {t('settings.departments.archive.fallbackFrom', {
+              names: new Intl.ListFormat(intlLocale(), { style: 'short', type: 'unit' }).format(
+                fallbackFrom.map((d) => isolate(d.name)),
+              ),
+              count: fallbackFrom.length,
+            })}
           </p>
         )}
       </ConfirmDialog>

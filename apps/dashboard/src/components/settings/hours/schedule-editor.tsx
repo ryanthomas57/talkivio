@@ -6,14 +6,41 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { validateWeeklyIntervals } from '@talkivio/contracts';
-import { Badge, Banner, Button, Card, CardBody, CardHeader, ConfirmDialog, Dialog, DialogContent, EmptyState, Field, Input, Page, PanelError, Skeleton, TimezonePicker } from '@/components/ui';
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  ConfirmDialog,
+  Dialog,
+  DialogContent,
+  EmptyState,
+  Field,
+  Input,
+  Page,
+  PanelError,
+  Skeleton,
+  TimezonePicker,
+} from '@/components/ui';
 import { useDirtyGuard } from '@/hooks/use-dirty-guard';
 import { intlLocale, isolate, useT } from '@/i18n';
 import { api, ApiError, errorMessage, isApiError } from '@/lib/api';
 import type { Tenant } from '@/lib/types';
 import { useCan, useSession } from '@/stores/session';
 import { ConflictBanner, describeFailure, isEqual, SaveBar } from '../form-kit';
-import { hk, localizeHoursErrors, stripErrors, useHoursRealtime, useSchedule, type ScheduleDetail, type ScheduleImpact, type ScheduleUsage, type WeeklyIntervals } from './hours-api';
+import {
+  hk,
+  localizeHoursErrors,
+  stripErrors,
+  useHoursRealtime,
+  useSchedule,
+  type ScheduleDetail,
+  type ScheduleImpact,
+  type ScheduleUsage,
+  type WeeklyIntervals,
+} from './hours-api';
 import { ScheduleExceptions } from './schedule-exceptions';
 import { SchedulePreview } from './schedule-preview';
 import { WeeklyGrid } from './weekly-grid';
@@ -24,7 +51,11 @@ interface Form {
   weeklyIntervals: WeeklyIntervals;
 }
 
-const formOf = (s: ScheduleDetail): Form => ({ name: s.name, timezone: s.timezone, weeklyIntervals: s.weeklyIntervals });
+const formOf = (s: ScheduleDetail): Form => ({
+  name: s.name,
+  timezone: s.timezone,
+  weeklyIntervals: s.weeklyIntervals,
+});
 
 /** Shape errors on a half-typed value are hidden until the user tries to save. */
 const isShapeError = (key: string) => key.endsWith('.start') || key.endsWith('.end');
@@ -70,7 +101,10 @@ export function ScheduleEditor({ id }: { id: string }) {
 function BackLink() {
   const t = useT();
   return (
-    <Link href="/settings/hours" className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg">
+    <Link
+      href="/settings/hours"
+      className="inline-flex w-fit items-center gap-1.5 rounded-md text-sm font-medium text-fg-2 hover:text-fg"
+    >
       <ArrowLeft className="size-4 rtl:-scale-x-100" aria-hidden />
       {t('settings.hours.title')}
     </Link>
@@ -103,14 +137,28 @@ function Editor({ schedule }: { schedule: ScheduleDetail }) {
 
   const clientErrors = useMemo(() => {
     const e = validateWeeklyIntervals(value.weeklyIntervals);
-    return attempted ? e : Object.fromEntries(Object.entries(e).filter(([k]) => !isShapeError(k) || !/^\d{0,4}$|^\d{1,2}:\d?$/.test(valueAt(value.weeklyIntervals, k))));
+    return attempted
+      ? e
+      : Object.fromEntries(
+          Object.entries(e).filter(
+            ([k]) => !isShapeError(k) || !/^\d{0,4}$|^\d{1,2}:\d?$/.test(valueAt(value.weeklyIntervals, k)),
+          ),
+        );
   }, [value.weeklyIntervals, attempted]);
-  const gridErrors = localizeHoursErrors({ ...clientErrors, ...stripErrors(serverErrors, 'weekly_intervals.') });
-  const nameError = attempted && !value.name.trim() ? t('settings.hours.nameRequired') : serverErrors.name?.[0];
+  const gridErrors = localizeHoursErrors({
+    ...clientErrors,
+    ...stripErrors(serverErrors, 'weekly_intervals.'),
+  });
+  const nameError =
+    attempted && !value.name.trim() ? t('settings.hours.nameRequired') : serverErrors.name?.[0];
   const tzError = serverErrors.timezone?.[0];
 
   const set = (patch: Partial<Form>) => {
-    setDraft((d) => ({ base: d?.base ?? server, baseVersion: d?.baseVersion ?? schedule.version, value: { ...(d?.value ?? server), ...patch } }));
+    setDraft((d) => ({
+      base: d?.base ?? server,
+      baseVersion: d?.baseVersion ?? schedule.version,
+      value: { ...(d?.value ?? server), ...patch },
+    }));
     if (Object.keys(serverErrors).length) setServerErrors({});
   };
 
@@ -129,7 +177,9 @@ function Editor({ schedule }: { schedule: ScheduleDetail }) {
     return {
       ...(v.name.trim() !== draft.base.name ? { name: v.name.trim() } : {}),
       ...(v.timezone !== draft.base.timezone ? { timezone: v.timezone } : {}),
-      ...(!isEqual(v.weeklyIntervals, draft.base.weeklyIntervals) ? { weeklyIntervals: v.weeklyIntervals } : {}),
+      ...(!isEqual(v.weeklyIntervals, draft.base.weeklyIntervals)
+        ? { weeklyIntervals: v.weeklyIntervals }
+        : {}),
       expectedVersion: draft.baseVersion,
       dryRun,
     };
@@ -140,8 +190,13 @@ function Editor({ schedule }: { schedule: ScheduleDetail }) {
     if (!b) return true;
     setSaving(true);
     try {
-      const r = await api.patch<{ schedule: ScheduleDetail; impact: ScheduleImpact; applied: boolean }>(`/schedules/${schedule.id}`, b);
-      qc.setQueryData<ScheduleDetail>(hk.schedule(schedule.id), (old) => (old ? { ...old, ...r.schedule } : old));
+      const r = await api.patch<{ schedule: ScheduleDetail; impact: ScheduleImpact; applied: boolean }>(
+        `/schedules/${schedule.id}`,
+        b,
+      );
+      qc.setQueryData<ScheduleDetail>(hk.schedule(schedule.id), (old) =>
+        old ? { ...old, ...r.schedule } : old,
+      );
       discard();
       toast.success(t('settings.hours.saved'));
       void qc.invalidateQueries({ queryKey: hk.schedule(schedule.id) });
@@ -198,9 +253,20 @@ function Editor({ schedule }: { schedule: ScheduleDetail }) {
       {schedule.archivedAt && <Banner tone="info">{t('settings.hours.archivedBanner')}</Banner>}
 
       <Card>
-        <CardHeader title={t('settings.hours.weeklyHours')} description={t('settings.hours.weeklyHoursHint')} />
+        <CardHeader
+          title={t('settings.hours.weeklyHours')}
+          description={t('settings.hours.weeklyHoursHint')}
+        />
         <CardBody className="flex flex-col gap-5">
-          {conflict && <ConflictBanner message={t('settings.hours.conflict')} onReload={async () => (await qc.invalidateQueries({ queryKey: hk.schedule(schedule.id) }), discard())} />}
+          {conflict && (
+            <ConflictBanner
+              message={t('settings.hours.conflict')}
+              onReload={async () => (
+                await qc.invalidateQueries({ queryKey: hk.schedule(schedule.id) }),
+                discard()
+              )}
+            />
+          )}
           {remoteChanged && !conflict && (
             <Banner
               tone="warning"
@@ -216,22 +282,54 @@ function Editor({ schedule }: { schedule: ScheduleDetail }) {
           {message && !conflict && <Banner tone="danger">{message}</Banner>}
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label={t('common.name')} required error={nameError}>
-              <Input value={value.name} maxLength={120} disabled={!canManage} dir="auto" onChange={(e) => set({ name: e.target.value })} />
+              <Input
+                value={value.name}
+                maxLength={120}
+                disabled={!canManage}
+                dir="auto"
+                onChange={(e) => set({ name: e.target.value })}
+              />
             </Field>
-            <Field label={t('common.timezone')} description={t('settings.hours.timezoneHint')} error={tzError}>
-              <TimezonePicker value={value.timezone} onChange={(tz) => set({ timezone: tz })} disabled={!canManage} />
+            <Field
+              label={t('common.timezone')}
+              description={t('settings.hours.timezoneHint')}
+              error={tzError}
+            >
+              <TimezonePicker
+                value={value.timezone}
+                onChange={(tz) => set({ timezone: tz })}
+                disabled={!canManage}
+              />
             </Field>
           </div>
           {draft && draft.value.timezone !== draft.base.timezone && (
-            <Banner tone="info">{t('settings.hours.timezoneChanged', { zone: isolate(draft.value.timezone.replace(/_/g, ' ')) })}</Banner>
+            <Banner tone="info">
+              {t('settings.hours.timezoneChanged', {
+                zone: isolate(draft.value.timezone.replace(/_/g, ' ')),
+              })}
+            </Banner>
           )}
           <div className="flex items-start gap-2 rounded-[var(--radius-control)] bg-surface-2 px-3 py-2 text-xs text-fg-2">
             <Info className="mt-px size-3.5 shrink-0" aria-hidden />
             <p>{t('settings.hours.formatHelp')}</p>
           </div>
-          <WeeklyGrid value={value.weeklyIntervals} onChange={(w) => set({ weeklyIntervals: w })} errors={gridErrors} disabled={!canManage} weekStartsOn={weekStartsOn} />
+          <WeeklyGrid
+            value={value.weeklyIntervals}
+            onChange={(w) => set({ weeklyIntervals: w })}
+            errors={gridErrors}
+            disabled={!canManage}
+            weekStartsOn={weekStartsOn}
+          />
         </CardBody>
-        {canManage && <SaveBar dirty={dirty} saving={saving} onSave={() => void save()} onDiscard={discard} label={t('settings.hours.saveHours')} />}
+        {canManage && (
+          <SaveBar
+            dirty={dirty}
+            saving={saving}
+            onSave={() => void save()}
+            onDiscard={discard}
+            label={t('settings.hours.saveHours')}
+          />
+        )}
       </Card>
 
       <ScheduleExceptions schedule={schedule} canManage={canManage} />
@@ -280,10 +378,20 @@ function ScheduleHeader({ schedule }: { schedule: ScheduleDetail }) {
     setDefaultError(null);
     setDefaultConflict(false);
     try {
-      const next = await api.patch<Tenant>('/tenants/current', { settings: { availability: { defaultScheduleId: scheduleId } }, expectedVersion: tenant.version });
+      const next = await api.patch<Tenant>('/tenants/current', {
+        settings: { availability: { defaultScheduleId: scheduleId } },
+        expectedVersion: tenant.version,
+      });
       setTenant(next);
-      toast.success(scheduleId ? t('settings.hours.nowDefault', { name: isolate(schedule.name) }) : t('settings.hours.defaultRemoved'));
-      await Promise.all([qc.invalidateQueries({ queryKey: hk.schedule(schedule.id) }), qc.invalidateQueries({ queryKey: hk.schedulesRoot })]);
+      toast.success(
+        scheduleId
+          ? t('settings.hours.nowDefault', { name: isolate(schedule.name) })
+          : t('settings.hours.defaultRemoved'),
+      );
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: hk.schedule(schedule.id) }),
+        qc.invalidateQueries({ queryKey: hk.schedulesRoot }),
+      ]);
     } catch (e) {
       if (isApiError(e, 'VERSION_CONFLICT')) setDefaultConflict(true);
       else setDefaultError(errorMessage(e));
@@ -297,22 +405,39 @@ function ScheduleHeader({ schedule }: { schedule: ScheduleDetail }) {
     <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="flex min-w-0 flex-col gap-2">
-          <h1 className="break-words text-xl" dir="auto">
+          <h1
+            className="w-fit max-w-full break-words rounded-md bg-primary px-3 py-1 text-lg font-semibold leading-7 text-primary-fg"
+            dir="auto"
+          >
             {schedule.name}
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-fg-2">
-            {schedule.isTenantDefault && <Badge tone="primary" icon={<Star className="size-3.5" aria-hidden />}>{t('settings.hours.workspaceDefaultBadge')}</Badge>}
+            {schedule.isTenantDefault && (
+              <Badge tone="primary" icon={<Star className="size-3.5" aria-hidden />}>
+                {t('settings.hours.workspaceDefaultBadge')}
+              </Badge>
+            )}
             {schedule.archivedAt ? (
-              <Badge tone="neutral" icon={<Archive className="size-3.5" aria-hidden />}>{t('settings.hours.archived')}</Badge>
+              <Badge tone="neutral" icon={<Archive className="size-3.5" aria-hidden />}>
+                {t('settings.hours.archived')}
+              </Badge>
             ) : state ? (
               state.open ? (
-                <Badge tone="success" icon={<DoorOpen className="size-3.5" aria-hidden />}>{t('settings.hours.openNow')}</Badge>
+                <Badge tone="success" icon={<DoorOpen className="size-3.5" aria-hidden />}>
+                  {t('settings.hours.openNow')}
+                </Badge>
               ) : (
-                <Badge tone="neutral" icon={<DoorClosed className="size-3.5" aria-hidden />}>{t('settings.hours.closedNow')}</Badge>
+                <Badge tone="neutral" icon={<DoorClosed className="size-3.5" aria-hidden />}>
+                  {t('settings.hours.closedNow')}
+                </Badge>
               )
             ) : null}
             {state?.nextBoundary && (
-              <span>{state.nextBoundary.kind === 'open' ? t('settings.hours.opensAt', { time: state.nextBoundary.localLabel }) : t('settings.hours.closesAt', { time: state.nextBoundary.localLabel })}</span>
+              <span>
+                {state.nextBoundary.kind === 'open'
+                  ? t('settings.hours.opensAt', { time: state.nextBoundary.localLabel })
+                  : t('settings.hours.closesAt', { time: state.nextBoundary.localLabel })}
+              </span>
             )}
             <span>· {schedule.timezone.replace(/_/g, ' ')}</span>
           </div>
@@ -325,7 +450,11 @@ function ScheduleHeader({ schedule }: { schedule: ScheduleDetail }) {
                   {t('settings.hours.removeAsDefault')}
                 </Button>
               ) : (
-                <Button variant="secondary" loading={defaultBusy} onClick={() => void setDefault(schedule.id).catch(() => undefined)}>
+                <Button
+                  variant="secondary"
+                  loading={defaultBusy}
+                  onClick={() => void setDefault(schedule.id).catch(() => undefined)}
+                >
                   <CalendarCheck2 className="size-4" aria-hidden />
                   {t('settings.hours.setAsDefault')}
                 </Button>
@@ -339,7 +468,12 @@ function ScheduleHeader({ schedule }: { schedule: ScheduleDetail }) {
           </div>
         )}
       </div>
-      {defaultConflict && <ConflictBanner message={t('settings.hours.conflictWorkspace')} onReload={async () => (await useSession.getState().refreshTenant(), setDefaultConflict(false))} />}
+      {defaultConflict && (
+        <ConflictBanner
+          message={t('settings.hours.conflictWorkspace')}
+          onReload={async () => (await useSession.getState().refreshTenant(), setDefaultConflict(false))}
+        />
+      )}
       {defaultError && <Banner tone="danger">{defaultError}</Banner>}
       <UsageLine usage={schedule.usage} />
       <ConfirmDialog
@@ -369,7 +503,8 @@ function UsageLine({ usage }: { usage: ScheduleUsage }) {
   const parts: string[] = [];
   if (usage.tenantDefault) parts.push(t('settings.hours.usage.workspaceDefault'));
   if (usage.sites.length) parts.push(t('settings.hours.usage.siteCount', { count: usage.sites.length }));
-  if (usage.departments.length) parts.push(t('settings.hours.usage.departmentCount', { count: usage.departments.length }));
+  if (usage.departments.length)
+    parts.push(t('settings.hours.usage.departmentCount', { count: usage.departments.length }));
   if (!parts.length) return <p className="text-sm text-fg-2">{t('settings.hours.usage.unused')}</p>;
   return (
     <p className="text-sm text-fg-2">
@@ -381,7 +516,10 @@ function UsageLine({ usage }: { usage: ScheduleUsage }) {
           {usage.departments.map((d, i) => (
             <span key={d.id}>
               {i > 0 && t('settings.hours.usage.separator')}
-              <Link href={`/settings/departments/${d.id}?tab=hours`} className="font-medium text-primary hover:underline">
+              <Link
+                href={`/settings/departments/${d.id}?tab=hours`}
+                className="font-medium text-primary hover:underline"
+              >
                 <bdi>{d.name}</bdi>
               </Link>
             </span>
@@ -389,12 +527,28 @@ function UsageLine({ usage }: { usage: ScheduleUsage }) {
           )
         </>
       )}
-      {usage.sites.length > 0 && <> · {t('settings.hours.usage.sites', { names: list.format(usage.sites.map((s) => isolate(s.name))) })}</>}. {t('settings.hours.usage.precedence')}
+      {usage.sites.length > 0 && (
+        <>
+          {' '}
+          · {t('settings.hours.usage.sites', { names: list.format(usage.sites.map((s) => isolate(s.name))) })}
+        </>
+      )}
+      . {t('settings.hours.usage.precedence')}
     </p>
   );
 }
 
-function ArchiveDialog({ open, onOpenChange, schedule, onArchived }: { open: boolean; onOpenChange: (o: boolean) => void; schedule: ScheduleDetail; onArchived: () => Promise<void> }) {
+function ArchiveDialog({
+  open,
+  onOpenChange,
+  schedule,
+  onArchived,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  schedule: ScheduleDetail;
+  onArchived: () => Promise<void>;
+}) {
   const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -414,7 +568,14 @@ function ArchiveDialog({ open, onOpenChange, schedule, onArchived }: { open: boo
       onOpenChange(false);
       await onArchived();
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409 && e.code === 'CONFLICT' && e.details && 'departments' in e.details) setUsage(e.details as unknown as ScheduleUsage);
+      if (
+        e instanceof ApiError &&
+        e.status === 409 &&
+        e.code === 'CONFLICT' &&
+        e.details &&
+        'departments' in e.details
+      )
+        setUsage(e.details as unknown as ScheduleUsage);
       setError(errorMessage(e));
     } finally {
       setBusy(false);
@@ -452,7 +613,10 @@ function ArchiveDialog({ open, onOpenChange, schedule, onArchived }: { open: boo
                   {shown.departments.map((d) => (
                     <li key={d.id}>
                       {t('settings.hours.archive.department')}{' '}
-                      <Link href={`/settings/departments/${d.id}?tab=hours`} className="font-medium text-primary hover:underline">
+                      <Link
+                        href={`/settings/departments/${d.id}?tab=hours`}
+                        className="font-medium text-primary hover:underline"
+                      >
                         <bdi>{d.name}</bdi>
                       </Link>
                     </li>

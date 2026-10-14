@@ -29,7 +29,7 @@ describe('GeoService.lookup', () => {
 });
 
 describe('GeoService header trust', () => {
-  it('ignores every location header by default — a visitor could otherwise pick their country (it drives triggers)', () => {
+  it('ignores every location header by default: a visitor could otherwise pick their country (it drives triggers)', () => {
     const geo = new GeoService();
     expect(
       geo.lookup(null, {

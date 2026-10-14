@@ -33,14 +33,19 @@ export class BansController {
   @Require('bans.manage')
   create(@Auth() auth: AuthContext, @Body(body(createSchema)) input: z.infer<typeof createSchema>) {
     const { ipOrCidr, ...rest } = input;
-    if (rest.ip && ipOrCidr) throw badRequest('Send either ip or ip_or_cidr, not both', { ip: ['Duplicate target'] });
+    if (rest.ip && ipOrCidr)
+      throw badRequest('Send either ip or ip_or_cidr, not both', { ip: ['Duplicate target'] });
     return this.bans.create(auth, { ...rest, ip: rest.ip ?? ipOrCidr ?? null });
   }
 
   @Get()
   @Require('bans.manage')
   list(@Auth() auth: AuthContext, @Query(body(listSchema)) q: z.infer<typeof listSchema>) {
-    return this.bans.list(auth, { active: q.active === undefined ? undefined : q.active === 'true', cursor: q.cursor, limit: q.limit });
+    return this.bans.list(auth, {
+      active: q.active === undefined ? undefined : q.active === 'true',
+      cursor: q.cursor,
+      limit: q.limit,
+    });
   }
 
   @Delete(':id')

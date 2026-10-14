@@ -12,15 +12,40 @@ export function Table({ className, ...rest }: HTMLAttributes<HTMLTableElement>) 
 }
 
 export function THead({ className, ...rest }: HTMLAttributes<HTMLTableSectionElement>) {
-  return <thead {...rest} className={cn('sticky top-0 z-[1] bg-surface-2', className)} />;
+  return <thead {...rest} className={cn('sticky top-0 z-[1] bg-primary-tint', className)} />;
 }
 
-export function TR({ className, interactive, selected, ...rest }: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean; selected?: boolean }) {
-  return <tr {...rest} aria-selected={selected || undefined} className={cn('border-b border-line-subtle last:border-b-0', interactive && 'cursor-pointer hover:bg-surface-2', selected && 'bg-primary-tint/60', className)} />;
+export function TR({
+  className,
+  interactive,
+  selected,
+  ...rest
+}: HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean; selected?: boolean }) {
+  return (
+    <tr
+      {...rest}
+      aria-selected={selected || undefined}
+      className={cn(
+        'border-b border-line-subtle last:border-b-0',
+        interactive && 'cursor-pointer hover:bg-surface-2',
+        selected && 'bg-primary-tint/60',
+        className,
+      )}
+    />
+  );
 }
 
 export function TH({ className, ...rest }: ThHTMLAttributes<HTMLTableCellElement>) {
-  return <th scope="col" {...rest} className={cn('h-10 whitespace-nowrap border-b border-line px-4 text-xs font-semibold uppercase tracking-wide text-fg-2', className)} />;
+  return (
+    <th
+      scope="col"
+      {...rest}
+      className={cn(
+        'h-10 whitespace-nowrap border-b border-line px-4 text-xs font-semibold uppercase tracking-wide text-primary-hover dark:text-primary',
+        className,
+      )}
+    />
+  );
 }
 
 export function TD({ className, ...rest }: TdHTMLAttributes<HTMLTableCellElement>) {

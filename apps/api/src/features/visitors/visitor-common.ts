@@ -13,7 +13,11 @@ export function pageLimit(raw: number | undefined, def = 50, max = 100): number 
   return Math.max(1, Math.min(max, Math.floor(raw)));
 }
 
-export function displayNameOf(v: { id: string; name: string | null; anonymousLabel?: string | null }): string {
+export function displayNameOf(v: {
+  id: string;
+  name: string | null;
+  anonymousLabel?: string | null;
+}): string {
   return v.name?.trim() || v.anonymousLabel || generatedVisitorName(v.id);
 }
 
@@ -40,21 +44,37 @@ export function likePattern(q: string): string {
  * version via `If-Match` (`"3"`, `W/"3"` or `3`) or `expected_version` in the
  * body. Missing → 428, stale → 409.
  */
-export function requireVersion(ifMatch: string | string[] | undefined, bodyVersion: number | undefined | null): number {
+export function requireVersion(
+  ifMatch: string | string[] | undefined,
+  bodyVersion: number | undefined | null,
+): number {
   const raw = Array.isArray(ifMatch) ? ifMatch[0] : ifMatch;
   let v: number | null = null;
   if (raw) {
     const m = /^(?:W\/)?"?(\d{1,9})"?$/.exec(raw.trim());
-    if (!m) throw new AppError(422, 'VALIDATION_FAILED', 'If-Match must carry the entity version', { fieldErrors: { if_match: ['Use the version number returned by GET'] } });
+    if (!m)
+      throw new AppError(422, 'VALIDATION_FAILED', 'If-Match must carry the entity version', {
+        fieldErrors: { if_match: ['Use the version number returned by GET'] },
+      });
     v = Number(m[1]);
   }
   if (v === null && typeof bodyVersion === 'number') v = bodyVersion;
-  if (v === null) throw new AppError(428, 'PRECONDITION_REQUIRED', 'Send If-Match with the current version to update this resource');
+  if (v === null)
+    throw new AppError(
+      428,
+      'PRECONDITION_REQUIRED',
+      'Send If-Match with the current version to update this resource',
+    );
   return v;
 }
 
 export function staleVersion(): AppError {
-  return new AppError(409, 'VERSION_CONFLICT', 'This record changed since you loaded it. Refresh and try again.', { retryable: true });
+  return new AppError(
+    409,
+    'VERSION_CONFLICT',
+    'This record changed since you loaded it. Refresh and try again.',
+    { retryable: true },
+  );
 }
 
 // ───────── IP addresses (bans) ─────────
@@ -65,7 +85,11 @@ export function canonicalIp(input: string): string | null {
   if (ip.endsWith('/32') && isIPv4(ip.slice(0, -3))) ip = ip.slice(0, -3);
   if (ip.endsWith('/128') && isIPv6(ip.slice(0, -4))) ip = ip.slice(0, -4);
   ip = normalizeIp(ip.toLowerCase());
-  if (isIPv4(ip)) return ip.split('.').map((o) => String(Number(o))).join('.');
+  if (isIPv4(ip))
+    return ip
+      .split('.')
+      .map((o) => String(Number(o)))
+      .join('.');
   if (isIPv6(ip)) {
     try {
       return new URL(`http://[${ip}]/`).hostname.replace(/^\[|\]$/g, '');

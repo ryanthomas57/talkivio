@@ -302,7 +302,7 @@ export class MailService {
         this.logger.log(`[console mail] to=${email.recipient} subject="${email.subject}"`);
         // Local development without SMTP/Mailpit: print the text body so links can be followed.
         // Never in production (bodies can carry single-use links).
-        if (!isProd()) this.logger.log(`[console mail body — development only]\n${email.textBody}`);
+        if (!isProd()) this.logger.log(`[console mail body, development only]\n${email.textBody}`);
         await this.db.root.outboundEmail.update({
           where: { id: emailId },
           data: {

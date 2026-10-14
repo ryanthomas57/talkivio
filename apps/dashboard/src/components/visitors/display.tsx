@@ -41,6 +41,17 @@ export function Elapsed({ ms, className }: { ms: number | null; className?: stri
 }
 
 /** Host + path (+ query) of an already server-sanitized URL; never a script URL. */
+/**
+ * A page title from the visitor's website, as the dashboard shows it: the em dash many sites use as a separator
+ * ("Pricing — Acme") reads as "Pricing | Acme". Stored data is unchanged.
+ */
+export function siteTitle(raw: string): string;
+export function siteTitle(raw: string | null | undefined): string | null;
+export function siteTitle(raw: string | null | undefined): string | null {
+  if (!raw) return raw ?? null;
+  return raw.replace(/\s+\u2014\s+/g, ' | ').replace(/\u2014/g, '-');
+}
+
 export function urlLabel(raw: string | null | undefined): string {
   if (!raw) return '';
   try {
@@ -188,7 +199,7 @@ export function PageCell({
         <span className="block break-all">
           {title ? (
             <span className="mb-0.5 block font-semibold" dir="auto">
-              {title}
+              {siteTitle(title)}
             </span>
           ) : null}
           <span dir="auto">{label}</span>
@@ -201,7 +212,10 @@ export function PageCell({
         className="block min-w-0 truncate rounded-sm"
         aria-label={
           title
-            ? t('visitors.display.currentPageWithTitle', { title: isolate(title), url: isolate(label) })
+            ? t('visitors.display.currentPageWithTitle', {
+                title: isolate(siteTitle(title)),
+                url: isolate(label),
+              })
             : t('visitors.display.currentPage', { url: isolate(label) })
         }
       >

@@ -14,7 +14,15 @@ import { VisitorPicker } from './visitor-picker';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export function MergeDialog({ open, onOpenChange, source }: { open: boolean; onOpenChange: (o: boolean) => void; source: { id: string; displayName: string } }) {
+export function MergeDialog({
+  open,
+  onOpenChange,
+  source,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  source: { id: string; displayName: string };
+}) {
   const t = useT();
   const [target, setTarget] = useState<VisitorListItem | null>(null);
   const [proof, setProof] = useState('');
@@ -46,9 +54,21 @@ export function MergeDialog({ open, onOpenChange, source }: { open: boolean; onO
     setBusy(true);
     setError(null);
     try {
-      setResult(await api.post<MergeRequestResult>('/visitors/merge-requests', { sourceId: source.id, targetId: target!.id, proofReference: proof.trim(), reason: reason.trim() }));
+      setResult(
+        await api.post<MergeRequestResult>('/visitors/merge-requests', {
+          sourceId: source.id,
+          targetId: target!.id,
+          proofReference: proof.trim(),
+          reason: reason.trim(),
+        }),
+      );
     } catch (e) {
-      if (e instanceof ApiError) setFe({ target: e.field('target_id') ?? '', proof: e.field('proof_reference') ?? '', reason: e.field('reason') ?? '' });
+      if (e instanceof ApiError)
+        setFe({
+          target: e.field('target_id') ?? '',
+          proof: e.field('proof_reference') ?? '',
+          reason: e.field('reason') ?? '',
+        });
       setError(errorMessage(e));
     } finally {
       setBusy(false);
@@ -104,7 +124,12 @@ export function MergeDialog({ open, onOpenChange, source }: { open: boolean; onO
               identifiedOnly
               error={fe.target || undefined}
             />
-            <Field label={t('visitors.merge.proofLabel')} required description={t('visitors.merge.proofDescription')} error={fe.proof || undefined}>
+            <Field
+              label={t('visitors.merge.proofLabel')}
+              required
+              description={t('visitors.merge.proofDescription')}
+              error={fe.proof || undefined}
+            >
               <Input value={proof} onChange={(e) => setProof(e.target.value)} maxLength={200} />
             </Field>
             <Field label={t('visitors.merge.reason')} required error={fe.reason || undefined}>

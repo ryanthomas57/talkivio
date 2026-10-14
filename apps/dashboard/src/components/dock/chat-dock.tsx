@@ -176,7 +176,7 @@ function Frame({
                 </span>
               )}
             </span>
-            <span className="block truncate text-xs text-primary-fg/85">{subtitle}</span>
+            <span className="block truncate text-xs text-primary-fg">{subtitle}</span>
           </span>
         </button>
         {actions}

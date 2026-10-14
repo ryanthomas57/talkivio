@@ -25,9 +25,12 @@ export class FilesWorker implements OnModuleInit, OnApplicationBootstrap, OnModu
   onModuleInit(): void {
     const e = env();
     if (e.SCAN_MODE === 'dev_unscanned') {
-      if (e.NODE_ENV === 'production') throw new Error('SCAN_MODE=dev_unscanned is refused in production. Configure ClamAV (CLAMAV_HOST/CLAMAV_PORT).');
+      if (e.NODE_ENV === 'production')
+        throw new Error(
+          'SCAN_MODE=dev_unscanned is refused in production. Configure ClamAV (CLAMAV_HOST/CLAMAV_PORT).',
+        );
       this.logger.warn(
-        '⚠️  SCAN_MODE=dev_unscanned — uploaded files are NOT malware-scanned. They are marked clean after type/magic-byte validation ' +
+        '⚠️  SCAN_MODE=dev_unscanned: uploaded files are NOT malware-scanned. They are marked clean after type/magic-byte validation ' +
           "with scan_result='unscanned-dev'. Development only.",
       );
     }
@@ -37,14 +40,20 @@ export class FilesWorker implements OnModuleInit, OnApplicationBootstrap, OnModu
   async onApplicationBootstrap(): Promise<void> {
     if (process.env.TALKIVIO_PROCESS !== 'worker') return;
     const e = env();
-    this.worker = new Worker<{ tenantId: string; attachmentId: string }>(QUEUES.scans, (job) => this.files.runScan(job.data.tenantId, job.data.attachmentId), {
-      connection: this.redis.create('worker:scans', { forBullMQ: true }),
-      prefix: 'rd',
-      concurrency: 4,
-    });
+    this.worker = new Worker<{ tenantId: string; attachmentId: string }>(
+      QUEUES.scans,
+      (job) => this.files.runScan(job.data.tenantId, job.data.attachmentId),
+      {
+        connection: this.redis.create('worker:scans', { forBullMQ: true }),
+        prefix: 'rd',
+        concurrency: 4,
+      },
+    );
     this.worker.on('failed', (job, err) => {
       if (err instanceof ScannerUnavailableError || err.name === 'ScannerUnavailableError') {
-        this.logger.warn(`Scanner unavailable for attachment ${job?.data.attachmentId} (attempt ${job?.attemptsMade}): ${err.message}; file stays pending`);
+        this.logger.warn(
+          `Scanner unavailable for attachment ${job?.data.attachmentId} (attempt ${job?.attemptsMade}): ${err.message}; file stays pending`,
+        );
       } else {
         this.logger.error(`Scan job failed for attachment ${job?.data.attachmentId}: ${err.message}`);
       }
@@ -53,7 +62,10 @@ export class FilesWorker implements OnModuleInit, OnApplicationBootstrap, OnModu
     if (e.SCAN_MODE === 'clamav') {
       const up = await clamdPing(e.CLAMAV_HOST, e.CLAMAV_PORT);
       if (up) this.logger.log(`ClamAV reachable at ${e.CLAMAV_HOST}:${e.CLAMAV_PORT}`);
-      else this.logger.warn(`ClamAV not reachable at ${e.CLAMAV_HOST}:${e.CLAMAV_PORT}; uploads will stay pending until it is`);
+      else
+        this.logger.warn(
+          `ClamAV not reachable at ${e.CLAMAV_HOST}:${e.CLAMAV_PORT}; uploads will stay pending until it is`,
+        );
     }
   }
 

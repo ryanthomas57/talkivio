@@ -4122,6 +4122,7 @@ export interface components {
                 };
             };
             allowed_contact_fields: string[];
+            notes: string | null;
             tags: components["schemas"]["VisitorTagRef"][];
             custom_fields: {
                 [key: string]: unknown;
@@ -12391,6 +12392,8 @@ export interface operations {
                 "application/json": {
                     display_name?: string | null;
                     email?: string | null;
+                    phone?: string | null;
+                    notes?: string | null;
                     custom_fields?: {
                         [key: string]: unknown;
                     };

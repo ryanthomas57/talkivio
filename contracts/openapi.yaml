@@ -10596,6 +10596,16 @@ paths:
                     - type: string
                       maxLength: 200
                     - type: "null"
+                phone:
+                  anyOf:
+                    - type: string
+                      maxLength: 40
+                    - type: "null"
+                notes:
+                  anyOf:
+                    - type: string
+                      maxLength: 5000
+                    - type: "null"
                 custom_fields:
                   type: object
                   additionalProperties: {}
@@ -16417,6 +16427,10 @@ components:
           type: array
           items:
             type: string
+        notes:
+          type:
+            - string
+            - "null"
         tags:
           type: array
           items:
@@ -16546,6 +16560,7 @@ components:
         - identities
         - fields
         - allowed_contact_fields
+        - notes
         - tags
         - custom_fields
         - custom_field_sources

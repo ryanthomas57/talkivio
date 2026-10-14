@@ -41,7 +41,11 @@ export interface SessionTimeline {
 
 export const DEFAULT_MAX_GAP_MS = 30 * 60_000;
 
-export function buildSessionTimeline(events: TimelineEvent[], endAt: number, maxGapMs = DEFAULT_MAX_GAP_MS): SessionTimeline {
+export function buildSessionTimeline(
+  events: TimelineEvent[],
+  endAt: number,
+  maxGapMs = DEFAULT_MAX_GAP_MS,
+): SessionTimeline {
   const sorted = [...events].sort((a, b) => a.at - b.at);
   const pages: PageVisit[] = [];
   const intervals: Interval[] = [];
@@ -144,7 +148,9 @@ export function uncoveredLength(a: Interval[], covered: Interval[]): number {
  * processed by start time and each only keeps time not already covered by an
  * earlier session. The values therefore sum to the union across all tabs.
  */
-export function exclusiveVisibleMs(sessions: Array<{ id: string; startedAt: number; intervals: Interval[] }>): Map<string, number> {
+export function exclusiveVisibleMs(
+  sessions: Array<{ id: string; startedAt: number; intervals: Interval[] }>,
+): Map<string, number> {
   const out = new Map<string, number>();
   let covered: Interval[] = [];
   for (const s of [...sessions].sort((a, b) => a.startedAt - b.startedAt || (a.id < b.id ? -1 : 1))) {

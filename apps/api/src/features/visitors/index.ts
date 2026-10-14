@@ -32,4 +32,8 @@ export const VISITORS_PROVIDERS: Provider[] = [
   VisitorCapabilityRevocations,
   ActiveVisitorGuard,
 ];
-export const VISITORS_CONTROLLERS: Type<unknown>[] = [VisitorsController, CustomFieldsController, BansController];
+export const VISITORS_CONTROLLERS: Type<unknown>[] = [
+  VisitorsController,
+  CustomFieldsController,
+  BansController,
+];

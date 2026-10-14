@@ -633,6 +633,36 @@ ok(
     patched.data.custom_fields.lifetime_value === 1200,
   'agent edit is applied and stays unverified',
 );
+// Phone and staff notes, edited beside the chat (classic live chat details panel).
+const badPhone = await owner.call(
+  'PATCH',
+  `/visitors/${V}`,
+  { phone: 'call me maybe' },
+  { 'if-match': `"${patched.data.version}"` },
+);
+ok(
+  badPhone.status === 422 && !!badPhone.error.field_errors?.phone,
+  'a phone number that is not one is refused (422, field error)',
+);
+const contact = await owner.call(
+  'PATCH',
+  `/visitors/${V}`,
+  { phone: '+1 (206) 555-0142', notes: 'Prefers email. Asked about the annual plan.' },
+  { 'if-match': `"${patched.data.version}"` },
+);
+ok(
+  contact.status === 200 &&
+    contact.data.fields.phone.value === '+1 (206) 555-0142' &&
+    contact.data.notes === 'Prefers email. Asked about the annual plan.',
+  'phone and staff notes are saved and returned with the profile',
+);
+ok(
+  !sql(`SELECT phone_ciphertext FROM visitors WHERE id = '${V}'`).includes('555') &&
+    sql(
+      `SELECT safe_diff->>'changed' FROM audit_events WHERE action = 'visitor.updated' AND object_id = '${V}' ORDER BY occurred_at DESC LIMIT 1`,
+    ).includes('notes'),
+  'the phone number is stored encrypted and the audit record lists the changed fields only',
+);
 const ownerMembership = (await owner.must('GET', '/agents/me')).agent.id;
 ok(
   patched.data.custom_field_sources.lifetime_value?.source === 'agent' &&

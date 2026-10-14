@@ -25,6 +25,7 @@ import {
   EmptyState,
   Field,
   Input,
+  PageHeader,
   PanelError,
   Select,
   Skeleton,
@@ -38,7 +39,7 @@ import { useDepartments, useSites, useTags } from '@/lib/queries';
 import { useDock } from '@/stores/dock';
 import { useSession } from '@/stores/session';
 import { effectiveGroups, type LiveFilters, type LiveRow, type LiveSort } from './live-model';
-import { urlLabel } from './display';
+import { siteTitle, urlLabel } from './display';
 import { LiveTable, type TableGroup } from './live-table';
 import {
   GROUP_HINT,
@@ -159,7 +160,7 @@ export function VisitorsPage() {
           ? (r.v.country?.toUpperCase() ?? '')
           : r.v.browsingHidden
             ? ''
-            : r.v.currentTitle || (r.v.currentUrl ? urlLabel(r.v.currentUrl) : '');
+            : siteTitle(r.v.currentTitle) || (r.v.currentUrl ? urlLabel(r.v.currentUrl) : '');
       byKey.set(k, [...(byKey.get(k) ?? []), r]);
     }
     return [...byKey.entries()]
@@ -241,7 +242,9 @@ export function VisitorsPage() {
         name: v.displayName,
         country: v.country,
         ipAddress: v.ipAddress,
-        page: v.browsingHidden ? null : v.currentTitle || (v.currentUrl ? urlLabel(v.currentUrl) : null),
+        page: v.browsingHidden
+          ? null
+          : siteTitle(v.currentTitle) || (v.currentUrl ? urlLabel(v.currentUrl) : null),
       });
     },
     [canServe, set],
@@ -249,28 +252,30 @@ export function VisitorsPage() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1280px] flex-col gap-4 p-4 lg:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold leading-8">{t('visitors.page.title')}</h1>
-        <div className="flex items-center gap-4 text-sm">
-          <span
-            className={cn(
-              'inline-flex items-center gap-1.5',
-              conn === 'live' ? 'text-success' : 'text-warning',
-            )}
-            role="status"
-          >
-            {conn === 'live' ? (
-              <Activity className="size-4" aria-hidden />
-            ) : (
-              <WifiOff className="size-4" aria-hidden />
-            )}
-            {conn === 'live' ? t('visitors.page.liveOn') : t('visitors.page.livePaused')}
-          </span>
-          <span className="text-fg-2">
-            {t('visitors.page.total', { count: state.status === 'ready' ? formatNumber(total) : '…' })}
-          </span>
-        </div>
-      </div>
+      <PageHeader
+        title={t('visitors.page.title')}
+        actions={
+          <div className="flex items-center gap-4 text-sm">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5',
+                conn === 'live' ? 'text-success' : 'text-warning',
+              )}
+              role="status"
+            >
+              {conn === 'live' ? (
+                <Activity className="size-4" aria-hidden />
+              ) : (
+                <WifiOff className="size-4" aria-hidden />
+              )}
+              {conn === 'live' ? t('visitors.page.liveOn') : t('visitors.page.livePaused')}
+            </span>
+            <span className="text-fg-2">
+              {t('visitors.page.total', { count: state.status === 'ready' ? formatNumber(total) : '…' })}
+            </span>
+          </div>
+        }
+      />
 
       <div className="flex flex-col gap-3 border-y border-line-subtle py-3">
         <div className="flex flex-wrap items-center gap-2">

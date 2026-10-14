@@ -27,6 +27,8 @@ export const StaffVisitorSchema = z.object({
   identities: z.array(z.object({ issuerSiteId: Uuid, verificationMethod: z.string(), linkedAt: DateTime })),
   fields: z.object({ name: ContactField, email: ContactField, phone: ContactField }),
   allowedContactFields: z.array(z.string()),
+  /** Staff notes about the visitor; never shown to the visitor. */
+  notes: z.string().nullable(),
   tags: z.array(VisitorTagRefSchema),
   customFields: JsonObject,
   /** Per custom-field key: who set the value — `visitor` (the site's page via the SDK, unverified), `agent` (membership id) or `trigger` (trigger id). */

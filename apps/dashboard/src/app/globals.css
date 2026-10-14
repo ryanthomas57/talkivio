@@ -128,7 +128,8 @@
   --color-nav-active-fg: var(--nav-active-fg);
   --color-overlay: var(--overlay);
 
-  --font-sans: 'Inter Variable', Inter, Arial, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-sans:
+    'Inter Variable', Inter, Arial, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Type scale (ch. 05): secondary 12/16, base 14/20, body 16/24, H3 16/24, H2 20/28, H1 28/36. */
@@ -147,7 +148,9 @@
   --radius-card: 12px;
   --radius-pill: 999px;
 
-  --shadow-float: 0 0 0 1px hsl(var(--shadow-color) / 0.06), 0 8px 24px hsl(var(--shadow-color) / 0.14), 0 2px 6px hsl(var(--shadow-color) / 0.06);
+  --shadow-float:
+    0 0 0 1px hsl(var(--shadow-color) / 0.06), 0 8px 24px hsl(var(--shadow-color) / 0.14),
+    0 2px 6px hsl(var(--shadow-color) / 0.06);
   --shadow-dialog: 0 0 0 1px hsl(var(--shadow-color) / 0.08), 0 24px 64px hsl(var(--shadow-color) / 0.24);
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
@@ -159,38 +162,83 @@
 }
 
 @keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.97); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 @keyframes slide-in-right {
-  from { transform: translateX(24px); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 @keyframes slide-in-left {
-  from { transform: translateX(-24px); opacity: 0; }
-  to { transform: none; opacity: 1; }
+  from {
+    transform: translateX(-24px);
+    opacity: 0;
+  }
+  to {
+    transform: none;
+    opacity: 1;
+  }
 }
 @keyframes message-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: none; }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 @keyframes typing-dot {
-  0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
-  30% { opacity: 1; transform: translateY(-2px); }
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
 }
 @keyframes skeleton {
-  0% { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
 }
 
 @layer base {
   html,
   body {
     height: 100%;
+  }
+  /* A denser dashboard (as in classic live chat consoles): 15 px root, so every rem-based size scales with the
+     visitor's own browser setting instead of being fixed in pixels. */
+  html {
+    font-size: 93.75%;
   }
   body {
     background: var(--canvas);
@@ -205,7 +253,16 @@
      system-ui, Segoe UI, Geeza Pro, Tahoma) instead of Arial, with a little more line height for diacritics. */
   :lang(ar) body,
   body:lang(ar) {
-    font-family: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', 'Geeza Pro', Tahoma, Arial, sans-serif;
+    font-family:
+      'Inter Variable',
+      Inter,
+      system-ui,
+      -apple-system,
+      'Segoe UI',
+      'Geeza Pro',
+      Tahoma,
+      Arial,
+      sans-serif;
     line-height: 1.375rem;
   }
   ::selection {
@@ -225,13 +282,32 @@
   }
   /* Date and time inputs: Tab also visits the calendar button inside the control, where the input itself is not
      :focus-visible — keep the ring on the whole control while any part of it has focus. */
-  input:is([type='date'], [type='time'], [type='datetime-local'], [type='month'], [type='week']):focus-within {
+  input:is(
+      [type='date'],
+      [type='time'],
+      [type='datetime-local'],
+      [type='month'],
+      [type='week']
+    ):focus-within {
     outline: 2px solid var(--primary);
     outline-offset: 0;
   }
-  h1 { font-size: 1.75rem; line-height: 2.25rem; font-weight: 650; letter-spacing: -0.01em; }
-  h2 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; }
-  h3 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+  h1 {
+    font-size: 1.75rem;
+    line-height: 2.25rem;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+  }
+  h2 {
+    font-size: 1.25rem;
+    line-height: 1.75rem;
+    font-weight: 600;
+  }
+  h3 {
+    font-size: 1rem;
+    line-height: 1.5rem;
+    font-weight: 600;
+  }
 }
 
 @layer utilities {

@@ -14,7 +14,19 @@ import { qk, useTags } from '@/lib/queries';
 import type { Tag, TagRef } from '@/lib/types';
 import { useCan } from '@/stores/session';
 
-export function TagEditor({ tags, onSave, canEdit, label, emptyText }: { tags: TagRef[]; onSave: (tagIds: string[]) => Promise<unknown>; canEdit: boolean; label?: string; emptyText?: string }) {
+export function TagEditor({
+  tags,
+  onSave,
+  canEdit,
+  label,
+  emptyText,
+}: {
+  tags: TagRef[];
+  onSave: (tagIds: string[]) => Promise<unknown>;
+  canEdit: boolean;
+  label?: string;
+  emptyText?: string;
+}) {
   const t = useT();
   const listLabel = label ?? t('visitors.live.col.tags');
   const all = useTags(canEdit);
@@ -25,7 +37,9 @@ export function TagEditor({ tags, onSave, canEdit, label, emptyText }: { tags: T
   const [newLabel, setNewLabel] = useState('');
   const [creating, setCreating] = useState(false);
   const selected = tags.map((tag) => tag.id);
-  const options = (all.data ?? []).filter((tag) => !tag.archivedAt).map((tag) => ({ value: tag.id, label: tag.label, hint: tag.slug }));
+  const options = (all.data ?? [])
+    .filter((tag) => !tag.archivedAt)
+    .map((tag) => ({ value: tag.id, label: tag.label, hint: tag.slug }));
 
   const save = async (ids: string[]) => {
     setSaving(true);
@@ -42,7 +56,9 @@ export function TagEditor({ tags, onSave, canEdit, label, emptyText }: { tags: T
   const create = async () => {
     const lbl = newLabel.trim().slice(0, 80);
     if (!lbl) return;
-    const existing = (all.data ?? []).find((tag) => tag.label.toLowerCase() === lbl.toLowerCase() || tag.slug === lbl.toLowerCase());
+    const existing = (all.data ?? []).find(
+      (tag) => tag.label.toLowerCase() === lbl.toLowerCase() || tag.slug === lbl.toLowerCase(),
+    );
     setCreating(true);
     setError(null);
     try {
@@ -94,7 +110,13 @@ export function TagEditor({ tags, onSave, canEdit, label, emptyText }: { tags: T
               }}
             >
               <Field label={t('visitors.tags.newTag')} hideLabel className="min-w-0 flex-1">
-                <Input value={newLabel} onChange={(e) => setNewLabel(e.target.value)} maxLength={80} placeholder={t('visitors.tags.createPlaceholder')} className="min-w-0" />
+                <Input
+                  value={newLabel}
+                  onChange={(e) => setNewLabel(e.target.value)}
+                  maxLength={80}
+                  placeholder={t('visitors.tags.createPlaceholder')}
+                  className="min-w-0"
+                />
               </Field>
               <Button type="submit" variant="secondary" disabled={!newLabel.trim()} loading={creating}>
                 <Plus className="size-4" aria-hidden /> {t('common.create')}

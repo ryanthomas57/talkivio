@@ -23,6 +23,9 @@ import {
 } from './visitor-common';
 import { VisitorMonitorService } from './visitor-monitor.service';
 
+/** A phone number as people type it: digits with spaces, dots, dashes, parentheses and an optional leading +. */
+const PHONE_RE = /^\+?[0-9][0-9 ().-]{2,38}$/;
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_PAGES_PER_SESSION = 200;
 
@@ -127,6 +130,8 @@ export class VisitorRecordsService {
         phone: { value: phone, verified: false },
       },
       allowedContactFields: ['name', 'email', 'phone'],
+      /** Staff notes about the visitor; never shown to the visitor. */
+      notes: erased ? null : v.notes,
       tags: tags.get(v.id) ?? [],
       customFields: erased ? {} : ((v.customFields ?? {}) as Record<string, unknown>),
       /** Who set each value: visitor (the site's page, unverified), agent (membership id) or trigger (trigger id). */
@@ -165,7 +170,13 @@ export class VisitorRecordsService {
     auth: AuthContext,
     id: string,
     expectedVersion: number,
-    input: { displayName?: string | null; email?: string | null; customFields?: Record<string, unknown> },
+    input: {
+      displayName?: string | null;
+      email?: string | null;
+      phone?: string | null;
+      notes?: string | null;
+      customFields?: Record<string, unknown>;
+    },
   ) {
     const result = await this.db.tx(auth.tenantId, async (tx) => {
       await lockForUpdate(tx, 'visitors', auth.tenantId, id);
@@ -197,6 +208,22 @@ export class VisitorRecordsService {
       }
       // Manually entered identity is never verified; proof stays in visitor_identities.
       if (identityChanged) data.verified = false;
+      if (input.phone !== undefined) {
+        const phone = input.phone?.trim() || null;
+        if (phone && !PHONE_RE.test(phone))
+          throw badRequest('Enter a valid phone number', { phone: ['Enter a valid phone number.'] });
+        if (phone !== safeDecrypt(v.phoneCiphertext)) {
+          data.phoneCiphertext = phone ? encrypt(phone) : null;
+          changed.push('phone');
+        }
+      }
+      if (input.notes !== undefined) {
+        const notes = input.notes?.trim() || null;
+        if (notes !== v.notes) {
+          data.notes = notes;
+          changed.push('notes');
+        }
+      }
       if (input.customFields !== undefined) {
         const { next, changedKeys } = await this.fields.applyPatch(
           tx,

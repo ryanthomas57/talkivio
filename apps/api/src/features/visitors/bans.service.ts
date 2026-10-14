@@ -11,7 +11,8 @@ import { VisitorMonitorService } from './visitor-monitor.service';
 import { RealtimeService } from '../../realtime/realtime.service';
 
 const MAX_BAN_DAYS = 3650;
-export const IP_COLLATERAL_WARNING = 'IP bans can block other people who share this network address (offices, mobile carriers, VPNs).';
+export const IP_COLLATERAL_WARNING =
+  'IP bans can block other people who share this network address (offices, mobile carriers, VPNs).';
 
 export interface BanResource {
   id: string;
@@ -51,7 +52,9 @@ export class BansService {
     const now = Date.now();
     return {
       id: b.id,
-      target: b.visitorId ? { kind: 'visitor', visitorId: b.visitorId, displayName: names.get(b.visitorId) ?? null } : { kind: 'ip', masked: b.ipMasked ?? 'hidden' },
+      target: b.visitorId
+        ? { kind: 'visitor', visitorId: b.visitorId, displayName: names.get(b.visitorId) ?? null }
+        : { kind: 'ip', masked: b.ipMasked ?? 'hidden' },
       siteId: b.siteId,
       reason: b.reason,
       expiresAt: b.expiresAt,
@@ -65,24 +68,41 @@ export class BansService {
 
   async create(
     auth: AuthContext,
-    input: { visitorId?: string | null; ip?: string | null; siteId?: string | null; expiresAt?: string | null; reason: string; closeActiveChat?: boolean },
+    input: {
+      visitorId?: string | null;
+      ip?: string | null;
+      siteId?: string | null;
+      expiresAt?: string | null;
+      reason: string;
+      closeActiveChat?: boolean;
+    },
   ): Promise<BanResource> {
-    if (!auth.userId) throw new AppError(403, 'PERMISSION_DENIED', 'Bans must be created by a signed-in staff member');
+    if (!auth.userId)
+      throw new AppError(403, 'PERMISSION_DENIED', 'Bans must be created by a signed-in staff member');
     const targets = [input.visitorId, input.ip].filter((x) => x !== undefined && x !== null && x !== '');
-    if (targets.length !== 1) throw badRequest('Choose exactly one target: a visitor or an IP address', { visitor_id: ['Exactly one target'], ip: ['Exactly one target'] });
+    if (targets.length !== 1)
+      throw badRequest('Choose exactly one target: a visitor or an IP address', {
+        visitor_id: ['Exactly one target'],
+        ip: ['Exactly one target'],
+      });
     const reason = input.reason.trim();
     if (!reason) throw badRequest('A reason is required', { reason: ['Required'] });
     let expiresAt: Date | null = null;
     if (input.expiresAt) {
       expiresAt = new Date(input.expiresAt);
-      if (Number.isNaN(expiresAt.getTime())) throw badRequest('Invalid expiry', { expires_at: ['Use an RFC 3339 timestamp'] });
-      if (expiresAt.getTime() <= Date.now()) throw badRequest('Expiry must be in the future', { expires_at: ['Must be in the future'] });
-      if (expiresAt.getTime() > Date.now() + MAX_BAN_DAYS * 86_400_000) throw badRequest('Expiry is too far in the future', { expires_at: [`At most ${MAX_BAN_DAYS} days`] });
+      if (Number.isNaN(expiresAt.getTime()))
+        throw badRequest('Invalid expiry', { expires_at: ['Use an RFC 3339 timestamp'] });
+      if (expiresAt.getTime() <= Date.now())
+        throw badRequest('Expiry must be in the future', { expires_at: ['Must be in the future'] });
+      if (expiresAt.getTime() > Date.now() + MAX_BAN_DAYS * 86_400_000)
+        throw badRequest('Expiry is too far in the future', { expires_at: [`At most ${MAX_BAN_DAYS} days`] });
     }
     let ip: string | null = null;
     if (input.ip) {
       if (input.ip.includes('/') && !/\/(32|128)$/.test(input.ip.trim())) {
-        throw badRequest('Ban an exact address; CIDR ranges are not accepted by this policy', { ip: ['CIDR ranges are not allowed'] });
+        throw badRequest('Ban an exact address; CIDR ranges are not accepted by this policy', {
+          ip: ['CIDR ranges are not allowed'],
+        });
       }
       ip = canonicalIp(input.ip);
       if (!ip) throw badRequest('Enter a valid IPv4 or IPv6 address', { ip: ['Invalid IP address'] });
@@ -90,10 +110,20 @@ export class BansService {
     const ipHash = ip ? hashIp(ip) : null;
 
     const result = await this.db.tx(auth.tenantId, async (tx) => {
-      if (input.siteId && !(await tx.site.findFirst({ where: { tenantId: auth.tenantId, id: input.siteId }, select: { id: true } }))) throw notFound('Site');
+      if (
+        input.siteId &&
+        !(await tx.site.findFirst({
+          where: { tenantId: auth.tenantId, id: input.siteId },
+          select: { id: true },
+        }))
+      )
+        throw notFound('Site');
       let visitorName: string | null = null;
       if (input.visitorId) {
-        const v = await tx.visitor.findFirst({ where: { tenantId: auth.tenantId, id: input.visitorId }, select: { id: true, name: true, anonymousLabel: true } });
+        const v = await tx.visitor.findFirst({
+          where: { tenantId: auth.tenantId, id: input.visitorId },
+          select: { id: true, name: true, anonymousLabel: true },
+        });
         if (!v) throw notFound('Visitor');
         visitorName = displayNameOf(v);
       }
@@ -105,7 +135,8 @@ export class BansService {
         ...(input.visitorId ? { visitorId: input.visitorId } : { ipMatchHash: ipHash }),
       };
       const dup = await tx.ban.findFirst({ where: activeWhere, select: { id: true } });
-      if (dup) throw conflict('CONFLICT', 'An active ban for this target already exists', false, { banId: dup.id });
+      if (dup)
+        throw conflict('CONFLICT', 'An active ban for this target already exists', false, { banId: dup.id });
       const ban = await tx.ban.create({
         data: {
           tenantId: auth.tenantId,
@@ -122,11 +153,25 @@ export class BansService {
         action: 'ban.created',
         objectType: 'ban',
         objectId: ban.id,
-        safeDiff: { target: input.visitorId ? 'visitor' : 'ip', visitor_id: input.visitorId ?? null, site_id: input.siteId ?? null, expires_at: expiresAt?.toISOString() ?? null, close_active_chat: !!input.closeActiveChat },
+        safeDiff: {
+          target: input.visitorId ? 'visitor' : 'ip',
+          visitor_id: input.visitorId ?? null,
+          site_id: input.siteId ?? null,
+          expires_at: expiresAt?.toISOString() ?? null,
+          close_active_chat: !!input.closeActiveChat,
+        },
       });
       const open =
         input.visitorId && input.closeActiveChat
-          ? await tx.chat.findMany({ where: { tenantId: auth.tenantId, visitorId: input.visitorId, status: { not: 'closed' }, ...(input.siteId ? { siteId: input.siteId } : {}) }, select: { id: true } })
+          ? await tx.chat.findMany({
+              where: {
+                tenantId: auth.tenantId,
+                visitorId: input.visitorId,
+                status: { not: 'closed' },
+                ...(input.siteId ? { siteId: input.siteId } : {}),
+              },
+              select: { id: true },
+            })
           : [];
       return { ban, visitorName, openChatIds: open.map((c) => c.id) };
     });
@@ -146,7 +191,9 @@ export class BansService {
       }
     }
     if (input.visitorId) await this.monitor.markDirty(auth.tenantId, [input.visitorId]);
-    const names = new Map(result.visitorName && input.visitorId ? [[input.visitorId, result.visitorName]] : []);
+    const names = new Map(
+      result.visitorName && input.visitorId ? [[input.visitorId, result.visitorName]] : [],
+    );
     return {
       ...this.resource(result.ban, names),
       ...(ip ? { collateralWarning: IP_COLLATERAL_WARNING } : {}),
@@ -158,22 +205,38 @@ export class BansService {
     const limit = pageLimit(q.limit);
     const filterHash = sha256(JSON.stringify({ active: q.active ?? null })).slice(0, 16);
     const cur = decodeCursor<{ t: string; id: string }>(q.cursor, filterHash);
-    if (q.cursor && !cur) throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
+    if (q.cursor && !cur)
+      throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
     const now = new Date();
     return this.db.read(auth.tenantId, async (tx) => {
       const and: Prisma.BanWhereInput[] = [{ tenantId: auth.tenantId }];
-      if (q.active === true) and.push({ revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
+      if (q.active === true)
+        and.push({ revokedAt: null, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] });
       if (q.active === false) and.push({ OR: [{ revokedAt: { not: null } }, { expiresAt: { lte: now } }] });
-      if (cur) and.push({ OR: [{ createdAt: { lt: new Date(cur.t) } }, { createdAt: new Date(cur.t), id: { lt: cur.id } }] });
-      const rows = await tx.ban.findMany({ where: { AND: and }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: limit + 1 });
+      if (cur)
+        and.push({
+          OR: [{ createdAt: { lt: new Date(cur.t) } }, { createdAt: new Date(cur.t), id: { lt: cur.id } }],
+        });
+      const rows = await tx.ban.findMany({
+        where: { AND: and },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: limit + 1,
+      });
       const slice = rows.slice(0, limit);
       const visitorIds = [...new Set(slice.map((b) => b.visitorId).filter((v): v is string => !!v))];
-      const visitors = visitorIds.length ? await tx.visitor.findMany({ where: { tenantId: auth.tenantId, id: { in: visitorIds } }, select: { id: true, name: true, anonymousLabel: true } }) : [];
+      const visitors = visitorIds.length
+        ? await tx.visitor.findMany({
+            where: { tenantId: auth.tenantId, id: { in: visitorIds } },
+            select: { id: true, name: true, anonymousLabel: true },
+          })
+        : [];
       const names = new Map(visitors.map((v) => [v.id, displayNameOf(v)]));
       const last = slice[slice.length - 1];
       return page(
         slice.map((b) => this.resource(b, names)),
-        rows.length > limit && last ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id }, filterHash) : null,
+        rows.length > limit && last
+          ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id }, filterHash)
+          : null,
       );
     });
   }
@@ -185,7 +248,12 @@ export class BansService {
       if (!ban) throw notFound('Ban');
       if (ban.revokedAt) return null;
       await tx.ban.update({ where: { id }, data: { revokedAt: new Date(), revokedBy: auth.userId ?? null } });
-      await this.audit.inTx(tx, auth, { action: 'ban.revoked', objectType: 'ban', objectId: id, safeDiff: { target: ban.visitorId ? 'visitor' : 'ip', site_id: ban.siteId } });
+      await this.audit.inTx(tx, auth, {
+        action: 'ban.revoked',
+        objectType: 'ban',
+        objectId: id,
+        safeDiff: { target: ban.visitorId ? 'visitor' : 'ip', site_id: ban.siteId },
+      });
       return ban.visitorId;
     });
     if (visitorId) await this.monitor.markDirty(auth.tenantId, [visitorId]);
@@ -196,19 +264,33 @@ export class BansService {
    * ChatCommandsService.assertNotBanned (tenant + site scope, unrevoked,
    * unexpired, visitor or exact-IP hash).
    */
-  async isBanned(tenantId: string, siteId: string, visitorId: string | null, ipHash: string | null): Promise<boolean> {
+  async isBanned(
+    tenantId: string,
+    siteId: string,
+    visitorId: string | null,
+    ipHash: string | null,
+  ): Promise<boolean> {
     if (!visitorId && !ipHash) return false;
     return this.db.read(tenantId, (tx) => this.isBannedTx(tx, tenantId, siteId, visitorId, ipHash));
   }
 
-  async isBannedTx(tx: Tx, tenantId: string, siteId: string, visitorId: string | null, ipHash: string | null): Promise<boolean> {
+  async isBannedTx(
+    tx: Tx,
+    tenantId: string,
+    siteId: string,
+    visitorId: string | null,
+    ipHash: string | null,
+  ): Promise<boolean> {
     if (!visitorId && !ipHash) return false;
     const n = await tx.ban.count({
       where: {
         tenantId,
         revokedAt: null,
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
-        AND: [{ OR: [{ siteId: null }, { siteId }] }, { OR: [...(visitorId ? [{ visitorId }] : []), ...(ipHash ? [{ ipMatchHash: ipHash }] : [])] }],
+        AND: [
+          { OR: [{ siteId: null }, { siteId }] },
+          { OR: [...(visitorId ? [{ visitorId }] : []), ...(ipHash ? [{ ipMatchHash: ipHash }] : [])] },
+        ],
       },
     });
     return n > 0;

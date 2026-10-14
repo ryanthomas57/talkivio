@@ -13,7 +13,9 @@ const META: Record<string, { label: MessageKey; cls: string; Icon: typeof Circle
 export function ChatStatusLabel({ status, className }: { status: string; className?: string }) {
   const t = useT();
   const known = META[status];
-  const m = known ? { label: t(known.label), cls: known.cls, Icon: known.Icon } : { label: status, cls: 'text-fg-2', Icon: Circle };
+  const m = known
+    ? { label: t(known.label), cls: known.cls, Icon: known.Icon }
+    : { label: status, cls: 'text-fg-2', Icon: Circle };
   return (
     <span className={cn('inline-flex items-center gap-1 text-xs font-medium', m.cls, className)}>
       <m.Icon className="size-3.5" aria-hidden />

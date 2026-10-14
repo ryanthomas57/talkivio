@@ -740,7 +740,7 @@ async function main() {
 
     console.log('\nTalkivio demo fixtures applied (idempotent).');
     for (const { t, r } of results) {
-      console.log(`\n  ${t.name}  [${t.slug}]  ${r.created ? 'created' : 'already present — converged'}`);
+      console.log(`\n  ${t.name}  [${t.slug}]  ${r.created ? 'created' : 'already present, converged'}`);
       console.log(`    site key   ${r.siteKey}   allowed origins: ${t.origins.join(', ')}`);
       for (const o of t.origins) console.log(`    demo       ${o}/?api=${base}&w=${r.siteKey}`);
     }

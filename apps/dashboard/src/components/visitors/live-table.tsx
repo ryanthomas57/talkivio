@@ -11,14 +11,14 @@ import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type Ke
 import { useT, type MessageKey } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { countryName, flagEmoji, formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
-import { DEVICE, originLabel, ticking, urlLabel, useMonoNow } from './display';
+import { DEVICE, originLabel, siteTitle, ticking, urlLabel, useMonoNow } from './display';
 import type { LiveRow } from './live-model';
 import { GROUP_LABEL, type LiveGroup, type LiveVisitor } from './types';
 import { useWindowedRows } from './windowing';
 
-const ROW_H = 56;
-const GROUP_H = 56;
-const HEAD_H = 44;
+const ROW_H = 48;
+const GROUP_H = 44;
+const HEAD_H = 40;
 
 /** A section of the table: rows that share an activity, a country or a page. */
 export interface TableGroup {
@@ -205,15 +205,15 @@ export function LiveTable({
             <col key={c.key} style={{ width: c.width }} />
           ))}
         </colgroup>
-        <thead className="sticky top-0 z-[2] bg-surface">
+        <thead className="sticky top-0 z-[2] bg-primary-tint">
           <tr aria-rowindex={1} style={{ height: HEAD_H }}>
             {COLS.map((c) => (
               <th
                 key={c.key}
                 scope="col"
                 className={cn(
-                  'whitespace-nowrap border-b border-line px-3 text-start text-sm font-semibold text-fg',
-                  c.sticky && 'sticky start-0 z-[3] bg-surface ps-14',
+                  'whitespace-nowrap border-b border-line px-3 text-start text-sm font-semibold text-primary-hover dark:text-primary',
+                  c.sticky && 'sticky start-0 z-[3] bg-primary-tint ps-12',
                 )}
               >
                 {c.srOnly ? <span className="sr-only">{t(c.label)}</span> : t(c.label)}
@@ -262,8 +262,12 @@ function GroupRow({
 }) {
   const t = useT();
   return (
-    <tr style={{ height: GROUP_H }} className="bg-canvas">
-      <th scope="colgroup" colSpan={COLS.length} className="border-b border-line px-3 text-start font-normal">
+    <tr style={{ height: GROUP_H }} className="bg-primary text-primary-fg">
+      <th
+        scope="colgroup"
+        colSpan={COLS.length}
+        className="border-b border-primary-hover px-3 text-start font-normal"
+      >
         <div className="flex items-center gap-3">
           <button
             type="button"
@@ -272,18 +276,20 @@ function GroupRow({
             aria-label={t(collapsed ? 'visitors.live.expandGroup' : 'visitors.live.collapseGroup', {
               group: group.label,
             })}
-            className="inline-flex size-8 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-fg-2 hover:bg-surface-3 hover:text-fg"
+            className="inline-flex size-7 shrink-0 items-center justify-center rounded-full border border-primary-fg/60 text-primary-fg hover:bg-primary-hover focus-visible:outline-primary-fg"
           >
             <ChevronDown
               className={cn('size-4 transition-transform', !collapsed && 'rotate-180')}
               aria-hidden
             />
           </button>
-          <span className="min-w-0 truncate text-[15px] font-medium text-fg" dir="auto">
+          <span className="min-w-0 truncate text-[15px] font-semibold" dir="auto">
             {group.label}
           </span>
-          {group.hint && <span className="hidden truncate text-xs text-fg-2 lg:inline">{group.hint}</span>}
-          <span className="ms-auto shrink-0 pe-1 text-sm text-fg-2">
+          {group.hint && (
+            <span className="hidden truncate text-xs text-primary-fg lg:inline">{group.hint}</span>
+          )}
+          <span className="ms-auto shrink-0 pe-1 text-sm font-medium">
             {t('visitors.live.groupCount', { count: formatNumber(group.total) })}
             {group.total > group.rows.length && (
               <span className="ms-1.5 text-xs">
@@ -323,7 +329,9 @@ const VisitorRow = memo(function VisitorRow({
   const device = v.deviceCategory ? DEVICE[v.deviceCategory] : undefined;
   const deviceText = [device ? t(device.label) : null, v.browser, v.os].filter(Boolean).join(' · ');
   const activity = ACTIVITY[v.group];
-  const page = v.browsingHidden ? null : v.currentTitle || (v.currentUrl ? urlLabel(v.currentUrl) : null);
+  const page = v.browsingHidden
+    ? null
+    : siteTitle(v.currentTitle) || (v.currentUrl ? urlLabel(v.currentUrl) : null);
   const cell = 'border-b border-line-subtle px-3 align-middle';
   return (
     <tr
@@ -345,11 +353,11 @@ const VisitorRow = memo(function VisitorRow({
       >
         <div className="flex min-w-0 items-center gap-3">
           <span
-            className={cn('inline-flex size-7 shrink-0 items-center justify-center rounded-md', activity.cls)}
+            className={cn('inline-flex size-6 shrink-0 items-center justify-center rounded-md', activity.cls)}
             title={t(GROUP_LABEL[v.group])}
             aria-hidden
           >
-            <activity.Icon className="size-4" />
+            <activity.Icon className="size-3.5" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <span className="flex min-w-0 items-center gap-1">

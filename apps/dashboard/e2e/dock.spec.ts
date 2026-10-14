@@ -249,3 +249,49 @@ test('DOCK03 files both ways: a visitor attaches before chatting, the agent repl
     await vctx.close();
   }
 });
+
+test('DOCK04 visitor name, email, phone and notes are edited beside the chat', async ({
+  browser,
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const site = await demoSite(request);
+  const headers = await csrf(request);
+  await closeOpenChats(request, headers);
+  await request.put(`${API}/api/v1/agents/me/presence`, { data: { status: 'online' }, headers });
+  const name = `Details ${stamp}`;
+  const renamed = `Dana Details ${stamp}`;
+  const vctx = await browser.newContext({ storageState: undefined });
+  const vpage = await vctx.newPage();
+  try {
+    await visitorPage(vpage, site.public_key, name);
+    await page.goto('/visitors');
+    await settle(page);
+    await page.getByRole('button', { name: `Chat with ${name}` }).click();
+    const dock = page.getByRole('region', { name: 'Chat windows' });
+    const details = dock.getByRole('form', { name: 'Visitor details' });
+    await expect(details).toBeVisible({ timeout: 15_000 });
+    await details.getByLabel('Name').fill(renamed);
+    await details.getByLabel('Email').fill(`dana.${stamp}@example.com`);
+    await details.getByLabel('Phone').fill('+1 (206) 555-0142');
+    await details.getByLabel('Notes').fill('Wants a call after 5 pm.');
+    await details.getByRole('button', { name: 'Save' }).click();
+    await expect(page.getByText('Visitor details saved')).toBeVisible({ timeout: 10_000 });
+
+    const visitorId = (
+      (
+        await (
+          await request.get(`${API}/api/v1/visitors?q=${encodeURIComponent(`dana.${stamp}@example.com`)}`)
+        ).json()
+      ).data as Array<{ id: string }>
+    )[0]?.id;
+    expect(visitorId, 'the saved email finds the visitor').toBeTruthy();
+    const profile = (await (await request.get(`${API}/api/v1/visitors/${visitorId}`)).json()).data;
+    expect(profile.fields.name.value).toBe(renamed);
+    expect(profile.fields.phone.value).toBe('+1 (206) 555-0142');
+    expect(profile.notes).toBe('Wants a call after 5 pm.');
+  } finally {
+    await vctx.close();
+  }
+});

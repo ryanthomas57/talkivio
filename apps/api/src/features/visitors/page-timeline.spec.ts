@@ -1,11 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { buildSessionTimeline, exclusiveVisibleMs, mergeIntervals, uncoveredLength, unionLength, type TimelineEvent } from './page-timeline';
+import {
+  buildSessionTimeline,
+  exclusiveVisibleMs,
+  mergeIntervals,
+  uncoveredLength,
+  unionLength,
+  type TimelineEvent,
+} from './page-timeline';
 
-const ev = (kind: TimelineEvent['kind'], at: number, url = 'https://a.test/x'): TimelineEvent => ({ kind, at, url, title: null });
+const ev = (kind: TimelineEvent['kind'], at: number, url = 'https://a.test/x'): TimelineEvent => ({
+  kind,
+  at,
+  url,
+  title: null,
+});
 
 describe('buildSessionTimeline', () => {
   it('accrues dwell per page from server receipt times (SPA navigation)', () => {
-    const t = buildSessionTimeline([ev('entered', 0, 'https://a.test/a'), ev('entered', 10_000, 'https://a.test/b'), ev('left', 25_000, 'https://a.test/b')], 30_000);
+    const t = buildSessionTimeline(
+      [
+        ev('entered', 0, 'https://a.test/a'),
+        ev('entered', 10_000, 'https://a.test/b'),
+        ev('left', 25_000, 'https://a.test/b'),
+      ],
+      30_000,
+    );
     expect(t.pages.map((p) => [p.url, p.dwellMs])).toEqual([
       ['https://a.test/a', 10_000],
       ['https://a.test/b', 15_000],
@@ -14,12 +33,18 @@ describe('buildSessionTimeline', () => {
   });
 
   it('pauses while hidden and resumes when visible', () => {
-    const t = buildSessionTimeline([ev('entered', 0), ev('hidden', 5_000), ev('visible', 20_000), ev('left', 30_000)], 40_000);
+    const t = buildSessionTimeline(
+      [ev('entered', 0), ev('hidden', 5_000), ev('visible', 20_000), ev('left', 30_000)],
+      40_000,
+    );
     expect(t.pages[0].dwellMs).toBe(15_000);
   });
 
   it('does not duplicate a visit when the same page is entered again (bfcache)', () => {
-    const t = buildSessionTimeline([ev('entered', 0), ev('hidden', 4_000), ev('entered', 10_000), ev('left', 12_000)], 20_000);
+    const t = buildSessionTimeline(
+      [ev('entered', 0), ev('hidden', 4_000), ev('entered', 10_000), ev('left', 12_000)],
+      20_000,
+    );
     expect(t.pages).toHaveLength(1);
     expect(t.pages[0].dwellMs).toBe(6_000);
   });
@@ -39,12 +64,34 @@ describe('buildSessionTimeline', () => {
 
 describe('interval math', () => {
   it('merges and measures unions', () => {
-    expect(mergeIntervals([[5, 10], [0, 6], [20, 30]])).toEqual([[0, 10], [20, 30]]);
-    expect(unionLength([[0, 10], [5, 15]])).toBe(15);
+    expect(
+      mergeIntervals([
+        [5, 10],
+        [0, 6],
+        [20, 30],
+      ]),
+    ).toEqual([
+      [0, 10],
+      [20, 30],
+    ]);
+    expect(
+      unionLength([
+        [0, 10],
+        [5, 15],
+      ]),
+    ).toBe(15);
   });
 
   it('measures uncovered length', () => {
-    expect(uncoveredLength([[0, 10]], [[2, 4], [6, 7]])).toBe(7);
+    expect(
+      uncoveredLength(
+        [[0, 10]],
+        [
+          [2, 4],
+          [6, 7],
+        ],
+      ),
+    ).toBe(7);
     expect(uncoveredLength([[0, 10]], [])).toBe(10);
     expect(uncoveredLength([[0, 10]], [[-5, 20]])).toBe(0);
   });

@@ -22,6 +22,7 @@ import {
   IdentityBadge,
   originLabel,
   safeHref,
+  siteTitle,
   ticking,
   urlLabel,
   useMonoNow,
@@ -142,7 +143,7 @@ function DrawerBody({ visitorId, live }: { visitorId: string; live: LiveRow | nu
                   <span className="flex flex-col items-end">
                     {v.currentTitle && (
                       <span className="font-medium" dir="auto">
-                        {v.currentTitle}
+                        {siteTitle(v.currentTitle)}
                       </span>
                     )}
                     {safeHref(v.currentUrl) ? (

@@ -1,4 +1,15 @@
-import { Body, Controller, Get, Headers, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { z } from 'zod';
 import { Auth, body, Require, type AuthContext } from '../../common/http';
 import { CUSTOM_FIELD_TYPES, CustomFieldsService } from './custom-fields.service';
@@ -47,7 +58,12 @@ export class CustomFieldsController {
 
   @Patch(':id')
   @Require('custom_fields.manage')
-  update(@Auth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string, @Headers('if-match') ifMatch: string | undefined, @Body(body(patchSchema)) input: z.infer<typeof patchSchema>) {
+  update(
+    @Auth() auth: AuthContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Headers('if-match') ifMatch: string | undefined,
+    @Body(body(patchSchema)) input: z.infer<typeof patchSchema>,
+  ) {
     const { expectedVersion, ...patch } = input;
     return this.fields.update(auth, id, requireVersion(ifMatch, expectedVersion), patch);
   }

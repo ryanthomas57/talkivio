@@ -154,6 +154,7 @@ export class AccessExportService {
           name: v.name,
           email: safeDecrypt(v.emailCiphertext),
           phone: safeDecrypt(v.phoneCiphertext),
+          ...(includeNotes ? { staff_notes: v.notes } : {}),
           verified: v.verified,
           custom_fields: v.customFields,
           tags: tagRows.map((t) => t.label),

@@ -46,7 +46,15 @@ export class PresenceReader {
   /** Live visitor ids with their last heartbeat score, most recent first. */
   async liveVisitors(tenantId: string, limit = 10_000): Promise<Array<{ visitorId: string; score: number }>> {
     const cutoff = Date.now() - env().VISITOR_TIMEOUT_MS;
-    const raw = await this.redis.client.zrevrangebyscore(`pv:z:${tenantId}`, '+inf', cutoff, 'WITHSCORES', 'LIMIT', 0, limit);
+    const raw = await this.redis.client.zrevrangebyscore(
+      `pv:z:${tenantId}`,
+      '+inf',
+      cutoff,
+      'WITHSCORES',
+      'LIMIT',
+      0,
+      limit,
+    );
     const out: Array<{ visitorId: string; score: number }> = [];
     for (let i = 0; i < raw.length; i += 2) out.push({ visitorId: raw[i], score: Number(raw[i + 1]) });
     return out;
@@ -58,7 +66,11 @@ export class PresenceReader {
   }
 
   /** One pipelined read of state + connections for many visitors. Missing visitors are omitted. */
-  async read(tenantId: string, visitorIds: string[], scores?: Map<string, number>): Promise<Map<string, PresenceSnapshot>> {
+  async read(
+    tenantId: string,
+    visitorIds: string[],
+    scores?: Map<string, number>,
+  ): Promise<Map<string, PresenceSnapshot>> {
     const out = new Map<string, PresenceSnapshot>();
     if (!visitorIds.length) return out;
     const cutoff = Date.now() - env().VISITOR_TIMEOUT_MS;
@@ -76,13 +88,26 @@ export class PresenceReader {
       ids.forEach((visitorId, i) => {
         const state = (res[i * step]?.[1] as Array<string | null>) ?? [];
         const conns = (res[i * step + 1]?.[1] as Record<string, string>) ?? {};
-        const score = scores ? (scores.get(visitorId) ?? null) : this.num(res[i * step + 2]?.[1] as string | null);
+        const score = scores
+          ? (scores.get(visitorId) ?? null)
+          : this.num(res[i * step + 2]?.[1] as string | null);
         const connections: PresenceConnection[] = [];
         for (const [connectionId, json] of Object.entries(conns)) {
           try {
-            const c = JSON.parse(json) as { sessionId?: string; siteId?: string; ts?: number; visible?: boolean };
+            const c = JSON.parse(json) as {
+              sessionId?: string;
+              siteId?: string;
+              ts?: number;
+              visible?: boolean;
+            };
             if (c.sessionId && typeof c.ts === 'number' && c.ts > cutoff) {
-              connections.push({ connectionId, sessionId: c.sessionId, siteId: c.siteId ?? '', ts: c.ts, visible: c.visible !== false });
+              connections.push({
+                connectionId,
+                sessionId: c.sessionId,
+                siteId: c.siteId ?? '',
+                ts: c.ts,
+                visible: c.visible !== false,
+              });
             }
           } catch {
             /* ignore malformed entries */

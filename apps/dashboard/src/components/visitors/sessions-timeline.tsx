@@ -11,15 +11,27 @@ import { useT } from '@/i18n';
 import { api, errorMessage } from '@/lib/api';
 import { formatDateTime, formatDuration, formatTime } from '@/lib/format';
 import { byId, useSites } from '@/lib/queries';
-import { ApproxCountry, DeviceLabel, originLabel, safeHref, urlLabel } from './display';
+import { ApproxCountry, DeviceLabel, originLabel, safeHref, siteTitle, urlLabel } from './display';
 import { visitorKeys, type VisitorSessionRecord } from './types';
 
-export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { visitorId: string; pageSize?: number; maxPagesShown?: number }) {
+export function SessionsTimeline({
+  visitorId,
+  pageSize = 10,
+  maxPagesShown,
+}: {
+  visitorId: string;
+  pageSize?: number;
+  maxPagesShown?: number;
+}) {
   const t = useT();
   const sites = byId(useSites().data);
   const q = useInfiniteQuery({
     queryKey: [...visitorKeys.sessions(visitorId), pageSize],
-    queryFn: ({ pageParam }) => api.page<VisitorSessionRecord>(`/visitors/${visitorId}/sessions`, { cursor: pageParam ?? undefined, limit: pageSize }),
+    queryFn: ({ pageParam }) =>
+      api.page<VisitorSessionRecord>(`/visitors/${visitorId}/sessions`, {
+        cursor: pageParam ?? undefined,
+        limit: pageSize,
+      }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => (last.hasMore ? last.nextCursor : null),
     staleTime: 15_000,
@@ -32,7 +44,14 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
         <Skeleton className="h-16 w-full" />
       </div>
     );
-  if (q.isError) return <PanelError className="p-0" message={t('visitors.sessions.loadError', { error: errorMessage(q.error) })} onRetry={() => void q.refetch()} />;
+  if (q.isError)
+    return (
+      <PanelError
+        className="p-0"
+        message={t('visitors.sessions.loadError', { error: errorMessage(q.error) })}
+        onRetry={() => void q.refetch()}
+      />
+    );
   const sessions = q.data?.pages.flatMap((p) => p.items) ?? [];
   if (!sessions.length) return <p className="text-sm text-fg-2">{t('visitors.sessions.empty')}</p>;
 
@@ -41,7 +60,10 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
       <ol className="flex flex-col gap-2" aria-label={t('visitors.sessions.listLabel')}>
         {sessions.map((s, i) => (
           <li key={s.id}>
-            <details open={i === 0} className="group rounded-[var(--radius-control)] border border-line bg-surface">
+            <details
+              open={i === 0}
+              className="group rounded-[var(--radius-control)] border border-line bg-surface"
+            >
               <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center gap-x-3 gap-y-1 px-3 py-2 text-sm [&::-webkit-details-marker]:hidden">
                 <span className="font-medium text-fg">
                   <time dateTime={s.startedAt}>{formatDateTime(s.startedAt)}</time>
@@ -51,11 +73,16 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
                     {t('visitors.sessions.liveNow')}
                   </Badge>
                 ) : (
-                  <span className="text-xs text-fg-2">{s.endedAt ? t('visitors.sessions.endedAt', { time: formatTime(s.endedAt) }) : t('visitors.sessions.lastSeenAt', { time: formatTime(s.lastSeenAt) })}</span>
+                  <span className="text-xs text-fg-2">
+                    {s.endedAt
+                      ? t('visitors.sessions.endedAt', { time: formatTime(s.endedAt) })
+                      : t('visitors.sessions.lastSeenAt', { time: formatTime(s.lastSeenAt) })}
+                  </span>
                 )}
                 {s.isPreview && <Badge tone="info">{t('common.preview')}</Badge>}
                 <span className="text-xs text-fg-2">
-                  <span dir="auto">{sites.get(s.siteId)?.name ?? t('visitors.page.site')}</span> · <DeviceLabel category={s.device.category} className="text-xs" />
+                  <span dir="auto">{sites.get(s.siteId)?.name ?? t('visitors.page.site')}</span> ·{' '}
+                  <DeviceLabel category={s.device.category} className="text-xs" />
                   {s.device.browser ? (
                     <>
                       {' · '}
@@ -63,7 +90,11 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
                     </>
                   ) : null}
                 </span>
-                <span className="ms-auto text-xs text-fg-2 group-open:hidden">{s.browsingHidden ? t('visitors.sessions.detailsHidden') : t('visitors.sessions.pageCount', { count: s.pageViewCount ?? s.pages.length })}</span>
+                <span className="ms-auto text-xs text-fg-2 group-open:hidden">
+                  {s.browsingHidden
+                    ? t('visitors.sessions.detailsHidden')
+                    : t('visitors.sessions.pageCount', { count: s.pageViewCount ?? s.pages.length })}
+                </span>
               </summary>
               <div className="border-t border-line-subtle px-3 py-3">
                 {s.browsingHidden ? (
@@ -100,21 +131,33 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
                       )}
                     </dl>
                     {s.pages.length ? (
-                      <ol className="relative flex flex-col gap-0 border-s border-line ps-4" aria-label={t('visitors.sessions.pagesLabel')}>
+                      <ol
+                        className="relative flex flex-col gap-0 border-s border-line ps-4"
+                        aria-label={t('visitors.sessions.pagesLabel')}
+                      >
                         {(maxPagesShown ? s.pages.slice(-maxPagesShown) : s.pages).map((p, j) => {
                           const href = safeHref(p.url);
                           return (
                             <li key={`${p.enteredAt}-${j}`} className="relative py-1.5">
-                              <span className="absolute -start-[21px] top-3 size-2 rounded-full bg-primary" aria-hidden />
+                              <span
+                                className="absolute -start-[21px] top-3 size-2 rounded-full bg-primary"
+                                aria-hidden
+                              />
                               <div className="flex flex-wrap items-baseline justify-between gap-x-3">
                                 <span className="min-w-0 flex-1">
                                   {p.title && (
                                     <span className="block truncate text-sm font-medium text-fg" dir="auto">
-                                      {p.title}
+                                      {siteTitle(p.title)}
                                     </span>
                                   )}
                                   {href ? (
-                                    <a href={href} target="_blank" rel="noopener noreferrer nofollow" dir="auto" className="block break-all text-xs text-primary hover:underline">
+                                    <a
+                                      href={href}
+                                      target="_blank"
+                                      rel="noopener noreferrer nofollow"
+                                      dir="auto"
+                                      className="block break-all text-xs text-primary hover:underline"
+                                    >
                                       {urlLabel(p.url)}
                                     </a>
                                   ) : (
@@ -128,7 +171,9 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
                                     {formatTime(p.enteredAt)}
                                   </time>
                                   {' · '}
-                                  <span className="tabular font-medium text-fg">{formatDuration(p.dwellMs)}</span>
+                                  <span className="tabular font-medium text-fg">
+                                    {formatDuration(p.dwellMs)}
+                                  </span>
                                   {!p.leftAt && s.live ? ` ${t('visitors.sessions.onPage')}` : ''}
                                 </span>
                               </div>
@@ -139,7 +184,9 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
                     ) : (
                       <p className="text-sm text-fg-2">{t('visitors.sessions.noPages')}</p>
                     )}
-                    {(s.pagesTruncated || (maxPagesShown && s.pages.length > maxPagesShown)) && <p className="mt-2 text-xs text-fg-2">{t('visitors.sessions.truncated')}</p>}
+                    {(s.pagesTruncated || (maxPagesShown && s.pages.length > maxPagesShown)) && (
+                      <p className="mt-2 text-xs text-fg-2">{t('visitors.sessions.truncated')}</p>
+                    )}
                   </>
                 )}
               </div>
@@ -149,7 +196,12 @@ export function SessionsTimeline({ visitorId, pageSize = 10, maxPagesShown }: { 
       </ol>
       {q.hasNextPage && (
         <div>
-          <Button size="sm" variant="secondary" loading={q.isFetchingNextPage} onClick={() => void q.fetchNextPage()}>
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={q.isFetchingNextPage}
+            onClick={() => void q.fetchNextPage()}
+          >
             {t('visitors.sessions.loadOlder')}
           </Button>
         </div>

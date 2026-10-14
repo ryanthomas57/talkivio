@@ -24,9 +24,17 @@ const VISITORS = Number(process.env.SCALE_VISITORS ?? 10_000);
 const MESSAGES = Number(process.env.SCALE_MESSAGES ?? 10_000);
 const AUTH_FILE = 'e2e/.auth/scale.json';
 
-const sql = (q: string) => execFileSync('psql', [OWNER_DB, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', q], { maxBuffer: 64 << 20 }).toString().trim();
-const resp = (args: string[]) => `*${args.length}\r\n${args.map((a) => `$${Buffer.byteLength(a)}\r\n${a}\r\n`).join('')}`;
-const redis = (commands: string[][]) => execFileSync('redis-cli', ['-u', REDIS_URL, '--pipe'], { input: commands.map(resp).join(''), maxBuffer: 16 << 20 });
+const sql = (q: string) =>
+  execFileSync('psql', [OWNER_DB, '-X', '-At', '-v', 'ON_ERROR_STOP=1', '-c', q], { maxBuffer: 64 << 20 })
+    .toString()
+    .trim();
+const resp = (args: string[]) =>
+  `*${args.length}\r\n${args.map((a) => `$${Buffer.byteLength(a)}\r\n${a}\r\n`).join('')}`;
+const redis = (commands: string[][]) =>
+  execFileSync('redis-cli', ['-u', REDIS_URL, '--pipe'], {
+    input: commands.map(resp).join(''),
+    maxBuffer: 16 << 20,
+  });
 
 const stats = (xs: number[]) => {
   const v = [...xs].sort((a, b) => a - b);
@@ -39,7 +47,10 @@ let siteId = '';
 let chatId = '';
 let pairs: Array<[string, string]> = []; // [visitorId, sessionId]
 let refresher: NodeJS.Timeout | null = null;
-const report: Record<string, unknown> = { started_at: new Date().toISOString(), fixture: { visitors: VISITORS, messages: MESSAGES } };
+const report: Record<string, unknown> = {
+  started_at: new Date().toISOString(),
+  fixture: { visitors: VISITORS, messages: MESSAGES },
+};
 
 /** Presence for every fixture visitor with a fresh heartbeat (live list reads pv:z / pv:state / pv:conn). */
 function presence(): void {
@@ -47,8 +58,26 @@ function presence(): void {
   const cmds: string[][] = [['SADD', 'pv:tenants', tenantId]];
   for (const [v, s] of pairs) {
     cmds.push(['ZADD', `pv:z:${tenantId}`, String(now), v]);
-    cmds.push(['HSET', `pv:state:${tenantId}:${v}`, 'siteId', siteId, 'sessionId', s, 'lastActivityAt', String(now), 'sessionStartedAt', String(now - 600_000), 'pageEnteredAt', String(now - 60_000)]);
-    cmds.push(['HSET', `pv:conn:${tenantId}:${v}`, `scale-${v}`, JSON.stringify({ sessionId: s, siteId, ts: now, visible: true })]);
+    cmds.push([
+      'HSET',
+      `pv:state:${tenantId}:${v}`,
+      'siteId',
+      siteId,
+      'sessionId',
+      s,
+      'lastActivityAt',
+      String(now),
+      'sessionStartedAt',
+      String(now - 600_000),
+      'pageEnteredAt',
+      String(now - 60_000),
+    ]);
+    cmds.push([
+      'HSET',
+      `pv:conn:${tenantId}:${v}`,
+      `scale-${v}`,
+      JSON.stringify({ sessionId: s, siteId, ts: now, visible: true }),
+    ]);
   }
   redis(cmds);
 }
@@ -64,7 +93,8 @@ async function observeLongTasks(page: Page): Promise<void> {
     }).observe({ type: 'longtask' });
   });
 }
-const takeLongTasks = (page: Page) => page.evaluate(() => (window as unknown as { __lt: number[] }).__lt.splice(0));
+const takeLongTasks = (page: Page) =>
+  page.evaluate(() => (window as unknown as { __lt: number[] }).__lt.splice(0));
 
 /** Request start → response end of matching API calls, as the browser saw them (timing is final once finished). */
 function trackRequests(page: Page, match: RegExp): number[] {
@@ -84,17 +114,31 @@ test.use({ storageState: AUTH_FILE });
 test.beforeAll(async ({ browser }) => {
   test.setTimeout(600_000);
   for (const pattern of ['rl:signup:*', 'rl:login:*']) {
-    const keys = execFileSync('redis-cli', ['-u', REDIS_URL, '--scan', '--pattern', pattern]).toString().split('\n').filter(Boolean);
+    const keys = execFileSync('redis-cli', ['-u', REDIS_URL, '--scan', '--pattern', pattern])
+      .toString()
+      .split('\n')
+      .filter(Boolean);
     if (keys.length) redis(keys.map((k) => ['DEL', k]));
   }
   // A fresh owner and tenant; the browser context keeps the session cookies for the tests.
   const ctx = await browser.newContext({ storageState: { cookies: [], origins: [] } });
   const email = `scale-ui-${Date.now().toString(36)}@talkivio.test`;
-  const signup = await ctx.request.post(`${API}/api/v1/auth/signup`, { data: { email, password: `scale-${randomUUID()}`, tenant_name: 'Scale UI fixture', timezone: 'UTC', display_name: 'Scale Owner' } });
+  const signup = await ctx.request.post(`${API}/api/v1/auth/signup`, {
+    data: {
+      email,
+      password: `scale-${randomUUID()}`,
+      tenant_name: 'Scale UI fixture',
+      timezone: 'UTC',
+      display_name: 'Scale Owner',
+    },
+  });
   expect(signup.status(), await signup.text()).toBe(201);
   tenantId = (await signup.json()).data.tenant_id;
   const csrf = (await ctx.cookies()).find((c) => c.name === 'rd_csrf')?.value ?? '';
-  const site = await ctx.request.post(`${API}/api/v1/sites`, { data: { name: 'Scale site', origins: [{ origin: 'http://localhost:5173', pattern_type: 'exact' }] }, headers: { 'x-csrf-token': csrf } });
+  const site = await ctx.request.post(`${API}/api/v1/sites`, {
+    data: { name: 'Scale site', origins: [{ origin: 'http://localhost:5173', pattern_type: 'exact' }] },
+    headers: { 'x-csrf-token': csrf },
+  });
   expect(site.status(), await site.text()).toBe(201);
   siteId = (await site.json()).data.id;
   const me = (await (await ctx.request.get(`${API}/api/v1/agents/me`)).json()).data.agent.id as string;
@@ -120,14 +164,16 @@ COMMIT;`);
 INSERT INTO chats (id, tenant_id, number, site_id, visitor_id, owner_membership_id, status, requested_at, first_assigned_at, closed_at, close_reason, next_seq, last_message_at, last_message_preview, version)
   VALUES (gen_random_uuid(), '${tenantId}', 1, '${siteId}', '${longVisitor}', '${me}', 'closed', now() - interval '3 hours', now() - interval '3 hours', now() - interval '1 minute', 'resolved', ${MESSAGES + 1}, now() - interval '1 minute', 'Long transcript', 1)
   RETURNING id;
-COMMIT;`).split('\n').find((l) => /^[0-9a-f-]{36}$/.test(l))!;
+COMMIT;`)
+    .split('\n')
+    .find((l) => /^[0-9a-f-]{36}$/.test(l))!;
   sql(`BEGIN; SET LOCAL app.tenant_id = '${tenantId}';
 INSERT INTO messages (id, tenant_id, chat_id, seq, sender_type, sender_visitor_id, sender_membership_id, sender_name_snapshot, body, sent_at)
   SELECT gen_random_uuid(), '${tenantId}', '${chatId}', s,
          CASE WHEN s % 2 = 1 THEN 'visitor'::"ActorType" ELSE 'agent'::"ActorType" END,
          CASE WHEN s % 2 = 1 THEN '${longVisitor}'::uuid END, CASE WHEN s % 2 = 0 THEN '${me}'::uuid END,
          CASE WHEN s % 2 = 1 THEN 'Visitor' ELSE 'Scale Owner' END,
-         'Transcript line ' || s || CASE WHEN s % 7 = 0 THEN ' — a longer message that wraps onto a second line in the transcript so row heights vary like a real conversation' ELSE '' END,
+         'Transcript line ' || s || CASE WHEN s % 7 = 0 THEN ', a longer message that wraps onto a second line in the transcript so row heights vary like a real conversation' ELSE '' END,
          now() - interval '3 hours' + (s || ' seconds')::interval
     FROM generate_series(1, ${MESSAGES}) s;
 COMMIT; ANALYZE visitors; ANALYZE visitor_sessions; ANALYZE messages;`);
@@ -139,13 +185,21 @@ COMMIT; ANALYZE visitors; ANALYZE visitor_sessions; ANALYZE messages;`);
       /* next tick retries */
     }
   }, 10_000);
-  report.fixture = { visitors: VISITORS, messages: MESSAGES, tenant_id: tenantId, load_s: (Date.now() - t0) / 1000 };
+  report.fixture = {
+    visitors: VISITORS,
+    messages: MESSAGES,
+    tenant_id: tenantId,
+    load_s: (Date.now() - t0) / 1000,
+  };
 });
 
 test.afterAll(async () => {
   if (refresher) clearInterval(refresher);
   if (tenantId) {
-    const cmds: string[][] = [['DEL', `pv:z:${tenantId}`], ['SREM', 'pv:tenants', tenantId]];
+    const cmds: string[][] = [
+      ['DEL', `pv:z:${tenantId}`],
+      ['SREM', 'pv:tenants', tenantId],
+    ];
     for (const [v] of pairs) cmds.push(['DEL', `pv:state:${tenantId}:${v}`, `pv:conn:${tenantId}:${v}`]);
     redis(cmds);
     const t0 = Date.now();
@@ -244,7 +298,9 @@ test('transcript: paging back through 10 000 messages stays responsive', async (
     const before = pagesApi.length;
     await earlier.click();
     // The page is in once its request finished and the button (or the start marker) is back.
-    await expect.poll(() => pagesApi.length, { timeout: 30_000, intervals: [20, 50, 100] }).toBeGreaterThan(before);
+    await expect
+      .poll(() => pagesApi.length, { timeout: 30_000, intervals: [20, 50, 100] })
+      .toBeGreaterThan(before);
     await expect(earlier.or(start)).toBeVisible({ timeout: 30_000 });
     clicks.push(Date.now() - t);
   }
@@ -261,7 +317,12 @@ test('transcript: paging back through 10 000 messages stays responsive', async (
     const t = Date.now();
     const firstBefore = await log.locator('time').first().getAttribute('datetime');
     await newer.click();
-    await expect.poll(() => log.locator('time').first().getAttribute('datetime'), { timeout: 15_000, intervals: [20, 50, 100] }).not.toBe(firstBefore);
+    await expect
+      .poll(() => log.locator('time').first().getAttribute('datetime'), {
+        timeout: 15_000,
+        intervals: [20, 50, 100],
+      })
+      .not.toBe(firstBefore);
     slides.push(Date.now() - t);
   }
   const slideLongTasks = await takeLongTasks(page);
@@ -272,7 +333,10 @@ test('transcript: paging back through 10 000 messages stays responsive', async (
     first_page_ms: firstPageMs,
     pages_loaded: clicks.length + 1,
     load_earlier_ms: stats(clicks),
-    first_vs_last_tenth_ms: { first: stats(clicks.slice(0, Math.ceil(clicks.length / 10))), last: stats(clicks.slice(-Math.ceil(clicks.length / 10))) },
+    first_vs_last_tenth_ms: {
+      first: stats(clicks.slice(0, Math.ceil(clicks.length / 10))),
+      last: stats(clicks.slice(-Math.ceil(clicks.length / 10))),
+    },
     messages_api_ms: stats(pagesApi),
     long_tasks_ms: stats(longTasks),
     dom_nodes_in_log: domNodes,
