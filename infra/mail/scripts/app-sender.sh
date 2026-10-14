@@ -20,6 +20,7 @@ fi
 
 umask 077
 tmp=$(mktemp "$envfile.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
 declare -A want=(
   [TALKIVIO_SMTP_HOST]="$host"
   [TALKIVIO_SMTP_PORT]=465
@@ -30,7 +31,8 @@ declare -A want=(
 declare -A seen=()
 while IFS= read -r line || [ -n "$line" ]; do
   key=${line%%=*}
-  if [ -n "${want[$key]+x}" ] && [[ "$line" == *=* ]]; then
+  # Blank and comment lines have no usable key (an empty subscript is an error for associative arrays).
+  if [[ "$line" == *=* && "$key" =~ ^[A-Z0-9_]+$ ]] && [ -n "${want[$key]+x}" ]; then
     printf '%s=%s\n' "$key" "${want[$key]}"
     seen[$key]=1
   else
