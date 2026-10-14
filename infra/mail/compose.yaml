@@ -1,0 +1,101 @@
+# Optional mail server for the domain Talkivio runs on, on the same server as deploy/ (see README.md):
+# mailboxes (IMAP), sending for Talkivio and mail apps (SMTP submission), incoming mail (MX) and Roundcube webmail
+# at https://<MAIL_HOSTNAME>, served by the Talkivio Caddy through deploy/caddy.d/.
+#
+#   cd infra/mail
+#   ./scripts/init.sh                      # once: mail.env, the webmail key, the config folder
+#   ./scripts/mail.sh up -d                # start (the TLS certificate must exist first, README step 3)
+#
+# The TLS certificate is the one Caddy obtains for MAIL_HOSTNAME; it is mounted read-only from Caddy's volume,
+# and renewals are picked up automatically.
+
+name: talkivio-mail
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '5'
+
+services:
+  mailserver:
+    image: ghcr.io/docker-mailserver/docker-mailserver:16.0.1
+    hostname: ${MAIL_HOSTNAME:?set MAIL_HOSTNAME in mail.env (scripts/init.sh)}
+    env_file: mailserver.env
+    environment:
+      POSTMASTER_ADDRESS: ${MAIL_POSTMASTER:?set MAIL_POSTMASTER in mail.env}
+      SSL_TYPE: manual
+      SSL_CERT_PATH: /srv/tls/${MAIL_HOSTNAME}.crt
+      SSL_KEY_PATH: /srv/tls/${MAIL_HOSTNAME}.key
+    ports:
+      - '25:25' # incoming mail from other servers (MX)
+      - '465:465' # sending with implicit TLS: Talkivio, mail apps, webmail
+      - '587:587' # sending with STARTTLS: mail apps
+      - '993:993' # IMAP with implicit TLS: mail apps, webmail
+    volumes:
+      - mail_data:/var/mail
+      - mail_state:/var/mail-state
+      - mail_logs:/var/log/mail
+      # Accounts, aliases and DKIM keys (git-ignored; included in scripts/backup.sh).
+      - ./config:/tmp/docker-mailserver
+      - type: volume
+        source: caddy_data
+        target: /srv/tls
+        read_only: true
+        volume:
+          subpath: caddy/certificates/acme-v02.api.letsencrypt.org-directory/${MAIL_HOSTNAME}
+    networks:
+      mail:
+        # Webmail reaches IMAP/SMTP by the public name, so the certificate matches without leaving the host.
+        aliases:
+          - ${MAIL_HOSTNAME}
+    cap_add:
+      - NET_ADMIN # fail2ban bans abusive addresses inside the container
+    restart: unless-stopped
+    stop_grace_period: 1m
+    logging: *logging
+
+  webmail:
+    image: roundcube/roundcubemail:1.7.4-apache-nonroot
+    depends_on:
+      - mailserver
+    environment:
+      ROUNDCUBEMAIL_DEFAULT_HOST: ssl://${MAIL_HOSTNAME}
+      ROUNDCUBEMAIL_DEFAULT_PORT: '993'
+      ROUNDCUBEMAIL_SMTP_SERVER: ssl://${MAIL_HOSTNAME}
+      ROUNDCUBEMAIL_SMTP_PORT: '465'
+      ROUNDCUBEMAIL_DB_TYPE: sqlite
+      ROUNDCUBEMAIL_SKIN: elastic
+      ROUNDCUBEMAIL_UPLOAD_MAX_FILESIZE: 25M
+      ROUNDCUBEMAIL_PLUGINS: archive,zipdownload
+    secrets:
+      - roundcube_des_key
+    volumes:
+      - webmail_db:/var/roundcube/db
+    networks:
+      mail: {}
+      # The Talkivio Caddy proxies https://<MAIL_HOSTNAME> to talkivio-webmail:8000 (deploy/caddy.d/mail.caddy).
+      edge:
+        aliases:
+          - talkivio-webmail
+    restart: unless-stopped
+    logging: *logging
+
+secrets:
+  roundcube_des_key:
+    file: ./config/roundcube_des_key
+
+networks:
+  mail: {}
+  edge:
+    external: true
+    name: talkivio_edge
+
+volumes:
+  mail_data:
+  mail_state:
+  mail_logs:
+  webmail_db:
+  caddy_data:
+    external: true
+    name: talkivio_caddy_data

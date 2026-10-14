@@ -1,0 +1,18 @@
+# Copy to deploy/caddy.d/mail.caddy with your mail host name and e-mail, then recreate Caddy (deploy/caddy.d/README.md).
+# Caddy gets the certificate the mail server also uses (Let's Encrypt only, so its path is predictable), and serves
+# Roundcube webmail on this name.
+mail.example.com {
+	tls {
+		issuer acme {
+			email you@example.com
+		}
+	}
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Frame-Options "DENY"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+	reverse_proxy talkivio-webmail:8000
+}
