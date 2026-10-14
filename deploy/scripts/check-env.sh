@@ -36,6 +36,18 @@ for k in TALKIVIO_POSTGRES_PASSWORD TALKIVIO_OWNER_DB_PASSWORD TALKIVIO_APP_DB_P
   [[ "$(setting "$k")" =~ ^[A-Za-z0-9_-]+$ ]] || fail "$k may only contain letters, digits, _ and - (it is used in connection URLs)"
 done
 
+billing=$(setting TALKIVIO_BILLING_PROVIDER none)
+case "$billing" in
+  none) ;;
+  converge)
+    for k in TALKIVIO_CONVERGE_MERCHANT_ID TALKIVIO_CONVERGE_USER_ID TALKIVIO_CONVERGE_PIN; do
+      [ -n "$(setting "$k")" ] || fail "TALKIVIO_BILLING_PROVIDER=converge needs $k"
+    done
+    [ "$(setting TALKIVIO_CONVERGE_ENV demo)" = production ] || warn "TALKIVIO_CONVERGE_ENV is demo: cards are not really charged"
+    ;;
+  *) fail "TALKIVIO_BILLING_PROVIDER must be none or converge" ;;
+esac
+
 command -v docker > /dev/null || fail "docker is not installed"
 if command -v docker > /dev/null; then
   docker compose version > /dev/null 2>&1 || fail "the docker compose plugin is not installed"

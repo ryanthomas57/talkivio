@@ -80,6 +80,12 @@ x-app-env: &app-env
   GEO_TRUSTED_HEADERS: ${TALKIVIO_GEO_TRUSTED_HEADERS:-none}
   SENTRY_DSN: ${TALKIVIO_SENTRY_DSN:-}
   OTEL_EXPORTER_OTLP_ENDPOINT: ${TALKIVIO_OTEL_EXPORTER_OTLP_ENDPOINT:-}
+  # Subscriptions (docs/operations/billing.md). none: nothing is charged and every workspace has every feature.
+  BILLING_PROVIDER: ${TALKIVIO_BILLING_PROVIDER:-none}
+  CONVERGE_ENV: ${TALKIVIO_CONVERGE_ENV:-demo}
+  CONVERGE_MERCHANT_ID: ${TALKIVIO_CONVERGE_MERCHANT_ID:-}
+  CONVERGE_USER_ID: ${TALKIVIO_CONVERGE_USER_ID:-}
+  CONVERGE_PIN: ${TALKIVIO_CONVERGE_PIN:-}
 
 services:
   # ─────────────────────────── Edge: HTTPS for <domain> and files.<domain> ───────────────────────────

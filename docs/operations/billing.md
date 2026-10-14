@@ -45,7 +45,13 @@ BILLING_SWEEP_SECONDS=300        # how often the worker runs reminders, charges 
 ```
 
 `BILLING_PROVIDER=fake` is refused in production, and `converge` without all three credentials is refused at start-up.
-Set the same values for the API and the worker. Turning billing off later never locks anyone out: with
+Set the same values for the API and the worker.
+
+On a Compose server (deploy/) the same settings live in `deploy/talkivio.env` with a `TALKIVIO_` prefix
+(`TALKIVIO_BILLING_PROVIDER`, `TALKIVIO_CONVERGE_ENV`, `TALKIVIO_CONVERGE_MERCHANT_ID`, `TALKIVIO_CONVERGE_USER_ID`), and
+Compose passes them to the API, gateway and worker. Type the PIN with `./scripts/set-secret.sh TALKIVIO_CONVERGE_PIN`
+(it never appears on screen), run `./scripts/check-env.sh`, then redeploy the running commit with
+`./scripts/deploy.sh <commit>`. Turning billing off later never locks anyone out: with
 `BILLING_PROVIDER=none` the API ignores billing states and plan limits.
 
 Run the sweep once by hand (same work the worker does): `node dist/billing-sweep.js`.
