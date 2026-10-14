@@ -9,10 +9,10 @@ export const COMPANY = {
   product: 'Talkivio',
   governingLaw: 'the State of Delaware, United States',
   arbitrationSeat: 'Wilmington, Delaware',
-  supportEmail: 'support@desverso.com',
-  billingEmail: 'billing@desverso.com',
-  privacyEmail: 'privacy@desverso.com',
-  legalEmail: 'legal@desverso.com',
+  supportEmail: 'support@talkivio.com',
+  billingEmail: 'billing@talkivio.com',
+  privacyEmail: 'privacy@talkivio.com',
+  legalEmail: 'legal@talkivio.com',
   /** Date shown as "Last updated" on the legal pages. */
   legalUpdated: 'October 14, 2026',
 } as const;

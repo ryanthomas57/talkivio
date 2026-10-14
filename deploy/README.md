@@ -29,9 +29,14 @@ ufw allow OpenSSH && ufw allow 80/tcp && ufw allow 443/tcp && ufw allow 443/udp 
 git clone https://github.com/ryanthomas57/talkivio.git /opt/talkivio
 cd /opt/talkivio/deploy
 ./scripts/init-env.sh        # creates talkivio.env (mode 600) with generated secrets
-nano talkivio.env            # domain, TLS e-mail, SMTP, backup bucket
+nano talkivio.env            # domain, TLS e-mail, SMTP, backup bucket (not the passwords)
+./scripts/set-secret.sh TALKIVIO_SMTP_PASSWORD   # typed, never shown or kept in the shell history
 ./scripts/check-env.sh
 ```
+
+To serve the bare domain (for example `talkivio.com`, with the public website at `/`), set `TALKIVIO_DOMAIN=talkivio.com`
+and `TALKIVIO_WWW_SITE=www.talkivio.com`, and point `talkivio.com`, `www.talkivio.com` and `files.talkivio.com` at the
+server: `www` then redirects to the bare domain with its own certificate.
 
 Save a copy of `talkivio.env` in your password manager. It holds the only copy of the secrets; `TALKIVIO_APP_SECRET`
 in particular cannot be changed without invalidating stored credentials and tokens.

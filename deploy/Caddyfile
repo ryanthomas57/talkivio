@@ -48,6 +48,13 @@ files.{$TALKIVIO_DOMAIN} {
 	reverse_proxy minio:9000
 }
 
+# Optional: when TALKIVIO_DOMAIN is the bare domain (talkivio.com), set TALKIVIO_WWW_SITE=www.talkivio.com in
+# talkivio.env and the www name gets its own certificate and redirects to the main address. Unset, this block is a
+# plain-HTTP placeholder on a name that never resolves, so it requests no certificate.
+{$TALKIVIO_WWW_SITE:http://www-redirect.invalid} {
+	redir https://{$TALKIVIO_DOMAIN}{uri} permanent
+}
+
 # Container health check only (not published).
 :8081 {
 	respond /proxy-health "ok" 200

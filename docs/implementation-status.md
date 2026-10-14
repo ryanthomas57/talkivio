@@ -116,8 +116,8 @@ restore point; RPO ≈ 1.3 s to the end of the WAL archive).
 - **An off-server backup bucket:** any S3-compatible bucket at another provider, with a key limited to it.
 - **Converge (Elavon) merchant account** with tokenization and recurring payments enabled, an API user and PIN, the
   server IP and dashboard domain allow-listed; test on a Converge demo account first (`docs/operations/billing.md`).
-- **Legal review** of the Terms of Use, Privacy Policy and Refund Policy, and confirmed mailboxes support@, billing@,
-  privacy@ and legal@desverso.com (set in `apps/dashboard/src/components/site/site-config.ts`).
+- **Mailboxes** support@, billing@, privacy@ and legal@talkivio.com (quoted on the website and in the legal pages from
+  `apps/dashboard/src/components/site/site-config.ts`). The legal pages were approved by counsel on 2026-10-15.
 
 ## Descoped by the owner
 
