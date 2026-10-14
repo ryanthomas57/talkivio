@@ -38,6 +38,13 @@ To serve the bare domain (for example `talkivio.com`, with the public website at
 and `TALKIVIO_WWW_SITE=www.talkivio.com`, and point `talkivio.com`, `www.talkivio.com` and `files.talkivio.com` at the
 server: `www` then redirects to the bare domain with its own certificate.
 
+Publish **A records only** unless the Docker networks have IPv6 enabled: without it, Docker forwards IPv6 connections
+through a proxy, so every IPv6 visitor reaches Talkivio as the same internal address (`172.x`), which breaks the
+visitor IPs and locations on the Visitors page and per-address rate limits.
+
+To serve another site from this server (for example webmail, see `infra/mail/`), put a Caddy site block in
+`deploy/caddy.d/<name>.caddy` (ignored by git) and redeploy; Caddy gets and renews its certificate like the others.
+
 Save a copy of `talkivio.env` in your password manager. It holds the only copy of the secrets; `TALKIVIO_APP_SECRET`
 in particular cannot be changed without invalidating stored credentials and tokens.
 

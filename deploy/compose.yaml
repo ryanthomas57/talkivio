@@ -111,6 +111,7 @@ services:
       TALKIVIO_TLS: ${TALKIVIO_TLS:?set TALKIVIO_TLS (your e-mail for Let's Encrypt) in talkivio.env}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy.d:/etc/caddy/sites.d:ro
       - caddy_data:/data
       - caddy_config:/config
     ports:

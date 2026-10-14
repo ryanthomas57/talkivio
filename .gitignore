@@ -31,3 +31,7 @@ deploy/release*.env
 deploy/releases.log
 deploy/backups/
 deploy/.caddy-root.crt
+deploy/caddy.d/*.caddy
+infra/mail/mail.env
+infra/mail/config/
+infra/mail/backups/

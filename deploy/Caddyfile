@@ -55,6 +55,10 @@ files.{$TALKIVIO_DOMAIN} {
 	redir https://{$TALKIVIO_DOMAIN}{uri} permanent
 }
 
+# Extra sites on this server, one file per site in deploy/caddy.d/*.caddy (for example webmail for a mail server on
+# the same host, infra/mail/). Those files are local to the server and not in git; none by default.
+import /etc/caddy/sites.d/*.caddy
+
 # Container health check only (not published).
 :8081 {
 	respond /proxy-health "ok" 200
