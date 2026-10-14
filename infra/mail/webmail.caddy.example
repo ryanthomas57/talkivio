@@ -14,5 +14,5 @@ mail.example.com {
 		Referrer-Policy "same-origin"
 		-Server
 	}
-	reverse_proxy talkivio-webmail:8000
+	reverse_proxy talkivio-webmail:80
 }

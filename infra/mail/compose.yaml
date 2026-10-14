@@ -56,7 +56,9 @@ services:
     logging: *logging
 
   webmail:
-    image: roundcube/roundcubemail:1.7.4-apache-nonroot
+    # The standard image (not -nonroot): its entrypoint starts as root to create the database folder for www-data
+    # and to apply the upload limit, then Apache serves as www-data.
+    image: roundcube/roundcubemail:1.7.4-apache
     depends_on:
       - mailserver
     environment:
@@ -74,7 +76,7 @@ services:
       - webmail_db:/var/roundcube/db
     networks:
       mail: {}
-      # The Talkivio Caddy proxies https://<MAIL_HOSTNAME> to talkivio-webmail:8000 (deploy/caddy.d/mail.caddy).
+      # The Talkivio Caddy proxies https://<MAIL_HOSTNAME> to talkivio-webmail:80 (deploy/caddy.d/mail.caddy).
       edge:
         aliases:
           - talkivio-webmail
