@@ -9,12 +9,17 @@ domain=${1:-}
 record=config/rspamd/dkim/rsa-2048-mail-$domain.public.dns.txt
 if [ ! -s "$record" ]; then
   dc exec -T mailserver setup config dkim keysize 2048 selector mail domain "$domain" > /dev/null
-  dc restart mailserver > /dev/null
+  dc restart mailserver > /dev/null 2>&1
 fi
 [ -s "$record" ] || die "no DKIM record at infra/mail/$record"
 echo "Add this TXT record in your DNS:"
 echo "  name:  mail._domainkey.$domain"
 printf '  value: '
-# The file is a BIND-style record split into quoted chunks; join them into the single value DNS panels expect.
-tr -d '\n' < "$record" | sed -E 's/^[^(]*\(//; s/\).*$//' | grep -o '"[^"]*"' | tr -d '"' | tr -d ' \t'
+# docker-mailserver 16 writes the bare value on one line; older versions wrote a BIND-style record split into
+# quoted chunks, which are joined here into the single value DNS panels expect.
+if grep -q '(' "$record"; then
+  tr -d '\n' < "$record" | sed -E 's/^[^(]*\(//; s/\).*$//' | grep -o '"[^"]*"' | tr -d '"' | tr -d ' \t'
+else
+  tr -d '\n' < "$record"
+fi
 echo
