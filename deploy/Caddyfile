@@ -49,8 +49,8 @@ files.{$TALKIVIO_DOMAIN} {
 }
 
 # Optional: when TALKIVIO_DOMAIN is the bare domain (talkivio.com), set TALKIVIO_WWW_SITE=www.talkivio.com in
-# talkivio.env and the www name gets its own certificate and redirects to the main address. Unset, this block is a
-# plain-HTTP placeholder on a name that never resolves, so it requests no certificate.
+# talkivio.env and the www name gets its own certificate and redirects to the main address. Unset or empty,
+# compose.yaml passes a plain-HTTP placeholder on a name that never resolves, so it requests no certificate.
 {$TALKIVIO_WWW_SITE:http://www-redirect.invalid} {
 	redir https://{$TALKIVIO_DOMAIN}{uri} permanent
 }
