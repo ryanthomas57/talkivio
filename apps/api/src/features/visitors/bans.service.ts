@@ -6,13 +6,22 @@ import { hashIp, sha256 } from '../../common/crypto';
 import { AppError, badRequest, conflict, notFound, type AuthContext } from '../../common/http';
 import { decodeCursor, encodeCursor, page } from '../../common/wire';
 import { ChatCommandsService } from '../chats/chat-commands.service';
-import { canonicalIp, displayNameOf, maskIp, pageLimit } from './visitor-common';
+import {
+  canonicalBanIp,
+  displayNameOf,
+  ipBanFilter,
+  maskIp,
+  pageLimit,
+  type VisitorIp,
+} from './visitor-common';
 import { VisitorMonitorService } from './visitor-monitor.service';
 import { RealtimeService } from '../../realtime/realtime.service';
 
 const MAX_BAN_DAYS = 3650;
 export const IP_COLLATERAL_WARNING =
   'IP bans can block other people who share this network address (offices, mobile carriers, VPNs).';
+const IP_RANGE_REFUSED =
+  'Ban an exact address or an IPv6 /64; other CIDR ranges are not accepted by this policy';
 
 export interface BanResource {
   id: string;
@@ -30,9 +39,12 @@ export interface BanResource {
 }
 
 /**
- * Bans (ch. 24): tenant (optionally site) scoped visitor or exact-IP bans with
- * optional expiry. IPs are never stored raw: a keyed hash (`hashIp`, the same
- * function the widget guard uses) matches, a masked string displays.
+ * Bans (ch. 24): tenant (optionally site) scoped visitor, exact-IP or IPv6 /64 bans
+ * with optional expiry. IPs are never stored raw: a keyed hash (`hashIp` of the
+ * canonical address or of the `ipBucket` /64 text, the hashes the widget guard puts
+ * on VisitorContext as ipHash / ipNetHash) matches, a masked string displays.
+ * Wider ranges stay refused: hashes only match whole values, and anything broader
+ * than one subscriber's /64 blocks bystanders.
  * Enforcement lives in ChatCommandsService.assertNotBanned (new chats, messages,
  * offline submissions) and in the widget bootstrap/session endpoints.
  */
@@ -99,12 +111,11 @@ export class BansService {
     }
     let ip: string | null = null;
     if (input.ip) {
-      if (input.ip.includes('/') && !/\/(32|128)$/.test(input.ip.trim())) {
-        throw badRequest('Ban an exact address; CIDR ranges are not accepted by this policy', {
-          ip: ['CIDR ranges are not allowed'],
-        });
-      }
-      ip = canonicalIp(input.ip);
+      if (input.ip.includes('/') && !/\/(32|64|128)$/.test(input.ip.trim()))
+        throw badRequest(IP_RANGE_REFUSED, { ip: ['CIDR ranges are not allowed'] });
+      ip = canonicalBanIp(input.ip);
+      if (!ip && input.ip.trim().endsWith('/64'))
+        throw badRequest(IP_RANGE_REFUSED, { ip: ['Use an IPv6 /64 such as 2001:db8:1:2::/64'] });
       if (!ip) throw badRequest('Enter a valid IPv4 or IPv6 address', { ip: ['Invalid IP address'] });
     }
     const ipHash = ip ? hashIp(ip) : null;
@@ -262,16 +273,16 @@ export class BansService {
   /**
    * Public enforcement for widget bootstrap/session: same predicate as
    * ChatCommandsService.assertNotBanned (tenant + site scope, unrevoked,
-   * unexpired, visitor or exact-IP hash).
+   * unexpired, visitor, exact-IP hash or IPv6 /64 hash).
    */
   async isBanned(
     tenantId: string,
     siteId: string,
     visitorId: string | null,
-    ipHash: string | null,
+    ip: VisitorIp,
   ): Promise<boolean> {
-    if (!visitorId && !ipHash) return false;
-    return this.db.read(tenantId, (tx) => this.isBannedTx(tx, tenantId, siteId, visitorId, ipHash));
+    if (!visitorId && !ipBanFilter(ip).length) return false;
+    return this.db.read(tenantId, (tx) => this.isBannedTx(tx, tenantId, siteId, visitorId, ip));
   }
 
   async isBannedTx(
@@ -279,9 +290,10 @@ export class BansService {
     tenantId: string,
     siteId: string,
     visitorId: string | null,
-    ipHash: string | null,
+    ip: VisitorIp,
   ): Promise<boolean> {
-    if (!visitorId && !ipHash) return false;
+    const ipMatch = ipBanFilter(ip);
+    if (!visitorId && !ipMatch.length) return false;
     const n = await tx.ban.count({
       where: {
         tenantId,
@@ -289,7 +301,7 @@ export class BansService {
         OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         AND: [
           { OR: [{ siteId: null }, { siteId }] },
-          { OR: [...(visitorId ? [{ visitorId }] : []), ...(ipHash ? [{ ipMatchHash: ipHash }] : [])] },
+          { OR: [...(visitorId ? [{ visitorId }] : []), ...ipMatch] },
         ],
       },
     });

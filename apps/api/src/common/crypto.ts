@@ -1,5 +1,13 @@
-import { createCipheriv, createDecipheriv, createHash, createHmac, randomBytes, timingSafeEqual } from 'node:crypto';
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  createHmac,
+  randomBytes,
+  timingSafeEqual,
+} from 'node:crypto';
 import { env } from '../config/env';
+import { ipBucket } from './ip';
 
 /** URL-safe random token. */
 export function randomToken(bytes = 32): string {
@@ -7,7 +15,10 @@ export function randomToken(bytes = 32): string {
 }
 
 export function randomId(prefix: string, bytes = 12): string {
-  return `${prefix}_${randomBytes(bytes).toString('base64url').replace(/[-_]/g, '').slice(0, Math.ceil(bytes * 1.3))}`;
+  return `${prefix}_${randomBytes(bytes)
+    .toString('base64url')
+    .replace(/[-_]/g, '')
+    .slice(0, Math.ceil(bytes * 1.3))}`;
 }
 
 export function sha256(input: string): string {
@@ -58,6 +69,14 @@ export function decrypt(payload: string): string {
 export function hashIp(ip: string | null | undefined): string | null {
   if (!ip) return null;
   return hmacSha256(`ip:${env().APP_SECRET}`, ip).slice(0, 32);
+}
+
+/**
+ * Keyed hash of an address's rate-limit bucket (`ipBucket`: the IPv4 address or the IPv6 /64). Use it for
+ * per-network limits; exact-address records (sessions, audit, visitor ipHash) keep `hashIp`.
+ */
+export function hashIpBucket(ip: string | null | undefined): string | null {
+  return ip ? hashIp(ipBucket(ip)) : null;
 }
 
 /** Verify an HS256 JWT. Returns the payload or null. */

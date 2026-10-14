@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../common/redis.service';
-import { capabilityRevocationKey, VisitorGuard, visitorIpHash } from '../widget/capability';
+import { capabilityRevocationKey, VisitorGuard, visitorIpHash, visitorIpHashes } from '../widget/capability';
 
-export { visitorIpHash };
+export { visitorIpHash, visitorIpHashes };
 
 /** Capabilities live at most one hour (features/widget/capability.ts); keep revocations a little longer. */
 const REVOCATION_TTL_SECONDS = 3_700;

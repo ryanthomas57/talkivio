@@ -13,8 +13,8 @@ import type { Namespace, Socket } from 'socket.io';
 import { randomUUID } from 'node:crypto';
 import { TenantDb } from '../db/tenant-db';
 import { containsNul, errorBody, type AuthContext, type VisitorContext } from '../common/http';
-import { hashIp } from '../common/crypto';
-import { visitorIpHash } from '../features/widget/capability';
+import { hashIpBucket } from '../common/crypto';
+import { visitorIpHashes } from '../features/widget/capability';
 import { socketClientIp } from '../common/client-ip';
 import { fromWire, toWire } from '../common/wire';
 import { permissionsForRole, TENANT_WIDE_ROLES } from '../common/permissions';
@@ -336,7 +336,13 @@ export class AgentGateway
       try {
         const origin = originOf(socket);
         if (origin && !dashboardOrigins().includes(origin)) return next(new Error('ORIGIN_NOT_ALLOWED'));
-        if (!(await this.rateLimit.hit(`ws-agent-connect:${socketClientIp(socket.handshake)}`, 60, 60)))
+        if (
+          !(await this.rateLimit.hit(
+            `ws-agent-connect:${hashIpBucket(socketClientIp(socket.handshake))}`,
+            60,
+            60,
+          ))
+        )
           return next(new Error('RATE_LIMITED'));
         const claims = await this.tickets.consume((socket.handshake.auth as { ticket?: string })?.ticket);
         if (!claims || claims.kind !== 'agent') return next(new Error('AUTH_REQUIRED'));
@@ -569,7 +575,13 @@ export class VisitorGateway
         // was validated when the capability was issued (and enforced by frame-ancestors).
         if (origin && !widgetOrigins().includes(origin) && isProd())
           return next(new Error('ORIGIN_NOT_ALLOWED'));
-        if (!(await this.rateLimit.hit(`ws-visitor-connect:${socketClientIp(socket.handshake)}`, 120, 60)))
+        if (
+          !(await this.rateLimit.hit(
+            `ws-visitor-connect:${hashIpBucket(socketClientIp(socket.handshake))}`,
+            120,
+            60,
+          ))
+        )
           return next(new Error('RATE_LIMITED'));
         const claims = await this.tickets.consume((socket.handshake.auth as { ticket?: string })?.ticket);
         if (!claims || claims.kind !== 'visitor') return next(new Error('AUTH_REQUIRED'));
@@ -608,7 +620,7 @@ export class VisitorGateway
       visitorId: d.visitorId,
       sessionId: d.sessionId,
       requestId: `ws-${d.connectionId.slice(0, 8)}`,
-      ipHash: visitorIpHash(socketClientIp(socket.handshake)),
+      ...visitorIpHashes(socketClientIp(socket.handshake)),
       origin: d.origin,
     };
   }

@@ -6,7 +6,7 @@ import type { Request, Response } from 'express';
 import type { Prisma } from '@prisma/client';
 import { defaultSchedule, mergeOrgSettings, type OrgSettings } from '@talkivio/contracts';
 import { TenantDb } from '../db/tenant-db';
-import { decrypt, encrypt, hashIp, randomToken, sha256 } from '../common/crypto';
+import { decrypt, encrypt, hashIp, hashIpBucket, randomToken, sha256 } from '../common/crypto';
 import { AppError, badRequest, conflict, unauthorized } from '../common/http';
 import { AuditService } from '../common/audit.service';
 import { env } from '../config/env';
@@ -166,7 +166,7 @@ export class AuthService {
     req: Request,
     res: Response,
   ) {
-    await this.rateLimit.enforce(`signup:${hashIp(req.ip)}`, 10, 3600);
+    await this.rateLimit.enforce(`signup:${hashIpBucket(req.ip)}`, 10, 3600);
     const email = input.email.trim().toLowerCase();
     validatePassword(input.password);
     if (await this.db.root.user.findUnique({ where: { email } })) {
@@ -306,7 +306,7 @@ export class AuthService {
     res: Response,
   ): Promise<MeResult> {
     const email = input.email.trim().toLowerCase();
-    await this.rateLimit.enforce(`login:net:${hashIp(req.ip)}`, 30, 300);
+    await this.rateLimit.enforce(`login:net:${hashIpBucket(req.ip)}`, 30, 300);
     await this.rateLimit.enforce(`login:acct:${sha256(email)}`, 10, 300);
     const user = await this.db.root.user.findUnique({ where: { email } });
     const ok = await this.verifyPassword(user?.passwordHash ?? null, input.password);
@@ -417,8 +417,8 @@ export class AuthService {
     );
   }
 
-  async resendVerification(userId: string, ipHash: string | null): Promise<void> {
-    await this.rateLimit.enforce(`verify-resend:${userId}:${ipHash}`, 5, 3600);
+  async resendVerification(userId: string, ip: string | null | undefined): Promise<void> {
+    await this.rateLimit.enforce(`verify-resend:${userId}:${hashIpBucket(ip)}`, 5, 3600);
     const user = await this.db.root.user.findUniqueOrThrow({ where: { id: userId } });
     if (!user.emailVerifiedAt) await this.sendVerification(user.id, user.email, user.displayName);
   }
@@ -430,7 +430,7 @@ export class AuthService {
 
   async requestReset(email: string, ip: string | null, ctx: SecurityContext = {}): Promise<void> {
     const norm = email.trim().toLowerCase();
-    await this.rateLimit.enforce(`reset:net:${hashIp(ip)}`, 10, 3600);
+    await this.rateLimit.enforce(`reset:net:${hashIpBucket(ip)}`, 10, 3600);
     if (!(await this.rateLimit.hit(`reset:acct:${sha256(norm)}`, 3, 3600))) return; // generic success regardless
     const user = await this.db.root.user.findUnique({ where: { email: norm } });
     if (!user || user.disabledAt) return;

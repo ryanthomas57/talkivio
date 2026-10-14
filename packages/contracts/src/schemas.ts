@@ -14,6 +14,7 @@ import {
 import { TRIGGER_EVENTS, TRIGGER_OPERATORS, TRIGGER_RUN_MODES } from './logic/triggers';
 import { WEEKDAYS, isValidTimezone } from './logic/hours';
 import { SHORTCUT_NAME_RE } from './logic/shortcuts';
+import { parseIpRule } from './logic/ip';
 import { WIDGET_LANGUAGES } from './widget-config';
 import { BILLING_CYCLES, PLAN_IDS } from './plans';
 
@@ -136,20 +137,15 @@ export const operatingHoursSchema = z.object({
   schedule: weeklyScheduleSchema,
 });
 
-/** Exact IPv4 / IPv6 address or IPv4 CIDR (/8–/32) — the forms the API allowlist matcher supports. */
-const IPV4 = /^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/;
-const IPV6 = /^[0-9a-f:]+$/i;
+/** Exact IPv4 / IPv6 address or CIDR range (IPv4 /8–/32, IPv6 /16–/128): the forms the API allowlist matcher supports. */
 export const ipRuleSchema = z
   .string()
   .trim()
   .max(64)
-  .refine((v) => {
-    const [addr, bits, extra] = v.split('/');
-    if (extra !== undefined || !addr) return false;
-    if (bits === undefined)
-      return IPV4.test(addr) || (IPV6.test(addr) && addr.includes(':') && addr.split('::').length <= 2);
-    return IPV4.test(addr) && /^\d{1,2}$/.test(bits) && Number(bits) >= 8 && Number(bits) <= 32;
-  }, 'Use an IPv4/IPv6 address or an IPv4 CIDR range such as 203.0.113.0/24');
+  .refine(
+    (v) => parseIpRule(v) !== null,
+    'Use an IPv4 or IPv6 address or a CIDR range such as 203.0.113.0/24 or 2001:db8:1::/48',
+  );
 
 export const orgSettingsPatchSchema = z
   .object({

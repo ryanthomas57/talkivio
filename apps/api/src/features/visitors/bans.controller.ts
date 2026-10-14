@@ -7,7 +7,7 @@ const createSchema = z
   .object({
     visitorId: z.string().uuid().nullable().optional(),
     ip: z.string().trim().min(2).max(64).nullable().optional(),
-    /** Spec alias (ch. 43 `ip_or_cidr`); only exact addresses are accepted. */
+    /** Spec alias (ch. 43 `ip_or_cidr`); only an exact address or an IPv6 /64 is accepted. */
     ipOrCidr: z.string().trim().min(2).max(64).nullable().optional(),
     siteId: z.string().uuid().nullable().optional(),
     expiresAt: z.string().max(40).nullable().optional(),

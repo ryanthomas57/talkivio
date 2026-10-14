@@ -19,6 +19,7 @@ import { PresenceService } from '../../core/presence.service';
 import { QueueService, QUEUES } from '../../core/queue.service';
 import { AvailabilityService } from '../availability/availability.service';
 import { PresenceReader } from '../visitors/presence-reader';
+import { ipBanFilter } from '../visitors/visitor-common';
 import { ChatStore, queueScopeId, assertSameSender } from './chat.store';
 import {
   messageInclude,
@@ -316,6 +317,7 @@ export class ChatCommandsService {
           tenantId: auth.tenantId,
           visitorId,
           ipHash: null,
+          ipNetHash: null,
           siteId: session.siteId,
         });
         const existing = await this.db.read(auth.tenantId, (tx) =>
@@ -369,7 +371,7 @@ export class ChatCommandsService {
   }
 
   async assertNotBanned(
-    v: Pick<VisitorContext, 'tenantId' | 'visitorId' | 'ipHash' | 'siteId'>,
+    v: Pick<VisitorContext, 'tenantId' | 'visitorId' | 'ipHash' | 'ipNetHash' | 'siteId'>,
   ): Promise<void> {
     const banned = await this.db.read(v.tenantId, (tx) =>
       tx.ban.count({
@@ -379,7 +381,7 @@ export class ChatCommandsService {
           OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
           AND: [
             { OR: [{ siteId: null }, { siteId: v.siteId }] },
-            { OR: [{ visitorId: v.visitorId }, ...(v.ipHash ? [{ ipMatchHash: v.ipHash }] : [])] },
+            { OR: [{ visitorId: v.visitorId }, ...ipBanFilter(v)] },
           ],
         },
       }),

@@ -31,7 +31,7 @@ import {
   subjectHash,
   type VerifiedClaims,
 } from '../visitors/identity-tokens';
-import { VisitorCapabilityRevocations, visitorIpHash } from '../visitors/visitor-capability';
+import { VisitorCapabilityRevocations, visitorIpHashes } from '../visitors/visitor-capability';
 import { EMAIL_RE } from '../visitors/visitor-common';
 import { VisitorMonitorService } from '../visitors/visitor-monitor.service';
 import { normalizeOrigin, originAllowed, originOfUrl, sanitizeTrackedUrl, type OriginRule } from './origins';
@@ -181,7 +181,7 @@ export class WidgetService {
     const site = await this.resolveSite(input.siteKey);
     await this.assertOrigin(site, input.hostOrigin);
     // IP bans apply before any configuration is disclosed (ch. 24; unban allows a subsequent bootstrap).
-    if (req && (await this.bans.isBanned(site.tenantId, site.siteId, null, visitorIpHash(req.ip))))
+    if (req && (await this.bans.isBanned(site.tenantId, site.siteId, null, visitorIpHashes(req.ip))))
       throw serviceUnavailable();
     const [{ config, version }, avail, tenant] = await Promise.all([
       this.db.read(site.tenantId, (tx) => this.publishedConfig(tx, site.siteId)),
@@ -316,8 +316,8 @@ export class WidgetService {
   ) {
     const site = await this.resolveSite(input.siteKey);
     const origin = await this.assertOrigin(site, input.hostOrigin);
-    const ipHash = visitorIpHash(req.ip);
-    if (!(await this.rateLimit.hit(`widget-session:${ipHash}`, 120, 60)))
+    const ipHashes = visitorIpHashes(req.ip);
+    if (!(await this.rateLimit.hit(`widget-session:${ipHashes.ipNetHash}`, 120, 60)))
       throw new AppError(429, 'RATE_LIMITED', 'Too many requests', { retryable: true, retryAfter: 30 });
     const tenantId = site.tenantId;
     // Verified identity: validate every claim, then burn the jti before any write (replay protection).
@@ -426,7 +426,7 @@ export class WidgetService {
         visitorId = (await this.createVisitor(tx, tenantId, site.siteId, client, geo, input)).id;
         issueCredential = true;
       }
-      if (await this.bans.isBannedTx(tx, tenantId, site.siteId, visitorId, ipHash))
+      if (await this.bans.isBannedTx(tx, tenantId, site.siteId, visitorId, ipHashes))
         throw serviceUnavailable();
       const started = await this.startSession(tx, {
         tenantId,
@@ -1314,14 +1314,14 @@ export class WidgetService {
   ) {
     const site = await this.resolveSite(input.siteKey);
     const origin = await this.assertOrigin(site, input.hostOrigin);
-    const ipHash = visitorIpHash(req.ip);
-    if (!(await this.rateLimit.hit(`widget-redeem:${ipHash}`, 30, 60)))
+    const ipHashes = visitorIpHashes(req.ip);
+    if (!(await this.rateLimit.hit(`widget-redeem:${ipHashes.ipNetHash}`, 30, 60)))
       throw new AppError(429, 'RATE_LIMITED', 'Too many requests', { retryable: true, retryAfter: 30 });
     const h = await this.handoffs.consume(
       site.tenantId,
       input.handoffCode,
       { siteId: site.siteId, origin: normalizeOrigin(origin) ?? origin },
-      { ipHash, requestId: req.requestId ?? '' },
+      { ipHash: ipHashes.ipHash, requestId: req.requestId ?? '' },
     );
     const client = this.geo.parseUserAgent(String(req.headers['user-agent'] ?? ''));
     const geo = this.geo.lookup(req.ip, req.headers);
@@ -1335,7 +1335,7 @@ export class WidgetService {
         where: { tenantId: site.tenantId, id: h.visitorId, erasedAt: null },
       });
       if (!visitor) throw new AppError(401, 'TOKEN_EXPIRED', 'This handoff code is invalid or expired');
-      if (await this.bans.isBannedTx(tx, site.tenantId, site.siteId, visitor.id, ipHash))
+      if (await this.bans.isBannedTx(tx, site.tenantId, site.siteId, visitor.id, ipHashes))
         throw serviceUnavailable();
       // New destination-scoped session; chats stay with their origin site (no ownership transfer).
       const started = await this.startSession(tx, {
@@ -1379,7 +1379,7 @@ export class WidgetService {
 
   async socketTicket(v: VisitorContext) {
     // A banned visitor cannot reconnect after the ban cut their socket (neutral refusal, ch. 24/76).
-    if (await this.bans.isBanned(v.tenantId, v.siteId, v.visitorId, v.ipHash))
+    if (await this.bans.isBanned(v.tenantId, v.siteId, v.visitorId, v))
       throw new AppError(403, 'SERVICE_UNAVAILABLE', 'Service unavailable', { retryable: false });
     return this.tickets.mint({
       kind: 'visitor',

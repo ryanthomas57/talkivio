@@ -8,7 +8,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { ShieldBan } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Banner, Button, CheckboxField, Dialog, DialogContent, Field, Input, RadioGroup, Select, Textarea } from '@/components/ui';
+import {
+  Banner,
+  Button,
+  CheckboxField,
+  Dialog,
+  DialogContent,
+  Field,
+  Input,
+  RadioGroup,
+  Select,
+  Textarea,
+} from '@/components/ui';
 import { isolate, useT, type MessageKey } from '@/i18n';
 import { api, ApiError, errorMessage } from '@/lib/api';
 import { formatDateTime } from '@/lib/format';
@@ -39,7 +50,17 @@ function expiryIso(kind: Expiry, custom: string): string | null | 'invalid' {
   return new Date(Date.now() + (EXPIRY.find((e) => e.value === kind)?.ms ?? 0)).toISOString();
 }
 
-export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: boolean; onOpenChange: (o: boolean) => void; visitor?: { id: string; displayName: string } | null; onCreated?: (b: Ban) => void }) {
+export function BanDialog({
+  open,
+  onOpenChange,
+  visitor,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+  visitor?: { id: string; displayName: string } | null;
+  onCreated?: (b: Ban) => void;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const canSites = useSession((s) => s.permissions.has('sites.view'));
@@ -75,15 +96,19 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
   const masked = target === 'ip' && ip.trim() ? maskIp(ip) : null;
   const exp = expiryIso(expiry, custom);
   const selectedSite = siteId ? sites.data?.find((s) => s.id === siteId)?.name : undefined;
-  const siteName = siteId ? (selectedSite ? isolate(selectedSite) : t('bans.dialog.selectedSite')) : t('bans.scope.allSites');
+  const siteName = siteId
+    ? selectedSite
+      ? isolate(selectedSite)
+      : t('bans.dialog.selectedSite')
+    : t('bans.scope.allSites');
 
   const submit = async () => {
     const fe: Record<string, string> = {};
     if (target === 'visitor' && !visitorId) fe.visitor = t('bans.dialog.chooseVisitor');
     if (target === 'ip') {
       if (!ip.trim()) fe.ip = t('bans.dialog.ipRequired');
-      else if (ip.includes('/') && !/\/(32|128)$/.test(ip.trim())) fe.ip = t('bans.dialog.noCidr');
-      else if (!masked) fe.ip = t('bans.dialog.ipInvalid');
+      else if (ip.includes('/') && !/\/(32|64|128)$/.test(ip.trim())) fe.ip = t('bans.dialog.noCidr');
+      else if (!masked) fe.ip = t(ip.trim().endsWith('/64') ? 'bans.dialog.noCidr' : 'bans.dialog.ipInvalid');
     }
     if (!reason.trim()) fe.reason = t('bans.dialog.reasonRequired');
     if (exp === 'invalid') fe.expiry = t('bans.dialog.expiryInvalid');
@@ -110,7 +135,8 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
       if (e instanceof ApiError) {
         const map: Record<string, string> = {};
         for (const [k, v] of Object.entries(e.fieldErrors)) {
-          const key = k === 'visitor_id' ? 'visitor' : k === 'expires_at' ? 'expiry' : k === 'ip_or_cidr' ? 'ip' : k;
+          const key =
+            k === 'visitor_id' ? 'visitor' : k === 'expires_at' ? 'expiry' : k === 'ip_or_cidr' ? 'ip' : k;
           if (target === 'visitor' && key === 'ip') continue;
           if (target === 'ip' && key === 'visitor') continue;
           map[key] = v[0] ?? t('bans.dialog.invalid');
@@ -127,7 +153,11 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
     <Dialog open={open} onOpenChange={(o) => !busy && onOpenChange(o)}>
       <DialogContent
         size="md"
-        title={visitor ? t('bans.dialog.titleVisitor', { name: isolate(visitor.displayName) }) : t('bans.dialog.title')}
+        title={
+          visitor
+            ? t('bans.dialog.titleVisitor', { name: isolate(visitor.displayName) })
+            : t('bans.dialog.title')
+        }
         description={t('bans.dialog.description')}
         footer={
           <>
@@ -153,7 +183,11 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
             value={target}
             onChange={setTarget}
             options={[
-              { value: 'visitor', label: t('bans.target.visitorIdentity'), description: t('bans.dialog.visitorHint') },
+              {
+                value: 'visitor',
+                label: t('bans.target.visitorIdentity'),
+                description: t('bans.dialog.visitorHint'),
+              },
               { value: 'ip', label: t('bans.dialog.ip'), description: t('bans.dialog.ipHint') },
             ]}
           />
@@ -164,11 +198,25 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
                 {t('bans.dialog.visitorLabel')} <bdi className="font-medium">{visitor.displayName}</bdi>
               </p>
             ) : (
-              <VisitorPicker label={t('common.visitor')} value={picked} onChange={setPicked} error={fieldErrors.visitor} />
+              <VisitorPicker
+                label={t('common.visitor')}
+                value={picked}
+                onChange={setPicked}
+                error={fieldErrors.visitor}
+              />
             )
           ) : (
             <div className="flex flex-col gap-2">
-              <Field label={t('bans.dialog.ip')} required description={masked ? t('bans.dialog.shownAs', { masked: isolate(masked) }) : t('bans.dialog.ipFieldHint')} error={fieldErrors.ip}>
+              <Field
+                label={t('bans.dialog.ip')}
+                required
+                description={
+                  masked
+                    ? t('bans.dialog.shownAs', { masked: isolate(masked) })
+                    : t('bans.dialog.ipFieldHint')
+                }
+                error={fieldErrors.ip}
+              >
                 <Input
                   value={ip}
                   onChange={(e) => setIp(e.target.value)}
@@ -184,7 +232,10 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
             </div>
           )}
 
-          <Field label={t('bans.dialog.sites')} description={canSites ? undefined : t('bans.dialog.sitesRoleHint')}>
+          <Field
+            label={t('bans.dialog.sites')}
+            description={canSites ? undefined : t('bans.dialog.sitesRoleHint')}
+          >
             <Select value={siteId} onChange={(e) => setSiteId(e.target.value)} disabled={!canSites}>
               <option value="">{t('bans.dialog.allSitesOption')}</option>
               {(sites.data ?? [])
@@ -198,7 +249,11 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
           </Field>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Field label={t('bans.col.expires')} className="flex-1" error={expiry !== 'custom' ? fieldErrors.expiry : undefined}>
+            <Field
+              label={t('bans.col.expires')}
+              className="flex-1"
+              error={expiry !== 'custom' ? fieldErrors.expiry : undefined}
+            >
               <Select value={expiry} onChange={(e) => setExpiry(e.target.value as Expiry)}>
                 {EXPIRY.map((x) => (
                   <option key={x.value} value={x.value}>
@@ -214,8 +269,20 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
             )}
           </div>
 
-          <Field label={t('bans.col.reason')} required description={t('bans.dialog.reasonHint')} error={fieldErrors.reason}>
-            <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} rows={3} placeholder={t('bans.dialog.reasonPlaceholder')} dir="auto" />
+          <Field
+            label={t('bans.col.reason')}
+            required
+            description={t('bans.dialog.reasonHint')}
+            error={fieldErrors.reason}
+          >
+            <Textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder={t('bans.dialog.reasonPlaceholder')}
+              dir="auto"
+            />
           </Field>
 
           {target === 'visitor' && (
@@ -227,16 +294,28 @@ export function BanDialog({ open, onOpenChange, visitor, onCreated }: { open: bo
             />
           )}
 
-          <div className="rounded-[var(--radius-control)] border border-line-subtle bg-surface-2 px-3 py-2 text-sm text-fg-2" role="status">
+          <div
+            className="rounded-[var(--radius-control)] border border-line-subtle bg-surface-2 px-3 py-2 text-sm text-fg-2"
+            role="status"
+          >
             <p className="font-medium text-fg">{t('bans.dialog.effect')}</p>
             <p>
               {t('bans.dialog.effectBody', {
-                target: target === 'visitor' ? (visitorName ? isolate(visitorName) : t('bans.dialog.selectedVisitor')) : masked ? t('bans.dialog.address', { masked: isolate(masked) }) : t('bans.dialog.theAddress'),
+                target:
+                  target === 'visitor'
+                    ? visitorName
+                      ? isolate(visitorName)
+                      : t('bans.dialog.selectedVisitor')
+                    : masked
+                      ? t('bans.dialog.address', { masked: isolate(masked) })
+                      : t('bans.dialog.theAddress'),
                 site: siteName,
                 until: exp && exp !== 'invalid' ? 'date' : exp === null ? 'never' : 'none',
                 date: exp && exp !== 'invalid' ? formatDateTime(exp) : '',
               })}
-              {target === 'visitor' && <> {closeChat ? t('bans.dialog.effectEnds') : t('bans.dialog.effectKeeps')}</>}
+              {target === 'visitor' && (
+                <> {closeChat ? t('bans.dialog.effectEnds') : t('bans.dialog.effectKeeps')}</>
+              )}
             </p>
           </div>
 

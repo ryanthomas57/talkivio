@@ -6,7 +6,16 @@ import { randomUUID } from 'node:crypto';
 import { TenantDb, type Tx } from '../../db/tenant-db';
 import { AuditService } from '../../common/audit.service';
 import { decrypt, encrypt, sha256, emailLookupHash } from '../../common/crypto';
-import { AppError, badRequest, conflict, denied, notFound, rateLimited, type AuthContext, type VisitorContext } from '../../common/http';
+import {
+  AppError,
+  badRequest,
+  conflict,
+  denied,
+  notFound,
+  rateLimited,
+  type AuthContext,
+  type VisitorContext,
+} from '../../common/http';
 import { IdempotencyService } from '../../common/idempotency';
 import { camel, decodeCursor, encodeCursor, page, type Page } from '../../common/wire';
 import { MailService } from '../../core/mail.service';
@@ -15,7 +24,16 @@ import { OutboxService, type OutboxScope } from '../../outbox/outbox.service';
 import { ChatCommandsService } from '../chats/chat-commands.service';
 import { ChatStore, queueScopeId } from '../chats/chat.store';
 import { RoutingService } from '../chats/routing.service';
-import { EMAIL_RE, maskEmail, newReference, offlinePolicy, PHONE_FIELD_KEY, PHONE_RE, visitorHourlyLimit, type OfflinePolicy } from './offline.policy';
+import {
+  EMAIL_RE,
+  maskEmail,
+  newReference,
+  offlinePolicy,
+  PHONE_FIELD_KEY,
+  PHONE_RE,
+  visitorHourlyLimit,
+  type OfflinePolicy,
+} from './offline.policy';
 
 export interface OfflineSubmitInput {
   clientRequestId: string;
@@ -72,10 +90,14 @@ const MAX_CUSTOM_FIELDS = 20;
 const VISITOR_ROUTE = 'widget.offline_submissions.create';
 const DUPLICATE_RETRIES = 25;
 
-const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isObj = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
 
 function fieldError(path: string, message: string, details?: unknown): AppError {
-  return new AppError(422, 'VALIDATION_FAILED', 'Check the highlighted fields.', { fieldErrors: { [path]: [message] }, details });
+  return new AppError(422, 'VALIDATION_FAILED', 'Check the highlighted fields.', {
+    fieldErrors: { [path]: [message] },
+    details,
+  });
 }
 
 /**
@@ -100,26 +122,44 @@ export class OfflineService {
   // ═════════════════════════════ Visitor submission ═════════════════════════════
 
   async policyFor(tx: Tx, siteId: string): Promise<OfflinePolicy> {
-    const rev = await tx.widgetConfigRevision.findFirst({ where: { siteId, publishedAt: { not: null } }, orderBy: { revision: 'desc' } });
+    const rev = await tx.widgetConfigRevision.findFirst({
+      where: { siteId, publishedAt: { not: null } },
+      orderBy: { revision: 'desc' },
+    });
     return offlinePolicy(rev?.config ?? null);
   }
 
-  async submit(v: VisitorContext, input: OfflineSubmitInput): Promise<{ status: number; body: OfflineReceipt; replayed: boolean }> {
-    const key = input.clientRequestId.length >= 16 ? input.clientRequestId : `req-${input.clientRequestId.padEnd(16, '0')}`;
+  async submit(
+    v: VisitorContext,
+    input: OfflineSubmitInput,
+  ): Promise<{ status: number; body: OfflineReceipt; replayed: boolean }> {
+    const key =
+      input.clientRequestId.length >= 16
+        ? input.clientRequestId
+        : `req-${input.clientRequestId.padEnd(16, '0')}`;
     // A concurrent duplicate either races the idempotency row insert (P2002) or finds it
     // still processing; wait briefly and replay the committed receipt instead of failing.
     for (let attempt = 0; ; attempt++) {
       try {
-        return await this.idempotency.run(v.tenantId, `visitor:${v.visitorId}`, VISITOR_ROUTE, key, input, async () => {
-          await this.chats.assertNotBanned(v);
-          const prepared = await this.validate(v, input);
-          await this.enforceRateLimits(v, prepared.hourlyLimit);
-          const receipt = await this.db.tx(v.tenantId, (tx) => this.persist(tx, v, input, prepared));
-          if (receipt.sourceChatId) await this.routing.drainQueue(v.tenantId, 20).catch(() => undefined);
-          return { status: 201, body: receipt };
-        });
+        return await this.idempotency.run(
+          v.tenantId,
+          `visitor:${v.visitorId}`,
+          VISITOR_ROUTE,
+          key,
+          input,
+          async () => {
+            await this.chats.assertNotBanned(v);
+            const prepared = await this.validate(v, input);
+            await this.enforceRateLimits(v, prepared.hourlyLimit);
+            const receipt = await this.db.tx(v.tenantId, (tx) => this.persist(tx, v, input, prepared));
+            if (receipt.sourceChatId) await this.routing.drainQueue(v.tenantId, 20).catch(() => undefined);
+            return { status: 201, body: receipt };
+          },
+        );
       } catch (err) {
-        const duplicateRace = (err as { code?: string }).code === 'P2002' || (err instanceof AppError && err.code === 'IDEMPOTENCY_IN_PROGRESS');
+        const duplicateRace =
+          (err as { code?: string }).code === 'P2002' ||
+          (err instanceof AppError && err.code === 'IDEMPOTENCY_IN_PROGRESS');
         if (!duplicateRace || attempt >= DUPLICATE_RETRIES) throw err;
         await new Promise((r) => setTimeout(r, 100 + Math.floor(Math.random() * 100)));
       }
@@ -127,16 +167,32 @@ export class OfflineService {
   }
 
   private async validate(v: VisitorContext, input: OfflineSubmitInput) {
-    const { policy, departments, customDefs, rawSettings, emailOfflineMessages } = await this.db.read(v.tenantId, async (tx) => {
-      const [policy, departments, customDefs, tenant] = await Promise.all([
-        this.policyFor(tx, v.siteId),
-        tx.department.findMany({ where: { tenantId: v.tenantId, enabled: true, archivedAt: null }, select: { id: true, name: true, publicLabel: true }, orderBy: { name: 'asc' } }),
-        tx.customFieldDefinition.findMany({ where: { tenantId: v.tenantId, archivedAt: null, publicWritable: true } }),
-        tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }),
-      ]);
-      const notif = isObj(tenant.settings) && isObj(tenant.settings.notifications) ? tenant.settings.notifications : {};
-      return { policy, departments, customDefs, rawSettings: tenant.settings, emailOfflineMessages: notif.emailOfflineMessages !== false };
-    });
+    const { policy, departments, customDefs, rawSettings, emailOfflineMessages } = await this.db.read(
+      v.tenantId,
+      async (tx) => {
+        const [policy, departments, customDefs, tenant] = await Promise.all([
+          this.policyFor(tx, v.siteId),
+          tx.department.findMany({
+            where: { tenantId: v.tenantId, enabled: true, archivedAt: null },
+            select: { id: true, name: true, publicLabel: true },
+            orderBy: { name: 'asc' },
+          }),
+          tx.customFieldDefinition.findMany({
+            where: { tenantId: v.tenantId, archivedAt: null, publicWritable: true },
+          }),
+          tx.tenant.findUniqueOrThrow({ where: { id: v.tenantId }, select: { settings: true } }),
+        ]);
+        const notif =
+          isObj(tenant.settings) && isObj(tenant.settings.notifications) ? tenant.settings.notifications : {};
+        return {
+          policy,
+          departments,
+          customDefs,
+          rawSettings: tenant.settings,
+          emailOfflineMessages: notif.emailOfflineMessages !== false,
+        };
+      },
+    );
     if (!policy.enabled) throw conflict('CONFLICT', 'This site is not accepting offline messages right now');
 
     const errors: Record<string, string[]> = {};
@@ -157,7 +213,8 @@ export class OfflineService {
     delete fields.phone;
     const phone = rawPhone?.trim() || null;
     // Optional phone is always accepted (widget contract); required only when the form config says so.
-    if (phone && (phone.length > 40 || !PHONE_RE.test(phone) || !/\d/.test(phone))) add('phone', 'Use digits, spaces and + ( ) - . only');
+    if (phone && (phone.length > 40 || !PHONE_RE.test(phone) || !/\d/.test(phone)))
+      add('phone', 'Use digits, spaces and + ( ) - . only');
     if (!phone && policy.phone === 'required') add('phone', 'Enter a phone number');
 
     const custom: Record<string, unknown> = {};
@@ -172,10 +229,14 @@ export class OfflineService {
         add(`fields.${k}`, 'This field is not accepted');
         continue;
       }
-      const opts = isObj(def.validation) && Array.isArray(def.validation.options) ? (def.validation.options as unknown[]).map(String) : null;
+      const opts =
+        isObj(def.validation) && Array.isArray(def.validation.options)
+          ? (def.validation.options as unknown[]).map(String)
+          : null;
       if (val === null || val === undefined || val === '') continue;
       if (def.dataType === 'number') {
-        const n = typeof val === 'number' ? val : typeof val === 'string' && val.trim() !== '' ? Number(val) : NaN;
+        const n =
+          typeof val === 'number' ? val : typeof val === 'string' && val.trim() !== '' ? Number(val) : NaN;
         if (!Number.isFinite(n)) add(`fields.${k}`, 'Enter a number');
         else custom[def.key] = n;
       } else if (def.dataType === 'boolean') {
@@ -193,11 +254,18 @@ export class OfflineService {
     let departmentId = input.departmentId ?? null;
     if (departmentId && policy.department === 'hidden' && !input.sourceChatId) departmentId = null;
     if (departmentId && !departments.some((d) => d.id === departmentId)) {
-      throw new AppError(422, 'VALIDATION_FAILED', 'That department is not available. Choose another.', { fieldErrors: { ...errors, department_id: ['Choose one of the available departments'] }, details: { departments: choices } });
+      throw new AppError(422, 'VALIDATION_FAILED', 'That department is not available. Choose another.', {
+        fieldErrors: { ...errors, department_id: ['Choose one of the available departments'] },
+        details: { departments: choices },
+      });
     }
-    if (!departmentId && !input.sourceChatId && policy.department === 'required' && choices.length) add('department_id', 'Choose a department');
+    if (!departmentId && !input.sourceChatId && policy.department === 'required' && choices.length)
+      add('department_id', 'Choose a department');
     if (Object.keys(errors).length) {
-      throw new AppError(422, 'VALIDATION_FAILED', 'Check the highlighted fields.', { fieldErrors: errors, ...(errors.department_id ? { details: { departments: choices } } : {}) });
+      throw new AppError(422, 'VALIDATION_FAILED', 'Check the highlighted fields.', {
+        fieldErrors: errors,
+        ...(errors.department_id ? { details: { departments: choices } } : {}),
+      });
     }
     return {
       message,
@@ -207,33 +275,62 @@ export class OfflineService {
       custom,
       departmentId,
       hourlyLimit: visitorHourlyLimit(rawSettings),
-      notifications: { confirmation: policy.confirmationEnabled && email ? ('pending' as const) : ('disabled' as const), team: emailOfflineMessages ? ('pending' as const) : ('disabled' as const) },
+      notifications: {
+        confirmation: policy.confirmationEnabled && email ? ('pending' as const) : ('disabled' as const),
+        team: emailOfflineMessages ? ('pending' as const) : ('disabled' as const),
+      },
     };
   }
 
   private async enforceRateLimits(v: VisitorContext, perHour: number): Promise<void> {
     const retryAfter = 3600 - (Math.floor(Date.now() / 1000) % 3600);
-    if (!(await this.rateLimit.hit(`offline:v:${v.tenantId}:${v.visitorId}`, perHour, 3600))) throw rateLimited(retryAfter);
-    if (v.ipHash && !(await this.rateLimit.hit(`offline:ip:${v.ipHash}`, VISITOR_NETWORK_LIMIT_PER_HOUR, 3600))) throw rateLimited(retryAfter);
+    if (!(await this.rateLimit.hit(`offline:v:${v.tenantId}:${v.visitorId}`, perHour, 3600)))
+      throw rateLimited(retryAfter);
+    if (
+      v.ipNetHash &&
+      !(await this.rateLimit.hit(`offline:ip:${v.ipNetHash}`, VISITOR_NETWORK_LIMIT_PER_HOUR, 3600))
+    )
+      throw rateLimited(retryAfter);
   }
 
-  private async persist(tx: Tx, v: VisitorContext, input: OfflineSubmitInput, p: Awaited<ReturnType<OfflineService['validate']>>): Promise<OfflineReceipt> {
+  private async persist(
+    tx: Tx,
+    v: VisitorContext,
+    input: OfflineSubmitInput,
+    p: Awaited<ReturnType<OfflineService['validate']>>,
+  ): Promise<OfflineReceipt> {
     let departmentId = p.departmentId;
     let conversionReason: string | null = null;
     if (input.sourceChatId) {
       // Queue conversion (ch. 23/75): withdraw the request and store the message in ONE transaction.
       const chat = await this.store.lockChat(tx, v.tenantId, input.sourceChatId).catch(() => null);
-      if (!chat || chat.visitorId !== v.visitorId || chat.siteId !== v.siteId) throw fieldError('source_chat_id', 'Chat not found');
+      if (!chat || chat.visitorId !== v.visitorId || chat.siteId !== v.siteId)
+        throw fieldError('source_chat_id', 'Chat not found');
       if (chat.status === 'closed') throw conflict('CHAT_CLOSED', 'This chat has already ended');
-      if (chat.status === 'active' || chat.ownerMembershipId) throw conflict('CHAT_ALREADY_ASSIGNED', 'An agent has already joined this chat');
-      const exceeded = await tx.assignmentHistory.count({ where: { tenantId: v.tenantId, chatId: chat.id, reason: 'max_wait_exceeded' } });
+      if (chat.status === 'active' || chat.ownerMembershipId)
+        throw conflict('CHAT_ALREADY_ASSIGNED', 'An agent has already joined this chat');
+      const exceeded = await tx.assignmentHistory.count({
+        where: { tenantId: v.tenantId, chatId: chat.id, reason: 'max_wait_exceeded' },
+      });
       conversionReason = exceeded ? 'max_wait_exceeded' : 'visitor_requested';
       departmentId ??= chat.departmentId;
       await this.chats.closeInTx(tx, chat, 'converted_offline', { kind: 'visitor', visitor: v });
     }
     let reference = newReference();
-    for (let i = 0; i < 5 && (await tx.offlineSubmission.findUnique({ where: { tenantId_reference: { tenantId: v.tenantId, reference } }, select: { id: true } })); i++) reference = newReference();
-    const customFields: Record<string, unknown> = { ...p.custom, ...(p.phone ? { [PHONE_FIELD_KEY]: encrypt(p.phone) } : {}) };
+    for (
+      let i = 0;
+      i < 5 &&
+      (await tx.offlineSubmission.findUnique({
+        where: { tenantId_reference: { tenantId: v.tenantId, reference } },
+        select: { id: true },
+      }));
+      i++
+    )
+      reference = newReference();
+    const customFields: Record<string, unknown> = {
+      ...p.custom,
+      ...(p.phone ? { [PHONE_FIELD_KEY]: encrypt(p.phone) } : {}),
+    };
     const sub = await tx.offlineSubmission.create({
       data: {
         tenantId: v.tenantId,
@@ -261,7 +358,17 @@ export class OfflineService {
       payload: { submission: { ...summary, emailMasked: undefined, messagePreview: undefined } },
       scopes: [
         { kind: 'queue', id: queueScopeId(departmentId), audience: 'staff' },
-        { kind: 'visitor', id: v.sessionId, audience: 'public', payload: { reference: sub.reference, status: sub.status, createdAt: sub.createdAt, sourceChatId: sub.sourceChatId } },
+        {
+          kind: 'visitor',
+          id: v.sessionId,
+          audience: 'public',
+          payload: {
+            reference: sub.reference,
+            status: sub.status,
+            createdAt: sub.createdAt,
+            sourceChatId: sub.sourceChatId,
+          },
+        },
       ],
     });
     return {
@@ -313,7 +420,8 @@ export class OfflineService {
 
   private async detail(tx: Tx, sub: OfflineSubmission): Promise<OfflineDetail> {
     const custom = isObj(sub.customFields) ? { ...sub.customFields } : {};
-    const phoneCipher = typeof custom[PHONE_FIELD_KEY] === 'string' ? (custom[PHONE_FIELD_KEY] as string) : null;
+    const phoneCipher =
+      typeof custom[PHONE_FIELD_KEY] === 'string' ? (custom[PHONE_FIELD_KEY] as string) : null;
     delete custom[PHONE_FIELD_KEY];
     let phone: string | null = null;
     if (phoneCipher) {
@@ -324,10 +432,17 @@ export class OfflineService {
       }
     }
     const handler = sub.handledById
-      ? await tx.membership.findFirst({ where: { tenantId: sub.tenantId, id: sub.handledById }, include: { user: { select: { displayName: true } } } })
+      ? await tx.membership.findFirst({
+          where: { tenantId: sub.tenantId, id: sub.handledById },
+          include: { user: { select: { displayName: true } } },
+        })
       : null;
     const replies = await this.db.root.outboundEmail.findMany({
-      where: { tenantId: sub.tenantId, template: 'offline_reply', dedupeKey: { startsWith: `offline_reply:${sub.id}:` } },
+      where: {
+        tenantId: sub.tenantId,
+        template: 'offline_reply',
+        dedupeKey: { startsWith: `offline_reply:${sub.id}:` },
+      },
       orderBy: { createdAt: 'asc' },
       select: { id: true, status: true, createdAt: true, acceptedAt: true, textBody: true },
     });
@@ -340,35 +455,57 @@ export class OfflineService {
       phone,
       message: sub.message,
       customFields: custom,
-      handledBy: handler ? { id: handler.id, displayName: handler.displayName || handler.user.displayName } : null,
+      handledBy: handler
+        ? { id: handler.id, displayName: handler.displayName || handler.user.displayName }
+        : null,
       // The exact text emailed to the submitter (scrubbed to "[erased]" by privacy erasure).
       replies: replies.map(({ textBody, ...r }) => ({ ...r, emailText: textBody })),
     };
   }
 
   private async visible(tx: Tx, auth: AuthContext, id: string, lock = false): Promise<OfflineSubmission> {
-    if (lock) await tx.$queryRaw`SELECT id FROM offline_submissions WHERE tenant_id = ${auth.tenantId}::uuid AND id = ${id}::uuid FOR UPDATE`;
-    const sub = await tx.offlineSubmission.findFirst({ where: { AND: [{ tenantId: auth.tenantId, id }, this.scopeWhere(auth)] } });
+    if (lock)
+      await tx.$queryRaw`SELECT id FROM offline_submissions WHERE tenant_id = ${auth.tenantId}::uuid AND id = ${id}::uuid FOR UPDATE`;
+    const sub = await tx.offlineSubmission.findFirst({
+      where: { AND: [{ tenantId: auth.tenantId, id }, this.scopeWhere(auth)] },
+    });
     if (!sub) throw notFound('Offline message');
     return sub;
   }
 
-  async list(auth: AuthContext, q: { departmentId?: string; status?: string; cursor?: string; limit: number }): Promise<Page<OfflineSummary>> {
-    if (q.departmentId && auth.departmentScope !== 'all' && !auth.departmentScope.includes(q.departmentId)) throw denied('You cannot view this department');
-    const filterHash = sha256(JSON.stringify({ d: q.departmentId ?? null, s: q.status ?? null })).slice(0, 16);
+  async list(
+    auth: AuthContext,
+    q: { departmentId?: string; status?: string; cursor?: string; limit: number },
+  ): Promise<Page<OfflineSummary>> {
+    if (q.departmentId && auth.departmentScope !== 'all' && !auth.departmentScope.includes(q.departmentId))
+      throw denied('You cannot view this department');
+    const filterHash = sha256(JSON.stringify({ d: q.departmentId ?? null, s: q.status ?? null })).slice(
+      0,
+      16,
+    );
     const cur = decodeCursor<{ t: string; id: string }>(q.cursor, filterHash);
-    if (q.cursor && !cur) throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
+    if (q.cursor && !cur)
+      throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
     return this.db.read(auth.tenantId, async (tx) => {
       const and: Prisma.OfflineSubmissionWhereInput[] = [{ tenantId: auth.tenantId }, this.scopeWhere(auth)];
       if (q.departmentId) and.push({ departmentId: q.departmentId });
       if (q.status) and.push({ status: q.status });
-      if (cur) and.push({ OR: [{ createdAt: { lt: new Date(cur.t) } }, { createdAt: new Date(cur.t), id: { lt: cur.id } }] });
-      const rows = await tx.offlineSubmission.findMany({ where: { AND: and }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: q.limit + 1 });
+      if (cur)
+        and.push({
+          OR: [{ createdAt: { lt: new Date(cur.t) } }, { createdAt: new Date(cur.t), id: { lt: cur.id } }],
+        });
+      const rows = await tx.offlineSubmission.findMany({
+        where: { AND: and },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: q.limit + 1,
+      });
       const slice = rows.slice(0, q.limit);
       const last = slice[slice.length - 1];
       return page(
         slice.map((s) => this.summary(s)),
-        rows.length > q.limit && last ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id }, filterHash) : null,
+        rows.length > q.limit && last
+          ? encodeCursor({ t: last.createdAt.toISOString(), id: last.id }, filterHash)
+          : null,
       );
     });
   }
@@ -390,55 +527,107 @@ export class OfflineService {
     });
   }
 
-  async reply(auth: AuthContext, id: string, input: { body: string }, idempotencyKey: string | null): Promise<OfflineDetail> {
+  async reply(
+    auth: AuthContext,
+    id: string,
+    input: { body: string },
+    idempotencyKey: string | null,
+  ): Promise<OfflineDetail> {
     const body = input.body.trim();
     const len = codePointLength(body);
-    if (len < 1 || len > 8000) throw badRequest('Write a reply (up to 8000 characters)', { body: [len < 1 ? 'Required' : 'Maximum 8000 characters'] });
-    const run = await this.idempotency.run(auth.tenantId, `member:${auth.membershipId ?? auth.tokenId}`, `offline.reply:${id}`, idempotencyKey, input, async () => {
-      const { sub, site } = await this.db.read(auth.tenantId, async (tx) => {
-        const sub = await this.visible(tx, auth, id);
-        const site = await tx.site.findFirst({ where: { tenantId: auth.tenantId, id: sub.siteId }, select: { name: true } });
-        return { sub, site };
+    if (len < 1 || len > 8000)
+      throw badRequest('Write a reply (up to 8000 characters)', {
+        body: [len < 1 ? 'Required' : 'Maximum 8000 characters'],
       });
-      if (sub.status === 'erased') throw conflict('CONFLICT', 'This message was erased');
-      const to = this.email(sub);
-      if (!to) throw conflict('CONFLICT', 'This message has no email address to reply to');
-      // The outbound row (deduplicated by reply key) is durable before the submission is marked handled.
-      const replyKey = idempotencyKey ?? randomUUID();
-      const sent = await this.mail.sendTemplate(
-        'offline_reply',
-        to,
-        { site: site?.name ?? 'Support', reference: sub.reference, agent: auth.actorName.split(' ')[0] || 'Support', body },
-        `${sub.id}:${replyKey}`,
-        auth.tenantId,
-      );
-      const detail = await this.db.tx(auth.tenantId, async (tx) => {
-        const locked = await this.visible(tx, auth, id, true);
-        const saved = await tx.offlineSubmission.update({
-          where: { id: locked.id },
-          data: { status: 'handled', handledAt: new Date(), handledById: auth.membershipId, version: { increment: 1 } },
+    const run = await this.idempotency.run(
+      auth.tenantId,
+      `member:${auth.membershipId ?? auth.tokenId}`,
+      `offline.reply:${id}`,
+      idempotencyKey,
+      input,
+      async () => {
+        const { sub, site } = await this.db.read(auth.tenantId, async (tx) => {
+          const sub = await this.visible(tx, auth, id);
+          const site = await tx.site.findFirst({
+            where: { tenantId: auth.tenantId, id: sub.siteId },
+            select: { name: true },
+          });
+          return { sub, site };
         });
-        await this.audit.inTx(tx, auth, { action: 'offline_submission.replied', objectType: 'offline_submission', objectId: id, safeDiff: { email_id: sent.id, status: saved.status, version: saved.version } });
-        await this.emitUpdated(tx, saved);
-        return this.detail(tx, saved);
-      });
-      return { status: 200, body: detail };
-    });
+        if (sub.status === 'erased') throw conflict('CONFLICT', 'This message was erased');
+        const to = this.email(sub);
+        if (!to) throw conflict('CONFLICT', 'This message has no email address to reply to');
+        // The outbound row (deduplicated by reply key) is durable before the submission is marked handled.
+        const replyKey = idempotencyKey ?? randomUUID();
+        const sent = await this.mail.sendTemplate(
+          'offline_reply',
+          to,
+          {
+            site: site?.name ?? 'Support',
+            reference: sub.reference,
+            agent: auth.actorName.split(' ')[0] || 'Support',
+            body,
+          },
+          `${sub.id}:${replyKey}`,
+          auth.tenantId,
+        );
+        const detail = await this.db.tx(auth.tenantId, async (tx) => {
+          const locked = await this.visible(tx, auth, id, true);
+          const saved = await tx.offlineSubmission.update({
+            where: { id: locked.id },
+            data: {
+              status: 'handled',
+              handledAt: new Date(),
+              handledById: auth.membershipId,
+              version: { increment: 1 },
+            },
+          });
+          await this.audit.inTx(tx, auth, {
+            action: 'offline_submission.replied',
+            objectType: 'offline_submission',
+            objectId: id,
+            safeDiff: { email_id: sent.id, status: saved.status, version: saved.version },
+          });
+          await this.emitUpdated(tx, saved);
+          return this.detail(tx, saved);
+        });
+        return { status: 200, body: detail };
+      },
+    );
     return run.body;
   }
 
-  async setStatus(auth: AuthContext, id: string, status: 'received' | 'handled', expectedVersion: number | null): Promise<OfflineDetail> {
+  async setStatus(
+    auth: AuthContext,
+    id: string,
+    status: 'received' | 'handled',
+    expectedVersion: number | null,
+  ): Promise<OfflineDetail> {
     return this.db.tx(auth.tenantId, async (tx) => {
       await lockForUpdate(tx, 'offline_submissions', auth.tenantId, id);
       const sub = await this.visible(tx, auth, id, true);
       if (sub.status === 'erased') throw conflict('CONFLICT', 'This message was erased');
-      if (expectedVersion !== null && expectedVersion !== sub.version) throw conflict('VERSION_CONFLICT', 'This message was changed by someone else. Reload to continue.', false, { current_version: sub.version });
+      if (expectedVersion !== null && expectedVersion !== sub.version)
+        throw conflict(
+          'VERSION_CONFLICT',
+          'This message was changed by someone else. Reload to continue.',
+          false,
+          { current_version: sub.version },
+        );
       if (sub.status === status) return this.detail(tx, sub);
       const saved = await tx.offlineSubmission.update({
         where: { id: sub.id },
-        data: status === 'handled' ? { status, handledAt: new Date(), handledById: auth.membershipId, version: { increment: 1 } } : { status, handledAt: null, handledById: null, version: { increment: 1 } },
+        data:
+          status === 'handled'
+            ? { status, handledAt: new Date(), handledById: auth.membershipId, version: { increment: 1 } }
+            : { status, handledAt: null, handledById: null, version: { increment: 1 } },
       });
-      await this.audit.inTx(tx, auth, { action: 'offline_submission.status_changed', objectType: 'offline_submission', objectId: id, safeDiff: { status: { from: sub.status, to: status }, version: saved.version } });
+      await this.audit.inTx(tx, auth, {
+        action: 'offline_submission.status_changed',
+        objectType: 'offline_submission',
+        objectId: id,
+        safeDiff: { status: { from: sub.status, to: status }, version: saved.version },
+      });
       await this.emitUpdated(tx, saved);
       return this.detail(tx, saved);
     });

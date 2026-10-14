@@ -155,10 +155,11 @@ export const settings = {
   'settings.general.security.sessionHours': '{count, plural, one {# hour} other {# hours}}',
   'settings.general.security.networks': 'Allowed networks',
   'settings.general.security.networksHint':
-    'IPv4 or IPv6 addresses or CIDR ranges. Leave empty to allow any network.',
+    'IPv4 or IPv6 addresses or CIDR ranges, such as 203.0.113.0/24 or 2001:db8:1::/48. Agents may connect over IPv6, so add your IPv6 range as well. Leave empty to allow any network.',
   'settings.general.security.networksList': 'Current networks',
   'settings.general.security.networksLimit': 'At most {count, plural, one {# entry} other {# entries}}.',
-  'settings.general.security.networkInvalid': '“{value}” is not an IP address or CIDR range.',
+  'settings.general.security.networkInvalid':
+    '“{value}” is not an IP address or a supported CIDR range (IPv4 /8 to /32, IPv6 /16 to /128).',
   'settings.general.security.networksWarning':
     'Make sure the network you are using now is included, or you may lose access when the list takes effect.',
   'settings.general.retention.title': 'Data retention',

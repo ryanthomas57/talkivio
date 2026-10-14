@@ -162,11 +162,12 @@ export const settings: Record<keyof typeof source, string> = {
     '{count, plural, zero {لا ساعات} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
   'settings.general.security.networks': 'الشبكات المسموح بها',
   'settings.general.security.networksHint':
-    'عناوين IPv4 أو IPv6 أو نطاقات CIDR. اتركه فارغًا للسماح بأي شبكة.',
+    'عناوين IPv4 أو IPv6 أو نطاقات CIDR، مثل 203.0.113.0/24 أو 2001:db8:1::/48. قد يتصل الموظفون عبر IPv6، لذا أضف نطاق IPv6 الخاص بك أيضًا. اتركه فارغًا للسماح بأي شبكة.',
   'settings.general.security.networksList': 'الشبكات الحالية',
   'settings.general.security.networksLimit':
     'الحد الأقصى {count, plural, zero {لا عناصر} one {عنصر واحد} two {عنصران} few {# عناصر} many {# عنصرًا} other {# عنصر}}.',
-  'settings.general.security.networkInvalid': '«{value}» ليس عنوان IP أو نطاق CIDR.',
+  'settings.general.security.networkInvalid':
+    '«{value}» ليس عنوان IP أو نطاق CIDR مدعومًا (IPv4 من /8 إلى /32، وIPv6 من /16 إلى /128).',
   'settings.general.security.networksWarning':
     'تأكّد من تضمين الشبكة التي تستخدمها الآن، وإلا فقد تفقد الوصول عند تطبيق القائمة.',
   'settings.general.retention.title': 'الاحتفاظ بالبيانات',

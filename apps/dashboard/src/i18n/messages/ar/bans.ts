@@ -60,7 +60,7 @@ export const bans: Record<keyof typeof source, string> = {
   'bans.dialog.selectedSite': 'الموقع المحدد',
   'bans.dialog.chooseVisitor': 'اختر الزائر المراد حظره',
   'bans.dialog.ipRequired': 'أدخل عنوان IP',
-  'bans.dialog.noCidr': 'احظر عنوانًا محددًا: لا تُقبل نطاقات CIDR',
+  'bans.dialog.noCidr': 'احظر عنوانًا محددًا أو شبكة IPv6 بطول /64. لا تُقبل النطاقات الأخرى',
   'bans.dialog.ipInvalid': 'أدخل عنوان IPv4 أو IPv6 صالحًا',
   'bans.dialog.reasonRequired': 'السبب مطلوب (يظهر للموظفين فقط)',
   'bans.dialog.expiryInvalid': 'اختر تاريخًا ووقتًا صالحين',
@@ -75,10 +75,12 @@ export const bans: Record<keyof typeof source, string> = {
     'لا يستطيع الزوار المحظورون بدء محادثات أو إرسال رسائل خارج الدوام. يرون رسالة محايدة «الخدمة غير متاحة»، ولا يرون السبب أبدًا.',
   'bans.dialog.visitorHint': 'أفضل جهد ممكن للزوار المجهولين: مسح تخزين المتصفح يُنشئ هوية جديدة.',
   'bans.dialog.ip': 'عنوان IP',
-  'bans.dialog.ipHint': 'يحظر كل من يستخدم هذا العنوان تحديدًا. يُخزَّن كتجزئة بمفتاح ويُعرض مُخفى جزئيًا.',
+  'bans.dialog.ipHint':
+    'يحظر كل من يستخدم هذا العنوان تحديدًا، أو شبكة IPv6 كاملة بطول /64. يُخزَّن كتجزئة بمفتاح ويُعرض مُخفى جزئيًا.',
   'bans.dialog.visitorLabel': 'الزائر:',
   'bans.dialog.shownAs': 'يظهر للموظفين بالشكل {masked}',
-  'bans.dialog.ipFieldHint': 'عنوان IPv4 أو IPv6 محدد. لا تُقبل النطاقات.',
+  'bans.dialog.ipFieldHint':
+    'عنوان IPv4 أو IPv6 محدد، أو شبكة IPv6 بطول /64 مثل 2001:db8:1:2::/64 (يستطيع زوار IPv6 تغيير عناوينهم داخل شبكة /64). لا تُقبل النطاقات الأخرى.',
   'bans.dialog.ipWarning':
     'قد يحظر حظر عنوان IP أشخاصًا آخرين يشاركون عنوان الشبكة نفسه، مثل المكاتب والمدارس وشركات الاتصالات وشبكات VPN.',
   'bans.dialog.sites': 'المواقع',

@@ -58,7 +58,7 @@ export const bans = {
   'bans.dialog.selectedSite': 'the selected site',
   'bans.dialog.chooseVisitor': 'Choose the visitor to ban',
   'bans.dialog.ipRequired': 'Enter an IP address',
-  'bans.dialog.noCidr': 'Ban an exact address. CIDR ranges are not accepted',
+  'bans.dialog.noCidr': 'Ban an exact address or an IPv6 /64. Other ranges are not accepted',
   'bans.dialog.ipInvalid': 'Enter a valid IPv4 or IPv6 address',
   'bans.dialog.reasonRequired': 'A reason is required (visible to staff only)',
   'bans.dialog.expiryInvalid': 'Choose a valid date and time',
@@ -73,10 +73,12 @@ export const bans = {
   'bans.dialog.visitorHint':
     'Best effort for anonymous visitors: clearing browser storage creates a new identity.',
   'bans.dialog.ip': 'IP address',
-  'bans.dialog.ipHint': 'Blocks everyone on that exact address. Stored as a keyed hash and shown masked.',
+  'bans.dialog.ipHint':
+    'Blocks everyone on that exact address, or on a whole IPv6 /64 network. Stored as a keyed hash and shown masked.',
   'bans.dialog.visitorLabel': 'Visitor:',
   'bans.dialog.shownAs': 'Shown to staff as {masked}',
-  'bans.dialog.ipFieldHint': 'An exact IPv4 or IPv6 address. Ranges are not accepted.',
+  'bans.dialog.ipFieldHint':
+    'An exact IPv4 or IPv6 address, or an IPv6 /64 such as 2001:db8:1:2::/64 (IPv6 visitors can switch addresses inside their /64). Other ranges are not accepted.',
   'bans.dialog.ipWarning':
     'IP bans can block other people who share this network address, such as offices, schools, mobile carriers and VPNs.',
   'bans.dialog.sites': 'Sites',

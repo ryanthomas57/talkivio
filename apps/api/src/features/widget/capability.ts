@@ -1,6 +1,6 @@
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { env } from '../../config/env';
-import { hashIp, hmacSha256, safeEqual } from '../../common/crypto';
+import { hashIp, hashIpBucket, hmacSha256, safeEqual } from '../../common/crypto';
 import { AppError, type AppRequest, type VisitorContext } from '../../common/http';
 import { normalizeIp } from '../../common/ip';
 import { RedisService } from '../../common/redis.service';
@@ -48,6 +48,14 @@ export function visitorIpHash(ip: string | null | undefined): string | null {
   return ip ? hashIp(normalizeIp(ip)) : null;
 }
 
+/** Both visitor address hashes (`VisitorContext.ipHash` and `ipNetHash`) for a client address. */
+export function visitorIpHashes(ip: string | null | undefined): {
+  ipHash: string | null;
+  ipNetHash: string | null;
+} {
+  return { ipHash: visitorIpHash(ip), ipNetHash: hashIpBucket(ip) };
+}
+
 /**
  * Route guard for visitor-capability endpoints: verifies the signed capability and
  * rejects capabilities whose session was revoked (identity reset / host logout).
@@ -60,9 +68,14 @@ export class VisitorGuard implements CanActivate {
     const req = ctx.switchToHttp().getRequest<AppRequest>();
     const h = req.headers.authorization;
     const claims = verifyCapability(h?.startsWith('Bearer ') ? h.slice(7) : null);
-    if (!claims) throw new AppError(401, 'AUTH_REQUIRED', 'Your chat session expired. Refresh to continue.', { retryable: true });
+    if (!claims)
+      throw new AppError(401, 'AUTH_REQUIRED', 'Your chat session expired. Refresh to continue.', {
+        retryable: true,
+      });
     if ((await this.redis.client.exists(capabilityRevocationKey(claims.vs))) === 1) {
-      throw new AppError(401, 'AUTH_REQUIRED', 'Your chat session expired. Refresh to continue.', { retryable: true });
+      throw new AppError(401, 'AUTH_REQUIRED', 'Your chat session expired. Refresh to continue.', {
+        retryable: true,
+      });
     }
     const visitor: VisitorContext = {
       tenantId: claims.t,
@@ -70,7 +83,7 @@ export class VisitorGuard implements CanActivate {
       visitorId: claims.v,
       sessionId: claims.vs,
       requestId: req.requestId ?? '',
-      ipHash: visitorIpHash(req.ip),
+      ...visitorIpHashes(req.ip),
       origin: claims.o,
       capabilityExpiresAt: new Date(claims.exp * 1000).toISOString(),
     };

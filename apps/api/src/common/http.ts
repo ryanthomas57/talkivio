@@ -59,7 +59,10 @@ export interface VisitorContext {
   visitorId: string;
   sessionId: string;
   requestId: string;
+  /** Keyed hash of the exact address: exact-IP bans match it. */
   ipHash: string | null;
+  /** Keyed hash of the address's network (IPv4 address or IPv6 /64): per-network rate limits and IPv6 /64 bans. */
+  ipNetHash: string | null;
   origin: string | null;
   /** ISO time the visitor capability expires (set by VisitorGuard; reported as socket capability_expiry). */
   capabilityExpiresAt?: string;

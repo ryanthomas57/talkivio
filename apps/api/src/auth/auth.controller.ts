@@ -156,8 +156,8 @@ export class AuthController {
   @UserScoped()
   @Post('verify-email/resend')
   @HttpCode(202)
-  async resend(@CurrentUser() user: UserContext) {
-    await this.auth.resendVerification(user.userId, user.ipHash);
+  async resend(@CurrentUser() user: UserContext, @Req() req: Request) {
+    await this.auth.resendVerification(user.userId, req.ip);
     return { accepted: true };
   }
 

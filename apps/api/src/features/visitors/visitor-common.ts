@@ -3,9 +3,10 @@
  * custom fields, identity). Pure functions only.
  */
 import { isIPv4, isIPv6 } from 'node:net';
+import type { Prisma } from '@prisma/client';
 import { generatedVisitorName } from '@talkivio/contracts';
 import { AppError } from '../../common/http';
-import { normalizeIp } from '../../common/ip';
+import { ipBucket, normalizeIp } from '../../common/ip';
 
 /** Wire-level page size rules (ch. 40): default 50, maximum 100. */
 export function pageLimit(raw: number | undefined, def = 50, max = 100): number {
@@ -100,8 +101,33 @@ export function canonicalIp(input: string): string | null {
   return null;
 }
 
-/** Masked display for an address (never reveals the full value to ordinary staff). */
+/**
+ * Canonical IP ban target: an exact address (`canonicalIp`) or an IPv6 /64 as `prefix::/64` (host bits
+ * cleared, the same text `ipBucket` produces for a visitor). A /64 is the IPv6 counterpart of one IPv4
+ * address: the subscriber holds the whole block and rotates through it, so an exact IPv6 ban is easy to
+ * dodge. Other ranges are refused (null), like invalid input.
+ */
+export function canonicalBanIp(input: string): string | null {
+  const s = input.trim();
+  if (!s.endsWith('/64')) return canonicalIp(s);
+  const ip = canonicalIp(s.slice(0, -3));
+  return ip && isIPv6(ip) ? ipBucket(ip) : null;
+}
+
+export type VisitorIp = { ipHash: string | null; ipNetHash: string | null };
+
+/**
+ * Ban rows a visitor address matches: exact-address bans (`ipHash`) and IPv6 /64 bans (`ipNetHash`; for
+ * IPv4 it is the same hash). Empty when the address is unknown.
+ */
+export function ipBanFilter(ip: VisitorIp): Prisma.BanWhereInput[] {
+  const hashes = [...new Set([ip.ipHash, ip.ipNetHash].filter((h): h is string => !!h))];
+  return hashes.length ? [{ ipMatchHash: { in: hashes } }] : [];
+}
+
+/** Masked display for an address or IPv6 /64 ban target (never reveals the full value to ordinary staff). */
 export function maskIp(ip: string): string {
+  if (ip.endsWith('/64')) return `${maskIp(ip.slice(0, -3))}/64`;
   if (isIPv4(ip)) {
     const [a, b] = ip.split('.');
     return `${a}.${b}.x.x`;

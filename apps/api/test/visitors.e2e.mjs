@@ -1039,6 +1039,22 @@ const ipChat = await W(
   { 'x-forwarded-for': '203.0.113.7' },
 );
 ok(ipChat.status === 403, 'IP ban blocks chat admission');
+// IPv6: a /64 ban covers every address the subscriber can rotate to; the neighbouring /64 is unaffected.
+const netBan = await owner.call('POST', '/bans', { ip: '2001:db8:77:1::5/64', reason: 'Rotating spammer' });
+ok(
+  netBan.status === 201 && netBan.data.target.masked === '2001:db8:…/64' && netBan.data.collateral_warning,
+  'IPv6 /64 ban stored masked with collateral warning',
+);
+const bootFrom = (ip) =>
+  W('POST', '/bootstrap', { site_key: site.public_key, host_origin: ORIGIN }, null, {
+    'x-forwarded-for': ip,
+  });
+ok((await bootFrom('2001:db8:77:1:a:b:c:d')).status === 403, 'IPv6 /64 ban blocks every address in the /64');
+ok((await bootFrom('2001:db8:77:2::5')).status === 200, 'neighbouring IPv6 /64 unaffected');
+ok(
+  (await owner.call('POST', '/bans', { ip: '2001:db8:77::/48', reason: 'range' })).status === 422,
+  'IPv6 ranges other than a /64 rejected',
+);
 const shortBan = await owner.call('POST', '/bans', {
   ip: '198.51.100.9',
   reason: 'cool-off',

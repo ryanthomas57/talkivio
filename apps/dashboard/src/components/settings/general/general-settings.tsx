@@ -1,5 +1,6 @@
 'use client';
 import { useState, type ReactNode } from 'react';
+import { parseIpRule } from '@talkivio/contracts';
 import {
   Banner,
   Card,
@@ -37,8 +38,6 @@ function body(
 const pick = <T extends Record<string, unknown>>(changed: Partial<T>, keys: Array<keyof T>) =>
   Object.fromEntries(keys.filter((k) => k in changed).map((k) => [k, changed[k]]));
 
-const IPV4 = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}(\/([0-9]|[12]\d|3[0-2]))?$/;
-const IPV6 = /^(?=.*:.*:)[0-9a-f:]{2,39}(\/(\d|[1-9]\d|1[01]\d|12[0-8]))?$/i;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PARAM = /^[A-Za-z0-9_.\-[\]]{1,64}$/;
 
@@ -642,7 +641,7 @@ export function GeneralSettings() {
               limitMessage={t('settings.general.security.networksLimit', { count: 200 })}
               placeholder="203.0.113.0/24" // i18n-ignore: example CIDR
               validate={(ip) =>
-                ip.length <= 64 && (IPV4.test(ip) || IPV6.test(ip))
+                ip.length <= 64 && parseIpRule(ip)
                   ? null
                   : t('settings.general.security.networkInvalid', { value: isolate(ip) })
               }

@@ -7,7 +7,16 @@ import { pipeline } from 'node:stream/promises';
 import { TenantDb, type Tx } from '../../db/tenant-db';
 import { AuditService, type AuditActor } from '../../common/audit.service';
 import { decrypt, encrypt, sha256 } from '../../common/crypto';
-import { AppError, badRequest, conflict, denied, errorBody, notFound, type AuthContext, type VisitorContext } from '../../common/http';
+import {
+  AppError,
+  badRequest,
+  conflict,
+  denied,
+  errorBody,
+  notFound,
+  type AuthContext,
+  type VisitorContext,
+} from '../../common/http';
 import { RedisService } from '../../common/redis.service';
 import { env } from '../../config/env';
 import { MailService } from '../../core/mail.service';
@@ -18,7 +27,16 @@ import { ChatQueriesService } from '../chats/chat-queries.service';
 import { WidgetService } from '../widget/widget.service';
 import { sendHardened } from '../files/files.service';
 import { loadTranscriptChat } from './transcript.loader';
-import { FORMAT_META, isValidTimeZone, renderTranscript, renderTxt, type RenderFormat, type TranscriptAudience, type TranscriptChat, type TranscriptDoc } from './transcript.render';
+import {
+  FORMAT_META,
+  isValidTimeZone,
+  renderTranscript,
+  renderTxt,
+  type RenderFormat,
+  type TranscriptAudience,
+  type TranscriptChat,
+  type TranscriptDoc,
+} from './transcript.render';
 
 export const EXPORT_TTL_MS = 24 * 3600_000;
 const DOWNLOAD_GRANT_TTL_SECONDS = 60;
@@ -119,11 +137,13 @@ export function exportResource(e: Export, job: Job): ExportResource {
     expiresAt: e.expiresAt,
     createdAt: e.createdAt,
     completedAt: job.completedAt,
-    errorCode: state === 'expired' ? 'EXPORT_EXPIRED' : state === 'failed' ? (job.lastErrorCode ?? 'INTERNAL') : null,
+    errorCode:
+      state === 'expired' ? 'EXPORT_EXPIRED' : state === 'failed' ? (job.lastErrorCode ?? 'INTERNAL') : null,
   };
 }
 
-const visitorGrantHash = (v: Pick<VisitorContext, 'tenantId' | 'visitorId'>) => sha256(`export-visitor:${v.tenantId}:${v.visitorId}`);
+const visitorGrantHash = (v: Pick<VisitorContext, 'tenantId' | 'visitorId'>) =>
+  sha256(`export-visitor:${v.tenantId}:${v.visitorId}`);
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 /** Dedicated BullMQ queue for export/transcript jobs (durable state lives in `jobs` rows). */
@@ -138,13 +158,20 @@ export class ExportJobsQueue implements OnModuleDestroy {
     this.q ??= new Queue(ExportJobsQueue.NAME, {
       connection: this.redis.create('queue:exports', { forBullMQ: true }),
       prefix: 'rd',
-      defaultJobOptions: { removeOnComplete: { age: 3600, count: 2000 }, removeOnFail: { age: 7 * 24 * 3600 } },
+      defaultJobOptions: {
+        removeOnComplete: { age: 3600, count: 2000 },
+        removeOnFail: { age: 7 * 24 * 3600 },
+      },
     });
     return this.q;
   }
 
   async add(tenantId: string, jobId: string, suffix = ''): Promise<void> {
-    await this.queue().add('run', { tenantId, jobId }, { jobId: `job-${jobId}${suffix}`, attempts: 3, backoff: { type: 'exponential', delay: 5000 } });
+    await this.queue().add(
+      'run',
+      { tenantId, jobId },
+      { jobId: `job-${jobId}${suffix}`, attempts: 3, backoff: { type: 'exponential', delay: 5000 } },
+    );
   }
 
   async onModuleDestroy(): Promise<void> {
@@ -177,7 +204,10 @@ export class ExportsService {
 
   private limitsFor(auth: AuthContext, format: RenderFormat) {
     const base = ROLE_EXPORT_LIMITS[auth.role];
-    return { maxChats: Math.min(base.maxChats, format === 'pdf' ? MAX_PDF_CHATS : Infinity), maxRangeDays: base.maxRangeDays };
+    return {
+      maxChats: Math.min(base.maxChats, format === 'pdf' ? MAX_PDF_CHATS : Infinity),
+      maxRangeDays: base.maxRangeDays,
+    };
   }
 
   private filterWhere(auth: AuthContext, f: ExportFilters, maxRangeDays: number): Prisma.ChatWhereInput {
@@ -185,25 +215,46 @@ export class ExportsService {
     const to = new Date(f.to);
     if (!(from < to)) throw badRequest('`from` must be before `to`', { filters: ['Invalid date range'] });
     if (to.getTime() - from.getTime() > maxRangeDays * 86_400_000) {
-      throw badRequest(`Your role can export at most ${maxRangeDays} days at a time`, { 'filters.to': [`Maximum range is ${maxRangeDays} days`] });
+      throw badRequest(`Your role can export at most ${maxRangeDays} days at a time`, {
+        'filters.to': [`Maximum range is ${maxRangeDays} days`],
+      });
     }
-    const and: Prisma.ChatWhereInput[] = [{ tenantId: auth.tenantId, isPreview: false, requestedAt: { gte: from, lt: to } }, this.chats.scopeWhere(auth)];
+    const and: Prisma.ChatWhereInput[] = [
+      { tenantId: auth.tenantId, isPreview: false, requestedAt: { gte: from, lt: to } },
+      this.chats.scopeWhere(auth),
+    ];
     if (f.siteId) and.push({ siteId: f.siteId });
     if (f.departmentId) and.push({ departmentId: f.departmentId });
-    if (f.agentId) and.push({ OR: [{ ownerMembershipId: f.agentId }, { participants: { some: { membershipId: f.agentId } } }] });
-    if (f.status) and.push(f.status === 'queued' ? { status: { in: ['queued', 'offered'] } } : { status: f.status });
+    if (f.agentId)
+      and.push({
+        OR: [{ ownerMembershipId: f.agentId }, { participants: { some: { membershipId: f.agentId } } }],
+      });
+    if (f.status)
+      and.push(f.status === 'queued' ? { status: { in: ['queued', 'offered'] } } : { status: f.status });
     if (f.rating) and.push(f.rating === 'none' ? { rating: null } : { rating: { rating: f.rating } });
     if (f.tagId) and.push({ tags: { some: { tagId: f.tagId } } });
     return { AND: and };
   }
 
-  private async resolveChats(tx: Tx, auth: AuthContext, input: Pick<ExportInput, 'chatIds' | 'filters' | 'format'>): Promise<{ chatIds: string[]; count: number; limit: number; maxRangeDays: number }> {
+  private async resolveChats(
+    tx: Tx,
+    auth: AuthContext,
+    input: Pick<ExportInput, 'chatIds' | 'filters' | 'format'>,
+  ): Promise<{ chatIds: string[]; count: number; limit: number; maxRangeDays: number }> {
     const { maxChats, maxRangeDays } = this.limitsFor(auth, input.format);
     if (maxChats <= 0) throw denied('Your role cannot export transcripts');
     if (input.chatIds?.length) {
       const ids = [...new Set(input.chatIds)];
-      if (ids.length > Math.min(maxChats, MAX_EXPLICIT_CHATS)) throw badRequest(`At most ${Math.min(maxChats, MAX_EXPLICIT_CHATS)} chats per export`, { chat_ids: ['Too many chats'] });
-      const visible = await tx.chat.findMany({ where: { AND: [{ tenantId: auth.tenantId, id: { in: ids }, isPreview: false }, this.chats.scopeWhere(auth)] }, select: { id: true } });
+      if (ids.length > Math.min(maxChats, MAX_EXPLICIT_CHATS))
+        throw badRequest(`At most ${Math.min(maxChats, MAX_EXPLICIT_CHATS)} chats per export`, {
+          chat_ids: ['Too many chats'],
+        });
+      const visible = await tx.chat.findMany({
+        where: {
+          AND: [{ tenantId: auth.tenantId, id: { in: ids }, isPreview: false }, this.chats.scopeWhere(auth)],
+        },
+        select: { id: true },
+      });
       if (visible.length !== ids.length) throw notFound('Chat');
       return { chatIds: ids, count: ids.length, limit: maxChats, maxRangeDays };
     }
@@ -211,14 +262,27 @@ export class ExportsService {
     const where = this.filterWhere(auth, input.filters, maxRangeDays);
     const count = await tx.chat.count({ where });
     if (count > maxChats) {
-      throw new AppError(422, 'VALIDATION_FAILED', `This export would include ${count} chats; your limit is ${maxChats}. Narrow the filters.`, { details: { count, limit: maxChats } });
+      throw new AppError(
+        422,
+        'VALIDATION_FAILED',
+        `This export would include ${count} chats; your limit is ${maxChats}. Narrow the filters.`,
+        { details: { count, limit: maxChats } },
+      );
     }
-    const rows = await tx.chat.findMany({ where, orderBy: [{ requestedAt: 'asc' }, { id: 'asc' }], select: { id: true }, take: maxChats });
+    const rows = await tx.chat.findMany({
+      where,
+      orderBy: [{ requestedAt: 'asc' }, { id: 'asc' }],
+      select: { id: true },
+      take: maxChats,
+    });
     return { chatIds: rows.map((r) => r.id), count, limit: maxChats, maxRangeDays };
   }
 
   /** Bulk export count preview (no writes). */
-  async preview(auth: AuthContext, input: Pick<ExportInput, 'chatIds' | 'filters' | 'format' | 'includeInternal'>) {
+  async preview(
+    auth: AuthContext,
+    input: Pick<ExportInput, 'chatIds' | 'filters' | 'format' | 'includeInternal'>,
+  ) {
     this.assertInternalAllowed(auth, input.includeInternal);
     const { maxChats, maxRangeDays } = this.limitsFor(auth, input.format);
     return this.db.read(auth.tenantId, async (tx) => {
@@ -228,29 +292,65 @@ export class ExportsService {
       }
       if (!input.filters) throw badRequest('Provide either chat_ids or filters', { chat_ids: ['Required'] });
       const count = await tx.chat.count({ where: this.filterWhere(auth, input.filters, maxRangeDays) });
-      return { count, limit: maxChats, maxRangeDays, allowed: count > 0 && count <= maxChats, ...(count > maxChats ? { reason: 'too_many_chats' } : count === 0 ? { reason: 'no_chats' } : {}) };
+      return {
+        count,
+        limit: maxChats,
+        maxRangeDays,
+        allowed: count > 0 && count <= maxChats,
+        ...(count > maxChats ? { reason: 'too_many_chats' } : count === 0 ? { reason: 'no_chats' } : {}),
+      };
     });
   }
 
   private assertInternalAllowed(auth: AuthContext, includeInternal: boolean): void {
-    if (includeInternal && !(auth.permissions.has('exports.internal') && auth.permissions.has('notes.view'))) {
+    if (
+      includeInternal &&
+      !(auth.permissions.has('exports.internal') && auth.permissions.has('notes.view'))
+    ) {
       throw denied('Including internal notes requires the internal export permission');
     }
   }
 
-  private async enforceQuotas(tx: Tx, tenantId: string, requester: { membershipId?: string | null; visitorGrantHash?: string | null }): Promise<void> {
+  private async enforceQuotas(
+    tx: Tx,
+    tenantId: string,
+    requester: { membershipId?: string | null; visitorGrantHash?: string | null },
+  ): Promise<void> {
     const since = new Date(Date.now() - 24 * 3600_000);
     const [mine, tenant] = await Promise.all([
-      tx.export.count({ where: { tenantId, createdAt: { gte: since }, ...(requester.membershipId ? { requestedBy: requester.membershipId } : { visitorGrantHash: requester.visitorGrantHash ?? '__none__' }) } }),
+      tx.export.count({
+        where: {
+          tenantId,
+          createdAt: { gte: since },
+          ...(requester.membershipId
+            ? { requestedBy: requester.membershipId }
+            : { visitorGrantHash: requester.visitorGrantHash ?? '__none__' }),
+        },
+      }),
       tx.export.count({ where: { tenantId, createdAt: { gte: since } } }),
     ]);
     const perRequester = requester.membershipId ? DAILY_EXPORTS_PER_REQUESTER : 10;
     if (mine >= perRequester || tenant >= DAILY_EXPORTS_PER_TENANT) {
-      throw new AppError(429, 'RATE_LIMITED', 'The daily export quota has been reached. Try again later.', { retryable: true, retryAfter: 3600, details: { reason: 'daily_quota' } });
+      throw new AppError(429, 'RATE_LIMITED', 'The daily export quota has been reached. Try again later.', {
+        retryable: true,
+        retryAfter: 3600,
+        details: { reason: 'daily_quota' },
+      });
     }
     if (requester.membershipId) {
-      const active = await tx.job.count({ where: { tenantId, kind: 'export', requestedBy: requester.membershipId, state: { in: ['queued', 'running'] } } });
-      if (active >= MAX_ACTIVE_PER_REQUESTER) throw new AppError(429, 'RATE_LIMITED', 'Wait for your running exports to finish first.', { retryable: true, retryAfter: 30 });
+      const active = await tx.job.count({
+        where: {
+          tenantId,
+          kind: 'export',
+          requestedBy: requester.membershipId,
+          state: { in: ['queued', 'running'] },
+        },
+      });
+      if (active >= MAX_ACTIVE_PER_REQUESTER)
+        throw new AppError(429, 'RATE_LIMITED', 'Wait for your running exports to finish first.', {
+          retryable: true,
+          retryAfter: 30,
+        });
     }
   }
 
@@ -259,11 +359,13 @@ export class ExportsService {
   async create(auth: AuthContext, input: ExportInput): Promise<ExportResource> {
     if (!auth.membershipId) throw denied('Only workspace members can export transcripts');
     this.assertInternalAllowed(auth, input.includeInternal);
-    if (!isValidTimeZone(input.timezone)) throw badRequest('Unknown time zone', { timezone: ['Use an IANA time zone such as Europe/London'] });
+    if (!isValidTimeZone(input.timezone))
+      throw badRequest('Unknown time zone', { timezone: ['Use an IANA time zone such as Europe/London'] });
     const created = await this.db.tx(auth.tenantId, async (tx) => {
       await this.enforceQuotas(tx, auth.tenantId, { membershipId: auth.membershipId });
       const resolved = await this.resolveChats(tx, auth, input);
-      if (!resolved.chatIds.length) throw badRequest('No chats match these filters', { filters: ['No chats found'] });
+      if (!resolved.chatIds.length)
+        throw badRequest('No chats match these filters', { filters: ['No chats found'] });
       const snapshot: ExportSnapshot = {
         mode: input.chatIds?.length ? 'chats' : 'filters',
         chatIds: resolved.chatIds,
@@ -272,7 +374,17 @@ export class ExportsService {
         scope: { role: auth.role, departmentScope: auth.departmentScope, membershipId: auth.membershipId },
       };
       const exportId = randomUUID();
-      const job = await tx.job.create({ data: { tenantId: auth.tenantId, kind: 'export', dedupeKey: exportId, state: 'queued', payload: { exportId }, requestedBy: auth.membershipId, progress: 0 } });
+      const job = await tx.job.create({
+        data: {
+          tenantId: auth.tenantId,
+          kind: 'export',
+          dedupeKey: exportId,
+          state: 'queued',
+          payload: { exportId },
+          requestedBy: auth.membershipId,
+          progress: 0,
+        },
+      });
       const e = await tx.export.create({
         data: {
           id: exportId,
@@ -291,7 +403,13 @@ export class ExportsService {
         action: 'export.created',
         objectType: 'export',
         objectId: e.id,
-        safeDiff: { format: input.format, includeInternal: input.includeInternal, mode: snapshot.mode, chatCount: resolved.chatIds.length, timezone: input.timezone },
+        safeDiff: {
+          format: input.format,
+          includeInternal: input.includeInternal,
+          mode: snapshot.mode,
+          chatCount: resolved.chatIds.length,
+          timezone: input.timezone,
+        },
       });
       return { e, job };
     });
@@ -306,16 +424,39 @@ export class ExportsService {
    * artifact is kept until `retainUntil` instead of the usual 24 h. Owner-only: downloads go
    * through the normal re-authorised grant of the requesting member.
    */
-  async createWorkspaceArchive(tx: Tx, auth: AuthContext, opts: { limit: number; retainUntil: Date; timezone: string }): Promise<{ exportId: string; jobId: string; chatCount: number; totalChats: number }> {
-    if (!auth.membershipId || !auth.permissions.has('tenant.owner')) throw denied('Only the workspace owner can export the whole workspace');
+  async createWorkspaceArchive(
+    tx: Tx,
+    auth: AuthContext,
+    opts: { limit: number; retainUntil: Date; timezone: string },
+  ): Promise<{ exportId: string; jobId: string; chatCount: number; totalChats: number }> {
+    if (!auth.membershipId || !auth.permissions.has('tenant.owner'))
+      throw denied('Only the workspace owner can export the whole workspace');
     const where: Prisma.ChatWhereInput = { tenantId: auth.tenantId, isPreview: false };
     const totalChats = await tx.chat.count({ where });
-    const newest = await tx.chat.findMany({ where, orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }], select: { id: true }, take: opts.limit });
+    const newest = await tx.chat.findMany({
+      where,
+      orderBy: [{ requestedAt: 'desc' }, { id: 'desc' }],
+      select: { id: true },
+      take: opts.limit,
+    });
     const chatIds = newest.map((c) => c.id).reverse();
-    const snapshot: ExportSnapshot = { mode: 'workspace', chatIds, audience: 'staff', scope: { role: auth.role, departmentScope: 'all', membershipId: auth.membershipId } };
+    const snapshot: ExportSnapshot = {
+      mode: 'workspace',
+      chatIds,
+      audience: 'staff',
+      scope: { role: auth.role, departmentScope: 'all', membershipId: auth.membershipId },
+    };
     const exportId = randomUUID();
     const job = await tx.job.create({
-      data: { tenantId: auth.tenantId, kind: 'export', dedupeKey: exportId, state: 'queued', payload: { exportId, retainUntil: opts.retainUntil.toISOString() }, requestedBy: auth.membershipId, progress: 0 },
+      data: {
+        tenantId: auth.tenantId,
+        kind: 'export',
+        dedupeKey: exportId,
+        state: 'queued',
+        payload: { exportId, retainUntil: opts.retainUntil.toISOString() },
+        requestedBy: auth.membershipId,
+        progress: 0,
+      },
     });
     await tx.export.create({
       data: {
@@ -335,7 +476,13 @@ export class ExportsService {
       action: 'export.created',
       objectType: 'export',
       objectId: exportId,
-      safeDiff: { format: 'json', includeInternal: true, mode: 'workspace', chatCount: chatIds.length, totalChats },
+      safeDiff: {
+        format: 'json',
+        includeInternal: true,
+        mode: 'workspace',
+        chatCount: chatIds.length,
+        totalChats,
+      },
     });
     return { exportId, jobId: job.id, chatCount: chatIds.length, totalChats };
   }
@@ -352,7 +499,11 @@ export class ExportsService {
     return e && job ? exportResource(e, job) : null;
   }
 
-  private async loadExportWithJob(tx: Tx, tenantId: string, where: Prisma.ExportWhereInput): Promise<{ e: Export; job: Job }> {
+  private async loadExportWithJob(
+    tx: Tx,
+    tenantId: string,
+    where: Prisma.ExportWhereInput,
+  ): Promise<{ e: Export; job: Job }> {
     const e = await tx.export.findFirst({ where: { AND: [{ tenantId }, where] } });
     if (!e) throw notFound('Export');
     const job = await tx.job.findFirst({ where: { tenantId, id: e.jobId } });
@@ -361,7 +512,9 @@ export class ExportsService {
   }
 
   private ownerWhere(auth: AuthContext, id: string): Prisma.ExportWhereInput {
-    return auth.permissions.has('tenant.manage') ? { id } : { id, requestedBy: auth.membershipId ?? '__none__' };
+    return auth.permissions.has('tenant.manage')
+      ? { id }
+      : { id, requestedBy: auth.membershipId ?? '__none__' };
   }
 
   async get(auth: AuthContext, id: string): Promise<ExportResource> {
@@ -373,8 +526,14 @@ export class ExportsService {
 
   async list(auth: AuthContext): Promise<ExportResource[]> {
     return this.db.read(auth.tenantId, async (tx) => {
-      const rows = await tx.export.findMany({ where: { tenantId: auth.tenantId, requestedBy: auth.membershipId ?? '__none__' }, orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 50 });
-      const jobs = await tx.job.findMany({ where: { tenantId: auth.tenantId, id: { in: rows.map((r) => r.jobId) } } });
+      const rows = await tx.export.findMany({
+        where: { tenantId: auth.tenantId, requestedBy: auth.membershipId ?? '__none__' },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        take: 50,
+      });
+      const jobs = await tx.job.findMany({
+        where: { tenantId: auth.tenantId, id: { in: rows.map((r) => r.jobId) } },
+      });
       const byId = new Map(jobs.map((j) => [j.id, j]));
       return rows.filter((r) => byId.has(r.jobId)).map((r) => exportResource(r, byId.get(r.jobId)!));
     });
@@ -387,19 +546,42 @@ export class ExportsService {
   private async erasedSinceRender(tx: Tx, e: Export, job: Job): Promise<boolean> {
     const snap = e.filters as unknown as ExportSnapshot;
     const ids = snap.chatIds ?? [];
-    const since = new Date(((job.result as { renderedFrom?: string } | null)?.renderedFrom ?? e.createdAt.toISOString()));
-    const chats = await tx.chat.findMany({ where: { tenantId: e.tenantId, id: { in: ids } }, select: { id: true, visitorId: true } });
+    const since = new Date(
+      (job.result as { renderedFrom?: string } | null)?.renderedFrom ?? e.createdAt.toISOString(),
+    );
+    const chats = await tx.chat.findMany({
+      where: { tenantId: e.tenantId, id: { in: ids } },
+      select: { id: true, visitorId: true },
+    });
     if (chats.length !== ids.length) return true;
     const [redacted, removed, erased] = await Promise.all([
       tx.message.count({ where: { tenantId: e.tenantId, chatId: { in: ids }, redactedAt: { gte: since } } }),
-      tx.attachment.count({ where: { tenantId: e.tenantId, chatId: { in: ids }, deletedAt: { gte: since }, messages: { some: {} } } }),
-      tx.visitor.count({ where: { tenantId: e.tenantId, id: { in: [...new Set(chats.map((c) => c.visitorId))] }, erasedAt: { gte: since } } }),
+      tx.attachment.count({
+        where: {
+          tenantId: e.tenantId,
+          chatId: { in: ids },
+          deletedAt: { gte: since },
+          messages: { some: {} },
+        },
+      }),
+      tx.visitor.count({
+        where: {
+          tenantId: e.tenantId,
+          id: { in: [...new Set(chats.map((c) => c.visitorId))] },
+          erasedAt: { gte: since },
+        },
+      }),
     ]);
     return redacted + removed + erased > 0;
   }
 
   private async invalidate(tenantId: string, e: Export): Promise<void> {
-    await this.db.tx(tenantId, (tx) => tx.export.updateMany({ where: { tenantId, id: e.id, erasedAt: null }, data: { erasedAt: new Date(), objectKey: null } }));
+    await this.db.tx(tenantId, (tx) =>
+      tx.export.updateMany({
+        where: { tenantId, id: e.id, erasedAt: null },
+        data: { erasedAt: new Date(), objectKey: null },
+      }),
+    );
     if (e.objectKey) await this.storage.delete('exports', e.objectKey).catch(() => undefined);
   }
 
@@ -411,41 +593,76 @@ export class ExportsService {
       filename: `transcript-${e.id.slice(0, 8)}.${meta.ext}`,
       contentType: meta.mime === 'application/pdf' ? meta.mime : `${meta.mime}; charset=utf-8`,
       ttlSeconds: DOWNLOAD_GRANT_TTL_SECONDS,
-      grant: { tenantId, resourceId: e.id, scope: `export:${scope}`, path: scope === 'agent' ? `/api/v1/exports/${e.id}/content` : `/widget/v1/exports/${e.id}/content` },
+      grant: {
+        tenantId,
+        resourceId: e.id,
+        scope: `export:${scope}`,
+        path: scope === 'agent' ? `/api/v1/exports/${e.id}/content` : `/widget/v1/exports/${e.id}/content`,
+      },
     });
-    return { url: grant.url, method: grant.method, expiresAt: grant.expiresAt, filename: `transcript-${e.id.slice(0, 8)}.${meta.ext}`, mime: meta.mime, sizeBytes: Number(e.sizeBytes ?? 0), sha256: e.sha256 };
+    return {
+      url: grant.url,
+      method: grant.method,
+      expiresAt: grant.expiresAt,
+      filename: `transcript-${e.id.slice(0, 8)}.${meta.ext}`,
+      mime: meta.mime,
+      sizeBytes: Number(e.sizeBytes ?? 0),
+      sha256: e.sha256,
+    };
   }
 
   /** Re-authorises (permission, scope, erasure, expiry) and returns a 60-second grant; 410 when expired. */
   async downloadGrant(auth: AuthContext, id: string) {
-    const { e, job } = await this.db.read(auth.tenantId, (tx) => this.loadExportWithJob(tx, auth.tenantId, { id, requestedBy: auth.membershipId ?? '__none__' }));
+    const { e, job } = await this.db.read(auth.tenantId, (tx) =>
+      this.loadExportWithJob(tx, auth.tenantId, { id, requestedBy: auth.membershipId ?? '__none__' }),
+    );
     if (!auth.permissions.has('exports.create')) throw denied();
     if (e.includeInternal) this.assertInternalAllowed(auth, true);
     const state = exportState(e, job);
-    if (state === 'expired') throw new AppError(410, 'EXPORT_EXPIRED', 'This export has expired. Create a new one.');
+    if (state === 'expired')
+      throw new AppError(410, 'EXPORT_EXPIRED', 'This export has expired. Create a new one.');
     if (state === 'failed') throw conflict('CONFLICT', 'This export failed. Create a new one.');
     if (state !== 'ready') throw conflict('CONFLICT', 'This export is not ready yet.', true);
     const ok = await this.db.read(auth.tenantId, async (tx) => {
       const snap = e.filters as unknown as ExportSnapshot;
-      const visible = await tx.chat.count({ where: { AND: [{ tenantId: auth.tenantId, id: { in: snap.chatIds } }, this.chats.scopeWhere(auth)] } });
+      const visible = await tx.chat.count({
+        where: { AND: [{ tenantId: auth.tenantId, id: { in: snap.chatIds } }, this.chats.scopeWhere(auth)] },
+      });
       if (visible !== snap.chatIds.length) return 'scope' as const;
       return (await this.erasedSinceRender(tx, e, job)) ? ('erased' as const) : ('ok' as const);
     });
     if (ok === 'scope') throw denied('You no longer have access to every chat in this export');
     if (ok === 'erased') {
       await this.invalidate(auth.tenantId, e);
-      throw new AppError(410, 'EXPORT_EXPIRED', 'This export is no longer available because some of its content was erased.');
+      throw new AppError(
+        410,
+        'EXPORT_EXPIRED',
+        'This export is no longer available because some of its content was erased.',
+      );
     }
-    await this.audit.log(auth, { action: 'export.download_granted', objectType: 'export', objectId: e.id, safeDiff: { format: e.format } });
+    await this.audit.log(auth, {
+      action: 'export.download_granted',
+      objectType: 'export',
+      objectId: e.id,
+      safeDiff: { format: e.format },
+    });
     return this.grantFor(e, auth.tenantId, 'agent');
   }
 
   /** `GET …/exports/{id}/content?sig=` (local driver, proxy mode and emailed PDF links). */
-  async serveContent(scope: 'agent' | 'widget', id: string, sig: string | undefined, res: Response): Promise<void> {
+  async serveContent(
+    scope: 'agent' | 'widget',
+    id: string,
+    sig: string | undefined,
+    res: Response,
+  ): Promise<void> {
     const claims =
       this.storage.verifyGrant(sig, { kind: 'download', resourceId: id, scope: `export:${scope}` }) ??
-      (scope === 'widget' ? this.storage.verifyGrant(sig, { kind: 'download', resourceId: id, scope: 'export:email' }) : null);
-    if (!claims) throw new AppError(403, 'PERMISSION_DENIED', 'This download link is invalid or has expired.');
+      (scope === 'widget'
+        ? this.storage.verifyGrant(sig, { kind: 'download', resourceId: id, scope: 'export:email' })
+        : null);
+    if (!claims)
+      throw new AppError(403, 'PERMISSION_DENIED', 'This download link is invalid or has expired.');
     const loaded = await this.db.read(claims.t, async (tx) => {
       const e = await tx.export.findFirst({ where: { tenantId: claims.t, id } });
       if (!e) return null;
@@ -458,37 +675,78 @@ export class ExportsService {
       await this.invalidate(claims.t, loaded.e);
       throw new AppError(410, 'EXPORT_EXPIRED', 'This export is no longer available.');
     }
-    if (exportState(loaded.e, loaded.job) !== 'ready') throw new AppError(410, 'EXPORT_EXPIRED', 'This export has expired.');
+    if (exportState(loaded.e, loaded.job) !== 'ready')
+      throw new AppError(410, 'EXPORT_EXPIRED', 'This export has expired.');
     const obj = await this.storage.openRead('exports', loaded.e.objectKey);
     if (!obj) throw new AppError(410, 'EXPORT_EXPIRED', 'This export is no longer available.');
     const meta = FORMAT_META[loaded.e.format];
-    sendHardened(res, { mime: meta.mime === 'application/pdf' ? meta.mime : `${meta.mime}; charset=utf-8`, sizeBytes: obj.sizeBytes, filename: `transcript-${loaded.e.id.slice(0, 8)}.${meta.ext}` });
+    sendHardened(res, {
+      mime: meta.mime === 'application/pdf' ? meta.mime : `${meta.mime}; charset=utf-8`,
+      sizeBytes: obj.sizeBytes,
+      filename: `transcript-${loaded.e.id.slice(0, 8)}.${meta.ext}`,
+    });
     await pipeline(obj.stream, res).catch(() => undefined);
   }
 
   // ───────────────────────── Visitor exports ─────────────────────────
 
   private async visitorTranscriptChat(tx: Tx, v: VisitorContext, chatId: string) {
-    const chat = await tx.chat.findFirst({ where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId } });
+    const chat = await tx.chat.findFirst({
+      where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId },
+    });
     if (!chat) throw notFound('Chat');
     const { config } = await this.widget.publishedConfig(tx, chat.siteId);
     if (!config.behavior.transcripts.enabled) throw denied('Transcripts are not available for this chat');
     return chat;
   }
 
-  async createVisitorExport(v: VisitorContext, chatId: string, input: { format: 'txt' | 'pdf'; timezone?: string | null }): Promise<ExportResource> {
-    await this.rateLimit.enforce(`export:v:${v.visitorId}`, 10, 3600, 'Too many transcript requests. Please try again later.');
+  async createVisitorExport(
+    v: VisitorContext,
+    chatId: string,
+    input: { format: 'txt' | 'pdf'; timezone?: string | null },
+  ): Promise<ExportResource> {
+    await this.rateLimit.enforce(
+      `export:v:${v.visitorId}`,
+      10,
+      3600,
+      'Too many transcript requests. Please try again later.',
+    );
     const created = await this.db.tx(v.tenantId, async (tx) => {
       const chat = await this.visitorTranscriptChat(tx, v, chatId);
       const grant = visitorGrantHash(v);
       await this.enforceQuotas(tx, v.tenantId, { visitorGrantHash: grant });
-      const visitor = await tx.visitor.findFirst({ where: { tenantId: v.tenantId, id: v.visitorId }, select: { timezone: true } });
-      const tz = [input.timezone, visitor?.timezone, 'UTC'].find((z): z is string => !!z && isValidTimeZone(z))!;
+      const visitor = await tx.visitor.findFirst({
+        where: { tenantId: v.tenantId, id: v.visitorId },
+        select: { timezone: true },
+      });
+      const tz = [input.timezone, visitor?.timezone, 'UTC'].find(
+        (z): z is string => !!z && isValidTimeZone(z),
+      )!;
       const exportId = randomUUID();
-      const job = await tx.job.create({ data: { tenantId: v.tenantId, kind: 'export', dedupeKey: exportId, state: 'queued', payload: { exportId }, progress: 0 } });
+      const job = await tx.job.create({
+        data: {
+          tenantId: v.tenantId,
+          kind: 'export',
+          dedupeKey: exportId,
+          state: 'queued',
+          payload: { exportId },
+          progress: 0,
+        },
+      });
       const snapshot: ExportSnapshot = { mode: 'visitor', chatIds: [chat.id], audience: 'public' };
       const e = await tx.export.create({
-        data: { id: exportId, tenantId: v.tenantId, visitorGrantHash: grant, format: input.format, filters: snapshot as unknown as Prisma.InputJsonValue, includeInternal: false, timezone: tz, jobId: job.id, itemCount: 1, expiresAt: new Date(Date.now() + EXPORT_TTL_MS) },
+        data: {
+          id: exportId,
+          tenantId: v.tenantId,
+          visitorGrantHash: grant,
+          format: input.format,
+          filters: snapshot as unknown as Prisma.InputJsonValue,
+          includeInternal: false,
+          timezone: tz,
+          jobId: job.id,
+          itemCount: 1,
+          expiresAt: new Date(Date.now() + EXPORT_TTL_MS),
+        },
       });
       return { e, job };
     });
@@ -498,7 +756,10 @@ export class ExportsService {
 
   async getVisitorExport(v: VisitorContext, id: string): Promise<ExportResource> {
     return this.db.read(v.tenantId, async (tx) => {
-      const { e, job } = await this.loadExportWithJob(tx, v.tenantId, { id, visitorGrantHash: visitorGrantHash(v) });
+      const { e, job } = await this.loadExportWithJob(tx, v.tenantId, {
+        id,
+        visitorGrantHash: visitorGrantHash(v),
+      });
       return exportResource(e, job);
     });
   }
@@ -507,13 +768,25 @@ export class ExportsService {
     const { e, job, chatOk, erased } = await this.db.read(v.tenantId, async (tx) => {
       const r = await this.loadExportWithJob(tx, v.tenantId, { id, visitorGrantHash: visitorGrantHash(v) });
       const snap = r.e.filters as unknown as ExportSnapshot;
-      const owned = await tx.chat.count({ where: { tenantId: v.tenantId, id: { in: snap.chatIds }, visitorId: v.visitorId } });
-      return { ...r, chatOk: owned === snap.chatIds.length, erased: await this.erasedSinceRender(tx, r.e, r.job) };
+      const owned = await tx.chat.count({
+        where: { tenantId: v.tenantId, id: { in: snap.chatIds }, visitorId: v.visitorId },
+      });
+      return {
+        ...r,
+        chatOk: owned === snap.chatIds.length,
+        erased: await this.erasedSinceRender(tx, r.e, r.job),
+      };
     });
     if (!chatOk) throw notFound('Export');
     const state = exportState(e, job);
-    if (state === 'expired') throw new AppError(410, 'EXPORT_EXPIRED', 'This transcript download has expired.');
-    if (state !== 'ready') throw conflict('CONFLICT', state === 'failed' ? 'The transcript could not be created.' : 'The transcript is not ready yet.', state !== 'failed');
+    if (state === 'expired')
+      throw new AppError(410, 'EXPORT_EXPIRED', 'This transcript download has expired.');
+    if (state !== 'ready')
+      throw conflict(
+        'CONFLICT',
+        state === 'failed' ? 'The transcript could not be created.' : 'The transcript is not ready yet.',
+        state !== 'failed',
+      );
     if (erased) {
       await this.invalidate(v.tenantId, e);
       throw new AppError(410, 'EXPORT_EXPIRED', 'This transcript is no longer available.');
@@ -529,8 +802,12 @@ export class ExportsService {
     p: Omit<TranscriptEmailPayload, 'recipientCiphertext'> & { recipient: string; lastSeq: number },
     limits: () => Promise<void>,
   ) {
-    const dedupeKey = sha256(`${p.chatId}|${p.recipient}|${p.format}|${p.includeInternal}|${p.audience}|${p.lastSeq}`).slice(0, 48);
-    const existing = await this.db.read(tenantId, (tx) => tx.job.findFirst({ where: { tenantId, kind: 'transcript_email', dedupeKey } }));
+    const dedupeKey = sha256(
+      `${p.chatId}|${p.recipient}|${p.format}|${p.includeInternal}|${p.audience}|${p.lastSeq}`,
+    ).slice(0, 48);
+    const existing = await this.db.read(tenantId, (tx) =>
+      tx.job.findFirst({ where: { tenantId, kind: 'transcript_email', dedupeKey } }),
+    );
     if (existing) return this.emailJobResource(existing, true);
     await limits();
     const payload: TranscriptEmailPayload = {
@@ -546,12 +823,28 @@ export class ExportsService {
     };
     try {
       const job = await this.db.tx(tenantId, async (tx) => {
-        const j = await tx.job.create({ data: { tenantId, kind: 'transcript_email', dedupeKey, state: 'queued', payload: payload as unknown as Prisma.InputJsonValue, requestedBy: p.requestedByMembershipId, progress: 0 } });
+        const j = await tx.job.create({
+          data: {
+            tenantId,
+            kind: 'transcript_email',
+            dedupeKey,
+            state: 'queued',
+            payload: payload as unknown as Prisma.InputJsonValue,
+            requestedBy: p.requestedByMembershipId,
+            progress: 0,
+          },
+        });
         await this.audit.inTx(tx, actor, {
           action: 'transcript.email_requested',
           objectType: 'chat',
           objectId: p.chatId,
-          safeDiff: { jobId: j.id, format: p.format, includeInternal: p.includeInternal, recipientKind: p.recipientKind, recipientHash: sha256(`recipient:${p.recipient}`).slice(0, 16) },
+          safeDiff: {
+            jobId: j.id,
+            format: p.format,
+            includeInternal: p.includeInternal,
+            recipientKind: p.recipientKind,
+            recipientHash: sha256(`recipient:${p.recipient}`).slice(0, 16),
+          },
         });
         return j;
       });
@@ -559,7 +852,9 @@ export class ExportsService {
       return this.emailJobResource(job, false);
     } catch (err) {
       if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2002') {
-        const j = await this.db.read(tenantId, (tx) => tx.job.findFirstOrThrow({ where: { tenantId, kind: 'transcript_email', dedupeKey } }));
+        const j = await this.db.read(tenantId, (tx) =>
+          tx.job.findFirstOrThrow({ where: { tenantId, kind: 'transcript_email', dedupeKey } }),
+        );
         return this.emailJobResource(j, true);
       }
       throw err;
@@ -569,7 +864,12 @@ export class ExportsService {
   private async emailJobResource(job: Job, duplicate: boolean) {
     const p = job.payload as unknown as TranscriptEmailPayload;
     const emailId = (job.result as { emailId?: string } | null)?.emailId ?? null;
-    const email = emailId ? await this.db.root.outboundEmail.findUnique({ where: { id: emailId }, select: { status: true, acceptedAt: true, deliveredAt: true } }) : null;
+    const email = emailId
+      ? await this.db.root.outboundEmail.findUnique({
+          where: { id: emailId },
+          select: { status: true, acceptedAt: true, deliveredAt: true },
+        })
+      : null;
     // Job state first (queued → rendering), then mail status: accepted (provider took it) is distinct from delivered.
     const state =
       job.state === 'failed' || job.state === 'cancelled'
@@ -587,23 +887,48 @@ export class ExportsService {
                 : email.status === 'failed'
                   ? 'retrying'
                   : 'sending';
-    return { id: job.id, chatId: p.chatId, state, format: p.format, recipientKind: p.recipientKind, includeInternal: p.includeInternal, acceptedAt: email?.acceptedAt ?? null, deliveredAt: email?.deliveredAt ?? null, duplicate, createdAt: job.createdAt };
+    return {
+      id: job.id,
+      chatId: p.chatId,
+      state,
+      format: p.format,
+      recipientKind: p.recipientKind,
+      includeInternal: p.includeInternal,
+      acceptedAt: email?.acceptedAt ?? null,
+      deliveredAt: email?.deliveredAt ?? null,
+      duplicate,
+      createdAt: job.createdAt,
+    };
   }
 
   /** Agent transcript email: recipient must be the visitor's address on record or the agent's own verified address. */
-  async agentTranscriptEmail(auth: AuthContext, chatId: string, input: { recipient: string; format: 'txt' | 'pdf'; includeInternal: boolean }) {
+  async agentTranscriptEmail(
+    auth: AuthContext,
+    chatId: string,
+    input: { recipient: string; format: 'txt' | 'pdf'; includeInternal: boolean },
+  ) {
     if (!auth.membershipId || !auth.userId) throw denied('Only workspace members can email transcripts');
     this.assertInternalAllowed(auth, input.includeInternal);
     const recipient = input.recipient.trim().toLowerCase();
-    if (!EMAIL_RE.test(recipient)) throw badRequest('Enter a valid email address', { recipient: ['Enter a valid email address.'] });
-    const user = await this.db.root.user.findUnique({ where: { id: auth.userId }, select: { email: true, emailVerifiedAt: true } });
+    if (!EMAIL_RE.test(recipient))
+      throw badRequest('Enter a valid email address', { recipient: ['Enter a valid email address.'] });
+    const user = await this.db.root.user.findUnique({
+      where: { id: auth.userId },
+      select: { email: true, emailVerifiedAt: true },
+    });
     const ctx = await this.db.read(auth.tenantId, async (tx) => {
       const chat = await this.chats.getVisible(tx, auth, chatId);
-      const visitor = await tx.visitor.findFirst({ where: { tenantId: auth.tenantId, id: chat.visitorId }, select: { emailCiphertext: true, erasedAt: true } });
+      const visitor = await tx.visitor.findFirst({
+        where: { tenantId: auth.tenantId, id: chat.visitorId },
+        select: { emailCiphertext: true, erasedAt: true },
+      });
       const tenant = await tx.tenant.findUnique({ where: { id: auth.tenantId }, select: { timezone: true } });
       let visitorEmail: string | null = null;
       try {
-        visitorEmail = visitor?.emailCiphertext && !visitor.erasedAt ? decrypt(visitor.emailCiphertext).toLowerCase() : null;
+        visitorEmail =
+          visitor?.emailCiphertext && !visitor.erasedAt
+            ? decrypt(visitor.emailCiphertext).toLowerCase()
+            : null;
       } catch {
         visitorEmail = null;
       }
@@ -611,8 +936,12 @@ export class ExportsService {
     });
     const self = !!user?.emailVerifiedAt && user.email.toLowerCase() === recipient;
     const toVisitor = !!ctx.visitorEmail && ctx.visitorEmail === recipient;
-    if (!self && !toVisitor) throw badRequest("Send transcripts to the visitor's email on record or to your own verified address", { recipient: ['Recipient is not verified for this chat'] });
-    if (input.includeInternal && !self) throw denied('Transcripts with internal notes can only be sent to your own address');
+    if (!self && !toVisitor)
+      throw badRequest("Send transcripts to the visitor's email on record or to your own verified address", {
+        recipient: ['Recipient is not verified for this chat'],
+      });
+    if (input.includeInternal && !self)
+      throw denied('Transcripts with internal notes can only be sent to your own address');
     return this.queueTranscriptEmail(
       auth.tenantId,
       auth,
@@ -629,33 +958,66 @@ export class ExportsService {
         lastSeq: Number(ctx.chat.nextSeq) - 1,
       },
       async () => {
-        await this.rateLimit.enforce(`tx-email:m:${auth.membershipId}`, 20, 3600, 'Too many transcript emails. Please try again later.');
-        await this.rateLimit.enforce(`tx-email:r:${auth.tenantId}:${sha256(recipient).slice(0, 16)}`, 10, 86_400, 'Too many transcripts were sent to this address today.');
+        await this.rateLimit.enforce(
+          `tx-email:m:${auth.membershipId}`,
+          20,
+          3600,
+          'Too many transcript emails. Please try again later.',
+        );
+        await this.rateLimit.enforce(
+          `tx-email:r:${auth.tenantId}:${sha256(recipient).slice(0, 16)}`,
+          10,
+          86_400,
+          'Too many transcripts were sent to this address today.',
+        );
       },
     );
   }
 
   async agentTranscriptEmailStatus(auth: AuthContext, chatId: string, jobId: string) {
-    return this.db.read(auth.tenantId, async (tx) => {
-      await this.chats.getVisible(tx, auth, chatId);
-      const job = await tx.job.findFirst({ where: { tenantId: auth.tenantId, id: jobId, kind: 'transcript_email' } });
-      if (!job || (job.payload as unknown as TranscriptEmailPayload).chatId !== chatId) throw notFound('Transcript email');
-      return job;
-    }).then((job) => this.emailJobResource(job, false));
+    return this.db
+      .read(auth.tenantId, async (tx) => {
+        await this.chats.getVisible(tx, auth, chatId);
+        const job = await tx.job.findFirst({
+          where: { tenantId: auth.tenantId, id: jobId, kind: 'transcript_email' },
+        });
+        if (!job || (job.payload as unknown as TranscriptEmailPayload).chatId !== chatId)
+          throw notFound('Transcript email');
+        return job;
+      })
+      .then((job) => this.emailJobResource(job, false));
   }
 
   /** Visitor transcript email (visitor-confirmed address, public transcript only, abuse limits). */
-  async visitorTranscriptEmail(v: VisitorContext, chatId: string, input: { email: string; format: 'txt' | 'pdf' }) {
+  async visitorTranscriptEmail(
+    v: VisitorContext,
+    chatId: string,
+    input: { email: string; format: 'txt' | 'pdf' },
+  ) {
     const recipient = input.email.trim().toLowerCase();
-    if (!EMAIL_RE.test(recipient) || recipient.length > 200) throw badRequest('Enter a valid email address', { email: ['Enter a valid email address.'] });
+    if (!EMAIL_RE.test(recipient) || recipient.length > 200)
+      throw badRequest('Enter a valid email address', { email: ['Enter a valid email address.'] });
     const ctx = await this.db.read(v.tenantId, async (tx) => {
       const chat = await this.visitorTranscriptChat(tx, v, chatId);
-      const visitor = await tx.visitor.findFirst({ where: { tenantId: v.tenantId, id: v.visitorId }, select: { timezone: true } });
-      return { chat, timezone: visitor?.timezone && isValidTimeZone(visitor.timezone) ? visitor.timezone : 'UTC' };
+      const visitor = await tx.visitor.findFirst({
+        where: { tenantId: v.tenantId, id: v.visitorId },
+        select: { timezone: true },
+      });
+      return {
+        chat,
+        timezone: visitor?.timezone && isValidTimeZone(visitor.timezone) ? visitor.timezone : 'UTC',
+      };
     });
     return this.queueTranscriptEmail(
       v.tenantId,
-      { tenantId: v.tenantId, userId: null, tokenId: null, actorName: 'Visitor', requestId: v.requestId, ipHash: v.ipHash },
+      {
+        tenantId: v.tenantId,
+        userId: null,
+        tokenId: null,
+        actorName: 'Visitor',
+        requestId: v.requestId,
+        ipHash: v.ipHash,
+      },
       {
         chatId,
         recipient,
@@ -669,10 +1031,31 @@ export class ExportsService {
         lastSeq: Number(ctx.chat.nextSeq) - 1,
       },
       async () => {
-        await this.rateLimit.enforce(`tx-email:v:${v.visitorId}`, 3, 3600, 'Too many transcript emails. Please try again later.');
-        await this.rateLimit.enforce(`tx-email:c:${chatId}`, 5, 86_400, 'Too many transcript emails for this chat.');
-        await this.rateLimit.enforce(`tx-email:r:${v.tenantId}:${sha256(recipient).slice(0, 16)}`, 10, 86_400, 'Too many transcripts were sent to this address today.');
-        if (v.ipHash) await this.rateLimit.enforce(`tx-email:ip:${v.ipHash}`, 10, 3600, 'Too many transcript emails. Please try again later.');
+        await this.rateLimit.enforce(
+          `tx-email:v:${v.visitorId}`,
+          3,
+          3600,
+          'Too many transcript emails. Please try again later.',
+        );
+        await this.rateLimit.enforce(
+          `tx-email:c:${chatId}`,
+          5,
+          86_400,
+          'Too many transcript emails for this chat.',
+        );
+        await this.rateLimit.enforce(
+          `tx-email:r:${v.tenantId}:${sha256(recipient).slice(0, 16)}`,
+          10,
+          86_400,
+          'Too many transcripts were sent to this address today.',
+        );
+        if (v.ipNetHash)
+          await this.rateLimit.enforce(
+            `tx-email:ip:${v.ipNetHash}`,
+            10,
+            3600,
+            'Too many transcript emails. Please try again later.',
+          );
       },
     ).then((r) => ({ id: r.id, state: r.state, format: r.format, duplicate: r.duplicate }));
   }
@@ -683,8 +1066,16 @@ export class ExportsService {
   async runJob(tenantId: string, jobId: string, finalAttempt: boolean): Promise<void> {
     const leased = await this.db.tx(tenantId, async (tx) => {
       const r = await tx.job.updateMany({
-        where: { tenantId, id: jobId, OR: [{ state: 'queued' }, { state: 'running', leaseUntil: { lt: new Date() } }] },
-        data: { state: 'running', attempts: { increment: 1 }, leaseUntil: new Date(Date.now() + JOB_LEASE_MS) },
+        where: {
+          tenantId,
+          id: jobId,
+          OR: [{ state: 'queued' }, { state: 'running', leaseUntil: { lt: new Date() } }],
+        },
+        data: {
+          state: 'running',
+          attempts: { increment: 1 },
+          leaseUntil: new Date(Date.now() + JOB_LEASE_MS),
+        },
       });
       return r.count ? tx.job.findFirst({ where: { tenantId, id: jobId } }) : null;
     });
@@ -695,10 +1086,21 @@ export class ExportsService {
       else throw new Error(`Unknown job kind ${leased.kind}`);
     } catch (err) {
       // Dependency outages keep their own code (SERVICE_UNAVAILABLE), not a generic INTERNAL.
-      const code = err instanceof AppError ? err.code : String((errorBody(err).body.error as { code: string }).code);
-      this.logger.warn(`Job ${leased.kind} ${jobId} failed (attempt ${leased.attempts}): ${(err as Error).message}`);
+      const code =
+        err instanceof AppError ? err.code : String((errorBody(err).body.error as { code: string }).code);
+      this.logger.warn(
+        `Job ${leased.kind} ${jobId} failed (attempt ${leased.attempts}): ${(err as Error).message}`,
+      );
       await this.db.tx(tenantId, async (tx) => {
-        await tx.job.update({ where: { id: jobId }, data: { state: finalAttempt ? 'failed' : 'queued', lastErrorCode: code, leaseUntil: null, ...(finalAttempt ? { completedAt: new Date() } : {}) } });
+        await tx.job.update({
+          where: { id: jobId },
+          data: {
+            state: finalAttempt ? 'failed' : 'queued',
+            lastErrorCode: code,
+            leaseUntil: null,
+            ...(finalAttempt ? { completedAt: new Date() } : {}),
+          },
+        });
         if (finalAttempt && leased.kind === 'export') {
           const e = await tx.export.findFirst({ where: { tenantId, jobId } });
           if (e) await this.emitExport(tx, e, 'export.failed', { state: 'failed', errorCode: code });
@@ -708,11 +1110,17 @@ export class ExportsService {
     }
   }
 
-  private async emitExport(tx: Tx, e: Export, eventType: 'export.ready' | 'export.failed', payload: Record<string, unknown>): Promise<void> {
+  private async emitExport(
+    tx: Tx,
+    e: Export,
+    eventType: 'export.ready' | 'export.failed',
+    payload: Record<string, unknown>,
+  ): Promise<void> {
     const snap = e.filters as unknown as ExportSnapshot;
     const scopes: OutboxScope[] = [];
     if (e.requestedBy) scopes.push({ kind: 'agent', id: e.requestedBy, audience: 'staff' });
-    else if (snap.mode === 'visitor' && snap.chatIds[0]) scopes.push({ kind: 'chat', id: snap.chatIds[0], audience: 'public' });
+    else if (snap.mode === 'visitor' && snap.chatIds[0])
+      scopes.push({ kind: 'chat', id: snap.chatIds[0], audience: 'public' });
     await this.outbox.append(tx, e.tenantId, {
       aggregateType: 'export',
       aggregateId: e.id,
@@ -723,7 +1131,13 @@ export class ExportsService {
     });
   }
 
-  private async loadChats(tenantId: string, job: Job, ids: string[], audience: TranscriptAudience, includeInternal: boolean): Promise<TranscriptChat[]> {
+  private async loadChats(
+    tenantId: string,
+    job: Job,
+    ids: string[],
+    audience: TranscriptAudience,
+    includeInternal: boolean,
+  ): Promise<TranscriptChat[]> {
     const out: TranscriptChat[] = [];
     for (let i = 0; i < ids.length; i += RENDER_CHUNK) {
       const slice = ids.slice(i, i + RENDER_CHUNK);
@@ -737,13 +1151,25 @@ export class ExportsService {
       });
       out.push(...loaded);
       if (ids.length > RENDER_CHUNK) {
-        await this.db.tx(tenantId, (tx) => tx.job.update({ where: { id: job.id }, data: { progress: Math.min(90, Math.floor(((i + slice.length) / ids.length) * 90)), leaseUntil: new Date(Date.now() + JOB_LEASE_MS) } }));
+        await this.db.tx(tenantId, (tx) =>
+          tx.job.update({
+            where: { id: job.id },
+            data: {
+              progress: Math.min(90, Math.floor(((i + slice.length) / ids.length) * 90)),
+              leaseUntil: new Date(Date.now() + JOB_LEASE_MS),
+            },
+          }),
+        );
       }
     }
     return out;
   }
 
-  private async storeArtifact(tenantId: string, e: Export, buf: Buffer): Promise<{ key: string; sha: string }> {
+  private async storeArtifact(
+    tenantId: string,
+    e: Export,
+    buf: Buffer,
+  ): Promise<{ key: string; sha: string }> {
     const meta = FORMAT_META[e.format];
     const key = `t/${tenantId}/exports/${e.id}/${randomBytes(12).toString('hex')}.${meta.ext}`;
     await this.storage.write('exports', key, buf, meta.mime);
@@ -751,36 +1177,91 @@ export class ExportsService {
   }
 
   private async renderExport(tenantId: string, job: Job): Promise<void> {
-    const e = await this.db.read(tenantId, (tx) => tx.export.findFirst({ where: { tenantId, jobId: job.id } }));
+    const e = await this.db.read(tenantId, (tx) =>
+      tx.export.findFirst({ where: { tenantId, jobId: job.id } }),
+    );
     if (!e) throw new Error('Export row missing');
     if (e.erasedAt) {
-      await this.db.tx(tenantId, (tx) => tx.job.update({ where: { id: job.id }, data: { state: 'cancelled', lastErrorCode: 'ERASED', completedAt: new Date(), leaseUntil: null } }));
+      await this.db.tx(tenantId, (tx) =>
+        tx.job.update({
+          where: { id: job.id },
+          data: { state: 'cancelled', lastErrorCode: 'ERASED', completedAt: new Date(), leaseUntil: null },
+        }),
+      );
       return;
     }
     const snap = e.filters as unknown as ExportSnapshot;
     const renderedFrom = new Date().toISOString();
-    const chats = await this.loadChats(tenantId, job, snap.chatIds, snap.audience, e.includeInternal && snap.audience === 'staff');
-    const doc: TranscriptDoc = { exportId: e.id, brand: env().BRAND_NAME, generatedAt: new Date(), timezone: e.timezone, audience: snap.audience, includeInternal: e.includeInternal && snap.audience === 'staff', chats };
+    const chats = await this.loadChats(
+      tenantId,
+      job,
+      snap.chatIds,
+      snap.audience,
+      e.includeInternal && snap.audience === 'staff',
+    );
+    const doc: TranscriptDoc = {
+      exportId: e.id,
+      brand: env().BRAND_NAME,
+      generatedAt: new Date(),
+      timezone: e.timezone,
+      audience: snap.audience,
+      includeInternal: e.includeInternal && snap.audience === 'staff',
+      chats,
+    };
     const buf = await renderTranscript(doc, e.format);
     const { key, sha } = await this.storeArtifact(tenantId, e, buf);
     // Workspace archives (tenant deletion) stay available for the whole cancellation window.
-    const retainUntil = Date.parse(String((job.payload as { retainUntil?: unknown } | null)?.retainUntil ?? ''));
-    const expiresAt = new Date(Math.max(Date.now() + EXPORT_TTL_MS, Number.isFinite(retainUntil) ? retainUntil : 0));
+    const retainUntil = Date.parse(
+      String((job.payload as { retainUntil?: unknown } | null)?.retainUntil ?? ''),
+    );
+    const expiresAt = new Date(
+      Math.max(Date.now() + EXPORT_TTL_MS, Number.isFinite(retainUntil) ? retainUntil : 0),
+    );
     const committed = await this.db.tx(tenantId, async (tx) => {
       const r = await tx.export.updateMany({
         where: { tenantId, id: e.id, erasedAt: null },
-        data: { objectKey: key, sha256: sha, sizeBytes: BigInt(buf.length), itemCount: chats.length, expiresAt },
+        data: {
+          objectKey: key,
+          sha256: sha,
+          sizeBytes: BigInt(buf.length),
+          itemCount: chats.length,
+          expiresAt,
+        },
       });
       if (!r.count) return false;
-      await tx.job.update({ where: { id: job.id }, data: { state: 'succeeded', progress: 100, completedAt: new Date(), leaseUntil: null, lastErrorCode: null, result: { renderedFrom, sizeBytes: buf.length, sha256: sha } } });
-      const fresh = await tx.export.findUniqueOrThrow({ where: { id: e.id } });
-      await this.emitExport(tx, fresh, 'export.ready', { state: 'ready', expiresAt: fresh.expiresAt, sizeBytes: buf.length, itemCount: chats.length });
-      await this.audit.inTx(tx, { tenantId, userId: null, tokenId: null, actorName: 'Export worker', requestId: '', ipHash: null }, {
-        action: 'export.ready',
-        objectType: 'export',
-        objectId: e.id,
-        safeDiff: { format: e.format, sizeBytes: buf.length, chatCount: chats.length, checksum: sha.slice(0, 16) },
+      await tx.job.update({
+        where: { id: job.id },
+        data: {
+          state: 'succeeded',
+          progress: 100,
+          completedAt: new Date(),
+          leaseUntil: null,
+          lastErrorCode: null,
+          result: { renderedFrom, sizeBytes: buf.length, sha256: sha },
+        },
       });
+      const fresh = await tx.export.findUniqueOrThrow({ where: { id: e.id } });
+      await this.emitExport(tx, fresh, 'export.ready', {
+        state: 'ready',
+        expiresAt: fresh.expiresAt,
+        sizeBytes: buf.length,
+        itemCount: chats.length,
+      });
+      await this.audit.inTx(
+        tx,
+        { tenantId, userId: null, tokenId: null, actorName: 'Export worker', requestId: '', ipHash: null },
+        {
+          action: 'export.ready',
+          objectType: 'export',
+          objectId: e.id,
+          safeDiff: {
+            format: e.format,
+            sizeBytes: buf.length,
+            chatCount: chats.length,
+            checksum: sha.slice(0, 16),
+          },
+        },
+      );
       return true;
     });
     if (!committed) await this.storage.delete('exports', key).catch(() => undefined);
@@ -793,17 +1274,31 @@ export class ExportsService {
     const chats = await this.loadChats(tenantId, job, [p.chatId], p.audience, p.includeInternal);
     const chat = chats[0];
     if (!chat) throw new AppError(404, 'NOT_FOUND', 'Chat no longer exists');
-    const doc: TranscriptDoc = { exportId: null, brand: env().BRAND_NAME, generatedAt: new Date(), timezone: p.timezone, audience: p.audience, includeInternal: p.includeInternal, chats };
+    const doc: TranscriptDoc = {
+      exportId: null,
+      brand: env().BRAND_NAME,
+      generatedAt: new Date(),
+      timezone: p.timezone,
+      audience: p.audience,
+      includeInternal: p.includeInternal,
+      chats,
+    };
     const text = renderTxt(doc).toString('utf8');
     let url: string | null = null;
     let exportId: string | null = (job.result as { exportId?: string } | null)?.exportId ?? null;
     if (p.format === 'pdf') {
       // PDF is delivered as a 24 h link (MailService has no attachment support); the link is re-authorised on use.
-      const existing = exportId ? await this.db.read(tenantId, (tx) => tx.export.findFirst({ where: { tenantId, id: exportId! } })) : null;
+      const existing = exportId
+        ? await this.db.read(tenantId, (tx) => tx.export.findFirst({ where: { tenantId, id: exportId! } }))
+        : null;
       let e = existing;
       if (!e) {
         exportId = randomUUID();
-        const snapshot: ExportSnapshot = { mode: 'transcript_email', chatIds: [p.chatId], audience: p.audience };
+        const snapshot: ExportSnapshot = {
+          mode: 'transcript_email',
+          chatIds: [p.chatId],
+          audience: p.audience,
+        };
         e = await this.db.tx(tenantId, (tx) =>
           tx.export.create({
             data: {
@@ -825,16 +1320,49 @@ export class ExportsService {
       if (!e.objectKey) {
         const buf = await renderTranscript({ ...doc, exportId: e.id }, 'pdf');
         const { key, sha } = await this.storeArtifact(tenantId, e, buf);
-        await this.db.tx(tenantId, (tx) => tx.export.update({ where: { id: e!.id }, data: { objectKey: key, sha256: sha, sizeBytes: BigInt(buf.length), expiresAt: new Date(Date.now() + EXPORT_TTL_MS) } }));
+        await this.db.tx(tenantId, (tx) =>
+          tx.export.update({
+            where: { id: e!.id },
+            data: {
+              objectKey: key,
+              sha256: sha,
+              sizeBytes: BigInt(buf.length),
+              expiresAt: new Date(Date.now() + EXPORT_TTL_MS),
+            },
+          }),
+        );
         e = { ...e, objectKey: key };
       }
-      await this.db.tx(tenantId, (tx) => tx.job.update({ where: { id: job.id }, data: { result: { renderedFrom, exportId: e!.id } } }));
-      url = this.storage.signGrant({ tenantId, resourceId: e.id, scope: 'export:email', path: `/widget/v1/exports/${e.id}/content` }, 'download', e.objectKey!, EXPORT_TTL_MS / 1000).url;
+      await this.db.tx(tenantId, (tx) =>
+        tx.job.update({ where: { id: job.id }, data: { result: { renderedFrom, exportId: e!.id } } }),
+      );
+      url = this.storage.signGrant(
+        { tenantId, resourceId: e.id, scope: 'export:email', path: `/widget/v1/exports/${e.id}/content` },
+        'download',
+        e.objectKey!,
+        EXPORT_TTL_MS / 1000,
+      ).url;
     }
     const template = p.audience === 'public' && !url ? 'transcript' : 'transcript_export';
-    const sent = await this.mail.sendTemplate(template, recipient, { site: chat.site.name, number: chat.number, transcript: text, internal: p.includeInternal, url }, `job:${job.id}`, tenantId);
+    const sent = await this.mail.sendTemplate(
+      template,
+      recipient,
+      { site: chat.site.name, number: chat.number, transcript: text, internal: p.includeInternal, url },
+      `job:${job.id}`,
+      tenantId,
+    );
     await this.db.tx(tenantId, (tx) =>
-      tx.job.update({ where: { id: job.id }, data: { state: 'succeeded', progress: 100, completedAt: new Date(), leaseUntil: null, lastErrorCode: null, result: { renderedFrom, emailId: sent.id, ...(exportId ? { exportId } : {}) } } }),
+      tx.job.update({
+        where: { id: job.id },
+        data: {
+          state: 'succeeded',
+          progress: 100,
+          completedAt: new Date(),
+          leaseUntil: null,
+          lastErrorCode: null,
+          result: { renderedFrom, emailId: sent.id, ...(exportId ? { exportId } : {}) },
+        },
+      }),
     );
   }
 
@@ -845,8 +1373,19 @@ export class ExportsService {
     const now = new Date();
     for (const tenantId of await this.db.activeTenantIds()) {
       const { expired, stuck } = await this.db.tx(tenantId, async (tx) => {
-        const expired = await tx.export.findMany({ where: { tenantId, objectKey: { not: null }, OR: [{ expiresAt: { lt: now } }, { erasedAt: { not: null } }] }, take: 200 });
-        if (expired.length) await tx.export.updateMany({ where: { tenantId, id: { in: expired.map((e) => e.id) } }, data: { objectKey: null } });
+        const expired = await tx.export.findMany({
+          where: {
+            tenantId,
+            objectKey: { not: null },
+            OR: [{ expiresAt: { lt: now } }, { erasedAt: { not: null } }],
+          },
+          take: 200,
+        });
+        if (expired.length)
+          await tx.export.updateMany({
+            where: { tenantId, id: { in: expired.map((e) => e.id) } },
+            data: { objectKey: null },
+          });
         const stuck = await tx.job.findMany({
           where: {
             tenantId,
@@ -859,11 +1398,19 @@ export class ExportsService {
           select: { id: true },
           take: 100,
         });
-        if (stuck.length) await tx.job.updateMany({ where: { tenantId, id: { in: stuck.map((s) => s.id) } }, data: { updatedAt: now } });
+        if (stuck.length)
+          await tx.job.updateMany({
+            where: { tenantId, id: { in: stuck.map((s) => s.id) } },
+            data: { updatedAt: now },
+          });
         return { expired, stuck };
       });
-      for (const e of expired) if (e.objectKey) await this.storage.delete('exports', e.objectKey).catch(() => undefined);
-      for (const j of stuck) await this.jobs.add(tenantId, j.id, `-r${Math.floor(now.getTime() / 120_000)}`).catch(() => undefined);
+      for (const e of expired)
+        if (e.objectKey) await this.storage.delete('exports', e.objectKey).catch(() => undefined);
+      for (const j of stuck)
+        await this.jobs
+          .add(tenantId, j.id, `-r${Math.floor(now.getTime() / 120_000)}`)
+          .catch(() => undefined);
     }
   }
 
@@ -871,17 +1418,31 @@ export class ExportsService {
   async invalidateFor(tenantId: string, target: { chatIds?: string[]; visitorId?: string }): Promise<number> {
     const rows = await this.db.tx(tenantId, async (tx) => {
       const chatIds = new Set(target.chatIds ?? []);
-      if (target.visitorId) for (const c of await tx.chat.findMany({ where: { tenantId, visitorId: target.visitorId }, select: { id: true } })) chatIds.add(c.id);
+      if (target.visitorId)
+        for (const c of await tx.chat.findMany({
+          where: { tenantId, visitorId: target.visitorId },
+          select: { id: true },
+        }))
+          chatIds.add(c.id);
       if (!chatIds.size) return [];
       const hits: Export[] = [];
       for (const id of chatIds) {
-        hits.push(...(await tx.export.findMany({ where: { tenantId, erasedAt: null, filters: { path: ['chatIds'], array_contains: [id] } } })));
+        hits.push(
+          ...(await tx.export.findMany({
+            where: { tenantId, erasedAt: null, filters: { path: ['chatIds'], array_contains: [id] } },
+          })),
+        );
       }
       const unique = [...new Map(hits.map((h) => [h.id, h])).values()];
-      if (unique.length) await tx.export.updateMany({ where: { tenantId, id: { in: unique.map((u) => u.id) } }, data: { erasedAt: new Date(), objectKey: null } });
+      if (unique.length)
+        await tx.export.updateMany({
+          where: { tenantId, id: { in: unique.map((u) => u.id) } },
+          data: { erasedAt: new Date(), objectKey: null },
+        });
       return unique;
     });
-    for (const e of rows) if (e.objectKey) await this.storage.delete('exports', e.objectKey).catch(() => undefined);
+    for (const e of rows)
+      if (e.objectKey) await this.storage.delete('exports', e.objectKey).catch(() => undefined);
     return rows.length;
   }
 }
