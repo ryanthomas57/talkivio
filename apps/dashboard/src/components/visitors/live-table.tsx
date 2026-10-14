@@ -5,12 +5,12 @@
  * insert or remove rows above the viewport the first visible row stays put, and
  * the selected row is kept by visitor id rather than position.
  */
-import { Info, MessageSquare, Timer } from 'lucide-react';
+import { BadgeCheck, Globe, Info, MessageSquare, Timer } from 'lucide-react';
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type KeyboardEvent } from 'react';
 import { useT, type MessageKey } from '@/i18n';
 import { cn } from '@/lib/cn';
 import { countryName, flagEmoji, formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
-import { Elapsed, IdentityBadge, PageCell, ticking, useMonoNow } from './display';
+import { Elapsed, PageCell, ticking, useMonoNow } from './display';
 import type { LiveRow } from './live-model';
 import { GROUP_HINT, GROUP_LABEL, type LiveGroup, type LiveVisitor } from './types';
 import { useWindowedRows } from './windowing';
@@ -71,11 +71,13 @@ export function LiveTable({
     let i = 0;
     for (const g of showGroups) {
       const groupRows = rows.filter((r) => r.v.group === g);
+      // Empty groups take no space; the activity chips above still show every count.
+      if (!groupRows.length && !(counts[g] ?? 0)) continue;
       out.push({ kind: 'group', group: g, loaded: groupRows.length });
       for (const row of groupRows) out.push({ kind: 'row', row, index: i++ });
     }
     return out;
-  }, [rows, showGroups]);
+  }, [rows, showGroups, counts]);
   const heights = useMemo(() => items.map((it) => (it.kind === 'group' ? GROUP_H : ROW_H)), [items]);
   const { range, scrollToIndex, anchor, offsets } = useWindowedRows(scrollRef, heights, HEAD_H);
   const posById = useMemo(() => {
@@ -198,7 +200,7 @@ export function LiveTable({
                 key={c.key}
                 scope="col"
                 className={cn(
-                  'whitespace-nowrap border-b border-line px-3 text-xs font-semibold uppercase tracking-wide text-fg-2',
+                  'whitespace-nowrap border-b border-line px-3 text-start text-xs font-semibold uppercase tracking-wide text-fg-2',
                   c.sticky && 'sticky start-0 z-[3] bg-surface-2',
                 )}
               >
@@ -293,28 +295,33 @@ const VisitorRow = memo(function VisitorRow({
       >
         <div className="flex min-w-0 items-center gap-2.5">
           <span
-            className="w-6 shrink-0 text-center text-lg leading-none"
+            className="flex w-6 shrink-0 justify-center text-lg leading-none"
             title={country ?? undefined}
             aria-hidden
           >
-            {flag}
+            {flag ?? <Globe className="size-4 text-fg-3" />}
           </span>
           <div className="flex min-w-0 flex-col gap-0.5">
-            <button
-              type="button"
-              data-visitor-button={v.visitorId}
-              onClick={() => onOpen(v)}
-              onKeyDown={(e) => onKey(e, v.visitorId)}
-              aria-label={t('visitors.live.openChat', { name: v.displayName })}
-              dir="auto"
-              className="max-w-full truncate rounded-sm text-start font-medium text-fg hover:underline"
-            >
-              {v.displayName}
-            </button>
-            <span className="flex min-w-0 items-center gap-1.5 text-xs text-fg-2">
-              <IdentityBadge verified={v.identity.verified} identified={v.identity.identified} compact />
-              {!v.browsingHidden && country && <span className="truncate">{country}</span>}
+            <span className="flex min-w-0 items-center gap-1">
+              <button
+                type="button"
+                data-visitor-button={v.visitorId}
+                onClick={() => onOpen(v)}
+                onKeyDown={(e) => onKey(e, v.visitorId)}
+                aria-label={t('visitors.live.openChat', { name: v.displayName })}
+                dir="auto"
+                className="max-w-full truncate rounded-sm text-start font-medium text-fg hover:underline"
+              >
+                {v.displayName}
+              </button>
+              {v.identity.verified && (
+                <BadgeCheck
+                  className="size-4 shrink-0 text-success"
+                  aria-label={t('visitors.display.verified')}
+                />
+              )}
             </span>
+            {country && <span className="truncate text-xs text-fg-2">{country}</span>}
           </div>
         </div>
       </td>

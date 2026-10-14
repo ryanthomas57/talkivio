@@ -30,6 +30,7 @@ import { useDepartments, useSites, useTags } from '@/lib/queries';
 import { useDock } from '@/stores/dock';
 import { useSession } from '@/stores/session';
 import { effectiveGroups, type LiveFilters, type LiveSort } from './live-model';
+import { urlLabel } from './display';
 import { LiveTable } from './live-table';
 import { GROUP_LABEL, HIGH_LOAD_GROUPS, LIVE_GROUPS, type LiveGroup, type LiveVisitor } from './types';
 import { useLiveVisitors } from './use-live-visitors';
@@ -173,6 +174,7 @@ export function VisitorsPage() {
         name: v.displayName,
         country: v.country,
         ipAddress: v.ipAddress,
+        page: v.browsingHidden ? null : v.currentTitle || (v.currentUrl ? urlLabel(v.currentUrl) : null),
       });
     },
     [canServe, set],

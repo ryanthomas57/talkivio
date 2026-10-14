@@ -320,6 +320,14 @@ function VisitorWindow({ w, visitor }: { w: DockWindow; visitor: DockVisitor }) 
           <dd className="truncate">
             {country ? `${flag ? `${flag} ` : ''}${country}` : t('common.unknown')}
           </dd>
+          {visitor.page && (
+            <>
+              <dt className="text-fg-2">{t('visitors.live.col.viewing')}</dt>
+              <dd className="truncate" dir="auto" title={visitor.page}>
+                {visitor.page}
+              </dd>
+            </>
+          )}
           {visitor.ipAddress && (
             <>
               <dt className="text-fg-2">{t('visitors.live.col.ip')}</dt>

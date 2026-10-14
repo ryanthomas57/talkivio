@@ -13,6 +13,8 @@ export interface DockVisitor {
   name: string;
   country: string | null;
   ipAddress: string | null;
+  /** Title (or address) of the page they are on, when browsing details are allowed. */
+  page: string | null;
 }
 
 export type DockWindow = { key: string; minimized: boolean } & (
