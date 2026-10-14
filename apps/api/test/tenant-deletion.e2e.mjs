@@ -302,7 +302,9 @@ ok(
 const B = await workspace('b');
 const ownerSockB = await socket('/agent', (await B.owner.must('POST', '/socket-ticket')).ticket);
 await B.owner.must('PUT', '/agents/me/presence', { status: 'online' });
-const CANARY_B = `canary-b-${B.stamp}`;
+// Like CANARY_A: letters around the digits, or a Luhn-valid stamp (1 run in 10) is stored masked as a card number
+// ("canary-b-179201******4614") and the canary is never found (CI run 38646121239).
+const CANARY_B = `canary-b-x${B.stamp}z`;
 const { chat: chatB } = await visitorChat(B, `Hello, ${CANARY_B} here`);
 await waitFor(
   async () => (await B.owner.call('POST', `/chats/${chatB.id}/accept`, {})).status === 200,
@@ -747,12 +749,13 @@ ok(
   JSON.stringify(storedFiles(B.tenantId).sort()) === JSON.stringify(bFiles),
   "workspace B's stored files are untouched",
 );
+const bTenant = await B.owner.must('GET', '/tenants/current');
+ok(bTenant.status === 'active', `workspace B is still active (status ${bTenant.status})`);
+const bBodies = (await B.owner.must('GET', `/chats/${chatB.id}/messages`)).items.map((m) => m.body ?? '');
+const bServed = bBodies.some((b) => b.includes(CANARY_B));
 ok(
-  (await B.owner.must('GET', '/tenants/current')).status === 'active' &&
-    (await B.owner.must('GET', `/chats/${chatB.id}/messages`)).items.some((m) =>
-      (m.body ?? '').includes(CANARY_B),
-    ),
-  'workspace B still serves its chats',
+  bServed,
+  `workspace B still serves its chats${bServed ? '' : `: no ${CANARY_B} in ${JSON.stringify(bBodies)}`}`,
 );
 const bWidget = await new Client('anon-b').call('POST', '/widget/v1/sessions', {
   site_key: B.site.public_key,
