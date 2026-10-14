@@ -5,7 +5,16 @@
  * visitor live in the URL; the table is windowed so 10 000 rows stay usable;
  * realtime deltas are coalesced and applied without moving the reading position.
  */
-import { Activity, RotateCw, Search, SlidersHorizontal, UsersRound, WifiOff } from 'lucide-react';
+import {
+  Activity,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  RotateCw,
+  Search,
+  SlidersHorizontal,
+  UsersRound,
+  WifiOff,
+} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -16,7 +25,6 @@ import {
   EmptyState,
   Field,
   Input,
-  PageHeader,
   PanelError,
   Select,
   Skeleton,
@@ -25,14 +33,21 @@ import {
 import { useT } from '@/i18n';
 import { useConnectionState } from '@/hooks/use-realtime';
 import { cn } from '@/lib/cn';
-import { countryName, formatNumber } from '@/lib/format';
+import { countryName, flagEmoji, formatNumber } from '@/lib/format';
 import { useDepartments, useSites, useTags } from '@/lib/queries';
 import { useDock } from '@/stores/dock';
 import { useSession } from '@/stores/session';
-import { effectiveGroups, type LiveFilters, type LiveSort } from './live-model';
+import { effectiveGroups, type LiveFilters, type LiveRow, type LiveSort } from './live-model';
 import { urlLabel } from './display';
-import { LiveTable } from './live-table';
-import { GROUP_LABEL, HIGH_LOAD_GROUPS, LIVE_GROUPS, type LiveGroup, type LiveVisitor } from './types';
+import { LiveTable, type TableGroup } from './live-table';
+import {
+  GROUP_HINT,
+  GROUP_LABEL,
+  HIGH_LOAD_GROUPS,
+  LIVE_GROUPS,
+  type LiveGroup,
+  type LiveVisitor,
+} from './types';
 import { useLiveVisitors } from './use-live-visitors';
 import { VisitorDrawer } from './visitor-drawer';
 
@@ -56,6 +71,8 @@ function useUrlState() {
 }
 
 const IP_HINT_KEY = 'rd_visitors_ip_hint';
+
+type GroupBy = 'activity' | 'country' | 'page';
 
 export function VisitorsPage() {
   const t = useT();
@@ -114,16 +131,66 @@ export function VisitorsPage() {
     filters.status.length
   );
   const total = groupsShown.reduce((n, g) => n + (state.counts[g] ?? 0), 0);
-  const toggleStatus = (g: LiveGroup) => {
-    const next = filters.status.includes(g) ? filters.status.filter((x) => x !== g) : [...filters.status, g];
-    set({ status: next.length ? next.join(',') : null });
-  };
   const clearFilters = () => {
     setSearch('');
     set({ site: null, dept: null, country: null, tag: null, q: null, status: null });
   };
   const onNearEnd = useCallback(() => void loadMore(), [loadMore]);
-  const statusChoices = filters.highLoad ? HIGH_LOAD_GROUPS : LIVE_GROUPS;
+
+  // Sections of the table: by activity (server counts), or by country / page among the loaded visitors.
+  const groupBy: GroupBy =
+    params.get('group') === 'country' ? 'country' : params.get('group') === 'page' ? 'page' : 'activity';
+  const groups = useMemo<TableGroup[]>(() => {
+    if (groupBy === 'activity')
+      return groupsShown
+        .map((g) => ({
+          key: g,
+          label: t(GROUP_LABEL[g]),
+          hint: t(GROUP_HINT[g]),
+          rows: sorted.filter((r) => r.v.group === g),
+          total: state.counts[g] ?? 0,
+        }))
+        .map((g) => ({ ...g, total: Math.max(g.total, g.rows.length) }))
+        .filter((g) => g.rows.length > 0 || g.total > 0);
+    const byKey = new Map<string, LiveRow[]>();
+    for (const r of sorted) {
+      const k =
+        groupBy === 'country'
+          ? (r.v.country?.toUpperCase() ?? '')
+          : r.v.browsingHidden
+            ? ''
+            : r.v.currentTitle || (r.v.currentUrl ? urlLabel(r.v.currentUrl) : '');
+      byKey.set(k, [...(byKey.get(k) ?? []), r]);
+    }
+    return [...byKey.entries()]
+      .sort(([a, ra], [b, rb]) =>
+        a === '' ? 1 : b === '' ? -1 : rb.length - ra.length || a.localeCompare(b),
+      )
+      .map(([k, rows]) => ({
+        key: k || '-',
+        label: k
+          ? groupBy === 'country'
+            ? `${flagEmoji(k) ?? ''} ${countryName(k) ?? k}`.trim()
+            : k
+          : t(groupBy === 'country' ? 'visitors.group.unknownCountry' : 'visitors.group.unknownPage'),
+        rows,
+        total: rows.length,
+      }));
+  }, [groupBy, groupsShown, sorted, state.counts, t]);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  useEffect(() => setCollapsed(new Set()), [groupBy]);
+  const toggleGroup = useCallback(
+    (key: string) =>
+      setCollapsed((c) => {
+        const next = new Set(c);
+        if (next.has(key)) next.delete(key);
+        else next.add(key);
+        return next;
+      }),
+    [],
+  );
+  const allCollapsed = groups.length > 0 && groups.every((g) => collapsed.has(g.key));
+  const toggleAll = () => setCollapsed(allCollapsed ? new Set() : new Set(groups.map((g) => g.key)));
   const canSites = perms.has('sites.view') && (sites.data?.length ?? 0) > 1;
   const canServe = perms.has('chats.serve');
   // Owners and admins (who can see websites) are pointed at installing the widget when there is none yet.
@@ -182,13 +249,12 @@ export function VisitorsPage() {
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1280px] flex-col gap-4 p-4 lg:p-6">
-      <PageHeader
-        title={t('visitors.page.title')}
-        description={t('visitors.page.description')}
-        actions={
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold leading-8">{t('visitors.page.title')}</h1>
+        <div className="flex items-center gap-4 text-sm">
           <span
             className={cn(
-              'inline-flex items-center gap-1.5 text-sm',
+              'inline-flex items-center gap-1.5',
               conn === 'live' ? 'text-success' : 'text-warning',
             )}
             role="status"
@@ -200,14 +266,57 @@ export function VisitorsPage() {
             )}
             {conn === 'live' ? t('visitors.page.liveOn') : t('visitors.page.livePaused')}
           </span>
-        }
-      />
+          <span className="text-fg-2">
+            {t('visitors.page.total', { count: state.status === 'ready' ? formatNumber(total) : '…' })}
+          </span>
+        </div>
+      </div>
 
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-full sm:w-64">
+      <div className="flex flex-col gap-3 border-y border-line-subtle py-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={toggleAll}
+            disabled={!groups.length}
+            aria-label={allCollapsed ? t('visitors.page.expandAll') : t('visitors.page.collapseAll')}
+            title={allCollapsed ? t('visitors.page.expandAll') : t('visitors.page.collapseAll')}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-fg-2 hover:bg-surface-3 hover:text-fg disabled:opacity-50"
+          >
+            {allCollapsed ? (
+              <ChevronsUpDown className="size-4" aria-hidden />
+            ) : (
+              <ChevronsDownUp className="size-4" aria-hidden />
+            )}
+          </button>
+          <Select
+            value={groupBy}
+            onChange={(e) => set({ group: e.target.value === 'activity' ? null : e.target.value })}
+            aria-label={t('visitors.page.groupBy')}
+            className="w-56"
+          >
+            <option value="activity">{t('visitors.page.groupByActivity')}</option>
+            <option value="country">{t('visitors.page.groupByCountry')}</option>
+            <option value="page">{t('visitors.page.groupByPage')}</option>
+          </Select>
+          <Button
+            variant="secondary"
+            aria-expanded={showFilters}
+            aria-controls="visitor-filters"
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            <SlidersHorizontal className="size-4" aria-hidden />
+            {advancedCount
+              ? t('visitors.page.filtersCount', { count: advancedCount })
+              : t('visitors.page.filters')}
+          </Button>
+          {activeFilters && (
+            <Button variant="link" size="sm" onClick={clearFilters}>
+              {t('visitors.page.clearFilters')}
+            </Button>
+          )}
+          <div className="relative ms-auto w-full sm:w-64">
             <Search
-              className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-2"
+              className="pointer-events-none absolute start-3.5 top-1/2 size-4 -translate-y-1/2 text-fg-2"
               aria-hidden
             />
             <Input
@@ -217,55 +326,8 @@ export function VisitorsPage() {
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('visitors.page.searchPlaceholder')}
               aria-label={t('visitors.page.search')}
-              className="ps-9"
+              className="rounded-full ps-10"
             />
-          </div>
-          <div
-            role="group"
-            aria-label={t('visitors.page.activity')}
-            className="flex flex-wrap items-center gap-1.5"
-          >
-            {statusChoices.map((g) => {
-              const on = filters.status.includes(g);
-              return (
-                <button
-                  key={g}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() => toggleStatus(g)}
-                  className={cn(
-                    'inline-flex h-11 items-center gap-1.5 rounded-full border px-3 text-sm font-medium transition-colors sm:h-9',
-                    on
-                      ? 'border-primary bg-primary-tint text-primary-hover dark:text-primary'
-                      : 'border-line bg-surface text-fg-2 hover:bg-surface-3 hover:text-fg',
-                  )}
-                >
-                  {t(GROUP_LABEL[g])}
-                  <span className="tabular text-xs">
-                    {state.status === 'ready' ? formatNumber(state.counts[g] ?? 0) : '…'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="ms-auto flex items-center gap-2">
-            {activeFilters && (
-              <Button variant="link" size="sm" onClick={clearFilters}>
-                {t('visitors.page.clearFilters')}
-              </Button>
-            )}
-            <Button
-              variant="secondary"
-              size="sm"
-              aria-expanded={showFilters}
-              aria-controls="visitor-filters"
-              onClick={() => setShowFilters((v) => !v)}
-            >
-              <SlidersHorizontal className="size-4" aria-hidden />
-              {advancedCount
-                ? t('visitors.page.filtersCount', { count: advancedCount })
-                : t('visitors.page.filters')}
-            </Button>
           </div>
         </div>
 
@@ -424,14 +486,14 @@ export function VisitorsPage() {
           />
         ) : (
           <LiveTable
-            rows={sorted}
-            counts={state.counts}
+            groups={groups}
+            collapsed={collapsed}
+            onToggleGroup={toggleGroup}
             version={state.version}
             selectedId={selectedId}
             onOpen={openChat}
             onDetails={(id) => set({ visitor: id })}
             onNearEnd={onNearEnd}
-            showGroups={groupsShown}
             label={t('visitors.page.tableLabel', { count: sorted.length })}
           />
         )}

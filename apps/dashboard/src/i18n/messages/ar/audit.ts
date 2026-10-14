@@ -61,7 +61,8 @@ export const audit: Record<keyof typeof source, string> = {
   'audit.log.action': 'الإجراء',
   'audit.log.actionHelp': 'الاسم الكامل أو بادئة، مثل webhook.*',
   'audit.log.actionPlaceholder': 'أي إجراء',
-  'audit.log.actionInvalid': 'استخدم اسم إجراء مثل webhook.created أو بادئة مثل webhook.* (أحرف لاتينية صغيرة وأرقام و_ و.).',
+  'audit.log.actionInvalid':
+    'استخدم اسم إجراء مثل webhook.created أو بادئة مثل webhook.* (أحرف لاتينية صغيرة وأرقام و_ و.).',
   'audit.log.objectType': 'نوع العنصر',
   'audit.log.anyType': 'أي نوع',
   'audit.log.outcome': 'النتيجة',
@@ -83,7 +84,8 @@ export const audit: Record<keyof typeof source, string> = {
   'audit.log.actorId': 'معرّف المنفِّذ',
   'audit.log.requestId': 'معرّف الطلب',
   'audit.log.showOnlyActor': 'عرض هذا المنفِّذ فقط',
-  'audit.log.footnote': 'تُعرض الأوقات بمنطقتك الزمنية. يتضمن تصدير CSV ما يصل إلى {max} حدث مطابق، ويُسجَّل كل تصدير هنا أيضًا.',
+  'audit.log.footnote':
+    'تُعرض الأوقات بمنطقتك الزمنية. يتضمن تصدير CSV ما يصل إلى {max} حدث مطابق، ويُسجَّل كل تصدير هنا أيضًا.',
 
   'audit.diff.none': 'لا شيء',
   'audit.diff.changedNotRecorded': 'تغيّر (لم تُسجَّل القيمة)',

@@ -2134,9 +2134,14 @@ export class Controller {
     } catch {
       return fail('NOT_CONNECTED');
     }
-    // Uploads belong to a chat: the attach button is only offered once one is open.
-    const conv = openConversation(this.state);
-    if (!conv) return fail('CHAT_CLOSED');
+    // Uploads belong to a chat: a file attached before any chat starts one, with the file's name as the request.
+    let conv = openConversation(this.state);
+    if (!conv) {
+      const started = await this.send(`📎 ${file.name}`.slice(0, 300));
+      if (!started.ok) return fail(started.error ?? 'CHAT_CLOSED');
+      conv = openConversation(this.state);
+      if (!conv) return fail('CHAT_CLOSED');
+    }
     try {
       const mime = file.type || 'application/octet-stream';
       const sha256 = await sha256Hex(file);

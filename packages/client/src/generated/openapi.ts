@@ -4273,6 +4273,9 @@ export interface components {
             ip_address: string | null;
             network: string | null;
             device_category: string | null;
+            browser: string | null;
+            os: string | null;
+            page_views: number | null;
             session_count: number | null;
             last_activity_at: string | null;
             idle: boolean;

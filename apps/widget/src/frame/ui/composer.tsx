@@ -3,12 +3,54 @@ import { useUi } from './common';
 import { IconClip, IconSend, IconSmile } from './icons';
 
 export const EMOJI = [
-  '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🙂',
-  '😉', '😊', '😍', '🥰', '😘', '😎', '🤩', '🤔',
-  '🤨', '😐', '😴', '😕', '😟', '😢', '😭', '😤',
-  '😡', '😱', '🤯', '🥳', '😇', '🙃', '🤗', '🤝',
-  '👍', '👎', '👏', '🙌', '🙏', '💪', '👋', '👀',
-  '❤️', '🔥', '✨', '🎉', '✅', '❌', '💡', '☕',
+  '😀',
+  '😃',
+  '😄',
+  '😁',
+  '😆',
+  '😅',
+  '😂',
+  '🙂',
+  '😉',
+  '😊',
+  '😍',
+  '🥰',
+  '😘',
+  '😎',
+  '🤩',
+  '🤔',
+  '🤨',
+  '😐',
+  '😴',
+  '😕',
+  '😟',
+  '😢',
+  '😭',
+  '😤',
+  '😡',
+  '😱',
+  '🤯',
+  '🥳',
+  '😇',
+  '🙃',
+  '🤗',
+  '🤝',
+  '👍',
+  '👎',
+  '👏',
+  '🙌',
+  '🙏',
+  '💪',
+  '👋',
+  '👀',
+  '❤️',
+  '🔥',
+  '✨',
+  '🎉',
+  '✅',
+  '❌',
+  '💡',
+  '☕',
 ];
 const COLS = 7;
 
@@ -18,7 +60,12 @@ function EmojiPicker({ onPick, onClose }: { onPick: (e: string) => void; onClose
   useEffect(() => {
     ref.current?.querySelector<HTMLButtonElement>('button')?.focus();
     const away = (e: PointerEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node) && !(e.target as HTMLElement).closest('[data-emoji-toggle]')) onClose();
+      if (
+        ref.current &&
+        !ref.current.contains(e.target as Node) &&
+        !(e.target as HTMLElement).closest('[data-emoji-toggle]')
+      )
+        onClose();
     };
     document.addEventListener('pointerdown', away, true);
     return () => document.removeEventListener('pointerdown', away, true);
@@ -27,7 +74,12 @@ function EmojiPicker({ onPick, onClose }: { onPick: (e: string) => void; onClose
     const buttons = Array.from(ref.current?.querySelectorAll<HTMLButtonElement>('button') ?? []);
     const i = buttons.indexOf(document.activeElement as HTMLButtonElement);
     const rtl = getComputedStyle(ref.current!).direction === 'rtl';
-    const step: Record<string, number> = { ArrowRight: rtl ? -1 : 1, ArrowLeft: rtl ? 1 : -1, ArrowDown: COLS, ArrowUp: -COLS };
+    const step: Record<string, number> = {
+      ArrowRight: rtl ? -1 : 1,
+      ArrowLeft: rtl ? 1 : -1,
+      ArrowDown: COLS,
+      ArrowUp: -COLS,
+    };
     if (e.key in step && i >= 0) {
       e.preventDefault();
       buttons[Math.max(0, Math.min(buttons.length - 1, i + step[e.key]))]?.focus();
@@ -61,8 +113,8 @@ export function Composer() {
   const ta = useRef<HTMLTextAreaElement>(null);
   const file = useRef<HTMLInputElement>(null);
   const emojiBtn = useRef<HTMLButtonElement>(null);
-  // Uploads are bound to a chat, so files can be attached once one is open.
-  const attachments = s.config.behavior.attachments.enabled && s.features.files && !!s.conversation && s.conversation.status !== 'RESOLVED';
+  // Files can be attached whenever the visitor can write; one sent before a chat exists starts the chat.
+  const attachments = s.config.behavior.attachments.enabled && s.features.files;
 
   useLayoutEffect(() => {
     const el = ta.current;
@@ -136,11 +188,25 @@ export function Composer() {
       />
       <div class="rd-composer-bar">
         <div class="rd-tools">
-          <button ref={emojiBtn} type="button" class="rd-tool" data-emoji-toggle="" aria-label={t('emoji')} aria-expanded={emoji} aria-haspopup="dialog" onClick={() => setEmoji((v) => !v)}>
+          <button
+            ref={emojiBtn}
+            type="button"
+            class="rd-tool"
+            data-emoji-toggle=""
+            aria-label={t('emoji')}
+            aria-expanded={emoji}
+            aria-haspopup="dialog"
+            onClick={() => setEmoji((v) => !v)}
+          >
             <IconSmile size={20} />
           </button>
           {attachments && (
-            <button type="button" class="rd-tool" aria-label={t('attach')} onClick={() => file.current?.click()}>
+            <button
+              type="button"
+              class="rd-tool"
+              aria-label={t('attach')}
+              onClick={() => file.current?.click()}
+            >
               <IconClip size={20} />
             </button>
           )}

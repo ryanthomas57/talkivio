@@ -9,9 +9,12 @@ export const format: Record<keyof typeof source, string> = {
   'format.duration.ms': '{m} د {s} ث',
   'format.duration.hm': '{h} س {m} د',
   'format.duration.dh': '{d} ي {h} س',
-  'format.durationLong.hours': '{n, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
-  'format.durationLong.minutes': '{n, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
-  'format.durationLong.seconds': '{n, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتان} few {# ثوانٍ} many {# ثانية} other {# ثانية}}',
+  'format.durationLong.hours':
+    '{n, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
+  'format.durationLong.minutes':
+    '{n, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
+  'format.durationLong.seconds':
+    '{n, plural, zero {# ثانية} one {ثانية واحدة} two {ثانيتان} few {# ثوانٍ} many {# ثانية} other {# ثانية}}',
   'format.durationLong.joiner': ' و',
   'format.bytes.b': '{n} بايت',
   'format.bytes.kb': '{n} ك.ب',

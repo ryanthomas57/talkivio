@@ -6,7 +6,8 @@ import { isolate, useT } from '@/i18n';
 import { dayLabel, sameDay } from '@/lib/format';
 import type { Message, StaffChat } from '@/lib/types';
 import { useInbox } from '@/stores/inbox';
-import { MessageBubble, PendingBubble } from './message-bubble';
+import { cn } from '@/lib/cn';
+import { LogMessage, MessageBubble, PendingBubble } from './message-bubble';
 
 const NEAR_BOTTOM_PX = 120;
 
@@ -20,7 +21,18 @@ const NEAR_BOTTOM_PX = 120;
  * while the chat is open, in one short sentence ("New message from Ana: …"), or a count for a burst.
  */
 const ANNOUNCE_CHARS = 140;
-export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: string | null; initialUnread: number }) {
+/** `log` renders the classic live chat log (name, time, text) used by docked chat windows; `bubbles` is the Inbox. */
+export function Transcript({
+  chat,
+  me,
+  initialUnread,
+  variant = 'bubbles',
+}: {
+  chat: StaffChat;
+  me: string | null;
+  initialUnread: number;
+  variant?: 'bubbles' | 'log';
+}) {
   const t = useT();
   const tr = useInbox((s) => s.transcripts[chat.id]);
   const pending = useInbox((s) => s.pending[chat.id]);
@@ -93,7 +105,12 @@ export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: s
       announcedThrough.current = lastSeq;
       return;
     }
-    const fresh = items.filter((m) => m.seq > announcedThrough.current! && m.type !== 'system' && !(m.sender.type === 'agent' && m.sender.id === me));
+    const fresh = items.filter(
+      (m) =>
+        m.seq > announcedThrough.current! &&
+        m.type !== 'system' &&
+        !(m.sender.type === 'agent' && m.sender.id === me),
+    );
     announcedThrough.current = Math.max(announcedThrough.current, lastSeq);
     if (!fresh.length) return;
     let text: string;
@@ -101,7 +118,10 @@ export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: s
       const m = fresh[0]!;
       const body = m.body ?? (m.attachments.length ? t('inbox.message.attachmentOnly') : '');
       const short = body.length > ANNOUNCE_CHARS ? `${body.slice(0, ANNOUNCE_CHARS - 1)}…` : body;
-      text = t('inbox.transcript.announceMessage', { name: isolate(m.sender.type === 'visitor' ? chat.visitor.displayName : m.sender.displayName), text: isolate(short) });
+      text = t('inbox.transcript.announceMessage', {
+        name: isolate(m.sender.type === 'visitor' ? chat.visitor.displayName : m.sender.displayName),
+        text: isolate(short),
+      });
     } else text = t('inbox.transcript.newBelow', { count: fresh.length });
     // A trailing no-break space toggles so two identical messages are both announced.
     setAnnouncement((prevText) => (prevText === text ? `${text}\u00a0` : text));
@@ -129,23 +149,46 @@ export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: s
 
   const typers = Object.values(typing ?? {}).filter((x) => x.until > Date.now());
   const typingText = typers.length
-    ? typers.map((x) => (x.actorType === 'visitor' ? t('inbox.transcript.typing', { name: isolate(chat.visitor.displayName) }) : x.mode === 'note' ? t('inbox.transcript.writingNote', { name: isolate(x.name) }) : t('inbox.transcript.typing', { name: isolate(x.name) }))).join(' · ')
+    ? typers
+        .map((x) =>
+          x.actorType === 'visitor'
+            ? t('inbox.transcript.typing', { name: isolate(chat.visitor.displayName) })
+            : x.mode === 'note'
+              ? t('inbox.transcript.writingNote', { name: isolate(x.name) })
+              : t('inbox.transcript.typing', { name: isolate(x.name) }),
+        )
+        .join(' · ')
     : '';
 
   if (!tr || (tr.loading && !items.length))
     return (
-      <div className="flex flex-1 flex-col gap-4 p-5" aria-busy="true" aria-label={t('inbox.transcript.loading')}>
+      <div
+        className="flex flex-1 flex-col gap-4 p-5"
+        aria-busy="true"
+        aria-label={t('inbox.transcript.loading')}
+      >
         {[60, 40, 70, 30].map((w, i) => (
           <Skeleton key={i} className={`h-10 ${i % 2 ? 'self-end' : ''}`} />
         ))}
       </div>
     );
-  if (tr.error && !items.length) return <PanelError message={tr.error} onRetry={() => void loadTranscript(chat.id)} />;
+  if (tr.error && !items.length)
+    return <PanelError message={tr.error} onRetry={() => void loadTranscript(chat.id)} />;
 
   let prev: Message | null = null;
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div ref={scroller} onScroll={onScroll} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-5 scroll-thin" role="log" aria-live="off" aria-label={t('inbox.transcript.label', { name: chat.visitor.displayName })}>
+      <div
+        ref={scroller}
+        onScroll={onScroll}
+        className={cn(
+          'min-h-0 flex-1 overflow-y-auto scroll-thin',
+          variant === 'log' ? 'px-2 py-3' : 'px-4 py-5 sm:px-5',
+        )}
+        role="log"
+        aria-live="off"
+        aria-label={t('inbox.transcript.label', { name: chat.visitor.displayName })}
+      >
         {tr.hasMoreBefore && (
           <div className="flex justify-center pb-3">
             {tr.loadingOlder ? (
@@ -159,33 +202,73 @@ export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: s
         )}
         {items.map((m) => {
           const newDay = !prev || !sameDay(prev.sentAt, m.sentAt);
-          const grouped = !!prev && !newDay && prev.sender.type === m.sender.type && prev.sender.id === m.sender.id && prev.visibility === m.visibility && prev.type !== 'system' && Date.parse(m.sentAt) - Date.parse(prev.sentAt) < 120_000;
+          const grouped =
+            !!prev &&
+            !newDay &&
+            prev.sender.type === m.sender.type &&
+            prev.sender.id === m.sender.id &&
+            prev.visibility === m.visibility &&
+            prev.type !== 'system' &&
+            Date.parse(m.sentAt) - Date.parse(prev.sentAt) < 120_000;
           prev = m;
           return (
             <Fragment key={m.id}>
               {newDay && (
-                <div className="my-4 flex items-center gap-3" role="separator" aria-label={dayLabel(m.sentAt)}>
+                <div
+                  className="my-4 flex items-center gap-3"
+                  role="separator"
+                  aria-label={dayLabel(m.sentAt)}
+                >
                   <span className="h-px flex-1 bg-line-subtle" />
                   <span className="text-xs font-medium text-fg-2">{dayLabel(m.sentAt)}</span>
                   <span className="h-px flex-1 bg-line-subtle" />
                 </div>
               )}
               {firstUnreadSeq.current === m.seq && (
-                <div className="my-3 flex items-center gap-3" role="separator" aria-label={t('inbox.transcript.newMessages')}>
+                <div
+                  className="my-3 flex items-center gap-3"
+                  role="separator"
+                  aria-label={t('inbox.transcript.newMessages')}
+                >
                   <span className="h-px flex-1 bg-danger/40" />
                   <span className="text-xs font-semibold text-danger">{t('inbox.transcript.newMarker')}</span>
                   <span className="h-px flex-1 bg-danger/40" />
                 </div>
               )}
-              <MessageBubble m={m} own={!!me && m.sender.type === 'agent' && m.sender.id === me} grouped={grouped} readByVisitor={visitorRead >= m.seq} deliveredToVisitor={visitorDelivered >= m.seq} />
+              {variant === 'log' ? (
+                <LogMessage
+                  m={m}
+                  own={!!me && m.sender.type === 'agent' && m.sender.id === me}
+                  grouped={grouped}
+                  readByVisitor={visitorRead >= m.seq}
+                  deliveredToVisitor={visitorDelivered >= m.seq}
+                />
+              ) : (
+                <MessageBubble
+                  m={m}
+                  own={!!me && m.sender.type === 'agent' && m.sender.id === me}
+                  grouped={grouped}
+                  readByVisitor={visitorRead >= m.seq}
+                  deliveredToVisitor={visitorDelivered >= m.seq}
+                />
+              )}
             </Fragment>
           );
         })}
         {pending?.map((p) => (
-          <PendingBubble key={p.clientMessageId} p={p} onRetry={() => void retry(chat.id, p.clientMessageId)} onDiscard={() => discard(chat.id, p.clientMessageId)} />
+          <PendingBubble
+            key={p.clientMessageId}
+            p={p}
+            onRetry={() => void retry(chat.id, p.clientMessageId)}
+            onDiscard={() => discard(chat.id, p.clientMessageId)}
+          />
         ))}
         {chat.status === 'closed' && (
-          <div className="my-5 flex items-center gap-3" role="separator" aria-label={t('inbox.transcript.ended')}>
+          <div
+            className="my-5 flex items-center gap-3"
+            role="separator"
+            aria-label={t('inbox.transcript.ended')}
+          >
             <span className="h-px flex-1 bg-line" />
             <span className="text-xs font-semibold text-fg-2">{t('inbox.transcript.ended')}</span>
             <span className="h-px flex-1 bg-line" />
@@ -200,7 +283,12 @@ export function Transcript({ chat, me, initialUnread }: { chat: StaffChat; me: s
       </p>
       {newBelow > 0 && !atBottom && (
         <div className="pointer-events-none absolute inset-x-0 bottom-8 flex justify-center">
-          <Button size="sm" variant="primary" className="pointer-events-auto shadow-[var(--shadow-float)]" onClick={() => scrollToBottom(true)}>
+          <Button
+            size="sm"
+            variant="primary"
+            className="pointer-events-auto shadow-[var(--shadow-float)]"
+            onClick={() => scrollToBottom(true)}
+          >
             <ArrowDown className="size-4" aria-hidden /> {t('inbox.transcript.newBelow', { count: newBelow })}
           </Button>
         </div>

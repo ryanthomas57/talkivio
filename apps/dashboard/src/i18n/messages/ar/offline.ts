@@ -14,15 +14,18 @@ export const offline: Record<keyof typeof source, string> = {
   'offline.list.announce': 'رسالة خارج الدوام جديدة {reference}',
   'offline.list.announceFrom': 'رسالة خارج الدوام جديدة {reference} من {name}',
   'offline.list.title': 'رسائل خارج الدوام',
-  'offline.list.description': 'رسائل تركها الزوار عندما لم يكن أحد متاحًا، أو بعد انتظار طويل في قائمة الانتظار. يمكنك الرد بالبريد الإلكتروني من صفحة الرسالة.',
+  'offline.list.description':
+    'رسائل تركها الزوار عندما لم يكن أحد متاحًا، أو بعد انتظار طويل في قائمة الانتظار. يمكنك الرد بالبريد الإلكتروني من صفحة الرسالة.',
   'offline.list.allStatuses': 'كل الحالات',
   'offline.list.allDepartments': 'كل الأقسام',
   'offline.list.allMyDepartments': 'كل أقسامي',
   'offline.list.loadFailed': 'تعذّر تحميل رسائل خارج الدوام: {error}',
   'offline.list.emptyReceived': 'لا توجد رسائل تحتاج إلى رد',
   'offline.list.emptyMatch': 'لا توجد رسائل خارج الدوام مطابقة',
-  'offline.list.emptyBody': 'لا توجد رسائل خارج الدوام {status, select, received {تحتاج إلى رد} handled {تم التعامل معها} other {بأي حالة}}{dept, select, named { في {department}} this { في هذا القسم} other {}}. {hint, select, status {اختر «كل الحالات» لتضمين جميع الرسائل} department {امسح عامل تصفية القسم لعرض كل أقسامك} other {تظهر الرسائل الجديدة هنا فور إرسالها من الزوار}}.',
-  'offline.list.listLabel': 'رسائل خارج الدوام {status, select, received {تحتاج إلى رد} handled {تم التعامل معها} other {بأي حالة}}{dept, select, named { في {department}} this { في هذا القسم} other {}}',
+  'offline.list.emptyBody':
+    'لا توجد رسائل خارج الدوام {status, select, received {تحتاج إلى رد} handled {تم التعامل معها} other {بأي حالة}}{dept, select, named { في {department}} this { في هذا القسم} other {}}. {hint, select, status {اختر «كل الحالات» لتضمين جميع الرسائل} department {امسح عامل تصفية القسم لعرض كل أقسامك} other {تظهر الرسائل الجديدة هنا فور إرسالها من الزوار}}.',
+  'offline.list.listLabel':
+    'رسائل خارج الدوام {status, select, received {تحتاج إلى رد} handled {تم التعامل معها} other {بأي حالة}}{dept, select, named { في {department}} this { في هذا القسم} other {}}',
   'offline.list.showAll': 'عرض كل الرسائل',
   'offline.list.refreshFailed': 'فشل التحديث: {error}',
   'offline.list.new': 'جديدة',
@@ -54,9 +57,11 @@ export const offline: Record<keyof typeof source, string> = {
   'offline.detail.handled': 'تم التعامل معها {time}',
   'offline.detail.message': 'الرسالة',
   'offline.detail.replyTitle': 'الرد بالبريد الإلكتروني',
-  'offline.detail.replyDescription': 'يُرسل من مساحة عملك إلى {email}. نص عادي؛ ويؤدي الإرسال إلى وضع علامة «تم التعامل معها» على الرسالة.',
+  'offline.detail.replyDescription':
+    'يُرسل من مساحة عملك إلى {email}. نص عادي؛ ويؤدي الإرسال إلى وضع علامة «تم التعامل معها» على الرسالة.',
   'offline.detail.replyErased': 'الردود غير متاحة للرسائل الممحوة.',
-  'offline.detail.noEmail': 'لم يترك هذا الزائر عنوان بريد إلكتروني، لذا لا يوجد ما يُرد عليه. استخدم رقم الهاتف إن وُجد، ثم ضع علامة «تم التعامل معها» على الرسالة.',
+  'offline.detail.noEmail':
+    'لم يترك هذا الزائر عنوان بريد إلكتروني، لذا لا يوجد ما يُرد عليه. استخدم رقم الهاتف إن وُجد، ثم ضع علامة «تم التعامل معها» على الرسالة.',
   'offline.detail.yourReply': 'ردّك',
   'offline.detail.sendReply': 'إرسال الرد',
   'offline.detail.sentReplies': 'الردود المرسلة ({count})',

@@ -49,7 +49,9 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
   const departments = byId(useDepartments().data);
   const canViewVisitors = useCan('visitors.view');
   const dept = chat.departmentId ? departments.get(chat.departmentId) : null;
-  const firstResponse = chat.firstResponseAt ? Date.parse(chat.firstResponseAt) - Date.parse(chat.requestedAt) : null;
+  const firstResponse = chat.firstResponseAt
+    ? Date.parse(chat.firstResponseAt) - Date.parse(chat.requestedAt)
+    : null;
   const prior = useQuery({
     queryKey: ['visitor-chats', chat.visitorId],
     queryFn: () => api.page<PriorChat>(`/visitors/${chat.visitorId}/chats`, { limit: 10 }),
@@ -64,7 +66,9 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
         <div className="min-w-0">
           <p className="flex items-center gap-1.5 truncate text-base font-semibold">
             <bdi>{chat.visitor.displayName}</bdi>
-            {chat.visitor.verified && <BadgeCheck className="size-4 shrink-0 text-primary" aria-label={t('inbox.visitor.verified')} />}
+            {chat.visitor.verified && (
+              <BadgeCheck className="size-4 shrink-0 text-primary" aria-label={t('inbox.visitor.verified')} />
+            )}
           </p>
           <p className="text-sm text-fg-2">
             {chat.visitor.online ? (
@@ -93,11 +97,18 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
           {chat.status === 'queued' || chat.status === 'offered' ? (
             <Row label={t('inbox.visitor.waiting')}>{formatDuration(now - Date.parse(chat.requestedAt))}</Row>
           ) : (
-            firstResponse !== null && <Row label={t('inbox.visitor.firstResponse')}>{formatDuration(firstResponse)}</Row>
+            firstResponse !== null && (
+              <Row label={t('inbox.visitor.firstResponse')}>{formatDuration(firstResponse)}</Row>
+            )
           )}
           {chat.pageUrl && (
             <Row label={t('inbox.visitor.page')}>
-              <a href={chat.pageUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-primary hover:underline">
+              <a
+                href={chat.pageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 text-primary hover:underline"
+              >
                 <Globe className="size-3.5" aria-hidden />
                 <span className="max-w-[180px] truncate" dir="auto">
                   {chat.pageUrl.replace(/^https?:\/\//, '')}
@@ -108,8 +119,14 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
           )}
           {chat.rating && (
             <Row label={t('inbox.visitor.rating')}>
-              <span className={`inline-flex items-center gap-1 font-medium ${chat.rating.rating === 'good' ? 'text-success' : 'text-danger'}`}>
-                {chat.rating.rating === 'good' ? <ThumbsUp className="size-3.5" aria-hidden /> : <ThumbsDown className="size-3.5" aria-hidden />}
+              <span
+                className={`inline-flex items-center gap-1 font-medium ${chat.rating.rating === 'good' ? 'text-success' : 'text-danger'}`}
+              >
+                {chat.rating.rating === 'good' ? (
+                  <ThumbsUp className="size-3.5" aria-hidden />
+                ) : (
+                  <ThumbsDown className="size-3.5" aria-hidden />
+                )}
                 {chat.rating.rating === 'good' ? t('inbox.visitor.ratingGood') : t('inbox.visitor.ratingBad')}
               </span>
             </Row>
@@ -139,7 +156,10 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
                 <ul className="flex flex-col gap-1">
                   {others.map((c) => (
                     <li key={c.id}>
-                      <Link href={`/history/${c.id}`} className="flex min-h-10 items-center justify-between gap-2 rounded-md px-2 text-sm hover:bg-surface-2">
+                      <Link
+                        href={`/history/${c.id}`}
+                        className="flex min-h-10 items-center justify-between gap-2 rounded-md px-2 text-sm hover:bg-surface-2"
+                      >
                         <span className="font-medium">#{c.number}</span>
                         <span className="text-xs text-fg-2">{formatRelative(c.requestedAt)}</span>
                       </Link>
@@ -151,7 +171,10 @@ export function VisitorPanel({ chat }: { chat: StaffChat }) {
               );
             })()
           )}
-          <Link href={`/visitors/${chat.visitorId}`} className="text-sm font-medium text-primary hover:underline">
+          <Link
+            href={`/visitors/${chat.visitorId}`}
+            className="text-sm font-medium text-primary hover:underline"
+          >
             {t('inbox.visitor.openProfile')}
           </Link>
         </Section>
@@ -233,7 +256,15 @@ function ChatTags({ chat }: { chat: StaffChat }) {
           <label className="sr-only" htmlFor={`newtag-${chat.id}`}>
             {t('inbox.tags.newTag')}
           </label>
-          <input id={`newtag-${chat.id}`} value={newLabel} onChange={(e) => setNewLabel(e.target.value)} maxLength={80} placeholder={t('inbox.tags.newTag')} dir="auto" className="h-8 min-w-0 flex-1 rounded-md border border-line bg-surface px-2.5 text-sm placeholder:text-fg-3" />
+          <input
+            id={`newtag-${chat.id}`}
+            value={newLabel}
+            onChange={(e) => setNewLabel(e.target.value)}
+            maxLength={80}
+            placeholder={t('inbox.tags.newTag')}
+            dir="auto"
+            className="h-8 min-w-0 flex-1 rounded-md border border-line bg-surface px-2.5 text-sm placeholder:text-fg-3"
+          />
           <Button size="sm" type="submit" disabled={!newLabel.trim()}>
             {t('common.create')}
           </Button>

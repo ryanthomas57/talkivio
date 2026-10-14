@@ -2,7 +2,8 @@
 /**
  * Docked chat windows (Zendesk-style): small windows along the bottom edge that stay open while the agent
  * moves around the dashboard. A window is either a chat, or a visitor the agent is about to start a chat
- * with (it becomes a chat window when the first message is sent). The newest window sits at the end edge.
+ * with (it becomes a chat window when the first message is sent). The newest window sits at the end edge, and only
+ * one window is open at a time: the others wait as tabs along the bottom (classic live chat).
  * Chat windows survive navigation and reloads of this tab (sessionStorage); visitor windows do not.
  */
 import { create } from 'zustand';
@@ -62,15 +63,16 @@ function restore(): DockWindow[] {
         kind: 'chat' as const,
         chatId: w.chatId as string,
         minimized: w.minimized === true,
-      }));
+      }))
+      .map((w, i, all) => ({ ...w, minimized: w.minimized || all.slice(i + 1).some((x) => !x.minimized) }));
   } catch {
     return [];
   }
 }
 
-/** Adds or re-opens a window and moves it to the end (newest); the oldest windows drop off past the limit. */
+/** Adds or re-opens a window, open and at the end (newest); the others become tabs; the oldest drop off past the limit. */
 function place(windows: DockWindow[], w: DockWindow): DockWindow[] {
-  const next = [...windows.filter((x) => x.key !== w.key), w];
+  const next = [...windows.filter((x) => x.key !== w.key).map((x) => ({ ...x, minimized: true })), w];
   return next.slice(-MAX_WINDOWS);
 }
 
@@ -100,8 +102,14 @@ export const useDock = create<DockState>((set, get) => {
         ),
       );
     },
-    toggle: (key) =>
-      update(get().windows.map((w) => (w.key === key ? { ...w, minimized: !w.minimized } : w))),
+    toggle: (key) => {
+      const opening = get().windows.find((w) => w.key === key)?.minimized ?? false;
+      update(
+        get().windows.map((w) =>
+          w.key === key ? { ...w, minimized: !w.minimized } : opening ? { ...w, minimized: true } : w,
+        ),
+      );
+    },
     close: (key) => update(get().windows.filter((w) => w.key !== key)),
     closeChat: (chatId) => update(get().windows.filter((w) => w.key !== `chat:${chatId}`)),
     reset: () => update([]),

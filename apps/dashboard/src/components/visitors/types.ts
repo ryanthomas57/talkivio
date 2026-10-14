@@ -72,6 +72,10 @@ export interface LiveVisitor {
   ipAddress: string | null;
   network: string | null;
   deviceCategory: string | null;
+  browser: string | null;
+  os: string | null;
+  /** Pages viewed in the session shown (with analytics consent). */
+  pageViews: number | null;
   sessionCount: number | null;
   lastActivityAt: string | null;
   idle: boolean;
@@ -176,6 +180,9 @@ export interface VisitorSessionRecord {
   browsingHidden: boolean;
   device: { category: string | null; browser: string | null; os: string | null };
   country: string | null;
+  /** While the workspace shows visitor IPs (Settings, General) and the visitor allowed tracking. */
+  ipAddress?: string | null;
+  network?: string | null;
   referrerOrigin: string | null;
   landingUrl: string | null;
   pageViewCount: number | null;

@@ -12,15 +12,18 @@ export const offline = {
   'offline.list.announce': 'New offline message {reference}',
   'offline.list.announceFrom': 'New offline message {reference} from {name}',
   'offline.list.title': 'Offline messages',
-  'offline.list.description': 'Messages visitors left while no one was available, or after waiting too long in the queue. Reply by email from the message page.',
+  'offline.list.description':
+    'Messages visitors left while no one was available, or after waiting too long in the queue. Reply by email from the message page.',
   'offline.list.allStatuses': 'All statuses',
   'offline.list.allDepartments': 'All departments',
   'offline.list.allMyDepartments': 'All my departments',
   'offline.list.loadFailed': 'Could not load offline messages: {error}',
   'offline.list.emptyReceived': 'No messages need a reply',
   'offline.list.emptyMatch': 'No offline messages match',
-  'offline.list.emptyBody': 'There are no offline messages {status, select, received {needing a reply} handled {marked handled} other {of any status}}{dept, select, named { in {department}} this { in this department} other {}}. {hint, select, status {Choose “All statuses” to include every message} department {Clear the department filter to see all of your departments} other {New messages appear here as soon as visitors send them}}.',
-  'offline.list.listLabel': 'Offline messages {status, select, received {needing a reply} handled {marked handled} other {of any status}}{dept, select, named { in {department}} this { in this department} other {}}',
+  'offline.list.emptyBody':
+    'There are no offline messages {status, select, received {needing a reply} handled {marked handled} other {of any status}}{dept, select, named { in {department}} this { in this department} other {}}. {hint, select, status {Choose “All statuses” to include every message} department {Clear the department filter to see all of your departments} other {New messages appear here as soon as visitors send them}}.',
+  'offline.list.listLabel':
+    'Offline messages {status, select, received {needing a reply} handled {marked handled} other {of any status}}{dept, select, named { in {department}} this { in this department} other {}}',
   'offline.list.showAll': 'Show all messages',
   'offline.list.refreshFailed': 'Refresh failed: {error}',
   'offline.list.new': 'New',
@@ -47,14 +50,17 @@ export const offline = {
   'offline.detail.conflictTitle': 'Someone else changed this message',
   'offline.detail.conflictBody': '{error} Your change was not saved.',
   'offline.detail.statusFailed': 'Status not changed: {error}',
-  'offline.detail.erased': 'This message was erased under the privacy policy. Its contents and contact details are no longer available.',
+  'offline.detail.erased':
+    'This message was erased under the privacy policy. Its contents and contact details are no longer available.',
   'offline.detail.handledBy': 'Handled by {name} {time}',
   'offline.detail.handled': 'Handled {time}',
   'offline.detail.message': 'Message',
   'offline.detail.replyTitle': 'Reply by email',
-  'offline.detail.replyDescription': 'Sent from your workspace to {email}. Plain text; sending marks the message handled.',
+  'offline.detail.replyDescription':
+    'Sent from your workspace to {email}. Plain text; sending marks the message handled.',
   'offline.detail.replyErased': 'Replies are unavailable for erased messages.',
-  'offline.detail.noEmail': 'This visitor did not leave an email address, so there is nothing to reply to. Use the phone number if one was given, then mark the message handled.',
+  'offline.detail.noEmail':
+    'This visitor did not leave an email address, so there is nothing to reply to. Use the phone number if one was given, then mark the message handled.',
   'offline.detail.yourReply': 'Your reply',
   'offline.detail.sendReply': 'Send reply',
   'offline.detail.sentReplies': 'Sent replies ({count})',

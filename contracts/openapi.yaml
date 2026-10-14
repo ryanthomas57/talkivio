@@ -16909,6 +16909,18 @@ components:
           type:
             - string
             - "null"
+        browser:
+          type:
+            - string
+            - "null"
+        os:
+          type:
+            - string
+            - "null"
+        page_views:
+          anyOf:
+            - type: integer
+            - type: "null"
         session_count:
           anyOf:
             - type: integer
@@ -16987,6 +16999,9 @@ components:
         - ip_address
         - network
         - device_category
+        - browser
+        - os
+        - page_views
         - session_count
         - last_activity_at
         - idle

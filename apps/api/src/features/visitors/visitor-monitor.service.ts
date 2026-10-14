@@ -129,6 +129,10 @@ export interface LiveVisitorItem {
   ipAddress: string | null;
   network: string | null;
   deviceCategory: string | null;
+  browser: string | null;
+  os: string | null;
+  /** Pages viewed in the session shown (with analytics consent). */
+  pageViews: number | null;
   sessionCount: number | null;
   lastActivityAt: Date | null;
   idle: boolean;
@@ -560,6 +564,9 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
                 currentTitle: true,
                 referrerOrigin: true,
                 deviceCategory: true,
+                browser: true,
+                os: true,
+                pageViewCount: true,
                 country: true,
                 analyticsConsent: true,
               },
@@ -684,6 +691,9 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
         network: addressed?.network ?? null,
         deviceCategory:
           sessionById.get(c.liveSessions[0]?.id ?? '')?.deviceCategory ?? v.deviceCategory ?? null,
+        browser: sessionById.get(recent?.sessionId ?? c.liveSessions[0]?.id ?? '')?.browser ?? null,
+        os: sessionById.get(recent?.sessionId ?? c.liveSessions[0]?.id ?? '')?.os ?? null,
+        pageViews: shown ? (sessionById.get(shown.sessionId)?.pageViewCount ?? null) : null,
         sessionCount: consenting ? v.visitCount : null,
         lastActivityAt: c.lastActivityAt ? new Date(c.lastActivityAt) : null,
         idle: c.idle,

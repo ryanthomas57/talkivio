@@ -40,13 +40,16 @@ for (let i = 0; i < text.length; i++) {
 const [header, ...data] = rows;
 const col = Object.fromEntries(header.map((h, i) => [h, i]));
 const STATUSES = new Set(['verified', 'partial', 'not_verified', 'optional_disabled', 'blocked', 'failed']);
-const PATH = /\b((?:apps|packages|docs|scripts|infra|contracts|\.github)\/[\w./@-]+?\.(?:tsx|ts|mjs|json|js|md|csv|yaml|yml|sql|sh|prisma))(?![\w])/g;
+// A path starts at a top-level folder (not inside another path, so deploy/scripts/x.sh is not read as scripts/x.sh).
+const PATH =
+  /(?<![\w./-])((?:apps|packages|docs|scripts|infra|contracts|deploy|\.github)\/[\w./@-]+?\.(?:tsx|ts|mjs|json|js|md|csv|yaml|yml|sql|sh|prisma))(?![\w])/g;
 const problems = [];
 let paths = 0;
 let messages = 0;
 const cache = new Map();
 const read = (p) => {
-  if (!cache.has(p)) cache.set(p, existsSync(resolve(root, p)) ? readFileSync(resolve(root, p), 'utf8') : null);
+  if (!cache.has(p))
+    cache.set(p, existsSync(resolve(root, p)) ? readFileSync(resolve(root, p), 'utf8') : null);
   return cache.get(p);
 };
 for (const r of data) {
@@ -65,7 +68,9 @@ for (const r of data) {
     }
   }
   // Quoted check messages: `path ("message"; "message")` — each must occur in that file.
-  for (const m of evidence.matchAll(/((?:apps|packages)\/[\w./@-]+\.(?:mjs|ts|tsx))\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g)) {
+  for (const m of evidence.matchAll(
+    /((?:apps|packages)\/[\w./@-]+\.(?:mjs|ts|tsx))\s*\(([^()]*(?:\([^()]*\)[^()]*)*)\)/g,
+  )) {
     const file = read(m[1]);
     if (file === null) continue;
     for (const qm of m[2].matchAll(/"([^"]{6,})"/g)) {
@@ -74,7 +79,9 @@ for (const r of data) {
     }
   }
 }
-console.log(`[ledger] ${data.filter((r) => r[0]).length} rows, ${paths} file references, ${messages} quoted check messages`);
+console.log(
+  `[ledger] ${data.filter((r) => r[0]).length} rows, ${paths} file references, ${messages} quoted check messages`,
+);
 if (problems.length) {
   console.error(`✗ ${problems.length} problems:\n  ${problems.join('\n  ')}`);
   process.exit(1);

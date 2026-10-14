@@ -456,41 +456,46 @@ export function Composer({
           </ul>
         </div>
       )}
-      <div className="mb-2 flex items-center justify-between gap-3">
-        <div
-          role="group"
-          aria-label={t('inbox.composer.messageType')}
-          className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5"
-        >
-          <button
-            type="button"
-            aria-pressed={!note}
-            disabled={!canReply}
-            onClick={() => switchMode('reply')}
-            className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
-              !note ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'text-fg-2 hover:text-fg',
-            )}
+      {compact && note && (
+        <p className="mb-1.5 text-xs font-semibold text-note-fg">{t('inbox.composer.notePrivacy')}</p>
+      )}
+      {!compact && (
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <div
+            role="group"
+            aria-label={t('inbox.composer.messageType')}
+            className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5"
           >
-            <MessageSquare className="size-3.5" aria-hidden /> {t('inbox.composer.reply')}
-          </button>
-          <button
-            type="button"
-            aria-pressed={note}
-            disabled={!canNote}
-            onClick={() => switchMode('note')}
-            className={cn(
-              'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
-              note ? 'bg-note text-note-fg' : 'text-fg-2 hover:text-fg',
-            )}
-          >
-            <Lock className="size-3.5" aria-hidden /> {t('inbox.composer.note')}
-          </button>
+            <button
+              type="button"
+              aria-pressed={!note}
+              disabled={!canReply}
+              onClick={() => switchMode('reply')}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
+                !note ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'text-fg-2 hover:text-fg',
+              )}
+            >
+              <MessageSquare className="size-3.5" aria-hidden /> {t('inbox.composer.reply')}
+            </button>
+            <button
+              type="button"
+              aria-pressed={note}
+              disabled={!canNote}
+              onClick={() => switchMode('note')}
+              className={cn(
+                'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
+                note ? 'bg-note text-note-fg' : 'text-fg-2 hover:text-fg',
+              )}
+            >
+              <Lock className="size-3.5" aria-hidden /> {t('inbox.composer.note')}
+            </button>
+          </div>
+          {note && (
+            <span className="text-xs font-semibold text-note-fg">{t('inbox.composer.notePrivacy')}</span>
+          )}
         </div>
-        {note && (
-          <span className="text-xs font-semibold text-note-fg">{t('inbox.composer.notePrivacy')}</span>
-        )}
-      </div>
+      )}
       {files.length > 0 && (
         <ul className="mb-2 flex flex-wrap gap-2" aria-label={t('inbox.composer.filesToSend')}>
           {files.map((f) => (
@@ -555,7 +560,11 @@ export function Composer({
         dir="auto"
         placeholder={
           disabledReason ??
-          (note ? t('inbox.composer.notePlaceholder') : t('inbox.composer.replyPlaceholder'))
+          (note
+            ? t('inbox.composer.notePlaceholder')
+            : compact
+              ? t('dock.typeHere')
+              : t('inbox.composer.replyPlaceholder'))
         }
         aria-describedby={`composer-help-${chat.id}`}
         aria-autocomplete="list"
@@ -584,33 +593,79 @@ export function Composer({
             t('inbox.composer.sendHint', { send: KEY_MOD_ENTER, newline: KEY_ENTER })
           )}
         </p>
-        <div className="flex items-center gap-2">
-          {allowFiles && (
-            <>
-              <input
-                ref={fileInput}
-                type="file"
-                multiple
-                hidden
-                accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,.docx,.xlsx,.pptx,.odt,.ods"
-                onChange={(e) => {
-                  addFiles([...(e.target.files ?? [])]);
-                  e.target.value = '';
-                }}
-              />
+        {compact && (
+          <div className="flex items-center gap-1">
+            {canReply && canNote && (
               <Button
                 variant="ghost"
-                size="icon"
-                onClick={() => fileInput.current?.click()}
-                disabled={blocked || files.length >= MAX_FILES}
-                aria-label={t('inbox.composer.attachFiles', { count: MAX_FILES, size: maxMb })}
+                size="icon-sm"
+                aria-pressed={note}
+                onClick={() => switchMode(note ? 'reply' : 'note')}
+                aria-label={t('inbox.composer.note')}
+                title={t('inbox.composer.note')}
+                className={cn(note && 'bg-note text-note-fg')}
               >
-                <Paperclip className="size-4" />
+                <Lock className="size-4" />
               </Button>
+            )}
+            {allowFiles && (
+              <>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  multiple
+                  hidden
+                  accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,.docx,.xlsx,.pptx,.odt,.ods"
+                  onChange={(e) => {
+                    addFiles([...(e.target.files ?? [])]);
+                    e.target.value = '';
+                  }}
+                />
+                <Button
+                  variant="ghost"
+                  size={compact ? 'icon-sm' : 'icon'}
+                  onClick={() => fileInput.current?.click()}
+                  disabled={blocked || files.length >= MAX_FILES}
+                  aria-label={t('inbox.composer.attachFiles', { count: MAX_FILES, size: maxMb })}
+                >
+                  <Paperclip className="size-4" />
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+        <div className="ms-auto flex items-center gap-2">
+          {!compact && (
+            <>
+              {allowFiles && (
+                <>
+                  <input
+                    ref={fileInput}
+                    type="file"
+                    multiple
+                    hidden
+                    accept="image/jpeg,image/png,image/webp,application/pdf,text/plain,.docx,.xlsx,.pptx,.odt,.ods"
+                    onChange={(e) => {
+                      addFiles([...(e.target.files ?? [])]);
+                      e.target.value = '';
+                    }}
+                  />
+                  <Button
+                    variant="ghost"
+                    size={compact ? 'icon-sm' : 'icon'}
+                    onClick={() => fileInput.current?.click()}
+                    disabled={blocked || files.length >= MAX_FILES}
+                    aria-label={t('inbox.composer.attachFiles', { count: MAX_FILES, size: maxMb })}
+                  >
+                    <Paperclip className="size-4" />
+                  </Button>
+                </>
+              )}
             </>
           )}
           <Button
             variant="primary"
+            size={compact ? 'sm' : 'md'}
             onClick={submit}
             disabled={!canSend}
             aria-label={note ? t('inbox.composer.addNote') : t('inbox.composer.sendReply')}

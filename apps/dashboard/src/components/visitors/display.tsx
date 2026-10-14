@@ -78,7 +78,7 @@ export function originLabel(raw: string | null | undefined): string {
   }
 }
 
-const DEVICE: Record<string, { label: MessageKey; Icon: typeof Monitor }> = {
+export const DEVICE: Record<string, { label: MessageKey; Icon: typeof Monitor }> = {
   desktop: { label: 'visitors.device.desktop', Icon: Monitor },
   mobile: { label: 'visitors.device.mobile', Icon: Smartphone },
   tablet: { label: 'visitors.device.tablet', Icon: Tablet },

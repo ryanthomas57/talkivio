@@ -7,9 +7,11 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.form.maxChars': 'استخدم {max} حرفًا على الأكثر.',
 
   'integrations.view.noAccessTitle': 'ليس لديك صلاحية الوصول إلى التكاملات',
-  'integrations.view.noAccessBody': 'يدير مسؤولو مساحة العمل الذين لديهم صلاحية التكاملات رموز التكامل وWebhook والموصِّلات.',
+  'integrations.view.noAccessBody':
+    'يدير مسؤولو مساحة العمل الذين لديهم صلاحية التكاملات رموز التكامل وWebhook والموصِّلات.',
   'integrations.view.title': 'التكاملات',
-  'integrations.view.description': 'اربط {brand} بأنظمتك الخاصة باستخدام رموز API محددة النطاق وWebhook موقّعة. تُعرض الأسرار مرة واحدة، ويُسجَّل كل تغيير في سجل التدقيق.',
+  'integrations.view.description':
+    'اربط {brand} بأنظمتك الخاصة باستخدام رموز API محددة النطاق وWebhook موقّعة. تُعرض الأسرار مرة واحدة، ويُسجَّل كل تغيير في سجل التدقيق.',
   'integrations.view.tabsLabel': 'أنواع التكامل',
   'integrations.view.tabTokens': 'رموز API',
   'integrations.view.tabWebhooks': 'Webhook',
@@ -19,7 +21,8 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.scopes.group.reporting': 'التقارير',
   'integrations.scopes.group.administration': 'الإدارة',
   'integrations.scopes.chatsRead.label': 'قراءة المحادثات',
-  'integrations.scopes.chatsRead.description': 'سجل المحادثات وسجلات المحادثة والملاحظات الداخلية، إضافة إلى أسماء الأقسام والفريق.',
+  'integrations.scopes.chatsRead.description':
+    'سجل المحادثات وسجلات المحادثة والملاحظات الداخلية، إضافة إلى أسماء الأقسام والفريق.',
   'integrations.scopes.chatsWrite.label': 'إجراءات على المحادثات',
   'integrations.scopes.chatsWrite.description': 'خدمة المحادثات ومراقبتها وتحويلها، وإنشاء الوسوم.',
   'integrations.scopes.visitorsRead.label': 'قراءة الزوار',
@@ -29,7 +32,8 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.scopes.analyticsRead.label': 'قراءة التحليلات',
   'integrations.scopes.analyticsRead.description': 'تقارير التحليلات وتقارير الموظفين والمراقبة المباشرة.',
   'integrations.scopes.webhooksManage.label': 'إدارة Webhook',
-  'integrations.scopes.webhooksManage.description': 'إنشاء نقاط نهاية Webhook وتعديلها وحذفها، وإعادة محاولة التسليمات.',
+  'integrations.scopes.webhooksManage.description':
+    'إنشاء نقاط نهاية Webhook وتعديلها وحذفها، وإعادة محاولة التسليمات.',
   'integrations.scopes.grantsFallback': 'يمنح: {permissions}.',
 
   'integrations.copy.ariaLabel': 'نسخ {what}',
@@ -37,10 +41,12 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.copy.copiedStatus': 'نُسخ {what} إلى الحافظة.',
   'integrations.copy.failedStatus': 'تعذّر النسخ. حدّد النص وانسخه يدويًا.',
   'integrations.secret.warningTitle': 'انسخه الآن، فلن تراه مرة أخرى',
-  'integrations.secret.warningBody': 'لا يخزّن {brand} سوى صيغة محمية من {what}. إذا فقدته، دوّره للحصول على واحد جديد.',
+  'integrations.secret.warningBody':
+    'لا يخزّن {brand} سوى صيغة محمية من {what}. إذا فقدته، دوّره للحصول على واحد جديد.',
   'integrations.secret.doneStored': 'تم، لقد حفظته',
   'integrations.secret.goneTitle': 'لا يمكن عرض السر مرة أخرى',
-  'integrations.secret.goneBody': 'اكتمل هذا الطلب سابقًا، ولا تُعرض الأسرار إلا مرة واحدة. دوّر السر مجددًا للحصول على سر جديد.',
+  'integrations.secret.goneBody':
+    'اكتمل هذا الطلب سابقًا، ولا تُعرض الأسرار إلا مرة واحدة. دوّر السر مجددًا للحصول على سر جديد.',
   'integrations.secret.tokenLabel': 'رمز التكامل',
   'integrations.secret.signingSecretLabel': 'سر التوقيع',
   'integrations.what.integrationToken': 'رمز التكامل',
@@ -55,7 +61,8 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.reauth.wrongCode': 'الرمز غير صالح. جرّب الرمز الحالي من التطبيق.',
   'integrations.reauth.rateLimited': 'محاولات كثيرة جدًا. انتظر بضع دقائق ثم حاول مرة أخرى.',
   'integrations.reauth.title': 'أكّد هويتك',
-  'integrations.reauth.description': 'لإتمام {action}، أكّد كلمة المرور{mfa, select, yes { ورمز المصادقة} other {}}. لن يُطلب منك ذلك مجددًا لبضع دقائق.',
+  'integrations.reauth.description':
+    'لإتمام {action}، أكّد كلمة المرور{mfa, select, yes { ورمز المصادقة} other {}}. لن يُطلب منك ذلك مجددًا لبضع دقائق.',
   'integrations.reauth.signedInAs': 'مسجّل الدخول باسم {email}',
   'integrations.reauth.password': 'كلمة المرور',
   'integrations.reauth.code': 'رمز المصادقة',
@@ -69,14 +76,17 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.tokenStatus.expired': 'منتهي الصلاحية',
   'integrations.tokenStatus.revoked': 'مُبطَل',
   'integrations.tokens.title': 'رموز API',
-  'integrations.tokens.description': 'رموز خاصة بمساحة العمل لأنظمتك. يُعرض سر كل رمز مرة واحدة، ولا يحتفظ {brand} إلا بقيمة مجزّأة منه. تنتهي صلاحية الرموز بعد {defaultDays} يومًا افتراضيًا ({maxDays} يومًا على الأكثر).',
+  'integrations.tokens.description':
+    'رموز خاصة بمساحة العمل لأنظمتك. يُعرض سر كل رمز مرة واحدة، ولا يحتفظ {brand} إلا بقيمة مجزّأة منه. تنتهي صلاحية الرموز بعد {defaultDays} يومًا افتراضيًا ({maxDays} يومًا على الأكثر).',
   'integrations.tokens.create': 'إنشاء رمز',
   'integrations.tokens.showRevoked': 'عرض الرموز المُبطَلة',
   'integrations.tokens.loadError': 'تعذّر تحميل رموز التكامل: {error}',
   'integrations.tokens.emptyTitle': 'لا توجد رموز بعد',
-  'integrations.tokens.emptyBody': 'أنشئ رمزًا ليتمكن نظام آخر من قراءة المحادثات أو تحديث الزوار أو إدارة Webhook عبر API.',
+  'integrations.tokens.emptyBody':
+    'أنشئ رمزًا ليتمكن نظام آخر من قراءة المحادثات أو تحديث الزوار أو إدارة Webhook عبر API.',
   'integrations.tokens.emptyActiveTitle': 'لا توجد رموز نشطة أو منتهية الصلاحية',
-  'integrations.tokens.emptyActiveBody': 'أنشئ رمزًا لربط نظام آخر. فعّل «عرض الرموز المُبطَلة» لرؤية الرموز التي أبطلتها.',
+  'integrations.tokens.emptyActiveBody':
+    'أنشئ رمزًا لربط نظام آخر. فعّل «عرض الرموز المُبطَلة» لرؤية الرموز التي أبطلتها.',
   'integrations.tokens.colPrefix': 'البادئة',
   'integrations.tokens.colScopes': 'النطاقات',
   'integrations.tokens.colCreatedBy': 'أنشأه',
@@ -89,43 +99,55 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.tokens.createdOnRotated': 'أُنشئ في {date} · دُوِّر {relative}',
   'integrations.tokens.never': 'لم يُستخدم قط',
   'integrations.tokens.expiresWithinDay': 'ينتهي خلال يوم',
-  'integrations.tokens.expiresInDays': 'ينتهي خلال {count, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
+  'integrations.tokens.expiresInDays':
+    'ينتهي خلال {count, plural, zero {# يوم} one {يوم واحد} two {يومين} few {# أيام} many {# يومًا} other {# يوم}}',
   'integrations.tokens.actionsFor': 'إجراءات الرمز {name}',
   'integrations.tokens.rotateMenu': 'تدوير السر…',
   'integrations.tokens.revokeMenu': 'إبطال…',
   'integrations.tokens.createdTitle': 'أُنشئ الرمز «{name}»',
   'integrations.tokens.rotateTitle': 'تدوير «{name}»؟',
   'integrations.tokens.rotateTitleFallback': 'تدوير الرمز',
-  'integrations.tokens.rotateBody': 'يُصدَر سر جديد ويتوقف السر الحالي عن العمل فورًا. ستفشل التكاملات التي تستخدم هذا الرمز حتى تحدّثها بالسر الجديد. يبقى الاسم والنطاقات وتاريخ الانتهاء كما هي.',
+  'integrations.tokens.rotateBody':
+    'يُصدَر سر جديد ويتوقف السر الحالي عن العمل فورًا. ستفشل التكاملات التي تستخدم هذا الرمز حتى تحدّثها بالسر الجديد. يبقى الاسم والنطاقات وتاريخ الانتهاء كما هي.',
   'integrations.tokens.rotateConfirm': 'تدوير السر',
   'integrations.tokens.newSecretTitle': 'سر جديد لـ«{name}»',
   'integrations.tokens.revokeTitle': 'إبطال «{name}»؟',
   'integrations.tokens.revokeTitleFallback': 'إبطال الرمز',
-  'integrations.tokens.revokeBody': 'يفقد أي نظام يستخدم {prefix} الوصول إلى API فورًا. لا يمكن التراجع عن ذلك، فأنشئ رمزًا جديدًا إذا احتجت إلى الوصول مرة أخرى.',
+  'integrations.tokens.revokeBody':
+    'يفقد أي نظام يستخدم {prefix} الوصول إلى API فورًا. لا يمكن التراجع عن ذلك، فأنشئ رمزًا جديدًا إذا احتجت إلى الوصول مرة أخرى.',
   'integrations.tokens.revokeConfirm': 'إبطال الرمز',
   'integrations.tokens.revoked': 'أُبطل «{name}»',
   'integrations.tokens.secretSummary': 'النطاقات: {scopes} · ينتهي في {date}',
-  'integrations.tokens.secretUsage': 'أرسله بالصيغة {header}. احفظه في أداة لإدارة الأسرار، فكل من يحمله يملك صلاحيات نطاقاته حتى تنتهي صلاحيته أو يُبطَل.',
+  'integrations.tokens.secretUsage':
+    'أرسله بالصيغة {header}. احفظه في أداة لإدارة الأسرار، فكل من يحمله يملك صلاحيات نطاقاته حتى تنتهي صلاحيته أو يُبطَل.',
 
   'integrations.tokenCreate.nameRequired': 'امنح الرمز اسمًا لتتعرّف عليه لاحقًا.',
   'integrations.tokenCreate.scopesRequired': 'اختر نطاقًا واحدًا على الأقل.',
-  'integrations.tokenCreate.scopesNotLoaded': 'تعذّر تحميل النطاقات. أعد المحاولة، ثم اختر نطاقًا واحدًا على الأقل.',
+  'integrations.tokenCreate.scopesNotLoaded':
+    'تعذّر تحميل النطاقات. أعد المحاولة، ثم اختر نطاقًا واحدًا على الأقل.',
   'integrations.tokenCreate.expiryRequired': 'اختر تاريخ انتهاء الصلاحية.',
   'integrations.tokenCreate.expiryTooSoon': 'يجب أن يكون تاريخ الانتهاء بعد ساعة واحدة على الأقل.',
   'integrations.tokenCreate.title': 'إنشاء رمز تكامل',
-  'integrations.tokenCreate.description': 'تتيح الرموز لأنظمتك استدعاء API الخاصة بـ{brand}. لا يمكن أن يملك الرمز صلاحيات أكثر مما تملك.',
+  'integrations.tokenCreate.description':
+    'تتيح الرموز لأنظمتك استدعاء API الخاصة بـ{brand}. لا يمكن أن يملك الرمز صلاحيات أكثر مما تملك.',
   'integrations.tokenCreate.nameHelp': 'مثلًا، اسم النظام الذي سيستخدمه: «مزامنة CRM».',
   'integrations.tokenCreate.scopes': 'النطاقات',
   'integrations.tokenCreate.scopesHelp': 'امنح التكامل ما يحتاج إليه فقط.',
-  'integrations.tokenCreate.scopesHelpUnavailable': 'امنح التكامل ما يحتاج إليه فقط. لا يمكن أن يملك الرمز صلاحيات أكثر منك، لذا لا تتوفر النطاقات التي تتطلب صلاحيات يفتقر إليها دورك.',
+  'integrations.tokenCreate.scopesHelpUnavailable':
+    'امنح التكامل ما يحتاج إليه فقط. لا يمكن أن يملك الرمز صلاحيات أكثر منك، لذا لا تتوفر النطاقات التي تتطلب صلاحيات يفتقر إليها دورك.',
   'integrations.tokenCreate.scopesLoadError': 'تعذّر تحميل النطاقات المتاحة: {error}',
   'integrations.tokenCreate.unavailable': 'غير متاح: يتطلب صلاحيات لا يملكها دورك.',
-  'integrations.tokenCreate.unavailableList': '{count, plural, zero {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} one {غير متاح: يتطلب صلاحية لا يملكها دورك ({permissions}).} two {غير متاح: يتطلب صلاحيتين لا يملكهما دورك ({permissions}).} few {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} many {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} other {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).}}',
+  'integrations.tokenCreate.unavailableList':
+    '{count, plural, zero {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} one {غير متاح: يتطلب صلاحية لا يملكها دورك ({permissions}).} two {غير متاح: يتطلب صلاحيتين لا يملكهما دورك ({permissions}).} few {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} many {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).} other {غير متاح: يتطلب صلاحيات لا يملكها دورك ({permissions}).}}',
   'integrations.tokenCreate.expires': 'تنتهي الصلاحية',
-  'integrations.tokenCreate.expiresOn': '{max, plural, zero {في {date}. الحد الأقصى # يوم.} one {في {date}. الحد الأقصى يوم واحد.} two {في {date}. الحد الأقصى يومان.} few {في {date}. الحد الأقصى # أيام.} many {في {date}. الحد الأقصى # يومًا.} other {في {date}. الحد الأقصى # يوم.}}',
-  'integrations.tokenCreate.expiresMax': '{max, plural, zero {الحد الأقصى # يوم.} one {الحد الأقصى يوم واحد.} two {الحد الأقصى يومان.} few {الحد الأقصى # أيام.} many {الحد الأقصى # يومًا.} other {الحد الأقصى # يوم.}}',
-  'integrations.tokenCreate.presetDays': '{count, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}',
-  'integrations.tokenCreate.presetDaysRecommended': '{count, plural, zero {# يوم (موصى به)} one {يوم واحد (موصى به)} two {يومان (موصى به)} few {# أيام (موصى به)} many {# يومًا (موصى به)} other {# يوم (موصى به)}}',
+  'integrations.tokenCreate.expiresOn':
+    '{max, plural, zero {في {date}. الحد الأقصى # يوم.} one {في {date}. الحد الأقصى يوم واحد.} two {في {date}. الحد الأقصى يومان.} few {في {date}. الحد الأقصى # أيام.} many {في {date}. الحد الأقصى # يومًا.} other {في {date}. الحد الأقصى # يوم.}}',
+  'integrations.tokenCreate.expiresMax':
+    '{max, plural, zero {الحد الأقصى # يوم.} one {الحد الأقصى يوم واحد.} two {الحد الأقصى يومان.} few {الحد الأقصى # أيام.} many {الحد الأقصى # يومًا.} other {الحد الأقصى # يوم.}}',
+  'integrations.tokenCreate.presetDays':
+    '{count, plural, zero {# يوم} one {يوم واحد} two {يومان} few {# أيام} many {# يومًا} other {# يوم}}',
+  'integrations.tokenCreate.presetDaysRecommended':
+    '{count, plural, zero {# يوم (موصى به)} one {يوم واحد (موصى به)} two {يومان (موصى به)} few {# أيام (موصى به)} many {# يومًا (موصى به)} other {# يوم (موصى به)}}',
   'integrations.tokenCreate.customDate': 'تاريخ مخصص…',
   'integrations.tokenCreate.expiryDate': 'تاريخ الانتهاء',
 
@@ -134,13 +156,15 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.event.chatStarted.label': 'بدأت محادثة',
   'integrations.event.chatStarted.description': 'قبل موظف محادثة.',
   'integrations.event.chatClosed.label': 'أُغلقت محادثة',
-  'integrations.event.chatClosed.description': 'انتهت محادثة (المعرّفات والتوقيتات وسبب الإغلاق، دون نص سجل المحادثة).',
+  'integrations.event.chatClosed.description':
+    'انتهت محادثة (المعرّفات والتوقيتات وسبب الإغلاق، دون نص سجل المحادثة).',
   'integrations.event.ratingUpdated.label': 'تحدّث التقييم',
   'integrations.event.ratingUpdated.description': 'قيّم زائر محادثة أو غيّر تقييمه.',
   'integrations.event.offlineSubmitted.label': 'رسالة خارج الدوام',
   'integrations.event.offlineSubmitted.description': 'ترك زائر رسالة خارج الدوام.',
   'integrations.event.privacyErased.label': 'مُحيت بيانات زائر',
-  'integrations.event.privacyErased.description': 'اكتمل محو البيانات لطلب خصوصية، فاحذف الزائر من أنظمتك أيضًا.',
+  'integrations.event.privacyErased.description':
+    'اكتمل محو البيانات لطلب خصوصية، فاحذف الزائر من أنظمتك أيضًا.',
   'integrations.event.triggerWebhook.label': 'Webhook من مُشغِّل',
   'integrations.event.triggerWebhook.description': 'نفّذ مُشغِّل إجراء «إرسال Webhook».',
   'integrations.event.webhookTest.label': 'حدث تجريبي',
@@ -156,32 +180,40 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.delivery.filterAll': 'كل الحالات',
 
   'integrations.webhooks.title': 'نقاط نهاية Webhook',
-  'integrations.webhooks.description': 'يرسل {brand} أحداث JSON موقّعة بطلبات POST إلى نقاط النهاية الخاصة بك، مع ضمان التسليم مرة واحدة على الأقل وإعادة المحاولة تلقائيًا لمدة تصل إلى 24 ساعة. يُعرض سر التوقيع لكل نقطة نهاية مرة واحدة.',
+  'integrations.webhooks.description':
+    'يرسل {brand} أحداث JSON موقّعة بطلبات POST إلى نقاط النهاية الخاصة بك، مع ضمان التسليم مرة واحدة على الأقل وإعادة المحاولة تلقائيًا لمدة تصل إلى 24 ساعة. يُعرض سر التوقيع لكل نقطة نهاية مرة واحدة.',
   'integrations.webhooks.add': 'إضافة نقطة نهاية',
   'integrations.webhooks.loadError': 'تعذّر تحميل نقاط نهاية Webhook: {error}',
   'integrations.webhooks.emptyTitle': 'لا توجد نقاط نهاية Webhook',
-  'integrations.webhooks.emptyBody': 'أضف نقطة نهاية لتتلقى إشعارًا عند بدء المحادثات وانتهائها، أو تغيّر التقييمات، أو وصول رسائل خارج الدوام، أو محو بيانات زائر.',
-  'integrations.webhooks.recentFailures': '{count, plural, zero {لا إخفاقات حديثة} one {إخفاق حديث واحد} two {إخفاقان حديثان} few {# إخفاقات حديثة} many {# إخفاقًا حديثًا} other {# إخفاق حديث}}',
-  'integrations.webhooks.eventSummary': '{count, plural, zero {لا أحداث} one {حدث واحد} two {حدثان} few {# أحداث} many {# حدثًا} other {# حدث}}: {events}',
+  'integrations.webhooks.emptyBody':
+    'أضف نقطة نهاية لتتلقى إشعارًا عند بدء المحادثات وانتهائها، أو تغيّر التقييمات، أو وصول رسائل خارج الدوام، أو محو بيانات زائر.',
+  'integrations.webhooks.recentFailures':
+    '{count, plural, zero {لا إخفاقات حديثة} one {إخفاق حديث واحد} two {إخفاقان حديثان} few {# إخفاقات حديثة} many {# إخفاقًا حديثًا} other {# إخفاق حديث}}',
+  'integrations.webhooks.eventSummary':
+    '{count, plural, zero {لا أحداث} one {حدث واحد} two {حدثان} few {# أحداث} many {# حدثًا} other {# حدث}}: {events}',
   'integrations.webhooks.lastDelivery': 'آخر تسليم:',
   'integrations.webhooks.noDeliveryYet': 'لا شيء بعد',
   'integrations.webhooks.lastSuccess': '· آخر نجاح {time}',
   'integrations.webhooks.openEndpoint': 'فتح نقطة النهاية {host}',
   'integrations.webhooks.addedTitle': 'أُضيفت نقطة النهاية',
-  'integrations.webhooks.addedUsage': 'اضبط المستقبِل لديك بهذا السر وتحقّق من الترويسة {header} في كل طلب. تحتوي صفحة نقطة النهاية على مثال للتحقق وتتيح لك إرسال حدث تجريبي.',
+  'integrations.webhooks.addedUsage':
+    'اضبط المستقبِل لديك بهذا السر وتحقّق من الترويسة {header} في كل طلب. تحتوي صفحة نقطة النهاية على مثال للتحقق وتتيح لك إرسال حدث تجريبي.',
 
   'integrations.webhookForm.urlRequired': 'أدخل عنوان URL الذي يجب أن يستقبل الأحداث.',
   'integrations.webhookForm.urlInvalid': 'أدخل عنوان URL كاملًا، مثل {example}.',
   'integrations.webhookForm.eventsRequired': 'اختر حدثًا واحدًا على الأقل.',
   'integrations.webhookForm.editTitle': 'تعديل نقطة نهاية Webhook',
   'integrations.webhookForm.addTitle': 'إضافة نقطة نهاية Webhook',
-  'integrations.webhookForm.description': 'يرسل {brand} طلب POST موقّعًا إلى عنوان URL هذا لكل حدث محدد. تُرفض العناوين الخاصة وعناوين الاسترجاع المحلي وعناوين بيانات السحابة الوصفية.',
+  'integrations.webhookForm.description':
+    'يرسل {brand} طلب POST موقّعًا إلى عنوان URL هذا لكل حدث محدد. تُرفض العناوين الخاصة وعناوين الاسترجاع المحلي وعناوين بيانات السحابة الوصفية.',
   'integrations.webhookForm.conflictTitle': 'غيّر شخص آخر نقطة النهاية هذه',
-  'integrations.webhookForm.conflictBody': 'لم تُحفظ تغييراتك. أعد التحميل لرؤية أحدث إصدار، ثم أجرِ تغييراتك مجددًا.',
+  'integrations.webhookForm.conflictBody':
+    'لم تُحفظ تغييراتك. أعد التحميل لرؤية أحدث إصدار، ثم أجرِ تغييراتك مجددًا.',
   'integrations.webhookForm.url': 'عنوان URL لنقطة النهاية',
   'integrations.webhookForm.urlHelp': 'استخدم HTTPS. يجب أن يكون العنوان متاحًا من الإنترنت.',
   'integrations.webhookForm.events': 'الأحداث',
-  'integrations.webhookForm.eventsHelp': 'لا تحمل البيانات المرسلة سوى المعرّفات والتوقيتات، ولا تتضمن أبدًا نص سجل المحادثة أو الأسماء أو عناوين البريد الإلكتروني.',
+  'integrations.webhookForm.eventsHelp':
+    'لا تحمل البيانات المرسلة سوى المعرّفات والتوقيتات، ولا تتضمن أبدًا نص سجل المحادثة أو الأسماء أو عناوين البريد الإلكتروني.',
   'integrations.webhookForm.clearAll': 'مسح الكل',
   'integrations.webhookForm.selectAll': 'تحديد الكل',
   'integrations.webhookForm.typesLoadError': 'تعذّر تحميل أنواع الأحداث: {error}',
@@ -190,12 +222,16 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.webhookForm.descriptionHelp': 'اختياري. يساعد فريقك على التعرّف على نقطة النهاية.',
 
   'integrations.detail.overlapNone': 'دون تداخل، أوقف استخدام السر القديم الآن',
-  'integrations.detail.overlapMinutes': '{count, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
-  'integrations.detail.overlapHours': '{count, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
-  'integrations.detail.overlapHoursRecommended': '{count, plural, zero {# ساعة (موصى به)} one {ساعة واحدة (موصى به)} two {ساعتان (موصى به)} few {# ساعات (موصى به)} many {# ساعة (موصى به)} other {# ساعة (موصى به)}}',
+  'integrations.detail.overlapMinutes':
+    '{count, plural, zero {# دقيقة} one {دقيقة واحدة} two {دقيقتان} few {# دقائق} many {# دقيقة} other {# دقيقة}}',
+  'integrations.detail.overlapHours':
+    '{count, plural, zero {# ساعة} one {ساعة واحدة} two {ساعتان} few {# ساعات} many {# ساعة} other {# ساعة}}',
+  'integrations.detail.overlapHoursRecommended':
+    '{count, plural, zero {# ساعة (موصى به)} one {ساعة واحدة (موصى به)} two {ساعتان (موصى به)} few {# ساعات (موصى به)} many {# ساعة (موصى به)} other {# ساعة (موصى به)}}',
   'integrations.detail.enabledToast': 'فُعّلت نقطة النهاية',
   'integrations.detail.disabledToast': 'عُطّلت نقطة النهاية',
-  'integrations.detail.conflict': 'غيّر شخص آخر نقطة النهاية هذه. أعد التحميل لرؤية أحدث إصدار، ثم حاول مرة أخرى.',
+  'integrations.detail.conflict':
+    'غيّر شخص آخر نقطة النهاية هذه. أعد التحميل لرؤية أحدث إصدار، ثم حاول مرة أخرى.',
   'integrations.detail.enableFailed': 'تعذّر تفعيل نقطة النهاية: {error}',
   'integrations.detail.disableFailed': 'تعذّر تعطيل نقطة النهاية: {error}',
   'integrations.detail.testQueued': 'أُضيف الحدث التجريبي إلى قائمة الإرسال (الحدث {id}…)',
@@ -210,7 +246,8 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.detail.url': 'عنوان URL',
   'integrations.detail.deliverLabel': 'تسليم الأحداث إلى نقطة النهاية هذه',
   'integrations.detail.deliveringOn': 'تُسلَّم الأحداث.',
-  'integrations.detail.deliveringOff': 'لا تُسلَّم أي أحداث أثناء التعطيل. يؤدي التفعيل إلى تصفير عدد الإخفاقات.',
+  'integrations.detail.deliveringOff':
+    'لا تُسلَّم أي أحداث أثناء التعطيل. يؤدي التفعيل إلى تصفير عدد الإخفاقات.',
   'integrations.detail.events': 'الأحداث',
   'integrations.detail.signingSecret': 'سر التوقيع',
   'integrations.detail.generation': 'الإصدار {n}',
@@ -219,36 +256,47 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.detail.lastSuccess': 'آخر نجاح',
   'integrations.detail.noSuccessYet': 'لا يوجد تسليم ناجح بعد',
   'integrations.detail.deleteTitle': 'حذف نقطة النهاية',
-  'integrations.detail.deleteBody': 'يوقف كل التسليمات إلى عنوان URL هذا ويزيل سجل التسليم الخاص به. لا يمكن التراجع عن ذلك.',
+  'integrations.detail.deleteBody':
+    'يوقف كل التسليمات إلى عنوان URL هذا ويزيل سجل التسليم الخاص به. لا يمكن التراجع عن ذلك.',
   'integrations.detail.saved': 'حُفظت نقطة النهاية',
   'integrations.detail.deleteConfirmTitle': 'حذف نقطة النهاية هذه؟',
-  'integrations.detail.deleteConfirmBody': 'يتوقف {brand} فورًا عن إرسال الأحداث إلى {url} ويُزال سجل التسليم الخاص بها. لا يمكن التراجع عن ذلك.',
+  'integrations.detail.deleteConfirmBody':
+    'يتوقف {brand} فورًا عن إرسال الأحداث إلى {url} ويُزال سجل التسليم الخاص بها. لا يمكن التراجع عن ذلك.',
   'integrations.detail.deleted': 'حُذفت نقطة النهاية الخاصة بـ{host}',
   'integrations.detail.newSecretTitle': 'سر توقيع جديد',
   'integrations.detail.newSecretOverlap': 'يوقّع السرّان التسليمات حتى {date}. حدّث المستقبِل لديك قبل ذلك.',
   'integrations.detail.newSecretNoOverlap': 'لم يعد السر السابق يوقّع التسليمات. حدّث المستقبِل لديك الآن.',
   'integrations.detail.back': 'Webhook',
   'integrations.detail.rotateTitle': 'تدوير سر التوقيع الخاص بـ{host}؟',
-  'integrations.detail.rotateBody': 'يُصدَر سر جديد ويُعرض مرة واحدة. استخدم فترة تداخل حتى يستمر المستقبِل لديك في قبول التسليمات أثناء تحديثه.',
+  'integrations.detail.rotateBody':
+    'يُصدَر سر جديد ويُعرض مرة واحدة. استخدم فترة تداخل حتى يستمر المستقبِل لديك في قبول التسليمات أثناء تحديثه.',
   'integrations.detail.overlap': 'فترة التداخل',
-  'integrations.detail.overlapHelp': 'خلال فترة التداخل يحمل كل تسليم التوقيعين معًا ({header})، فيقبله المستقبِل الذي يعرف أيًّا من السرّين. بعد انتهاء الفترة لا يوقّع إلا السر الجديد.',
-  'integrations.detail.overlapNoneHelp': 'يتوقف السر القديم عن التوقيع فورًا. سيفشل التحقق من التسليمات حتى يستخدم المستقبِل لديك السر الجديد.',
+  'integrations.detail.overlapHelp':
+    'خلال فترة التداخل يحمل كل تسليم التوقيعين معًا ({header})، فيقبله المستقبِل الذي يعرف أيًّا من السرّين. بعد انتهاء الفترة لا يوقّع إلا السر الجديد.',
+  'integrations.detail.overlapNoneHelp':
+    'يتوقف السر القديم عن التوقيع فورًا. سيفشل التحقق من التسليمات حتى يستخدم المستقبِل لديك السر الجديد.',
 
   'integrations.signature.title': 'التحقق من التوقيعات',
-  'integrations.signature.description': 'يحمل كل طلب الترويستين {timestampHeader} و{signatureHeader}. ارفض الطلبات التي لا يطابق توقيعها أو التي مضى على طابعها الزمني أكثر من 5 دقائق، وأزل التكرار اعتمادًا على معرّف الحدث ({eventIdHeader}).',
+  'integrations.signature.description':
+    'يحمل كل طلب الترويستين {timestampHeader} و{signatureHeader}. ارفض الطلبات التي لا يطابق توقيعها أو التي مضى على طابعها الزمني أكثر من 5 دقائق، وأزل التكرار اعتمادًا على معرّف الحدث ({eventIdHeader}).',
 
-  'integrations.deliveries.redeliveryQueued': 'أُضيفت إعادة التسليم للحدث {id}… إلى قائمة الإرسال (بمعرّف الحدث نفسه)',
+  'integrations.deliveries.redeliveryQueued':
+    'أُضيفت إعادة التسليم للحدث {id}… إلى قائمة الإرسال (بمعرّف الحدث نفسه)',
   'integrations.deliveries.retryFailed': 'تعذّرت إعادة محاولة تسليم {event}: {error}',
   'integrations.deliveries.title': 'التسليمات',
-  'integrations.deliveries.description': 'كل محاولة لتسليم حدث إلى نقطة النهاية هذه. يُعاد إرسال الطلبات الفاشلة بعد نحو 10 ثوانٍ ثم دقيقة و5 دقائق و30 دقيقة وساعتين و8 ساعات و24 ساعة، ثم تُنقل إلى قائمة الرسائل المُهمَلة. تُرسل إعادة المحاولة معرّف الحدث نفسه مجددًا.',
+  'integrations.deliveries.description':
+    'كل محاولة لتسليم حدث إلى نقطة النهاية هذه. يُعاد إرسال الطلبات الفاشلة بعد نحو 10 ثوانٍ ثم دقيقة و5 دقائق و30 دقيقة وساعتين و8 ساعات و24 ساعة، ثم تُنقل إلى قائمة الرسائل المُهمَلة. تُرسل إعادة المحاولة معرّف الحدث نفسه مجددًا.',
   'integrations.deliveries.filterLabel': 'تصفية التسليمات حسب الحالة',
-  'integrations.deliveries.disabledNotice': 'نقطة النهاية هذه معطّلة. لن تُسلَّم الأحداث الجديدة وستُرفض إعادة المحاولة حتى تفعّلها.',
+  'integrations.deliveries.disabledNotice':
+    'نقطة النهاية هذه معطّلة. لن تُسلَّم الأحداث الجديدة وستُرفض إعادة المحاولة حتى تفعّلها.',
   'integrations.deliveries.loadError': 'تعذّر تحميل التسليمات: {error}',
   'integrations.deliveries.emptyStatusTitle':
     '{status, select, pending {لا توجد تسليمات قيد الانتظار} sending {لا توجد تسليمات قيد الإرسال} retrying {لا توجد تسليمات قيد إعادة المحاولة} delivered {لا توجد تسليمات ناجحة} failed {لا توجد تسليمات فاشلة} dead {لا توجد تسليمات مُهمَلة} cancelled {لا توجد تسليمات ملغاة} other {لا توجد تسليمات}}',
-  'integrations.deliveries.emptyStatusBody': 'لا توجد تسليمات لنقطة النهاية هذه بتلك الحالة. اختر «كل الحالات» لرؤية كل التسليمات.',
+  'integrations.deliveries.emptyStatusBody':
+    'لا توجد تسليمات لنقطة النهاية هذه بتلك الحالة. اختر «كل الحالات» لرؤية كل التسليمات.',
   'integrations.deliveries.emptyTitle': 'لا توجد تسليمات بعد',
-  'integrations.deliveries.emptyBody': 'تظهر التسليمات هنا عند وقوع حدث مشترك فيه. أرسل حدثًا تجريبيًا لتجربة نقطة النهاية الآن.',
+  'integrations.deliveries.emptyBody':
+    'تظهر التسليمات هنا عند وقوع حدث مشترك فيه. أرسل حدثًا تجريبيًا لتجربة نقطة النهاية الآن.',
   'integrations.deliveries.showAll': 'عرض كل التسليمات',
   'integrations.deliveries.refreshFailed': 'تعذّر التحديث: {error}',
   'integrations.deliveries.colEvent': 'الحدث',
@@ -294,11 +342,13 @@ export const integrations: Record<keyof typeof source, string> = {
   'integrations.connectors.unavailable': '{message}. لا تُرسل أي بيانات إلى {name}.',
   'integrations.connectors.checkFailed': 'تعذّر إجراء فحص السلامة: {error}',
   'integrations.connectors.title': 'الموصِّلات',
-  'integrations.connectors.description': 'اتصالات اختيارية بأدوات خارجية. لا يرسل الموصِّل أي بيانات إلا بعد إعداد بيانات الاعتماد ونجاح فحص السلامة، وحتى ذلك الحين يبقى معطّلًا ولا يغادر أي شيء {brand}.',
+  'integrations.connectors.description':
+    'اتصالات اختيارية بأدوات خارجية. لا يرسل الموصِّل أي بيانات إلا بعد إعداد بيانات الاعتماد ونجاح فحص السلامة، وحتى ذلك الحين يبقى معطّلًا ولا يغادر أي شيء {brand}.',
   'integrations.connectors.loadError': 'تعذّر تحميل الموصِّلات: {error}',
   'integrations.connectors.emptyTitle': 'لا توجد موصِّلات في هذا الإصدار',
   'integrations.connectors.emptyBody': 'لا يتضمن هذا النشر أي موصِّلات خارجية.',
-  'integrations.connectors.credentialsNotice': 'لا يمكن إضافة بيانات اعتماد الموصِّلات من لوحة التحكم في هذا الإصدار. Webhook ورموز API هي الطريقة المدعومة حاليًا لربط الأنظمة الأخرى.',
+  'integrations.connectors.credentialsNotice':
+    'لا يمكن إضافة بيانات اعتماد الموصِّلات من لوحة التحكم في هذا الإصدار. Webhook ورموز API هي الطريقة المدعومة حاليًا لربط الأنظمة الأخرى.',
   'integrations.connectors.wouldDo': 'ما سيفعله',
   'integrations.connectors.needs': 'ما يحتاج إليه',
   'integrations.connectors.wouldSend': 'البيانات التي سيرسلها',

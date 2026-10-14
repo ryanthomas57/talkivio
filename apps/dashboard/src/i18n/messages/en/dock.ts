@@ -10,11 +10,22 @@ export const dock = {
   'dock.chatUnavailable': 'That chat is no longer available.',
   'dock.newChat': 'New chat',
   'dock.startHint':
-    'Write a message to start a chat with {name}. It appears in their chat window on your site.',
+    'Not chatting yet. Type below and press Enter to start a chat with {name}; it opens on their screen.',
   'dock.cannotStart': 'Your role cannot start chats.',
   'dock.startLabel': 'First message to {name}',
   'dock.startPlaceholder': 'Hi! Can I help you with anything?',
   'dock.startChat': 'Start chat',
+  'dock.typeHere': 'Type here and press Enter to chat',
+  'dock.viewing': 'Viewing {page}',
+  'dock.info.title': 'Visitor info',
+  'dock.info.location': 'Location',
+  'dock.info.localTime': 'Local time',
+  'dock.info.device': 'Device',
+  'dock.info.history': 'Visits and chats',
+  'dock.info.visitsChats':
+    '{visits, plural, one {# visit} other {# visits}}, {chats, plural, one {# chat} other {# chats}}',
+  'dock.info.path': 'Pages this visit',
+  'dock.info.firstSeen': 'First seen {when}.',
   'dock.visitorLeft': 'This visitor has left your site, so the chat could not start.',
   'dock.chatExists': '{name} already has an open chat. Showing it.',
 };

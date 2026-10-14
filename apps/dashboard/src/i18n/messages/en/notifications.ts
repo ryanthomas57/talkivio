@@ -1,7 +1,8 @@
 /** English source strings for 'notifications' (keys are prefixed 'notifications.'). */
 export const notifications = {
   'notifications.title': 'Notifications',
-  'notifications.bellUnread': '{count, plural, one {Notifications, # unread} other {Notifications, # unread}}',
+  'notifications.bellUnread':
+    '{count, plural, one {Notifications, # unread} other {Notifications, # unread}}',
   'notifications.unreadBadge': 'unread',
   'notifications.unreadCount': '{count, plural, one {# unread} other {# unread}}',
   'notifications.allCaughtUp': 'All caught up',

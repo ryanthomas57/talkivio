@@ -155,6 +155,10 @@ export const LiveVisitorItemSchema = z.object({
   ipAddress: z.string().nullable(),
   network: z.string().nullable(),
   deviceCategory: z.string().nullable(),
+  browser: z.string().nullable(),
+  os: z.string().nullable(),
+  /** Pages viewed in the session shown, with analytics consent. */
+  pageViews: z.number().int().nullable(),
   sessionCount: z.number().int().nullable(),
   lastActivityAt: DateTime.nullable(),
   idle: z.boolean(),

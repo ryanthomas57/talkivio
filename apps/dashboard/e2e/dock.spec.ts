@@ -178,3 +178,74 @@ test('DOCK02 a chat request pops up with Accept on any page and opens in a docke
     await vctx.close();
   }
 });
+
+test('DOCK03 files both ways: a visitor attaches before chatting, the agent replies with a file from the docked window', async ({
+  browser,
+  page,
+  request,
+}) => {
+  test.setTimeout(120_000);
+  const site = await demoSite(request);
+  const headers = await csrf(request);
+  await closeOpenChats(request, headers);
+  await request.put(`${API}/api/v1/agents/me/presence`, { data: { status: 'online' }, headers });
+  const name = `Files ${stamp}`;
+  const vctx = await browser.newContext({ storageState: undefined });
+  const vpage = await vctx.newPage();
+  try {
+    await page.goto('/history');
+    await settle(page);
+    await visitorPage(vpage, site.public_key, name);
+    const ui = await openWidget(vpage);
+    const receipt = {
+      name: `receipt-${stamp}.txt`,
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Order 1234 receipt'),
+    };
+    const startButton = ui.getByRole('button', { name: 'Start chat' });
+    if (await startButton.isVisible().catch(() => false)) {
+      // A site with a pre-chat form starts the chat from the form; the file follows.
+      if (
+        await ui
+          .getByLabel('Name')
+          .isVisible()
+          .catch(() => false)
+      )
+        await ui.getByLabel('Name').fill(name);
+      await ui.getByRole('textbox', { name: 'Message' }).fill('Here is my receipt');
+      await startButton.click();
+      await expect.poll(() => widgetChatId(vpage), { timeout: 15_000 }).not.toBe('');
+    }
+    // The paperclip is there before any chat exists; a file sent first starts the chat.
+    await ui.locator('input[type="file"]').setInputFiles(receipt);
+
+    const accept = page.getByRole('button', { name: `Accept chat with ${name}` });
+    await expect(accept).toBeVisible({ timeout: 20_000 });
+    await accept.click();
+    const dock = page.getByRole('region', { name: 'Chat windows' });
+    const log = dock.getByRole('log', { name: `Conversation with ${name}` });
+    await expect(log, "the visitor's file reaches the agent").toContainText(receipt.name, {
+      timeout: 20_000,
+    });
+
+    const invoice = {
+      name: `invoice-${stamp}.txt`,
+      mimeType: 'text/plain',
+      buffer: Buffer.from('Invoice 1234'),
+    };
+    await dock.locator('input[type="file"]').setInputFiles(invoice);
+    const send = dock.getByRole('button', { name: 'Send reply' });
+    await expect(send, 'the file is uploaded and scanned before it can be sent').toBeEnabled({
+      timeout: 20_000,
+    });
+    await send.click();
+    await expect(ui.getByRole('log').first(), "the agent's file reaches the visitor").toContainText(
+      invoice.name,
+      { timeout: 20_000 },
+    );
+  } finally {
+    const id = await widgetChatId(vpage).catch(() => '');
+    if (id) await request.post(`${API}/api/v1/chats/${id}/close`, { data: { reason: 'resolved' }, headers });
+    await vctx.close();
+  }
+});
