@@ -40,8 +40,10 @@ dc --profile jobs run --rm migrate
 note "checks: application role cannot bypass RLS; every tenant table forces it; no failed migration"
 q() { dc exec -T postgres psql -X -A -t -U postgres -d talkivio -c "$1"; }
 [ "$(q "SELECT rolbypassrls FROM pg_roles WHERE rolname = 'talkivio_app'")" = f ] || die "talkivio_app can bypass RLS"
-unforced=$(q "SELECT count(*) FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id' WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p') AND c.relname <> 'tenant_tombstones' AND NOT c.relforcerowsecurity")
-[ "$unforced" = 0 ] || die "$unforced tenant tables do not force row-level security"
+# Every table with a tenant_id forces RLS, except the ones that are not tenant-owned (docs/adr/0002): the global
+# auth_tokens and outbound_emails, the billing provider's event inbox, and the erasure ledger.
+unforced=$(q "SELECT string_agg(c.relname, ', ' ORDER BY c.relname) FROM pg_class c JOIN pg_attribute a ON a.attrelid = c.oid AND a.attname = 'tenant_id' WHERE c.relnamespace = 'public'::regnamespace AND c.relkind IN ('r','p') AND c.relname NOT IN ('tenant_tombstones', 'auth_tokens', 'outbound_emails', 'billing_events') AND NOT c.relforcerowsecurity")
+[ -z "$unforced" ] || die "tenant tables without forced row-level security: $unforced"
 [ "$(q "SELECT count(*) FROM _prisma_migrations WHERE finished_at IS NULL OR rolled_back_at IS NOT NULL")" = 0 ] || die "a migration is unfinished"
 note "restored: $(q "SELECT count(*) FROM tenants") workspaces, $(q "SELECT count(*) FROM chats") chats, $(q "SELECT count(*) FROM messages") messages"
 
