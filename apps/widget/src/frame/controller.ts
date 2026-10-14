@@ -4,7 +4,16 @@
  * UI components read `state` and call methods; nothing else mutates state.
  */
 import { io, type Socket } from 'socket.io-client';
-import { DEFAULT_WIDGET_CONFIG, mergeWidgetConfig, type MessageDTO, type PageInfo, type PublicAgent, type Rating, type VisitorProfileInput, type WidgetConfig } from '@talkivio/contracts/protocol';
+import {
+  DEFAULT_WIDGET_CONFIG,
+  mergeWidgetConfig,
+  type MessageDTO,
+  type PageInfo,
+  type PublicAgent,
+  type Rating,
+  type VisitorProfileInput,
+  type WidgetConfig,
+} from '@talkivio/contracts/protocol';
 import {
   FRAME_SOURCE,
   PREVIEW_SOURCE,
@@ -44,7 +53,20 @@ import { HostBridge, ancestorOrigin } from './host';
 import { resolveLocale, type Locale, type StringKey } from './i18n';
 import { previewState } from './preview';
 import { blip, unlockAudio } from './sound';
-import { computeInvitation, computeUnread, initialState, isAgentText, isHidden, mergeIncoming, openConversation, proactiveKey, viewOf, type OfflineDraft, type State, type UiMessage } from './state';
+import {
+  computeInvitation,
+  computeUnread,
+  initialState,
+  isAgentText,
+  isHidden,
+  mergeIncoming,
+  openConversation,
+  proactiveKey,
+  viewOf,
+  type OfflineDraft,
+  type State,
+  type UiMessage,
+} from './state';
 import { isPreviewableImage, putBytes, sha256Hex } from './upload';
 import { EMAIL_RE, keys, originOf, readVisitorToken, store, uuid, writeVisitorToken } from './util';
 
@@ -70,10 +92,15 @@ interface Consent {
   at: string;
 }
 type ConfigPatch = { appearance?: Record<string, unknown>; content?: Record<string, unknown> };
-type CommandAck = { type: 'command.ack'; result: unknown } | { type: 'command.error'; code: string; message: string; retryable: boolean };
+type CommandAck =
+  | { type: 'command.ack'; result: unknown }
+  | { type: 'command.error'; code: string; message: string; retryable: boolean };
 
 export class WidgetError extends Error {
-  constructor(readonly code: string, message?: string) {
+  constructor(
+    readonly code: string,
+    message?: string,
+  ) {
     super(message ?? code);
   }
 }
@@ -102,7 +129,10 @@ export function sanitizeSettingsPatch(patch: unknown): ConfigPatch {
     const defaults = DEFAULT_WIDGET_CONFIG[section] as unknown as Record<string, unknown>;
     if (!(key in defaults)) return false;
     const d = defaults[key];
-    const ok = d === null ? value === null || typeof value === 'string' : typeof value === typeof d && (typeof d !== 'number' || Number.isFinite(value));
+    const ok =
+      d === null
+        ? value === null || typeof value === 'string'
+        : typeof value === typeof d && (typeof d !== 'number' || Number.isFinite(value));
     if (ok) (out[section] ??= {})[key] = value;
     return ok;
   };
@@ -187,15 +217,31 @@ export class Controller {
   private previewMode: PreviewState = 'launcher';
   private previewOnline: boolean | undefined;
   private previewLocale: string | null = null;
-  private emitted = { unread: -1, invitation: '', online: null as boolean | null, visitor: '', unsupported: '', snapshot: '' };
+  private emitted = {
+    unread: -1,
+    invitation: '',
+    online: null as boolean | null,
+    visitor: '',
+    unsupported: '',
+    snapshot: '',
+  };
   private publishQueued = false;
   private lastLayout = '';
   private layoutCache: LayoutMessage | null = null;
-  private visitorTyping = { sentAt: 0, active: false, text: '', idle: undefined as ReturnType<typeof setTimeout> | undefined, trail: undefined as ReturnType<typeof setTimeout> | undefined };
+  private visitorTyping = {
+    sentAt: 0,
+    active: false,
+    text: '',
+    idle: undefined as ReturnType<typeof setTimeout> | undefined,
+    trail: undefined as ReturnType<typeof setTimeout> | undefined,
+  };
   private noticeSeq = 0;
   private focusLauncherFlag = false;
   private handoffCode: string | null = null;
-  private readonly uploadWaiters = new Map<string, (a: { state?: string; errorCode?: string | null }) => void>();
+  private readonly uploadWaiters = new Map<
+    string,
+    (a: { state?: string; errorCode?: string | null }) => void
+  >();
   private readonly grants = new Map<string, { url: string; until: number }>();
   private clientTags = new Set<string>();
   /** True while an identity reset is in flight: the old capability is being revoked on purpose. */
@@ -214,7 +260,12 @@ export class Controller {
     this.keys = keys(widgetId);
     this.api = new WidgetApi(apiBase, () => this.refreshSession());
     this.host = new HostBridge((m) => this.onHost(m));
-    this.ui = { open: false, seen: [], dismissedConv: null, ...(store.json<UiSession>('session', this.keys.ui) ?? {}) };
+    this.ui = {
+      open: false,
+      seen: [],
+      dismissedConv: null,
+      ...(store.json<UiSession>('session', this.keys.ui) ?? {}),
+    };
     this.consent = store.json<Consent>('local', this.keys.consent);
     this.page = { url: location.href, title: document.title || '', referrer: null };
     const prefs = store.json<{ sound?: boolean }>('local', this.keys.prefs);
@@ -255,7 +306,11 @@ export class Controller {
     const s = this.state;
     const invitation = computeInvitation(s);
     const unread = computeUnread(s);
-    if (invitation?.id !== s.invitation?.id || invitation?.body !== s.invitation?.body || unread !== s.unread) {
+    if (
+      invitation?.id !== s.invitation?.id ||
+      invitation?.body !== s.invitation?.body ||
+      unread !== s.unread
+    ) {
       this.state = { ...s, invitation, unread };
     }
     if (this.preview) return;
@@ -409,7 +464,14 @@ export class Controller {
         // Unapproved origin / unknown site: render nothing at all.
         this.set({ fatal: code === 'NOT_FOUND' ? 'UNKNOWN_SITE' : code });
         this.setConnection('failed', code);
-        this.emit('error', { code, message: code === 'ORIGIN_NOT_ALLOWED' ? 'This website is not allowed to use this widget' : 'Unknown site key', retryable: false });
+        this.emit('error', {
+          code,
+          message:
+            code === 'ORIGIN_NOT_ALLOWED'
+              ? 'This website is not allowed to use this widget'
+              : 'Unknown site key',
+          retryable: false,
+        });
         this.rejectWaiters(new WidgetError(code));
         return;
       }
@@ -417,13 +479,26 @@ export class Controller {
       const retryable = !(err instanceof ApiError) || err.retryable || code === 'NETWORK';
       if (!this.state.sessionReady && (this.failures >= 2 || !retryable)) this.set({ fatal: code });
       this.emit('error', { code, message: (err as Error).message || code, retryable });
-      if (retryable) this.retryTimer = setTimeout(() => void this.boot(), code === 'RATE_LIMITED' ? 15000 : Math.min(30000, 2000 * 2 ** Math.min(this.failures, 4)));
+      if (retryable)
+        this.retryTimer = setTimeout(
+          () => void this.boot(),
+          code === 'RATE_LIMITED' ? 15000 : Math.min(30000, 2000 * 2 ** Math.min(this.failures, 4)),
+        );
       else this.setConnection('failed', code);
     }
   }
 
   private async loadBootstrap(): Promise<void> {
-    const data = await this.api.call<V2Bootstrap>('POST', '/bootstrap', { siteKey: this.widgetId, hostOrigin: this.hostOrigin(), locale: (this.sdkLocale ?? this.browserLocale).slice(0, 20) }, { auth: false });
+    const data = await this.api.call<V2Bootstrap>(
+      'POST',
+      '/bootstrap',
+      {
+        siteKey: this.widgetId,
+        hostOrigin: this.hostOrigin(),
+        locale: (this.sdkLocale ?? this.browserLocale).slice(0, 20),
+      },
+      { auth: false },
+    );
     this.serverConfig = mergeWidgetConfig(data.config);
     this.siteId = data.siteId ?? null;
     const behavior = this.serverConfig.behavior;
@@ -447,8 +522,14 @@ export class Controller {
   private sessionContext() {
     const p = this.page;
     return {
-      consent: this.consent ? { analytics: this.consent.analytics, policyVersion: this.consent.policyVersion } : undefined,
-      page: { url: p.url.slice(0, 4000), title: (p.title || '').slice(0, 1000), referrer: p.referrer ? p.referrer.slice(0, 4000) : null },
+      consent: this.consent
+        ? { analytics: this.consent.analytics, policyVersion: this.consent.policyVersion }
+        : undefined,
+      page: {
+        url: p.url.slice(0, 4000),
+        title: (p.title || '').slice(0, 1000),
+        referrer: p.referrer ? p.referrer.slice(0, 4000) : null,
+      },
       locale: (this.initInfo.locale || this.browserLocale).slice(0, 20) || null,
       timezone: this.initInfo.timezone.slice(0, 80) || null,
     };
@@ -461,11 +542,25 @@ export class Controller {
     if (handoff) {
       this.handoffCode = null;
       try {
-        const s = await this.api.call<V2Session>('POST', '/identity/redeem', { handoffCode: handoff, siteKey: this.widgetId, hostOrigin: this.hostOrigin(), ...this.sessionContext() }, { auth: false });
+        const s = await this.api.call<V2Session>(
+          'POST',
+          '/identity/redeem',
+          {
+            handoffCode: handoff,
+            siteKey: this.widgetId,
+            hostOrigin: this.hostOrigin(),
+            ...this.sessionContext(),
+          },
+          { auth: false },
+        );
         return this.applySession(s);
       } catch (err) {
         if (codeOf(err) === 'BANNED') throw err;
-        this.emit('error', { code: codeOf(err), message: 'Identity handoff could not be redeemed', retryable: false });
+        this.emit('error', {
+          code: codeOf(err),
+          message: 'Identity handoff could not be redeemed',
+          retryable: false,
+        });
       }
     }
     const s = await this.api.call<V2Session>(
@@ -486,7 +581,11 @@ export class Controller {
 
   /** Apply a session response (from /sessions, /identity/reset or /identity/redeem). */
   private async applySession(s: V2Session): Promise<void> {
-    if (s.anonymousToken) writeVisitorToken(this.keys.visitor, s.anonymousToken, { persistence: s.anonymousTokenPersistence, expiresAt: s.anonymousTokenExpiresAt });
+    if (s.anonymousToken)
+      writeVisitorToken(this.keys.visitor, s.anonymousToken, {
+        persistence: s.anonymousTokenPersistence,
+        expiresAt: s.anonymousTokenExpiresAt,
+      });
     if (s.sessionKey) store.set('session', this.keys.session, s.sessionKey);
     this.api.capability = s.capability;
     this.scheduleCapabilityRefresh(s.capabilityExpiresAt);
@@ -498,7 +597,12 @@ export class Controller {
     this.set({
       sessionReady: true,
       fatal: null,
-      visitor: { id: s.visitor.id, name: s.visitor.hasName ? s.visitor.displayName : null, email: visitorChanged ? null : (prev?.email ?? null), phone: visitorChanged ? null : (prev?.phone ?? null) },
+      visitor: {
+        id: s.visitor.id,
+        name: s.visitor.hasName ? s.visitor.displayName : null,
+        email: visitorChanged ? null : (prev?.email ?? null),
+        phone: visitorChanged ? null : (prev?.phone ?? null),
+      },
       verified: !!s.visitor.verified,
       ...(visitorChanged ? { conversation: null, messages: [], proactive: [] } : {}),
     });
@@ -532,7 +636,10 @@ export class Controller {
   private scheduleCapabilityRefresh(expiresAt: string) {
     clearTimeout(this.capabilityTimer);
     const ms = new Date(expiresAt).getTime() - Date.now() - 120_000;
-    this.capabilityTimer = setTimeout(() => void this.refreshSession(), Math.max(30_000, Number.isFinite(ms) ? ms : 50 * 60_000));
+    this.capabilityTimer = setTimeout(
+      () => void this.refreshSession(),
+      Math.max(30_000, Number.isFinite(ms) ? ms : 50 * 60_000),
+    );
   }
 
   /** Re-issue the capability (on 401 / before expiry). Concurrent callers share one request. */
@@ -570,9 +677,13 @@ export class Controller {
       timeout: 15000,
     });
     this.socket = socket;
-    socket.on('auth.ok', (raw: unknown) => this.onSocketAuth(camelize<{ connectionId: string; heartbeatIntervalMs?: number }>(raw)));
+    socket.on('auth.ok', (raw: unknown) =>
+      this.onSocketAuth(camelize<{ connectionId: string; heartbeatIntervalMs?: number }>(raw)),
+    );
     socket.on('event', (raw: unknown) => this.onFrame(camelize<V2Frame>(raw)));
-    socket.on('ephemeral', (raw: unknown) => this.onEphemeral(camelize<{ type: string; expiresAt?: string; payload: Record<string, unknown> }>(raw)));
+    socket.on('ephemeral', (raw: unknown) =>
+      this.onEphemeral(camelize<{ type: string; expiresAt?: string; payload: Record<string, unknown> }>(raw)),
+    );
     socket.on('control', (raw: unknown) => this.onControl(camelize<{ type: string }>(raw)));
     socket.on('disconnect', (reason: string) => this.onDisconnect(reason));
     socket.on('connect_error', (err: Error) => this.onConnectError(err));
@@ -651,7 +762,8 @@ export class Controller {
   whenReady(timeout = 20000): Promise<void> {
     if (this.preview || (this.state.sessionReady && this.api.capability)) return Promise.resolve();
     if (this.state.fatal === 'BANNED') return Promise.reject(new WidgetError(UNAVAILABLE));
-    if (this.state.fatal && HIDDEN_CODES.includes(this.state.fatal)) return Promise.reject(new WidgetError(this.state.fatal));
+    if (this.state.fatal && HIDDEN_CODES.includes(this.state.fatal))
+      return Promise.reject(new WidgetError(this.state.fatal));
     return new Promise((resolve, reject) => {
       const t = setTimeout(() => reject(new WidgetError('NOT_CONNECTED')), timeout);
       this.readyWaiters.push([
@@ -677,7 +789,12 @@ export class Controller {
     if (!s || !this.live()) throw new ApiError('NOT_CONNECTED', 'Socket not connected', 0, true);
     let ack: CommandAck;
     try {
-      ack = (await s.timeout(timeout).emitWithAck('command', { v: 1, command_id: uuid(), type, payload: snakeKeys(payload) })) as CommandAck;
+      ack = (await s.timeout(timeout).emitWithAck('command', {
+        v: 1,
+        command_id: uuid(),
+        type,
+        payload: snakeKeys(payload),
+      })) as CommandAck;
     } catch {
       throw new ApiError('TIMEOUT', 'Command timed out', 0, true);
     }
@@ -690,9 +807,16 @@ export class Controller {
 
   private effectiveConfig(): WidgetConfig {
     const base = mergeWidgetConfig(this.serverConfig);
-    const appearance = { ...base.appearance, ...(this.overrides.appearance ?? {}) } as WidgetConfig['appearance'];
+    const appearance = {
+      ...base.appearance,
+      ...(this.overrides.appearance ?? {}),
+    } as WidgetConfig['appearance'];
     if (this.positionOverride) appearance.position = this.positionOverride;
-    return { ...base, appearance, content: { ...base.content, ...(this.overrides.content ?? {}) } as WidgetConfig['content'] };
+    return {
+      ...base,
+      appearance,
+      content: { ...base.content, ...(this.overrides.content ?? {}) } as WidgetConfig['content'],
+    };
   }
 
   private recomputeLocale() {
@@ -700,7 +824,11 @@ export class Controller {
     const r = resolveLocale(this.preview ? this.previewLocale : this.sdkLocale, site, this.browserLocale);
     if (r.unsupported && r.unsupported !== this.emitted.unsupported) {
       this.emitted.unsupported = r.unsupported;
-      this.emit('error', { code: 'UNSUPPORTED_LOCALE', message: `Locale "${r.unsupported}" is not supported; using "${r.locale}".`, retryable: false });
+      this.emit('error', {
+        code: 'UNSUPPORTED_LOCALE',
+        message: `Locale "${r.unsupported}" is not supported; using "${r.locale}".`,
+        retryable: false,
+      });
     }
     if (r.locale !== this.state.locale) this.set({ locale: r.locale });
     return r.locale;
@@ -726,7 +854,11 @@ export class Controller {
     const prev = this.state.conversation;
     const sameChat = prev?.id === chat.id;
     if (sameChat && this.chatMeta && chat.version < this.chatMeta.version) return; // stale
-    this.chatMeta = { id: chat.id, version: chat.version, lastSeq: Math.max(chat.lastSeq, sameChat ? (this.chatMeta?.lastSeq ?? 0) : 0) };
+    this.chatMeta = {
+      id: chat.id,
+      version: chat.version,
+      lastSeq: Math.max(chat.lastSeq, sameChat ? (this.chatMeta?.lastSeq ?? 0) : 0),
+    };
     const conv = toConversation(chat);
     const patch: Partial<State> = { conversation: conv };
     if (!sameChat) {
@@ -738,6 +870,14 @@ export class Controller {
     if (chat.status !== 'closed') this.checkStarted(conv, !loadMessages);
     if (this.live() && this.subscribedChat !== chat.id) await this.subscribeChat(chat.id);
     if (loadMessages) await this.loadMessages(chat.id);
+  }
+
+  /** The agent's opening message was written before this tab joined the chat; present it as it arrives. */
+  private async adoptAgentOpened(chat: V2Chat) {
+    const known = new Set(this.state.messages.map((m) => m.id));
+    await this.adoptChat(chat, true);
+    const opening = this.state.messages.filter((m) => !known.has(m.id) && isAgentText(m)).at(-1);
+    if (opening) this.presentArrival(opening);
   }
 
   private async refreshChat() {
@@ -756,13 +896,17 @@ export class Controller {
     for (let i = 0; i < 20; i++) {
       let page: V2MessagePage;
       try {
-        page = await this.api.call<V2MessagePage>('GET', `/chats/${encodeURIComponent(chatId)}/messages?${after ? `after_seq=${after}&` : ''}limit=100`);
+        page = await this.api.call<V2MessagePage>(
+          'GET',
+          `/chats/${encodeURIComponent(chatId)}/messages?${after ? `after_seq=${after}&` : ''}limit=100`,
+        );
       } catch {
         return;
       }
       if (this.state.conversation?.id !== chatId) return;
       for (const m of page.items) this.onMessage(this.mapMessage(m), false);
-      if (this.chatMeta?.id === chatId) this.chatMeta.lastSeq = Math.max(this.chatMeta.lastSeq, page.lastSeq ?? 0);
+      if (this.chatMeta?.id === chatId)
+        this.chatMeta.lastSeq = Math.max(this.chatMeta.lastSeq, page.lastSeq ?? 0);
       if (!page.hasMore || !page.throughSeq || page.throughSeq <= after) break;
       after = page.throughSeq;
     }
@@ -775,7 +919,10 @@ export class Controller {
     this.subscribedChat = chatId;
     const hadCursor = !!(useCursor && this.cursor);
     try {
-      const ack = (await s.timeout(10000).emitWithAck('subscribe', { scopes: [{ kind: 'chat', id: chatId }], last_cursor: hadCursor ? this.cursor : null })) as { type: string; snapshot_cursor?: string };
+      const ack = (await s.timeout(10000).emitWithAck('subscribe', {
+        scopes: [{ kind: 'chat', id: chatId }],
+        last_cursor: hadCursor ? this.cursor : null,
+      })) as { type: string; snapshot_cursor?: string };
       if (ack?.type === 'snapshot.required') {
         this.cursor = null;
         await this.refreshChat();
@@ -799,7 +946,8 @@ export class Controller {
     if (f.eventId) {
       if (this.seenEvents.has(f.eventId)) return;
       this.seenEvents.add(f.eventId);
-      if (this.seenEvents.size > 1000) this.seenEvents.delete(this.seenEvents.values().next().value as string);
+      if (this.seenEvents.size > 1000)
+        this.seenEvents.delete(this.seenEvents.values().next().value as string);
     }
     if (f.cursor) this.cursor = f.cursor;
     const p = f.payload ?? {};
@@ -838,7 +986,13 @@ export class Controller {
       case 'rating.updated': {
         const c = this.state.conversation;
         if (c && (!p.chatId || p.chatId === c.id) && (p.rating === 'good' || p.rating === 'bad')) {
-          this.set({ conversation: { ...c, rating: (p.rating as string).toUpperCase() as Rating, ratingComment: (p.comment as string | null) ?? c.ratingComment } });
+          this.set({
+            conversation: {
+              ...c,
+              rating: (p.rating as string).toUpperCase() as Rating,
+              ratingComment: (p.comment as string | null) ?? c.ratingComment,
+            },
+          });
         }
         return;
       }
@@ -848,13 +1002,25 @@ export class Controller {
       case 'invitation.offered':
         this.onInvitation(p);
         return;
+      case 'chat.opened_by_agent': {
+        // An agent started a chat from the Visitors list. One open chat per visitor is enforced by the server.
+        const chat = p.chat as V2Chat | undefined;
+        const open = openConversation(this.state);
+        if (chat && chat.status !== 'closed' && (!open || open.id === chat.id))
+          void this.adoptAgentOpened(chat);
+        return;
+      }
       case 'attachment.updated':
         this.onAttachmentUpdated(p);
         return;
       case 'message.redacted': {
         const id = String(p.messageId ?? '');
         if (!id || !this.state.messages.some((m) => m.id === id)) return;
-        this.set({ messages: this.state.messages.map((m) => (m.id === id ? { ...m, body: '', attachments: [], options: [], redacted: true } : m)) });
+        this.set({
+          messages: this.state.messages.map((m) =>
+            m.id === id ? { ...m, body: '', attachments: [], options: [], redacted: true } : m,
+          ),
+        });
         return;
       }
     }
@@ -872,31 +1038,43 @@ export class Controller {
       this.deliveredPending = null;
       if (!next || next.seq <= (this.deliveredSent.get(next.chatId) ?? 0) || !this.live()) return;
       this.deliveredSent.set(next.chatId, next.seq);
-      this.command('message.delivered', { chatId: next.chatId, lastDeliveredSeq: next.seq }).catch(() => undefined);
+      this.command('message.delivered', { chatId: next.chatId, lastDeliveredSeq: next.seq }).catch(
+        () => undefined,
+      );
     }, 400);
   }
 
   /** Agent receipts for the visitor's own messages (Delivered from the ephemeral frame, Read from `message.read`). */
   private setReceipt(chatId: string, kind: 'delivered' | 'read', seq: number) {
     if (!chatId || this.state.conversation?.id !== chatId) return;
-    const cur = this.state.receipts?.chatId === chatId ? this.state.receipts : { chatId, delivered: 0, read: 0 };
+    const cur =
+      this.state.receipts?.chatId === chatId ? this.state.receipts : { chatId, delivered: 0, read: 0 };
     const next = { ...cur, [kind]: Math.max(cur[kind], seq) };
     if (kind === 'read') next.delivered = Math.max(next.delivered, seq); // read implies delivered
-    if (next.delivered !== cur.delivered || next.read !== cur.read || this.state.receipts?.chatId !== chatId) this.set({ receipts: next });
+    if (next.delivered !== cur.delivered || next.read !== cur.read || this.state.receipts?.chatId !== chatId)
+      this.set({ receipts: next });
   }
 
   /** Scan progress of a visitor upload (public chat scope) — resolves upload waiters and updates sent files. */
   private onAttachmentUpdated(p: Record<string, unknown>) {
     const id = String(p.attachmentId ?? '');
     if (!id) return;
-    const update = { state: typeof p.state === 'string' ? p.state : undefined, errorCode: (p.errorCode as string | undefined) ?? null };
+    const update = {
+      state: typeof p.state === 'string' ? p.state : undefined,
+      errorCode: (p.errorCode as string | undefined) ?? null,
+    };
     this.uploadWaiters.get(id)?.(update);
     if (!update.state) return;
     let changed = false;
     const messages = this.state.messages.map((m) => {
       if (!m.attachments.some((a) => a.id === id)) return m;
       changed = true;
-      return { ...m, attachments: m.attachments.map((a) => (a.id === id ? { ...a, state: update.state, errorCode: update.errorCode } : a)) };
+      return {
+        ...m,
+        attachments: m.attachments.map((a) =>
+          a.id === id ? { ...a, state: update.state, errorCode: update.errorCode } : a,
+        ),
+      };
     });
     if (changed) this.set({ messages });
   }
@@ -913,11 +1091,20 @@ export class Controller {
   private applyChat(chat: V2Chat, adoptIfNew = false) {
     const prev = this.state.conversation;
     if (!prev || prev.id !== chat.id) {
-      if (adoptIfNew && !openConversation(this.state) && !(chat.status === 'closed' && chat.id === this.ui.dismissedConv)) void this.adoptChat(chat, true);
+      if (
+        adoptIfNew &&
+        !openConversation(this.state) &&
+        !(chat.status === 'closed' && chat.id === this.ui.dismissedConv)
+      )
+        void this.adoptChat(chat, true);
       return;
     }
     if (this.chatMeta && this.chatMeta.id === chat.id && chat.version < this.chatMeta.version) return; // stale aggregate version
-    this.chatMeta = { id: chat.id, version: chat.version, lastSeq: Math.max(chat.lastSeq, this.chatMeta?.lastSeq ?? 0) };
+    this.chatMeta = {
+      id: chat.id,
+      version: chat.version,
+      lastSeq: Math.max(chat.lastSeq, this.chatMeta?.lastSeq ?? 0),
+    };
     const conv = toConversation(chat);
     if (conv.status === 'RESOLVED' && conv.id === this.ui.dismissedConv) return;
     const patch: Partial<State> = { conversation: conv };
@@ -926,7 +1113,8 @@ export class Controller {
       if (this.state.offline?.reason === 'queue' && conv.status === 'ACTIVE') patch.offline = null;
     }
     this.set(patch);
-    if (conv.status === 'RESOLVED' && prev.status !== 'RESOLVED') this.markEnded(conv.id, this.endingByVisitor ? 'visitor' : 'team');
+    if (conv.status === 'RESOLVED' && prev.status !== 'RESOLVED')
+      this.markEnded(conv.id, this.endingByVisitor ? 'visitor' : 'team');
     if (conv.status !== 'RESOLVED') this.checkStarted(conv);
   }
 
@@ -934,22 +1122,35 @@ export class Controller {
     const p = e?.payload ?? {};
     if (e?.type === 'typing.changed') {
       const actor = (p.actor ?? {}) as { type?: string; displayName?: string };
-      if (actor.type !== 'agent' || !this.state.conversation || p.chatId !== this.state.conversation.id) return;
+      if (actor.type !== 'agent' || !this.state.conversation || p.chatId !== this.state.conversation.id)
+        return;
       const name = actor.displayName || '';
       const id = `typing:${name}`;
       const known = this.state.conversation.agents.find((a) => a.name === name);
       clearTimeout(this.typingTimers.get(id));
       const others = this.state.typing.filter((a) => a.id !== id);
       if (p.isTyping) {
-        const agent: PublicAgent = { id, name, avatarUrl: known?.avatarUrl ?? null, title: known?.title ?? null };
+        const agent: PublicAgent = {
+          id,
+          name,
+          avatarUrl: known?.avatarUrl ?? null,
+          title: known?.title ?? null,
+        };
         this.set({ typing: [...others, agent] });
         const ttl = e.expiresAt ? new Date(e.expiresAt).getTime() - Date.now() : 6000;
-        this.typingTimers.set(id, setTimeout(() => this.set({ typing: this.state.typing.filter((a) => a.id !== id) }), Math.min(15000, Math.max(1000, Number.isFinite(ttl) ? ttl : 6000))));
+        this.typingTimers.set(
+          id,
+          setTimeout(
+            () => this.set({ typing: this.state.typing.filter((a) => a.id !== id) }),
+            Math.min(15000, Math.max(1000, Number.isFinite(ttl) ? ttl : 6000)),
+          ),
+        );
       } else {
         this.set({ typing: others });
       }
     } else if (e?.type === 'message.delivered') {
-      if (p.actorType === 'agent' && typeof p.throughSeq === 'number') this.setReceipt(String(p.chatId ?? ''), 'delivered', p.throughSeq);
+      if (p.actorType === 'agent' && typeof p.throughSeq === 'number')
+        this.setReceipt(String(p.chatId ?? ''), 'delivered', p.throughSeq);
     } else if (e?.type === 'queue.wait_exceeded') {
       const c = this.state.conversation;
       if (!c || p.chatId !== c.id || c.status !== 'WAITING') return;
@@ -959,7 +1160,8 @@ export class Controller {
       if (!a.state) return;
       const account = toAccount(a);
       const patch: Partial<State> = { account };
-      if (account.online && this.state.offline?.reason === 'offline' && !this.state.offlineDraft?.message) patch.offline = null;
+      if (account.online && this.state.offline?.reason === 'offline' && !this.state.offlineDraft?.message)
+        patch.offline = null;
       this.set(patch);
       if (this.emitted.online !== account.online) {
         this.emitted.online = account.online;
@@ -984,7 +1186,10 @@ export class Controller {
     if (Number.isFinite(expiresAt)) {
       if (expiresAt <= Date.now()) return;
       // Expired invitations disappear (accepting one would answer 409).
-      setTimeout(() => this.set({ proactive: this.state.proactive.filter((x) => x.id !== `invitation-${id}`) }), Math.min(expiresAt - Date.now(), 2 ** 31 - 1));
+      setTimeout(
+        () => this.set({ proactive: this.state.proactive.filter((x) => x.id !== `invitation-${id}`) }),
+        Math.min(expiresAt - Date.now(), 2 ** 31 - 1),
+      );
     }
     const m: MessageDTO = {
       id: `invitation-${id}`,
@@ -1014,7 +1219,9 @@ export class Controller {
       action === 'displayed'
         ? live
           ? this.command('invitation.ack', { invitationId: id, displayedAtClient: new Date().toISOString() })
-          : this.api.call('POST', `/invitations/${encodeURIComponent(id)}/displayed`, { displayedAtClient: new Date().toISOString() })
+          : this.api.call('POST', `/invitations/${encodeURIComponent(id)}/displayed`, {
+              displayedAtClient: new Date().toISOString(),
+            })
         : live
           ? this.command('invitation.dismiss', { invitationId: id })
           : this.api.call('POST', `/invitations/${encodeURIComponent(id)}/dismiss`, {});
@@ -1023,7 +1230,8 @@ export class Controller {
 
   /** The invitation the visitor is answering (accepted card, or the latest unexpired proactive offer). */
   private pendingInvitation(): string | null {
-    if (this.acceptedInvitation && [...this.invitationIds.values()].includes(this.acceptedInvitation)) return this.acceptedInvitation;
+    if (this.acceptedInvitation && [...this.invitationIds.values()].includes(this.acceptedInvitation))
+      return this.acceptedInvitation;
     const last = this.state.proactive[this.state.proactive.length - 1];
     return last ? (this.invitationIds.get(proactiveKey(last)) ?? null) : null;
   }
@@ -1031,29 +1239,48 @@ export class Controller {
   private onMessage(m: UiMessage, live: boolean) {
     if (m.type === 'EVENT' && !m.event) return;
     const s = this.state;
-    const idx = s.messages.findIndex((x) => x.id === m.id || (!!m.clientId && x.clientId === m.clientId && x.authorType === 'VISITOR'));
+    const idx = s.messages.findIndex(
+      (x) => x.id === m.id || (!!m.clientId && x.clientId === m.clientId && x.authorType === 'VISITOR'),
+    );
     const isNew = idx < 0;
-    let messages = isNew ? [...s.messages, m] : s.messages.map((x, i) => (i === idx ? mergeIncoming(x, m) : x));
+    let messages = isNew
+      ? [...s.messages, m]
+      : s.messages.map((x, i) => (i === idx ? mergeIncoming(x, m) : x));
     if (m.seq !== undefined) messages = sortBySeq(messages);
     if (m.clientId && !s.messages[idx]?.upload) this.sendMeta.delete(m.clientId);
     const patch: Partial<State> = { messages };
     if (isNew && isAgentText(m)) patch.typing = s.typing.filter((a) => a.name !== m.authorName);
     if (m.type === 'EVENT' && m.event?.kind === 'chat.rating_requested') patch.ratingRequested = true;
     this.set(patch);
-    if (!isNew || !live) return;
+    if (isNew && live) this.presentArrival(m);
+  }
+
+  /** What a newly arrived message does beyond the transcript: announcement, host event, chime, auto-open. */
+  private presentArrival(m: UiMessage) {
     if (isAgentText(m)) {
       // One short sentence for screen readers; history and the visitor's own messages are never announced.
       const text = m.body.length > 140 ? `${m.body.slice(0, 139)}…` : m.body;
       this.set({ announcement: { name: m.authorName, text, n: (this.state.announcement?.n ?? 0) + 1 } });
     }
     if (isAgentText(m) || m.type === 'EVENT') {
-      this.emit('message.received', { chatId: m.conversationId, messageId: m.id, type: m.type === 'EVENT' ? 'system' : m.authorType === 'AGENT' ? 'agent' : 'automated' });
+      this.emit('message.received', {
+        chatId: m.conversationId,
+        messageId: m.id,
+        type: m.type === 'EVENT' ? 'system' : m.authorType === 'AGENT' ? 'agent' : 'automated',
+      });
     }
     if (isAgentText(m)) {
       const st = this.state;
       const attentive = st.open && st.hostVisible && st.hostFocused;
       if (st.config.behavior.sound && st.soundOn && !attentive) blip();
-      if (m.authorType === 'AGENT' && st.config.behavior.openOnAgentMessage && !st.open && !isHidden(st) && !st.viewport.compact && !st.hideLauncher) {
+      if (
+        m.authorType === 'AGENT' &&
+        st.config.behavior.openOnAgentMessage &&
+        !st.open &&
+        !isHidden(st) &&
+        !st.viewport.compact &&
+        !st.hideLauncher
+      ) {
         this.open('agent', false);
       }
       this.markRead();
@@ -1076,7 +1303,13 @@ export class Controller {
     if (!chatId || this.state.conversation?.id !== chatId) return;
     this.saveReadThrough(chatId, seq);
     const at = new Date().toISOString();
-    this.set({ messages: this.state.messages.map((m) => (isAgentText(m) && !m.readByVisitorAt && (m.seq ?? Infinity) <= seq ? { ...m, readByVisitorAt: at } : m)) });
+    this.set({
+      messages: this.state.messages.map((m) =>
+        isAgentText(m) && !m.readByVisitorAt && (m.seq ?? Infinity) <= seq
+          ? { ...m, readByVisitorAt: at }
+          : m,
+      ),
+    });
   }
 
   /**
@@ -1106,19 +1339,34 @@ export class Controller {
     const g = this.state.config.behavior.greeting;
     clearTimeout(this.greetingTimer);
     if (!g.enabled || this.state.greetingDue) return;
-    this.greetingTimer = setTimeout(() => this.set({ greetingDue: true }), Math.max(0, g.delaySeconds) * 1000);
+    this.greetingTimer = setTimeout(
+      () => this.set({ greetingDue: true }),
+      Math.max(0, g.delaySeconds) * 1000,
+    );
   }
 
   private beat() {
-    if (this.live()) this.socket!.emit('heartbeat', { visible: this.state.hostVisible, focused: this.state.hostFocused });
+    if (this.live())
+      this.socket!.emit('heartbeat', { visible: this.state.hostVisible, focused: this.state.hostFocused });
   }
 
   /** Page view events are sent only with analytics consent (the server enforces it too). */
   private sendPageEvent(kind: 'entered' | 'left' = 'entered') {
-    if (this.preview || !this.analyticsAllowed || !this.api.capability || this.consent?.analytics === false) return;
+    if (this.preview || !this.analyticsAllowed || !this.api.capability || this.consent?.analytics === false)
+      return;
     const p = this.page;
     void this.api
-      .call('POST', '/events', { events: [{ id: uuid(), kind, url: p.url.slice(0, 4000), title: (p.title || '').slice(0, 1000), clientAt: new Date().toISOString() }] })
+      .call('POST', '/events', {
+        events: [
+          {
+            id: uuid(),
+            kind,
+            url: p.url.slice(0, 4000),
+            title: (p.title || '').slice(0, 1000),
+            clientAt: new Date().toISOString(),
+          },
+        ],
+      })
       .catch(() => undefined);
   }
 
@@ -1129,8 +1377,16 @@ export class Controller {
       case 'init': {
         const first = !this.hostInit;
         this.hostInit = true;
-        this.page = { url: String(m.page?.url || location.href), title: String(m.page?.title || ''), referrer: m.page?.referrer ? String(m.page.referrer) : null };
-        this.initInfo = { locale: String(m.locale || ''), timezone: String(m.timezone || ''), screen: String(m.screen || '') };
+        this.page = {
+          url: String(m.page?.url || location.href),
+          title: String(m.page?.title || ''),
+          referrer: m.page?.referrer ? String(m.page.referrer) : null,
+        };
+        this.initInfo = {
+          locale: String(m.locale || ''),
+          timezone: String(m.timezone || ''),
+          screen: String(m.screen || ''),
+        };
         if (m.locale) this.browserLocale = String(m.locale);
         const patch: Partial<State> = { pageUrl: this.page.url };
         if (m.viewport) patch.viewport = m.viewport;
@@ -1169,7 +1425,13 @@ export class Controller {
   private async runApi(id: number, method: string, args: unknown[]) {
     try {
       const result = await this.sdkCommand(method, args);
-      this.host.post({ source: FRAME_SOURCE, type: 'api:result', id, ok: true, result: result === undefined ? null : result });
+      this.host.post({
+        source: FRAME_SOURCE,
+        type: 'api:result',
+        id,
+        ok: true,
+        result: result === undefined ? null : result,
+      });
     } catch (err) {
       const code = err instanceof ApiError || err instanceof WidgetError ? err.code : 'FAILED';
       this.host.post({ source: FRAME_SOURCE, type: 'api:result', id, ok: false, error: code });
@@ -1233,15 +1495,23 @@ export class Controller {
         return undefined;
       case 'updateSettings': {
         const patch = sanitizeSettingsPatch(a0);
-        this.overrides = { appearance: { ...this.overrides.appearance, ...patch.appearance }, content: { ...this.overrides.content, ...patch.content } };
+        this.overrides = {
+          appearance: { ...this.overrides.appearance, ...patch.appearance },
+          content: { ...this.overrides.content, ...patch.content },
+        };
         this.set({ config: this.effectiveConfig() });
         this.recomputeLocale();
         // Promise<Config>: the published configuration with the page's presentation overrides applied.
         return JSON.parse(JSON.stringify(this.state.config)) as unknown;
       }
       case 'trackPage': {
-        if (!isObject(a0) || typeof a0.url !== 'string' || !/^https?:\/\//i.test(a0.url)) throw new WidgetError('INVALID_ARGUMENT');
-        this.onPage({ url: a0.url, title: typeof a0.title === 'string' ? a0.title : '', referrer: this.page.url });
+        if (!isObject(a0) || typeof a0.url !== 'string' || !/^https?:\/\//i.test(a0.url))
+          throw new WidgetError('INVALID_ARGUMENT');
+        this.onPage({
+          url: a0.url,
+          title: typeof a0.title === 'string' ? a0.title : '',
+          referrer: this.page.url,
+        });
         return undefined;
       }
       case 'setConsent':
@@ -1266,7 +1536,8 @@ export class Controller {
 
   /** SDK tags: slugs of existing tags; the widget owns the client-sourced set (agent tags are never touched). */
   private async updateTags(input: unknown, mode: string) {
-    if (!Array.isArray(input) || !input.every((t) => typeof t === 'string')) throw new WidgetError('INVALID_ARGUMENT');
+    if (!Array.isArray(input) || !input.every((t) => typeof t === 'string'))
+      throw new WidgetError('INVALID_ARGUMENT');
     const tags = (input as string[]).map((t) => t.trim().toLowerCase()).filter(Boolean);
     const next = new Set(mode === 'setTags' ? [] : this.clientTags);
     for (const t of tags) mode === 'removeTags' ? next.delete(t) : next.add(t);
@@ -1294,10 +1565,20 @@ export class Controller {
     let r: IdentifyResult;
     try {
       // name/email are unverified prefill; the external id token (JWT) verifies the visitor in place.
-      r = await this.api.call<IdentifyResult>('POST', '/identity', { ...(name ? { name } : {}), ...(email ? { email } : {}), ...(token ? { externalIdToken: token } : {}) });
+      r = await this.api.call<IdentifyResult>('POST', '/identity', {
+        ...(name ? { name } : {}),
+        ...(email ? { email } : {}),
+        ...(token ? { externalIdToken: token } : {}),
+      });
     } catch (err) {
       // The identity belongs to another profile: start a new session bound to it.
-      if (!(token && err instanceof ApiError && err.code === 'CONFLICT' && err.details?.action === 'create_session')) throw err;
+      if (!(
+        token &&
+        err instanceof ApiError &&
+        err.code === 'CONFLICT' &&
+        err.details?.action === 'create_session'
+      ))
+        throw err;
       this.identityToken = token;
       this.socket?.disconnect();
       await this.openSession();
@@ -1306,7 +1587,11 @@ export class Controller {
     }
     if (token) this.identityToken = token;
     const v = this.state.visitor;
-    if (v) this.set({ visitor: { ...v, name: name ?? v.name, email: email ?? v.email }, verified: !!r.verified || this.state.verified });
+    if (v)
+      this.set({
+        visitor: { ...v, name: name ?? v.name, email: email ?? v.email },
+        verified: !!r.verified || this.state.verified,
+      });
     this.emit('identity.changed', { verified: !!r.verified, visitorId: r.visitorId });
     return { visitorId: r.visitorId, verified: !!r.verified || this.state.verified };
   }
@@ -1324,7 +1609,11 @@ export class Controller {
 
   /** availability.changed payload: { state, departmentId, nextOpenAt }. */
   private availabilityPayload(online: boolean) {
-    return { state: online ? 'online' : 'offline', departmentId: this.state.departmentId ?? null, nextOpenAt: this.state.account?.nextOpenAt ?? null };
+    return {
+      state: online ? 'online' : 'offline',
+      departmentId: this.state.departmentId ?? null,
+      nextOpenAt: this.state.account?.nextOpenAt ?? null,
+    };
   }
 
   private resetLocal() {
@@ -1364,7 +1653,14 @@ export class Controller {
     try {
       let fresh: V2Session | null = null;
       if (this.api.capability) {
-        fresh = await this.api.call<V2Session>('POST', '/identity/reset', { anonymousToken: token, ...this.sessionContext() }, { retried: true }).catch(() => null);
+        fresh = await this.api
+          .call<V2Session>(
+            'POST',
+            '/identity/reset',
+            { anonymousToken: token, ...this.sessionContext() },
+            { retried: true },
+          )
+          .catch(() => null);
       }
       writeVisitorToken(this.keys.visitor, null);
       store.set('session', this.keys.session, null);
@@ -1385,13 +1681,28 @@ export class Controller {
   }
 
   private async setConsent(input: unknown) {
-    if (!isObject(input) || typeof input.analytics !== 'boolean' || typeof input.policyVersion !== 'string') throw new WidgetError('INVALID_ARGUMENT');
+    if (!isObject(input) || typeof input.analytics !== 'boolean' || typeof input.policyVersion !== 'string')
+      throw new WidgetError('INVALID_ARGUMENT');
     const policyVersion = input.policyVersion.slice(0, 40);
-    this.consent = { analytics: input.analytics, policyVersion, at: new Date().toISOString(), ...(typeof input.service === 'boolean' ? { service: input.service } : {}) };
+    this.consent = {
+      analytics: input.analytics,
+      policyVersion,
+      at: new Date().toISOString(),
+      ...(typeof input.service === 'boolean' ? { service: input.service } : {}),
+    };
     store.set('local', this.keys.consent, JSON.stringify(this.consent));
     if (this.api.capability) {
-      await this.api.call('PUT', '/consent', { purpose: 'analytics', state: input.analytics ? 'granted' : 'denied', policyVersion });
-      if (typeof input.service === 'boolean') await this.api.call('PUT', '/consent', { purpose: 'service', state: input.service ? 'granted' : 'denied', policyVersion });
+      await this.api.call('PUT', '/consent', {
+        purpose: 'analytics',
+        state: input.analytics ? 'granted' : 'denied',
+        policyVersion,
+      });
+      if (typeof input.service === 'boolean')
+        await this.api.call('PUT', '/consent', {
+          purpose: 'service',
+          state: input.service ? 'granted' : 'denied',
+          policyVersion,
+        });
       const was = this.analyticsAllowed;
       this.analyticsAllowed = input.analytics;
       if (input.analytics && !was) this.sendPageEvent('entered');
@@ -1402,7 +1713,8 @@ export class Controller {
   private async startChat(input: unknown) {
     const opts = isObject(input) ? input : {};
     if (opts.departmentId !== undefined) {
-      if (opts.departmentId !== null && typeof opts.departmentId !== 'string') throw new WidgetError('INVALID_ARGUMENT');
+      if (opts.departmentId !== null && typeof opts.departmentId !== 'string')
+        throw new WidgetError('INVALID_ARGUMENT');
       this.set({ departmentId: opts.departmentId as string | null });
     }
     this.open('api', true);
@@ -1428,7 +1740,14 @@ export class Controller {
     if (inv && !seen.includes(inv.id)) seen.push(inv.id);
     for (const p of s.proactive) if (!seen.includes(proactiveKey(p))) seen.push(proactiveKey(p));
     this.saveUi({ open: true, seen });
-    this.set({ open: true, closing: false, openFocus: focus, hiddenByApi: source === 'api' ? false : s.hiddenByApi, seen, focusReturn: false });
+    this.set({
+      open: true,
+      closing: false,
+      openFocus: focus,
+      hiddenByApi: source === 'api' ? false : s.hiddenByApi,
+      seen,
+      focusReturn: false,
+    });
     this.emit('opened', { source });
     this.markRead();
   }
@@ -1475,11 +1794,18 @@ export class Controller {
       this.saveReadThrough(conv.id, seq);
       if (s.features.readReceipts && this.api.capability) {
         const payload = { chatId: conv.id, lastReadSeq: seq };
-        (this.live() ? this.command('message.read', payload) : this.api.call('PUT', `/chats/${encodeURIComponent(conv.id)}/read-cursor`, { lastReadSeq: seq })).catch(() => undefined);
+        (this.live()
+          ? this.command('message.read', payload)
+          : this.api.call('PUT', `/chats/${encodeURIComponent(conv.id)}/read-cursor`, { lastReadSeq: seq })
+        ).catch(() => undefined);
       }
     }
     const at = new Date().toISOString();
-    this.set({ messages: s.messages.map((m) => (isAgentText(m) && !m.readByVisitorAt ? { ...m, readByVisitorAt: at } : m)) });
+    this.set({
+      messages: s.messages.map((m) =>
+        isAgentText(m) && !m.readByVisitorAt ? { ...m, readByVisitorAt: at } : m,
+      ),
+    });
   }
 
   // Typing (visitor → agents): at most one `typing.set` per 2 s, stop after 3 s idle or on send.
@@ -1514,7 +1840,8 @@ export class Controller {
     t.trail = undefined;
     t.text = '';
     const conv = openConversation(this.state);
-    if (t.active && emit && conv && this.live()) this.command('typing.set', { chatId: conv.id, isTyping: false }).catch(() => undefined);
+    if (t.active && emit && conv && this.live())
+      this.command('typing.set', { chatId: conv.id, isTyping: false }).catch(() => undefined);
     t.active = false;
   }
 
@@ -1540,12 +1867,16 @@ export class Controller {
   }
 
   /** Optimistic send. Resolves when the server accepted (or definitively refused) the message. */
-  send(body: string, opts: { profile?: VisitorProfileInput; departmentId?: string | null } = {}): Promise<SendResult> {
+  send(
+    body: string,
+    opts: { profile?: VisitorProfileInput; departmentId?: string | null } = {},
+  ): Promise<SendResult> {
     const text = body.replace(/\s+$/, '').slice(0, 8000);
     if (!text.trim()) return Promise.resolve({ ok: false, error: 'EMPTY' });
     // A blocked / unavailable widget can never deliver: fail fast instead of queueing forever.
     const fatal = this.state.fatal;
-    if (fatal === 'BANNED' || (fatal && HIDDEN_CODES.includes(fatal))) return Promise.resolve({ ok: false, error: fatal === 'BANNED' ? UNAVAILABLE : fatal });
+    if (fatal === 'BANNED' || (fatal && HIDDEN_CODES.includes(fatal)))
+      return Promise.resolve({ ok: false, error: fatal === 'BANNED' ? UNAVAILABLE : fatal });
     this.stopTyping();
     const clientId = uuid();
     const msg = this.localMessage(clientId, text);
@@ -1554,7 +1885,11 @@ export class Controller {
       return Promise.resolve({ ok: true, chatId: this.state.conversation?.id ?? 'preview-conversation' });
     }
     return new Promise((resolve) => {
-      this.sendMeta.set(clientId, { departmentId: opts.departmentId ?? this.state.departmentId, profile: opts.profile, done: resolve });
+      this.sendMeta.set(clientId, {
+        departmentId: opts.departmentId ?? this.state.departmentId,
+        profile: opts.profile,
+        done: resolve,
+      });
       this.set({ messages: [...this.state.messages, msg] });
       void this.pump();
     });
@@ -1577,11 +1912,18 @@ export class Controller {
   }
 
   private patchMessage(clientId: string, patch: Partial<UiMessage>) {
-    this.set({ messages: this.state.messages.map((m) => (m.clientId === clientId && m.local ? { ...m, ...patch } : m)) });
+    this.set({
+      messages: this.state.messages.map((m) => (m.clientId === clientId && m.local ? { ...m, ...patch } : m)),
+    });
   }
 
   /** Deliver one message to a chat: socket command when connected, REST otherwise. */
-  private async deliver(chatId: string, clientId: string, body: string, attachmentIds: string[]): Promise<V2Message> {
+  private async deliver(
+    chatId: string,
+    clientId: string,
+    body: string,
+    attachmentIds: string[],
+  ): Promise<V2Message> {
     const payload = { chatId, clientMessageId: clientId, body: body || null, attachmentIds };
     if (this.live()) {
       try {
@@ -1590,7 +1932,11 @@ export class Controller {
         if (codeOf(err) !== 'TIMEOUT' && codeOf(err) !== 'NOT_CONNECTED') throw err;
       }
     }
-    return this.api.call<V2Message>('POST', `/chats/${encodeURIComponent(chatId)}/messages`, { clientMessageId: clientId, body: body || null, attachmentIds });
+    return this.api.call<V2Message>('POST', `/chats/${encodeURIComponent(chatId)}/messages`, {
+      clientMessageId: clientId,
+      body: body || null,
+      attachmentIds,
+    });
   }
 
   /** Send pending messages one at a time (keeps chat creation race-free). */
@@ -1612,7 +1958,11 @@ export class Controller {
         if (invitationId) {
           // Answering an invitation: accept it (creates the chat once, with the invitation message), then send.
           try {
-            created = await this.api.call<Admission>('POST', `/invitations/${encodeURIComponent(invitationId)}/accept`, { clientRequestId: `accept-${uuid()}` });
+            created = await this.api.call<Admission>(
+              'POST',
+              `/invitations/${encodeURIComponent(invitationId)}/accept`,
+              { clientRequestId: `accept-${uuid()}` },
+            );
           } catch (err) {
             if (codeOf(err) === 'DEPARTMENT_UNAVAILABLE' || codeOf(err) === 'BANNED') throw err;
             invitationId = null; // expired / dismissed: fall back to a normal chat request
@@ -1633,7 +1983,10 @@ export class Controller {
         }
         this.acceptedInvitation = null;
         // Invitation accept / already-open chat (no initial message) or an attachment: deliver separately.
-        message = created.initialMessage && !meta.attachmentIds?.length ? created.initialMessage : await this.deliver(created.chat.id, clientId, m.body, meta.attachmentIds ?? []);
+        message =
+          created.initialMessage && !meta.attachmentIds?.length
+            ? created.initialMessage
+            : await this.deliver(created.chat.id, clientId, m.body, meta.attachmentIds ?? []);
         void this.loadMessages(created.chat.id, 0);
       } else {
         message = await this.deliver(conv.id, clientId, m.body, meta.attachmentIds ?? []);
@@ -1653,27 +2006,45 @@ export class Controller {
     const local = s.messages.find((x) => x.clientId === clientId);
     if (local?.upload?.previewUrl) URL.revokeObjectURL(local.upload.previewUrl);
     let messages = s.messages.filter((x) => x.id !== mapped.id || x.clientId === clientId);
-    messages = messages.some((x) => x.clientId === clientId) ? messages.map((x) => (x.clientId === clientId ? mapped : x)) : [...messages, mapped];
+    messages = messages.some((x) => x.clientId === clientId)
+      ? messages.map((x) => (x.clientId === clientId ? mapped : x))
+      : [...messages, mapped];
     this.files.delete(clientId);
     this.sendMeta.delete(clientId);
     this.set({ messages: sortBySeq(messages), offline: null, offlineDraft: null, prechatDone: true });
-    if (this.chatMeta?.id === message.chatId) this.chatMeta.lastSeq = Math.max(this.chatMeta.lastSeq, message.seq);
+    if (this.chatMeta?.id === message.chatId)
+      this.chatMeta.lastSeq = Math.max(this.chatMeta.lastSeq, message.seq);
     meta.done?.({ ok: true, chatId: message.chatId });
   }
 
   private onSendError(clientId: string, m: UiMessage, meta: SendMeta, err: unknown) {
     const code = codeOf(err);
     const s = this.state;
-    if ((code === 'NETWORK' || code === 'TIMEOUT' || code === 'NOT_CONNECTED') && s.connection !== 'connected') return; // stays pending
+    if (
+      (code === 'NETWORK' || code === 'TIMEOUT' || code === 'NOT_CONNECTED') &&
+      s.connection !== 'connected'
+    )
+      return; // stays pending
     if (code === 'DEPARTMENT_UNAVAILABLE' || code === 'OFFLINE') {
       const details = (err instanceof ApiError ? err.details : null) ?? {};
       const deptName = s.account?.departments.find((d) => d.id === meta.departmentId)?.name;
-      const reason: 'offline' | 'department' = meta.departmentId && details.reason !== 'offline' && details.offline_form !== true && s.account?.online ? 'department' : 'offline';
+      const reason: 'offline' | 'department' =
+        meta.departmentId &&
+        details.reason !== 'offline' &&
+        details.offline_form !== true &&
+        s.account?.online
+          ? 'department'
+          : 'offline';
       this.sendMeta.delete(clientId);
       this.set({
         messages: s.messages.filter((x) => x.clientId !== clientId),
         offline: reason === 'department' ? { reason, department: deptName } : { reason: 'offline' },
-        offlineDraft: { ...s.offlineDraft, ...meta.profile, departmentId: meta.departmentId ?? s.offlineDraft?.departmentId ?? null, message: [s.offlineDraft?.message, m.body].filter(Boolean).join('\n') },
+        offlineDraft: {
+          ...s.offlineDraft,
+          ...meta.profile,
+          departmentId: meta.departmentId ?? s.offlineDraft?.departmentId ?? null,
+          message: [s.offlineDraft?.message, m.body].filter(Boolean).join('\n'),
+        },
         offlineDraftRev: s.offlineDraftRev + 1,
         account: reason === 'offline' && s.account ? { ...s.account, online: false } : s.account,
       });
@@ -1711,7 +2082,14 @@ export class Controller {
       const isImage = isPreviewableImage(file.type);
       const msg: UiMessage = {
         ...this.localMessage(clientId, ''),
-        upload: { name: file.name, size: file.size, mimeType: file.type, isImage, progress: 0, previewUrl: isImage ? URL.createObjectURL(file) : null },
+        upload: {
+          name: file.name,
+          size: file.size,
+          mimeType: file.type,
+          isImage,
+          progress: 0,
+          previewUrl: isImage ? URL.createObjectURL(file) : null,
+        },
       };
       this.files.set(clientId, file);
       this.set({ messages: [...this.state.messages, msg] });
@@ -1723,15 +2101,31 @@ export class Controller {
     const file = this.files.get(clientId);
     const m = this.state.messages.find((x) => x.clientId === clientId);
     if (!file || !m?.upload) return;
-    this.patchMessage(clientId, { local: 'pending', errorCode: undefined, uploadPhase: 'uploading', upload: { ...m.upload, progress: 0 } });
-    const fail = (code: string) => this.patchMessage(clientId, { local: 'failed', errorCode: code, uploadPhase: undefined });
+    this.patchMessage(clientId, {
+      local: 'pending',
+      errorCode: undefined,
+      uploadPhase: 'uploading',
+      upload: { ...m.upload, progress: 0 },
+    });
+    const fail = (code: string) =>
+      this.patchMessage(clientId, { local: 'failed', errorCode: code, uploadPhase: undefined });
     if (file.size > this.state.features.maxFileMb * 1024 * 1024) return fail('FILE_TOO_LARGE');
     if (this.preview) {
       const up = m.upload;
       this.patchMessage(clientId, {
         local: undefined,
         upload: undefined,
-        attachments: [{ id: `preview-${clientId}`, name: up.name, size: up.size, mimeType: up.mimeType, url: up.previewUrl ?? '', isImage: up.isImage, state: 'clean' }],
+        attachments: [
+          {
+            id: `preview-${clientId}`,
+            name: up.name,
+            size: up.size,
+            mimeType: up.mimeType,
+            url: up.previewUrl ?? '',
+            isImage: up.isImage,
+            state: 'clean',
+          },
+        ],
       });
       return;
     }
@@ -1746,10 +2140,17 @@ export class Controller {
     try {
       const mime = file.type || 'application/octet-stream';
       const sha256 = await sha256Hex(file);
-      const init = await this.api.call<V2UploadInit>('POST', '/uploads', { chatId: conv.id, name: file.name.slice(0, 255), sizeBytes: file.size, mime, sha256 });
+      const init = await this.api.call<V2UploadInit>('POST', '/uploads', {
+        chatId: conv.id,
+        name: file.name.slice(0, 255),
+        sizeBytes: file.size,
+        mime,
+        sha256,
+      });
       if (init.maxBytes && file.size > init.maxBytes) throw new WidgetError('FILE_TOO_LARGE');
       const headers = { ...init.headers };
-      if (!Object.keys(headers).some((k) => k.toLowerCase() === 'content-type')) headers['content-type'] = mime;
+      if (!Object.keys(headers).some((k) => k.toLowerCase() === 'content-type'))
+        headers['content-type'] = mime;
       let last = 0;
       await putBytes(init.url, init.method, headers, file, (p) => {
         if (p - last < 0.04 && p < 1) return;
@@ -1758,24 +2159,43 @@ export class Controller {
         if (cur?.upload) this.patchMessage(clientId, { upload: { ...cur.upload, progress: p } });
       }).promise;
       this.patchMessage(clientId, { uploadPhase: 'scanning' });
-      const finalized = await this.api.call<V2Attachment>('POST', `/uploads/${encodeURIComponent(init.uploadId)}/finalize`, { sha256 });
+      const finalized = await this.api.call<V2Attachment>(
+        'POST',
+        `/uploads/${encodeURIComponent(init.uploadId)}/finalize`,
+        { sha256 },
+      );
       const att = await this.waitForClean(init.uploadId, finalized);
       const cur = this.state.messages.find((x) => x.clientId === clientId);
       if (!cur) return;
       if (cur.upload?.previewUrl) URL.revokeObjectURL(cur.upload.previewUrl);
       this.files.delete(clientId);
       this.sendMeta.set(clientId, { attachmentIds: [att.id], departmentId: this.state.departmentId });
-      this.patchMessage(clientId, { upload: undefined, uploadPhase: undefined, attachments: [toAttachment(att)], local: 'pending' });
+      this.patchMessage(clientId, {
+        upload: undefined,
+        uploadPhase: undefined,
+        attachments: [toAttachment(att)],
+        local: 'pending',
+      });
       void this.pump();
     } catch (err) {
-      fail(err instanceof Error && !(err instanceof ApiError) && !(err instanceof WidgetError) ? err.message || 'UPLOAD_FAILED' : codeOf(err));
+      fail(
+        err instanceof Error && !(err instanceof ApiError) && !(err instanceof WidgetError)
+          ? err.message || 'UPLOAD_FAILED'
+          : codeOf(err),
+      );
     }
   }
 
   /** Resolve once the malware scan marks the upload clean (realtime `attachment.updated`, polled as a fallback). */
   private waitForClean(id: string, att: V2Attachment): Promise<V2Attachment> {
     const verdict = (a: { state?: string; errorCode?: string | null }) =>
-      a.state === 'clean' ? 'clean' : a.state === 'rejected' ? a.errorCode || 'FILE_REJECTED' : a.state === 'expired' ? 'UPLOAD_FAILED' : null;
+      a.state === 'clean'
+        ? 'clean'
+        : a.state === 'rejected'
+          ? a.errorCode || 'FILE_REJECTED'
+          : a.state === 'expired'
+            ? 'UPLOAD_FAILED'
+            : null;
     const first = verdict(att);
     if (first === 'clean') return Promise.resolve(att);
     if (first) return Promise.reject(new WidgetError(first));
@@ -1815,7 +2235,8 @@ export class Controller {
     const cached = this.grants.get(id);
     if (cached && cached.until > Date.now()) return cached.url;
     const g = await this.api.call<V2Grant>('GET', `/attachments/${encodeURIComponent(id)}/download`);
-    const until = Math.min(new Date(g.expiresAt).getTime() || Date.now() + 60_000, Date.now() + 60_000) - 10_000;
+    const until =
+      Math.min(new Date(g.expiresAt).getTime() || Date.now() + 60_000, Date.now() + 60_000) - 10_000;
     this.grants.set(id, { url: g.url, until });
     return g.url;
   }
@@ -1838,7 +2259,13 @@ export class Controller {
       },
       (err) => {
         const code = codeOf(err);
-        this.notify(code === 'FILE_SCAN_PENDING' ? 'file_pending' : code === 'FILE_REJECTED' ? 'file_rejected' : 'download_failed');
+        this.notify(
+          code === 'FILE_SCAN_PENDING'
+            ? 'file_pending'
+            : code === 'FILE_REJECTED'
+              ? 'file_rejected'
+              : 'download_failed',
+        );
       },
     );
   }
@@ -1867,11 +2294,25 @@ export class Controller {
   submitPrechat(input: { profile: VisitorProfileInput; departmentId: string | null; message: string }) {
     this.set({ prechatDone: true, departmentId: input.departmentId ?? this.state.departmentId });
     const v = this.state.visitor;
-    if (v) this.set({ visitor: { ...v, name: input.profile.name || v.name, email: input.profile.email || v.email, phone: input.profile.phone || v.phone } });
+    if (v)
+      this.set({
+        visitor: {
+          ...v,
+          name: input.profile.name || v.name,
+          email: input.profile.email || v.email,
+          phone: input.profile.phone || v.phone,
+        },
+      });
     return this.send(input.message, { profile: input.profile, departmentId: input.departmentId });
   }
 
-  async submitOffline(form: { name: string; email: string; phone?: string; departmentId?: string | null; message: string }): Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string[]> }> {
+  async submitOffline(form: {
+    name: string;
+    email: string;
+    phone?: string;
+    departmentId?: string | null;
+    message: string;
+  }): Promise<{ ok: boolean; error?: string; fieldErrors?: Record<string, string[]> }> {
     if (this.preview) {
       this.set({ offlineSent: { reference: null }, offline: null, offlineDraft: null });
       return { ok: true };
@@ -1881,7 +2322,8 @@ export class Controller {
     } catch {
       return { ok: false, error: 'NOT_CONNECTED' };
     }
-    const sourceChatId = this.state.offline?.reason === 'queue' ? (this.state.offline.sourceChatId ?? null) : null;
+    const sourceChatId =
+      this.state.offline?.reason === 'queue' ? (this.state.offline.sourceChatId ?? null) : null;
     try {
       const r = await this.api.call<V2OfflineReceipt>('POST', '/offline-submissions', {
         clientRequestId: uuid(),
@@ -1893,7 +2335,12 @@ export class Controller {
         ...(sourceChatId ? { sourceChatId } : {}),
       });
       const reference = typeof r?.reference === 'string' ? r.reference : null;
-      const patch: Partial<State> = { offlineSent: { reference }, offline: null, offlineDraft: null, waitExceeded: null };
+      const patch: Partial<State> = {
+        offlineSent: { reference },
+        offline: null,
+        offlineDraft: null,
+        waitExceeded: null,
+      };
       if (sourceChatId) {
         // The queued chat was closed server-side in favour of the message: leave it behind.
         this.saveUi({ dismissedConv: sourceChatId });
@@ -1905,7 +2352,11 @@ export class Controller {
       this.emit('offline.submitted', { reference });
       return { ok: true };
     } catch (err) {
-      return { ok: false, error: codeOf(err), fieldErrors: err instanceof ApiError ? (err.fieldErrors ?? undefined) : undefined };
+      return {
+        ok: false,
+        error: codeOf(err),
+        fieldErrors: err instanceof ApiError ? (err.fieldErrors ?? undefined) : undefined,
+      };
     }
   }
 
@@ -1922,7 +2373,11 @@ export class Controller {
     this.set({
       waitExceeded: null,
       offline: { reason: 'queue', sourceChatId: c.id },
-      offlineDraft: { name: v?.name ?? undefined, email: v?.email ?? undefined, phone: v?.phone ?? undefined },
+      offlineDraft: {
+        name: v?.name ?? undefined,
+        email: v?.email ?? undefined,
+        phone: v?.phone ?? undefined,
+      },
       offlineDraftRev: this.state.offlineDraftRev + 1,
     });
   }
@@ -1946,16 +2401,30 @@ export class Controller {
     this.set({ conversation: { ...c, rating, ratingComment: comment ?? c.ratingComment } });
     if (this.preview) return true;
     try {
-      const r = await this.api.call<{ rating: 'good' | 'bad'; comment: string | null }>('PUT', `/chats/${encodeURIComponent(c.id)}/rating`, {
-        rating: ratingToWire(rating),
-        ...(comment !== undefined ? { comment: comment.slice(0, 2000) || null } : {}),
-      });
+      const r = await this.api.call<{ rating: 'good' | 'bad'; comment: string | null }>(
+        'PUT',
+        `/chats/${encodeURIComponent(c.id)}/rating`,
+        {
+          rating: ratingToWire(rating),
+          ...(comment !== undefined ? { comment: comment.slice(0, 2000) || null } : {}),
+        },
+      );
       const cur = this.state.conversation;
-      if (cur?.id === c.id) this.set({ conversation: { ...cur, rating: r.rating.toUpperCase() as Rating, ratingComment: r.comment } });
+      if (cur?.id === c.id)
+        this.set({
+          conversation: { ...cur, rating: r.rating.toUpperCase() as Rating, ratingComment: r.comment },
+        });
       this.emit('rating.changed', { chatId: c.id, rating: r.rating });
       return true;
     } catch {
-      if (this.state.conversation?.id === prev.id) this.set({ conversation: { ...this.state.conversation, rating: prev.rating, ratingComment: prev.ratingComment } });
+      if (this.state.conversation?.id === prev.id)
+        this.set({
+          conversation: {
+            ...this.state.conversation,
+            rating: prev.rating,
+            ratingComment: prev.ratingComment,
+          },
+        });
       this.notify('send_failed');
       return false;
     }
@@ -1966,7 +2435,10 @@ export class Controller {
     if (this.preview) return { ok: true };
     if (!c) return { ok: false, error: 'NOT_FOUND' };
     try {
-      await this.api.call('POST', `/chats/${encodeURIComponent(c.id)}/transcript-email`, { email, format: 'txt' });
+      await this.api.call('POST', `/chats/${encodeURIComponent(c.id)}/transcript-email`, {
+        email,
+        format: 'txt',
+      });
       return { ok: true };
     } catch (err) {
       return { ok: false, error: codeOf(err) };
@@ -1980,7 +2452,10 @@ export class Controller {
     const timezone = this.initInfo.timezone || (Intl.DateTimeFormat().resolvedOptions().timeZone ?? null);
     this.openAfter(
       async () => {
-        let e = await this.api.call<V2Export>('POST', `/chats/${encodeURIComponent(c.id)}/exports`, { format, timezone });
+        let e = await this.api.call<V2Export>('POST', `/chats/${encodeURIComponent(c.id)}/exports`, {
+          format,
+          timezone,
+        });
         const deadline = Date.now() + 60_000;
         while (e.state === 'queued' || e.state === 'running') {
           if (Date.now() > deadline) throw new WidgetError('TIMEOUT');
@@ -2003,7 +2478,9 @@ export class Controller {
     }
     this.endingByVisitor = true;
     try {
-      const chat = this.live() ? await this.command<V2Chat>('chat.close', { chatId: c.id }) : await this.api.call<V2Chat>('POST', `/chats/${encodeURIComponent(c.id)}/close`, {});
+      const chat = this.live()
+        ? await this.command<V2Chat>('chat.close', { chatId: c.id })
+        : await this.api.call<V2Chat>('POST', `/chats/${encodeURIComponent(c.id)}/close`, {});
       if (chat?.id) this.applyChat(chat);
       const cur = this.state.conversation;
       if (cur && cur.id === c.id && cur.status !== 'RESOLVED') {
@@ -2027,7 +2504,17 @@ export class Controller {
     this.chatMeta = null;
     this.cursor = null;
     this.subscribedChat = null;
-    this.set({ conversation: null, messages: [], typing: [], prechatDone: false, offline: null, offlineDraft: null, offlineSent: null, ratingRequested: false, openFocus: true });
+    this.set({
+      conversation: null,
+      messages: [],
+      typing: [],
+      prechatDone: false,
+      offline: null,
+      offlineDraft: null,
+      offlineSent: null,
+      ratingRequested: false,
+      openFocus: true,
+    });
   }
 
   // ══════════════ Preview mode ══════════════

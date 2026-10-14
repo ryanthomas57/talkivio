@@ -21,6 +21,7 @@ import { team } from './team';
 import { analytics } from './analytics';
 import { history } from './history';
 import { monitor } from './monitor';
+import { dock } from './dock';
 
 /** Every area, flattened. Keys are unique because each area prefixes its own keys. */
 export const en = {
@@ -47,7 +48,32 @@ export const en = {
   ...analytics,
   ...history,
   ...monitor,
+  ...dock,
 };
 
 export type MessageKey = keyof typeof en;
-export const AREAS = { common, format, shell, ui, inbox, auth, pages, notifications, settings, sites, customFields, bans, offline, triggers, integrations, privacy, audit, shortcuts, visitors, team, analytics, history, monitor };
+export const AREAS = {
+  common,
+  format,
+  shell,
+  ui,
+  inbox,
+  auth,
+  pages,
+  notifications,
+  settings,
+  sites,
+  customFields,
+  bans,
+  offline,
+  triggers,
+  integrations,
+  privacy,
+  audit,
+  shortcuts,
+  visitors,
+  team,
+  analytics,
+  history,
+  monitor,
+};

@@ -73,7 +73,19 @@ export function focusComposerWhenReady(chatId: string): void {
  * chat per agent in this browser, Enter-to-send preference, typing signals,
  * slash shortcuts that insert (never send), and unresolved-placeholder blocking.
  */
-export function Composer({ chat, canReply, canNote, disabledReason }: { chat: StaffChat; canReply: boolean; canNote: boolean; disabledReason: string | null }) {
+export function Composer({
+  chat,
+  canReply,
+  canNote,
+  disabledReason,
+  compact = false,
+}: {
+  chat: StaffChat;
+  canReply: boolean;
+  canNote: boolean;
+  disabledReason: string | null;
+  compact?: boolean;
+}) {
   const t = useT();
   const me = useSession((s) => s.agent?.agent.id ?? 'anon');
   const sendOnEnter = useSession((s) => s.agent?.preferences.sendOnEnter ?? true);
@@ -87,9 +99,19 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
   const maxMb = Math.min(10, chatSettings?.maxAttachmentMb ?? 10);
   /** Canned reply inserted into this draft: recorded on send for adoption analytics (ch. 18). */
   const [inserted, setInserted] = useState<{ replyId: string; options: string[] } | null>(null);
-  const [suggest, setSuggest] = useState<{ query: string; start: number; items: ShortcutItem[]; index: number; loading: boolean } | null>(null);
+  const [suggest, setSuggest] = useState<{
+    query: string;
+    start: number;
+    items: ShortcutItem[];
+    index: number;
+    loading: boolean;
+  } | null>(null);
   const area = useRef<HTMLTextAreaElement>(null);
-  const typingState = useRef<{ active: boolean; lastSent: number; idle: ReturnType<typeof setTimeout> | null }>({ active: false, lastSent: 0, idle: null });
+  const typingState = useRef<{
+    active: boolean;
+    lastSent: number;
+    idle: ReturnType<typeof setTimeout> | null;
+  }>({ active: false, lastSent: 0, idle: null });
   const listId = useId();
   const closed = chat.status === 'closed';
   const effectiveMode: Mode = !canReply && canNote ? 'note' : mode;
@@ -123,14 +145,23 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     [chat.id],
   );
 
-  const patchFile = (key: string, patch: Partial<FileSlot>) => setFiles((list) => list.map((f) => (f.key === key ? { ...f, ...patch } : f)));
+  const patchFile = (key: string, patch: Partial<FileSlot>) =>
+    setFiles((list) => list.map((f) => (f.key === key ? { ...f, ...patch } : f)));
 
   const addFiles = (picked: File[]) => {
     if (!picked.length) return;
     const room = MAX_FILES - files.length;
     if (room <= 0) return;
     const accepted = picked.slice(0, room);
-    const slots: FileSlot[] = accepted.map((f) => ({ key: `${f.name}-${f.size}-${Math.random().toString(36).slice(2)}`, name: f.name, size: f.size, status: 'uploading', progress: 0, att: null, error: null }));
+    const slots: FileSlot[] = accepted.map((f) => ({
+      key: `${f.name}-${f.size}-${Math.random().toString(36).slice(2)}`,
+      name: f.name,
+      size: f.size,
+      status: 'uploading',
+      progress: 0,
+      att: null,
+      error: null,
+    }));
     setFiles((list) => [...list, ...slots]);
     accepted.forEach((file, i) => {
       const slot = slots[i]!;
@@ -144,7 +175,16 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
           const wait = waitForScan(att.id);
           patchFile(slot.key, { status: 'scanning', att, cancel: wait.cancel, progress: 1 });
           const done = await wait.promise;
-          patchFile(slot.key, done.state === 'clean' ? { status: 'ready', att: done } : { status: 'rejected', att: done, error: done.errorMessage ?? t('inbox.composer.scanBlocked') });
+          patchFile(
+            slot.key,
+            done.state === 'clean'
+              ? { status: 'ready', att: done }
+              : {
+                  status: 'rejected',
+                  att: done,
+                  error: done.errorMessage ?? t('inbox.composer.scanBlocked'),
+                },
+          );
         } catch (e) {
           patchFile(slot.key, { status: 'failed', error: errorMessage(e, t('inbox.composer.uploadFailed')) });
         }
@@ -182,7 +222,9 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
       if (!isTyping && !st.active) return;
       st.active = isTyping;
       st.lastSent = now;
-      void realtime.command('typing.set', { chatId: chat.id, isTyping, mode: effectiveMode }).catch(() => undefined);
+      void realtime
+        .command('typing.set', { chatId: chat.id, isTyping, mode: effectiveMode })
+        .catch(() => undefined);
     },
     [chat.id, effectiveMode],
   );
@@ -217,7 +259,13 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     const timer = setTimeout(() => {
       api
         .page<ShortcutItem>('/shortcuts', { q: suggest.query, limit: 8 }, ctrl.signal)
-        .then((p) => setSuggest((s) => (s && s.query === suggest.query ? { ...s, items: p.items.slice(0, 8), index: 0, loading: false } : s)))
+        .then((p) =>
+          setSuggest((s) =>
+            s && s.query === suggest.query
+              ? { ...s, items: p.items.slice(0, 8), index: 0, loading: false }
+              : s,
+          ),
+        )
         .catch(() => setSuggest((s) => (s ? { ...s, items: [], loading: false } : s)));
     }, 120);
     return () => {
@@ -230,7 +278,12 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     setText(value);
     if (!value.trim()) setInserted(null);
     const q = findShortcutQuery(value, caret);
-    if (q) setSuggest((s) => (s && s.query === q.query && !s.loading ? { ...s, start: q.start } : { query: q.query, start: q.start, items: s?.items ?? [], index: 0, loading: true }));
+    if (q)
+      setSuggest((s) =>
+        s && s.query === q.query && !s.loading
+          ? { ...s, start: q.start }
+          : { query: q.query, start: q.start, items: s?.items ?? [], index: 0, loading: true },
+      );
     else setSuggest(null);
     if (value.trim()) {
       emitTyping(true);
@@ -244,7 +297,13 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     if (!suggest) return;
     let body = item.body;
     try {
-      const r = await api.post<{ replyId: string; text: string; unresolved: string[]; canSend: boolean; options: string[] }>(`/shortcuts/${item.id}/render`, { chatId: chat.id });
+      const r = await api.post<{
+        replyId: string;
+        text: string;
+        unresolved: string[];
+        canSend: boolean;
+        options: string[];
+      }>(`/shortcuts/${item.id}/render`, { chatId: chat.id });
       if (typeof r?.text === 'string') body = r.text;
       setInserted({ replyId: r.replyId, options: r.options ?? [] });
     } catch {
@@ -275,7 +334,13 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
   }, [blocked, chat.id]);
   const filesBusy = files.some((f) => f.status === 'uploading' || f.status === 'scanning');
   const filesBroken = files.some((f) => f.status === 'rejected' || f.status === 'failed');
-  const canSend = !blocked && (!!text.trim() || ready.length > 0) && chars <= MAX_CHARS && !unresolved && !filesBusy && !filesBroken;
+  const canSend =
+    !blocked &&
+    (!!text.trim() || ready.length > 0) &&
+    chars <= MAX_CHARS &&
+    !unresolved &&
+    !filesBusy &&
+    !filesBroken;
 
   const submit = () => {
     if (!canSend) return;
@@ -287,7 +352,13 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     setInserted(null);
     const attachmentIds = ready.map((f) => f.att!.id);
     setFiles([]);
-    void send(chat.id, { body, visibility: effectiveMode === 'note' ? 'internal' : 'public', replyId: reply?.replyId ?? null, options: reply?.options ?? [], attachmentIds });
+    void send(chat.id, {
+      body,
+      visibility: effectiveMode === 'note' ? 'internal' : 'public',
+      replyId: reply?.replyId ?? null,
+      options: reply?.options ?? [],
+      attachmentIds,
+    });
   };
 
   const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -333,7 +404,11 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
   const note = effectiveMode === 'note';
   return (
     <div
-      className={cn('relative shrink-0 border-t px-4 pb-4 pt-2 sm:px-5', note ? 'border-note-border bg-note/60' : 'border-line bg-surface')}
+      className={cn(
+        'relative shrink-0 border-t',
+        compact ? 'px-3 pb-3 pt-2' : 'px-4 pb-4 pt-2 sm:px-5',
+        note ? 'border-note-border bg-note/60' : 'border-line bg-surface',
+      )}
       onDragOver={(e) => {
         if (allowFiles && !blocked && e.dataTransfer.types.includes('Files')) e.preventDefault();
       }}
@@ -345,8 +420,15 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
     >
       {suggest && (suggest.items.length > 0 || suggest.loading) && (
         <div className="absolute inset-x-4 bottom-full mb-2 overflow-hidden rounded-[var(--radius-control)] border border-line bg-surface shadow-[var(--shadow-float)] sm:inset-x-5">
-          <p className="border-b border-line-subtle px-3 py-2 text-xs text-fg-2">{suggest.loading ? t('inbox.composer.searchingShortcuts') : t('inbox.composer.shortcutsHelp')}</p>
-          <ul id={listId} role="listbox" aria-label={t('inbox.composer.suggestions')} className="max-h-64 overflow-y-auto p-1 scroll-thin">
+          <p className="border-b border-line-subtle px-3 py-2 text-xs text-fg-2">
+            {suggest.loading ? t('inbox.composer.searchingShortcuts') : t('inbox.composer.shortcutsHelp')}
+          </p>
+          <ul
+            id={listId}
+            role="listbox"
+            aria-label={t('inbox.composer.suggestions')}
+            className="max-h-64 overflow-y-auto p-1 scroll-thin"
+          >
             {suggest.items.map((s, i) => (
               <li
                 key={s.id}
@@ -357,7 +439,10 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
                   e.preventDefault();
                   void insertShortcut(s);
                 }}
-                className={cn('flex cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2', i === suggest.index && 'bg-surface-3')}
+                className={cn(
+                  'flex cursor-pointer flex-col gap-0.5 rounded-md px-3 py-2',
+                  i === suggest.index && 'bg-surface-3',
+                )}
               >
                 <span className="text-sm">
                   <bdi className="font-mono font-medium text-primary">/{s.slug}</bdi>{' '}
@@ -372,30 +457,78 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
         </div>
       )}
       <div className="mb-2 flex items-center justify-between gap-3">
-        <div role="group" aria-label={t('inbox.composer.messageType')} className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5">
-          <button type="button" aria-pressed={!note} disabled={!canReply} onClick={() => switchMode('reply')} className={cn('inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50', !note ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'text-fg-2 hover:text-fg')}>
+        <div
+          role="group"
+          aria-label={t('inbox.composer.messageType')}
+          className="inline-flex rounded-[var(--radius-control)] border border-line bg-surface p-0.5"
+        >
+          <button
+            type="button"
+            aria-pressed={!note}
+            disabled={!canReply}
+            onClick={() => switchMode('reply')}
+            className={cn(
+              'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
+              !note ? 'bg-primary-tint text-primary-hover dark:text-primary' : 'text-fg-2 hover:text-fg',
+            )}
+          >
             <MessageSquare className="size-3.5" aria-hidden /> {t('inbox.composer.reply')}
           </button>
-          <button type="button" aria-pressed={note} disabled={!canNote} onClick={() => switchMode('note')} className={cn('inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50', note ? 'bg-note text-note-fg' : 'text-fg-2 hover:text-fg')}>
+          <button
+            type="button"
+            aria-pressed={note}
+            disabled={!canNote}
+            onClick={() => switchMode('note')}
+            className={cn(
+              'inline-flex h-8 items-center gap-1.5 rounded-md px-3 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50',
+              note ? 'bg-note text-note-fg' : 'text-fg-2 hover:text-fg',
+            )}
+          >
             <Lock className="size-3.5" aria-hidden /> {t('inbox.composer.note')}
           </button>
         </div>
-        {note && <span className="text-xs font-semibold text-note-fg">{t('inbox.composer.notePrivacy')}</span>}
+        {note && (
+          <span className="text-xs font-semibold text-note-fg">{t('inbox.composer.notePrivacy')}</span>
+        )}
       </div>
       {files.length > 0 && (
         <ul className="mb-2 flex flex-wrap gap-2" aria-label={t('inbox.composer.filesToSend')}>
           {files.map((f) => (
-            <li key={f.key} className={cn('flex min-h-11 max-w-[260px] items-center gap-2 rounded-md border bg-surface px-2.5 py-1.5 text-sm', f.status === 'rejected' || f.status === 'failed' ? 'border-danger' : 'border-line')}>
-              {f.status === 'uploading' || f.status === 'scanning' ? <Loader2 className="size-4 shrink-0 animate-spin text-fg-2" aria-hidden /> : <FileText className="size-4 shrink-0 text-fg-2" aria-hidden />}
+            <li
+              key={f.key}
+              className={cn(
+                'flex min-h-11 max-w-[260px] items-center gap-2 rounded-md border bg-surface px-2.5 py-1.5 text-sm',
+                f.status === 'rejected' || f.status === 'failed' ? 'border-danger' : 'border-line',
+              )}
+            >
+              {f.status === 'uploading' || f.status === 'scanning' ? (
+                <Loader2 className="size-4 shrink-0 animate-spin text-fg-2" aria-hidden />
+              ) : (
+                <FileText className="size-4 shrink-0 text-fg-2" aria-hidden />
+              )}
               <span className="min-w-0 flex-1">
                 <span className="block truncate font-medium" dir="auto">
                   {f.name}
                 </span>
-                <span className={cn('block text-xs', f.error ? 'text-danger' : 'text-fg-2')} aria-live="polite">
-                  {f.status === 'uploading' ? t('inbox.composer.uploading', { percent: formatPercent(f.progress) }) : f.status === 'scanning' ? t('inbox.composer.scanning') : f.status === 'ready' ? formatBytes(f.size) : f.error}
+                <span
+                  className={cn('block text-xs', f.error ? 'text-danger' : 'text-fg-2')}
+                  aria-live="polite"
+                >
+                  {f.status === 'uploading'
+                    ? t('inbox.composer.uploading', { percent: formatPercent(f.progress) })
+                    : f.status === 'scanning'
+                      ? t('inbox.composer.scanning')
+                      : f.status === 'ready'
+                        ? formatBytes(f.size)
+                        : f.error}
                 </span>
               </span>
-              <button type="button" onClick={() => removeFile(f.key)} className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-fg-2 hover:bg-surface-3 hover:text-fg" aria-label={t('inbox.composer.removeFile', { name: isolate(f.name) })}>
+              <button
+                type="button"
+                onClick={() => removeFile(f.key)}
+                className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-fg-2 hover:bg-surface-3 hover:text-fg"
+                aria-label={t('inbox.composer.removeFile', { name: isolate(f.name) })}
+              >
                 <X className="size-4" aria-hidden />
               </button>
             </li>
@@ -403,7 +536,9 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
         </ul>
       )}
       <label htmlFor={`composer-${chat.id}`} className="sr-only">
-        {note ? t('inbox.composer.noteLabel') : t('inbox.composer.replyLabel', { name: chat.visitor.displayName })}
+        {note
+          ? t('inbox.composer.noteLabel')
+          : t('inbox.composer.replyLabel', { name: chat.visitor.displayName })}
       </label>
       <textarea
         id={`composer-${chat.id}`}
@@ -416,24 +551,33 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
           setTimeout(() => setSuggest(null), 150);
         }}
         disabled={blocked}
-        rows={3}
+        rows={compact ? 2 : 3}
         dir="auto"
-        placeholder={disabledReason ?? (note ? t('inbox.composer.notePlaceholder') : t('inbox.composer.replyPlaceholder'))}
+        placeholder={
+          disabledReason ??
+          (note ? t('inbox.composer.notePlaceholder') : t('inbox.composer.replyPlaceholder'))
+        }
         aria-describedby={`composer-help-${chat.id}`}
         aria-autocomplete="list"
         aria-controls={suggest ? listId : undefined}
         aria-activedescendant={suggest?.items.length ? `${listId}-${suggest.index}` : undefined}
         className={cn(
-          'block max-h-60 min-h-24 w-full resize-none rounded-[var(--radius-control)] border px-3 py-2.5 text-sm leading-5 text-fg placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-0 disabled:cursor-not-allowed disabled:bg-surface-3',
+          'block max-h-60 w-full resize-none',
+          compact ? 'min-h-16' : 'min-h-24',
+          'rounded-[var(--radius-control)] border px-3 py-2.5 text-sm leading-5 text-fg placeholder:text-fg-3 focus-visible:outline-2 focus-visible:outline-offset-0 disabled:cursor-not-allowed disabled:bg-surface-3',
           note ? 'border-note-border bg-surface' : 'border-line bg-surface',
         )}
       />
       <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-        <p id={`composer-help-${chat.id}`} className="text-xs text-fg-2">
+        <p id={`composer-help-${chat.id}`} className={cn('text-xs text-fg-2', compact && 'sr-only')}>
           {unresolved ? (
-            <span className="font-medium text-warning">{t('inbox.composer.unresolved', { token: PLACEHOLDER_TOKEN })}</span>
+            <span className="font-medium text-warning">
+              {t('inbox.composer.unresolved', { token: PLACEHOLDER_TOKEN })}
+            </span>
           ) : chars > MAX_CHARS - 500 ? (
-            <span className={cn('tabular', chars > MAX_CHARS && 'font-medium text-danger')}>{t('common.characterCount', { count: chars, max: MAX_CHARS })}</span>
+            <span className={cn('tabular', chars > MAX_CHARS && 'font-medium text-danger')}>
+              {t('common.characterCount', { count: chars, max: MAX_CHARS })}
+            </span>
           ) : sendOnEnter ? (
             t('inbox.composer.sendHint', { send: KEY_ENTER, newline: KEY_SHIFT_ENTER })
           ) : (
@@ -454,15 +598,26 @@ export function Composer({ chat, canReply, canNote, disabledReason }: { chat: St
                   e.target.value = '';
                 }}
               />
-              <Button variant="ghost" size="icon" onClick={() => fileInput.current?.click()} disabled={blocked || files.length >= MAX_FILES} aria-label={t('inbox.composer.attachFiles', { count: MAX_FILES, size: maxMb })}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => fileInput.current?.click()}
+                disabled={blocked || files.length >= MAX_FILES}
+                aria-label={t('inbox.composer.attachFiles', { count: MAX_FILES, size: maxMb })}
+              >
                 <Paperclip className="size-4" />
               </Button>
             </>
           )}
-        <Button variant="primary" onClick={submit} disabled={!canSend} aria-label={note ? t('inbox.composer.addNote') : t('inbox.composer.sendReply')}>
-          <SendHorizontal className="size-4 rtl:-scale-x-100" aria-hidden />
-          {note ? t('inbox.composer.addNote') : t('inbox.composer.send')}
-        </Button>
+          <Button
+            variant="primary"
+            onClick={submit}
+            disabled={!canSend}
+            aria-label={note ? t('inbox.composer.addNote') : t('inbox.composer.sendReply')}
+          >
+            <SendHorizontal className="size-4 rtl:-scale-x-100" aria-hidden />
+            {note ? t('inbox.composer.addNote') : t('inbox.composer.send')}
+          </Button>
         </div>
       </div>
     </div>

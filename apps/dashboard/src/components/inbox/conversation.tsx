@@ -1,13 +1,39 @@
 'use client';
-import { ArrowLeft, ArrowRightLeft, BellOff, BellRing, LogOut, MoreHorizontal, PanelRight, Star, UserPlus, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRightLeft,
+  BellOff,
+  BellRing,
+  LogOut,
+  MoreHorizontal,
+  PanelRight,
+  Star,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Avatar, Badge, Button, Dialog, DrawerContent, EmptyState, Menu, MenuContent, MenuItem, MenuSeparator, MenuTrigger, PanelError, Skeleton } from '@/components/ui';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Dialog,
+  DrawerContent,
+  EmptyState,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuSeparator,
+  MenuTrigger,
+  PanelError,
+  Skeleton,
+} from '@/components/ui';
 import { useMediaQuery } from '@/hooks/use-media';
 import { intlLocale, isolate, useT, type MessageKey } from '@/i18n';
 import { api, errorMessage, isApiError } from '@/lib/api';
+import { cn } from '@/lib/cn';
 import { byId, useAgents } from '@/lib/queries';
 import { realtime } from '@/lib/realtime';
 import type { StaffChat } from '@/lib/types';
@@ -19,7 +45,10 @@ import { Composer, focusComposerWhenReady } from './composer';
 import { Transcript } from './transcript';
 import { VisitorPanel } from './visitor-panel';
 
-const STATUS_LABEL: Record<StaffChat['status'], { label: MessageKey; tone: 'warning' | 'info' | 'success' | 'neutral' }> = {
+const STATUS_LABEL: Record<
+  StaffChat['status'],
+  { label: MessageKey; tone: 'warning' | 'info' | 'success' | 'neutral' }
+> = {
   queued: { label: 'inbox.status.queued', tone: 'warning' },
   offered: { label: 'inbox.status.offered', tone: 'info' },
   active: { label: 'inbox.status.active', tone: 'success' },
@@ -83,7 +112,8 @@ export function Conversation({ chatId }: { chatId: string }) {
           }
         />
       );
-    if (state === 'error') return <PanelError message={t('inbox.conversation.loadError')} onRetry={() => void loadChat(chatId)} />;
+    if (state === 'error')
+      return <PanelError message={t('inbox.conversation.loadError')} onRetry={() => void loadChat(chatId)} />;
     return (
       <div className="flex flex-1 flex-col gap-4 p-5" aria-busy="true">
         <Skeleton className="h-12 w-1/2" />
@@ -100,7 +130,10 @@ export function Conversation({ chatId }: { chatId: string }) {
         <ComposerArea chat={chat} me={me} />
       </div>
       {wide ? (
-        <aside aria-label={t('inbox.conversation.visitorDetails')} className="w-80 shrink-0 overflow-y-auto border-s border-line bg-surface scroll-thin">
+        <aside
+          aria-label={t('inbox.conversation.visitorDetails')}
+          className="w-80 shrink-0 overflow-y-auto border-s border-line bg-surface scroll-thin"
+        >
           <VisitorPanel chat={chat} />
         </aside>
       ) : (
@@ -114,7 +147,16 @@ export function Conversation({ chatId }: { chatId: string }) {
   );
 }
 
-function ComposerArea({ chat, me }: { chat: StaffChat; me: string | null }) {
+/** Reply/note composer, or an Accept bar while the chat waits for someone else to take it. Shared with the chat dock. */
+export function ComposerArea({
+  chat,
+  me,
+  compact = false,
+}: {
+  chat: StaffChat;
+  me: string | null;
+  compact?: boolean;
+}) {
   const t = useT();
   const canServe = useCan('chats.serve');
   const canNotes = useCan('notes.view');
@@ -128,11 +170,19 @@ function ComposerArea({ chat, me }: { chat: StaffChat; me: string | null }) {
   else if (!participant && !canMonitor) reason = 'inbox.conversation.reasonParticipants';
   if (waiting && !participant)
     return (
-      <div className="shrink-0 border-t border-line bg-surface px-5 py-4">
+      <div className={cn('shrink-0 border-t border-line bg-surface', compact ? 'px-3 py-3' : 'px-5 py-4')}>
         <AcceptBar chat={chat} />
       </div>
     );
-  return <Composer chat={chat} canReply={canReply} canNote={canNote} disabledReason={!canReply && !canNote ? t(reason ?? 'inbox.conversation.reasonCannotWrite') : null} />;
+  return (
+    <Composer
+      chat={chat}
+      canReply={canReply}
+      canNote={canNote}
+      compact={compact}
+      disabledReason={!canReply && !canNote ? t(reason ?? 'inbox.conversation.reasonCannotWrite') : null}
+    />
+  );
 }
 
 function AcceptBar({ chat }: { chat: StaffChat }) {
@@ -142,7 +192,9 @@ function AcceptBar({ chat }: { chat: StaffChat }) {
   const accept = async () => {
     setBusy(true);
     try {
-      const c = realtime.connected ? await realtime.command<StaffChat>('offer.accept', { chatId: chat.id, offerId: null }) : await api.post<StaffChat>(`/chats/${chat.id}/accept`, {});
+      const c = realtime.connected
+        ? await realtime.command<StaffChat>('offer.accept', { chatId: chat.id, offerId: null })
+        : await api.post<StaffChat>(`/chats/${chat.id}/accept`, {});
       focusComposerWhenReady(chat.id);
       useInbox.getState().upsertChat(c);
     } catch (e) {
@@ -155,7 +207,9 @@ function AcceptBar({ chat }: { chat: StaffChat }) {
   };
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <p className="text-sm text-fg-2">{t('inbox.conversation.acceptPrompt', { name: isolate(chat.visitor.displayName) })}</p>
+      <p className="text-sm text-fg-2">
+        {t('inbox.conversation.acceptPrompt', { name: isolate(chat.visitor.displayName) })}
+      </p>
       {canServe && (
         <Button variant="primary" onClick={accept} loading={busy}>
           {t('inbox.conversation.acceptChat')}
@@ -165,7 +219,17 @@ function AcceptBar({ chat }: { chat: StaffChat }) {
   );
 }
 
-function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffChat; me: string | null; onTogglePanel: () => void; showPanelToggle: boolean }) {
+function ChatHeader({
+  chat,
+  me,
+  onTogglePanel,
+  showPanelToggle,
+}: {
+  chat: StaffChat;
+  me: string | null;
+  onTogglePanel: () => void;
+  showPanelToggle: boolean;
+}) {
   const t = useT();
   const router = useRouter();
   const params = useSearchParams();
@@ -182,8 +246,21 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
   const status = STATUS_LABEL[chat.status];
   const back = `/inbox${params.get('view') ? `?view=${params.get('view')}` : ''}`;
   // Independent facts separated by a middle dot; each one is a whole translated phrase.
-  const ownerText = owner ? (owner.id === me ? t('inbox.header.ownerYou') : t('inbox.header.owner', { name: isolate(owner.displayName) })) : chat.status === 'closed' ? null : t('inbox.list.unassigned');
-  const withText = collaborators.length > 0 ? t('inbox.header.with', { names: new Intl.ListFormat(intlLocale(), { style: 'short', type: 'unit' }).format(collaborators.map(isolate)) }) : null;
+  const ownerText = owner
+    ? owner.id === me
+      ? t('inbox.header.ownerYou')
+      : t('inbox.header.owner', { name: isolate(owner.displayName) })
+    : chat.status === 'closed'
+      ? null
+      : t('inbox.list.unassigned');
+  const withText =
+    collaborators.length > 0
+      ? t('inbox.header.with', {
+          names: new Intl.ListFormat(intlLocale(), { style: 'short', type: 'unit' }).format(
+            collaborators.map(isolate),
+          ),
+        })
+      : null;
   const subtitle = [`#${chat.number}`, ownerText, withText].filter(Boolean).join(' · ');
 
   const leave = async () => {
@@ -205,7 +282,13 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
 
   return (
     <header className="flex h-16 shrink-0 items-center gap-3 border-b border-line bg-surface px-3 sm:px-4">
-      <Button asChild variant="ghost" size="icon" className="min-[900px]:hidden" aria-label={t('inbox.header.back')}>
+      <Button
+        asChild
+        variant="ghost"
+        size="icon"
+        className="min-[900px]:hidden"
+        aria-label={t('inbox.header.back')}
+      >
         <Link href={back}>
           <ArrowLeft className="size-5 rtl:-scale-x-100" />
         </Link>
@@ -222,7 +305,12 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
       </div>
       <div className="flex items-center gap-1">
         {active && (isOwner || canForce) && (
-          <Button variant="secondary" size="sm" onClick={() => setDialog('transfer')} className="hidden sm:inline-flex">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setDialog('transfer')}
+            className="hidden sm:inline-flex"
+          >
             <ArrowRightLeft className="size-4" aria-hidden /> {t('inbox.header.transfer')}
           </Button>
         )}
@@ -244,7 +332,12 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
           </Button>
         )}
         {showPanelToggle && (
-          <Button variant="ghost" size="icon" onClick={onTogglePanel} aria-label={t('inbox.conversation.visitorDetails')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onTogglePanel}
+            aria-label={t('inbox.conversation.visitorDetails')}
+          >
             <PanelRight className="size-5 rtl:-scale-x-100" />
           </Button>
         )}
@@ -256,7 +349,11 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
           </MenuTrigger>
           <MenuContent>
             {active && (isOwner || canForce) && (
-              <MenuItem icon={<ArrowRightLeft />} onSelect={() => setDialog('transfer')} className="sm:hidden">
+              <MenuItem
+                icon={<ArrowRightLeft />}
+                onSelect={() => setDialog('transfer')}
+                className="sm:hidden"
+              >
                 {t('inbox.header.transfer')}
               </MenuItem>
             )}
@@ -290,8 +387,16 @@ function ChatHeader({ chat, me, onTogglePanel, showPanelToggle }: { chat: StaffC
           </MenuContent>
         </Menu>
       </div>
-      <TransferDialog chat={chat} open={dialog === 'transfer'} onOpenChange={(o) => setDialog(o ? 'transfer' : null)} />
-      <InviteDialog chat={chat} open={dialog === 'invite'} onOpenChange={(o) => setDialog(o ? 'invite' : null)} />
+      <TransferDialog
+        chat={chat}
+        open={dialog === 'transfer'}
+        onOpenChange={(o) => setDialog(o ? 'transfer' : null)}
+      />
+      <InviteDialog
+        chat={chat}
+        open={dialog === 'invite'}
+        onOpenChange={(o) => setDialog(o ? 'invite' : null)}
+      />
       <EndChatDialog chat={chat} open={dialog === 'end'} onOpenChange={(o) => setDialog(o ? 'end' : null)} />
     </header>
   );

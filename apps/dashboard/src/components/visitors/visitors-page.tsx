@@ -5,7 +5,8 @@
  * visitor live in the URL; the table is windowed so 10 000 rows stay usable;
  * realtime deltas are coalesced and applied without moving the reading position.
  */
-import { Activity, RotateCw, Search, UsersRound, WifiOff } from 'lucide-react';
+import { Activity, RotateCw, Search, SlidersHorizontal, UsersRound, WifiOff } from 'lucide-react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -26,10 +27,11 @@ import { useConnectionState } from '@/hooks/use-realtime';
 import { cn } from '@/lib/cn';
 import { countryName, formatNumber } from '@/lib/format';
 import { useDepartments, useSites, useTags } from '@/lib/queries';
+import { useDock } from '@/stores/dock';
 import { useSession } from '@/stores/session';
 import { effectiveGroups, type LiveFilters, type LiveSort } from './live-model';
 import { LiveTable } from './live-table';
-import { GROUP_LABEL, HIGH_LOAD_GROUPS, LIVE_GROUPS, type LiveGroup } from './types';
+import { GROUP_LABEL, HIGH_LOAD_GROUPS, LIVE_GROUPS, type LiveGroup, type LiveVisitor } from './types';
 import { useLiveVisitors } from './use-live-visitors';
 import { VisitorDrawer } from './visitor-drawer';
 
@@ -51,6 +53,8 @@ function useUrlState() {
   );
   return { params, set };
 }
+
+const IP_HINT_KEY = 'rd_visitors_ip_hint';
 
 export function VisitorsPage() {
   const t = useT();
@@ -120,25 +124,65 @@ export function VisitorsPage() {
   const onNearEnd = useCallback(() => void loadMore(), [loadMore]);
   const statusChoices = filters.highLoad ? HIGH_LOAD_GROUPS : LIVE_GROUPS;
   const canSites = perms.has('sites.view') && (sites.data?.length ?? 0) > 1;
+  const canServe = perms.has('chats.serve');
+  // Owners and admins (who can see websites) are pointed at installing the widget when there is none yet.
+  const noSite = perms.has('sites.view') && sites.isSuccess && !(sites.data ?? []).some((x) => !x.archivedAt);
+  const advancedCount =
+    [filters.siteId, filters.departmentId, filters.country, filters.tag].filter(Boolean).length +
+    (filters.sort === 'arrival' ? 1 : 0) +
+    (filters.highLoad ? 1 : 0);
+  const [showFilters, setShowFilters] = useState(() => advancedCount > 0);
+
+  // Owners and admins are told once where visitor IPs are switched on (they are off by default).
+  const [ipHintDismissed, setIpHintDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(IP_HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const dismissIpHint = () => {
+    setIpHintDismissed(true);
+    try {
+      localStorage.setItem(IP_HINT_KEY, '1');
+    } catch {
+      /* not persisted */
+    }
+  };
+  const ipHint =
+    !ipHintDismissed &&
+    perms.has('tenant.manage') &&
+    state.status === 'ready' &&
+    sorted.length > 0 &&
+    !sorted.some((r) => r.v.ipAddress);
+
+  // A click on a visitor opens their chat in a docked window; a browsing visitor gets a new-chat window.
+  const openChat = useCallback(
+    (v: LiveVisitor) => {
+      if (v.chat) {
+        useDock.getState().openChat(v.chat.id);
+        return;
+      }
+      if (!canServe) {
+        set({ visitor: v.visitorId });
+        return;
+      }
+      useDock.getState().openVisitor({
+        visitorId: v.visitorId,
+        sessionId: v.mostRecentSessionId,
+        name: v.displayName,
+        country: v.country,
+        ipAddress: v.ipAddress,
+      });
+    },
+    [canServe, set],
+  );
 
   return (
     <div className="mx-auto flex h-full w-full max-w-[1280px] flex-col gap-4 p-4 lg:p-6">
       <PageHeader
         title={t('visitors.page.title')}
-        description={
-          <>
-            {t('visitors.page.description')}{' '}
-            {/* DB-IP City Lite (CC BY 4.0) supplies locations in the bundled deployment; the licence requires this credit. */}
-            <a
-              href="https://db-ip.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline underline-offset-2 hover:text-fg"
-            >
-              {t('visitors.page.geoCredit')}
-            </a>
-          </>
-        }
+        description={t('visitors.page.description')}
         actions={
           <span
             className={cn(
@@ -158,91 +202,27 @@ export function VisitorsPage() {
       />
 
       <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-end gap-3">
-          <Field label={t('visitors.page.search')} className="w-full sm:w-64">
-            <div className="relative">
-              <Search
-                className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-2"
-                aria-hidden
-              />
-              <Input
-                type="search"
-                value={search}
-                maxLength={100}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t('visitors.page.searchPlaceholder')}
-                className="ps-9"
-              />
-            </div>
-          </Field>
-          {canSites && (
-            <Field label={t('visitors.page.site')} className="w-[calc(50%-6px)] sm:w-44">
-              <Select value={filters.siteId} onChange={(e) => set({ site: e.target.value || null })}>
-                <option value="">{t('visitors.page.allSites')}</option>
-                {(sites.data ?? [])
-                  .filter((s) => !s.archivedAt)
-                  .map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-              </Select>
-            </Field>
-          )}
-          {(departments.data?.length ?? 0) > 0 && (
-            <Field label={t('common.department')} className="w-[calc(50%-6px)] sm:w-44">
-              <Select value={filters.departmentId} onChange={(e) => set({ dept: e.target.value || null })}>
-                <option value="">{t('visitors.page.anyDepartment')}</option>
-                {(departments.data ?? [])
-                  .filter((d) => !d.archivedAt)
-                  .map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name}
-                    </option>
-                  ))}
-              </Select>
-            </Field>
-          )}
-          <Field label={t('visitors.page.country')} className="w-[calc(50%-6px)] sm:w-44">
-            <Select value={filters.country} onChange={(e) => set({ country: e.target.value || null })}>
-              <option value="">{t('visitors.page.anyCountry')}</option>
-              {countryOptions.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          <Field label={t('visitors.page.tag')} className="w-[calc(50%-6px)] sm:w-44">
-            <Select value={filters.tag} onChange={(e) => set({ tag: e.target.value || null })}>
-              <option value="">{t('visitors.page.anyTag')}</option>
-              {(tags.data ?? [])
-                .filter((tag) => !tag.archivedAt)
-                .map((tag) => (
-                  <option key={tag.id} value={tag.id}>
-                    {tag.label}
-                  </option>
-                ))}
-            </Select>
-          </Field>
-          <Field label={t('visitors.page.sort')} className="w-full sm:w-56">
-            <Select
-              value={filters.sort}
-              onChange={(e) => set({ sort: e.target.value === 'arrival' ? 'arrival' : null })}
-            >
-              <option value="queue">{t('visitors.page.sortQueue')}</option>
-              <option value="arrival">{t('visitors.page.sortArrival')}</option>
-            </Select>
-          </Field>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search
+              className="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-fg-2"
+              aria-hidden
+            />
+            <Input
+              type="search"
+              value={search}
+              maxLength={100}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('visitors.page.searchPlaceholder')}
+              aria-label={t('visitors.page.search')}
+              className="ps-9"
+            />
+          </div>
           <div
             role="group"
             aria-label={t('visitors.page.activity')}
             className="flex flex-wrap items-center gap-1.5"
           >
-            <span className="me-1 text-sm font-medium text-fg">{t('visitors.page.activity')}</span>
             {statusChoices.map((g) => {
               const on = filters.status.includes(g);
               return (
@@ -265,28 +245,128 @@ export function VisitorsPage() {
                 </button>
               );
             })}
+          </div>
+          <div className="ms-auto flex items-center gap-2">
             {activeFilters && (
-              <Button variant="link" size="sm" className="ms-1" onClick={clearFilters}>
+              <Button variant="link" size="sm" onClick={clearFilters}>
                 {t('visitors.page.clearFilters')}
               </Button>
             )}
+            <Button
+              variant="secondary"
+              size="sm"
+              aria-expanded={showFilters}
+              aria-controls="visitor-filters"
+              onClick={() => setShowFilters((v) => !v)}
+            >
+              <SlidersHorizontal className="size-4" aria-hidden />
+              {advancedCount
+                ? t('visitors.page.filtersCount', { count: advancedCount })
+                : t('visitors.page.filters')}
+            </Button>
           </div>
-          <SwitchField
-            className="min-h-9 py-0"
-            label={t('visitors.page.highLoad')}
-            description={t('visitors.page.highLoadHint')}
-            checked={filters.highLoad}
-            onCheckedChange={(c) =>
-              set({
-                mode: c ? 'high_load' : null,
-                status: c
-                  ? filters.status.filter((g) => HIGH_LOAD_GROUPS.includes(g)).join(',') || null
-                  : statusParam || null,
-              })
-            }
-          />
         </div>
+
+        {showFilters && (
+          <div
+            id="visitor-filters"
+            className="flex flex-wrap items-end gap-3 rounded-[var(--radius-card)] border border-line-subtle bg-surface-2 p-3"
+          >
+            {canSites && (
+              <Field label={t('visitors.page.site')} className="w-[calc(50%-6px)] sm:w-44">
+                <Select value={filters.siteId} onChange={(e) => set({ site: e.target.value || null })}>
+                  <option value="">{t('visitors.page.allSites')}</option>
+                  {(sites.data ?? [])
+                    .filter((s) => !s.archivedAt)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                </Select>
+              </Field>
+            )}
+            {(departments.data?.length ?? 0) > 0 && (
+              <Field label={t('common.department')} className="w-[calc(50%-6px)] sm:w-44">
+                <Select value={filters.departmentId} onChange={(e) => set({ dept: e.target.value || null })}>
+                  <option value="">{t('visitors.page.anyDepartment')}</option>
+                  {(departments.data ?? [])
+                    .filter((d) => !d.archivedAt)
+                    .map((d) => (
+                      <option key={d.id} value={d.id}>
+                        {d.name}
+                      </option>
+                    ))}
+                </Select>
+              </Field>
+            )}
+            <Field label={t('visitors.page.country')} className="w-[calc(50%-6px)] sm:w-44">
+              <Select value={filters.country} onChange={(e) => set({ country: e.target.value || null })}>
+                <option value="">{t('visitors.page.anyCountry')}</option>
+                {countryOptions.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label={t('visitors.page.tag')} className="w-[calc(50%-6px)] sm:w-44">
+              <Select value={filters.tag} onChange={(e) => set({ tag: e.target.value || null })}>
+                <option value="">{t('visitors.page.anyTag')}</option>
+                {(tags.data ?? [])
+                  .filter((tag) => !tag.archivedAt)
+                  .map((tag) => (
+                    <option key={tag.id} value={tag.id}>
+                      {tag.label}
+                    </option>
+                  ))}
+              </Select>
+            </Field>
+            <Field label={t('visitors.page.sort')} className="w-full sm:w-56">
+              <Select
+                value={filters.sort}
+                onChange={(e) => set({ sort: e.target.value === 'arrival' ? 'arrival' : null })}
+              >
+                <option value="queue">{t('visitors.page.sortQueue')}</option>
+                <option value="arrival">{t('visitors.page.sortArrival')}</option>
+              </Select>
+            </Field>
+            <SwitchField
+              className="min-h-9 py-0"
+              label={t('visitors.page.highLoad')}
+              description={t('visitors.page.highLoadHint')}
+              checked={filters.highLoad}
+              onCheckedChange={(c) =>
+                set({
+                  mode: c ? 'high_load' : null,
+                  status: c
+                    ? filters.status.filter((g) => HIGH_LOAD_GROUPS.includes(g)).join(',') || null
+                    : statusParam || null,
+                })
+              }
+            />
+          </div>
+        )}
       </div>
+
+      {ipHint && (
+        <Banner
+          tone="info"
+          title={t('visitors.page.ipOffTitle')}
+          action={
+            <span className="flex items-center gap-1">
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/settings/general">{t('visitors.page.ipOffAction')}</Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={dismissIpHint}>
+                {t('visitors.page.ipOffDismiss')}
+              </Button>
+            </span>
+          }
+        >
+          {t('visitors.page.ipOffBody')}
+        </Banner>
+      )}
 
       {filters.highLoad && (
         <Banner tone="warning" title={t('visitors.page.highLoadBannerTitle')}>
@@ -304,6 +384,17 @@ export function VisitorsPage() {
           </div>
         ) : state.status === 'error' ? (
           <PanelError message={state.error ?? t('visitors.live.loadError')} onRetry={reload} />
+        ) : sorted.length === 0 && noSite ? (
+          <EmptyState
+            icon={<UsersRound />}
+            title={t('visitors.page.noSiteTitle')}
+            description={t('visitors.page.noSiteBody')}
+            action={
+              <Button asChild variant="primary">
+                <Link href="/settings/sites">{t('visitors.page.noSiteAction')}</Link>
+              </Button>
+            }
+          />
         ) : sorted.length === 0 ? (
           <EmptyState
             icon={<UsersRound />}
@@ -335,7 +426,8 @@ export function VisitorsPage() {
             counts={state.counts}
             version={state.version}
             selectedId={selectedId}
-            onSelect={(id) => set({ visitor: id })}
+            onOpen={openChat}
+            onDetails={(id) => set({ visitor: id })}
             onNearEnd={onNearEnd}
             showGroups={groupsShown}
             label={t('visitors.page.tableLabel', { count: sorted.length })}
@@ -354,7 +446,16 @@ export function VisitorsPage() {
                 ? ` · ${t('visitors.page.sortedAmongLoaded')}`
                 : ''}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex items-center gap-3">
+              {/* DB-IP City Lite (CC BY 4.0) supplies locations in the bundled deployment; the licence requires this credit. */}
+              <a
+                href="https://db-ip.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs underline underline-offset-2 hover:text-fg"
+              >
+                {t('visitors.page.geoCredit')}
+              </a>
               {state.moreError && <span className="text-danger">{state.moreError}</span>}
               {state.hasMore && (
                 <Button

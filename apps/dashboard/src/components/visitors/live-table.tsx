@@ -5,24 +5,14 @@
  * insert or remove rows above the viewport the first visible row stays put, and
  * the selected row is kept by visitor id rather than position.
  */
-import { MessageSquare, Timer } from 'lucide-react';
+import { Info, MessageSquare, Timer } from 'lucide-react';
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, type KeyboardEvent } from 'react';
-import { Badge, Tooltip } from '@/components/ui';
-import { isolate, useT, type MessageKey } from '@/i18n';
+import { useT, type MessageKey } from '@/i18n';
 import { cn } from '@/lib/cn';
-import { formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
-import {
-  ApproxCountry,
-  DeviceLabel,
-  Elapsed,
-  IdentityBadge,
-  originLabel,
-  PageCell,
-  ticking,
-  useMonoNow,
-} from './display';
+import { countryName, flagEmoji, formatDuration, formatDurationLong, formatNumber } from '@/lib/format';
+import { Elapsed, IdentityBadge, PageCell, ticking, useMonoNow } from './display';
 import type { LiveRow } from './live-model';
-import { GROUP_HINT, GROUP_LABEL, type LiveGroup } from './types';
+import { GROUP_HINT, GROUP_LABEL, type LiveGroup, type LiveVisitor } from './types';
 import { useWindowedRows } from './windowing';
 
 const ROW_H = 56;
@@ -37,25 +27,15 @@ const COLS: Array<{
   label: MessageKey;
   width: number;
   sticky?: boolean;
-  title?: MessageKey;
-  srLabel?: MessageKey;
+  srOnly?: boolean;
 }> = [
-  { key: 'visitor', label: 'common.visitor', width: 200, sticky: true },
-  { key: 'page', label: 'visitors.live.col.page', width: 216 },
-  { key: 'ref', label: 'visitors.live.col.referrer', width: 112 },
-  { key: 'site', label: 'visitors.live.col.onSite', width: 84 },
-  { key: 'dwell', label: 'visitors.live.col.onPage', width: 84 },
-  {
-    key: 'country',
-    label: 'visitors.live.col.country',
-    width: 120,
-    title: 'visitors.live.col.countryTitle',
-    srLabel: 'visitors.live.col.countrySr',
-  },
-  { key: 'device', label: 'visitors.live.col.device', width: 96 },
-  { key: 'sessions', label: 'visitors.live.col.visits', width: 76 },
-  { key: 'tags', label: 'visitors.live.col.tags', width: 120 },
-  { key: 'chat', label: 'common.chat', width: 156 },
+  { key: 'visitor', label: 'common.visitor', width: 240, sticky: true },
+  { key: 'ip', label: 'visitors.live.col.ip', width: 200 },
+  { key: 'page', label: 'visitors.live.col.viewing', width: 300 },
+  { key: 'site', label: 'visitors.live.col.onSite', width: 96 },
+  { key: 'sessions', label: 'visitors.live.col.visits', width: 72 },
+  { key: 'chat', label: 'common.chat', width: 136 },
+  { key: 'more', label: 'visitors.live.col.details', width: 52, srOnly: true },
 ];
 const TABLE_W = COLS.reduce((n, c) => n + c.width, 0);
 
@@ -64,7 +44,8 @@ export function LiveTable({
   counts,
   version,
   selectedId,
-  onSelect,
+  onOpen,
+  onDetails,
   onNearEnd,
   showGroups,
   label,
@@ -73,7 +54,10 @@ export function LiveTable({
   counts: Partial<Record<LiveGroup, number>>;
   version: number;
   selectedId: string | null;
-  onSelect: (id: string) => void;
+  /** Click on a visitor: their chat window opens in the dock. */
+  onOpen: (v: LiveVisitor) => void;
+  /** The details button: the visitor drawer. */
+  onDetails: (id: string) => void;
   onNearEnd: () => void;
   showGroups: LiveGroup[];
   label: string;
@@ -218,16 +202,7 @@ export function LiveTable({
                   c.sticky && 'sticky start-0 z-[3] bg-surface-2',
                 )}
               >
-                {c.title ? (
-                  <>
-                    <span aria-hidden title={t(c.title)}>
-                      {t(c.label)}
-                    </span>
-                    {c.srLabel && <span className="sr-only">{t(c.srLabel)}</span>}
-                  </>
-                ) : (
-                  t(c.label)
-                )}
+                {c.srOnly ? <span className="sr-only">{t(c.label)}</span> : t(c.label)}
               </th>
             ))}
           </tr>
@@ -261,7 +236,8 @@ export function LiveTable({
                 rowIndex={it.index + 2}
                 now={now}
                 selected={it.row.v.visitorId === selectedId}
-                onSelect={onSelect}
+                onOpen={onOpen}
+                onDetails={onDetails}
                 onKey={onKey}
               />
             ),
@@ -278,22 +254,24 @@ const VisitorRow = memo(function VisitorRow({
   rowIndex,
   now,
   selected,
-  onSelect,
+  onOpen,
+  onDetails,
   onKey,
 }: {
   row: LiveRow;
   rowIndex: number;
   now: number;
   selected: boolean;
-  onSelect: (id: string) => void;
+  onOpen: (v: LiveVisitor) => void;
+  onDetails: (id: string) => void;
   onKey: (e: KeyboardEvent<HTMLButtonElement>, id: string) => void;
 }) {
   const t = useT();
   const v = row.v;
   const onSite = v.browsingHidden ? null : ticking(v.timeOnSiteMs, row.recv, now);
-  const dwell = v.browsingHidden ? null : ticking(v.pageDwellMs, row.recv, now);
   const wait = v.chat ? ticking(v.chat.waitMs, row.recv, now) : null;
-  const liveTabs = v.sessions.length;
+  const flag = flagEmoji(v.country);
+  const country = countryName(v.country);
   const cell = 'border-b border-line-subtle px-3 align-middle';
   return (
     <tr
@@ -302,7 +280,7 @@ const VisitorRow = memo(function VisitorRow({
       style={{ height: ROW_H }}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('button, a')) return;
-        onSelect(v.visitorId);
+        onOpen(v);
       }}
       className={cn('group cursor-pointer', selected ? 'bg-primary-tint' : 'hover:bg-surface-2')}
     >
@@ -313,127 +291,107 @@ const VisitorRow = memo(function VisitorRow({
           selected ? 'bg-primary-tint' : 'bg-surface group-hover:bg-surface-2',
         )}
       >
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <button
-            type="button"
-            data-visitor-button={v.visitorId}
-            onClick={() => onSelect(v.visitorId)}
-            onKeyDown={(e) => onKey(e, v.visitorId)}
-            aria-haspopup="dialog"
-            dir="auto"
-            className="max-w-full truncate rounded-sm text-start font-medium text-fg hover:underline"
+        <div className="flex min-w-0 items-center gap-2.5">
+          <span
+            className="w-6 shrink-0 text-center text-lg leading-none"
+            title={country ?? undefined}
+            aria-hidden
           >
-            {v.displayName}
-          </button>
-          <span className="flex items-center gap-1.5 text-xs text-fg-2">
-            <IdentityBadge verified={v.identity.verified} identified={v.identity.identified} compact />
-            {v.idle && v.group !== 'idle' && <span>{t('visitors.group.idle')}</span>}
+            {flag}
           </span>
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <button
+              type="button"
+              data-visitor-button={v.visitorId}
+              onClick={() => onOpen(v)}
+              onKeyDown={(e) => onKey(e, v.visitorId)}
+              aria-label={t('visitors.live.openChat', { name: v.displayName })}
+              dir="auto"
+              className="max-w-full truncate rounded-sm text-start font-medium text-fg hover:underline"
+            >
+              {v.displayName}
+            </button>
+            <span className="flex min-w-0 items-center gap-1.5 text-xs text-fg-2">
+              <IdentityBadge verified={v.identity.verified} identified={v.identity.identified} compact />
+              {!v.browsingHidden && country && <span className="truncate">{country}</span>}
+            </span>
+          </div>
         </div>
       </td>
       <td className={cell}>
+        {v.ipAddress ? (
+          <div className="flex min-w-0 flex-col gap-0.5">
+            <span className="truncate font-mono text-xs" dir="ltr">
+              {v.ipAddress}
+            </span>
+            {v.network && (
+              <span className="truncate text-xs text-fg-2" title={v.network} dir="auto">
+                {v.network}
+              </span>
+            )}
+          </div>
+        ) : null}
+      </td>
+      <td className={cell}>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <PageCell url={v.currentUrl} title={v.currentTitle} hidden={v.browsingHidden} />
           {!v.browsingHidden && v.currentTitle && (
-            <span className="truncate text-xs text-fg-2" dir="auto">
+            <span className="truncate" dir="auto">
               {v.currentTitle}
             </span>
           )}
+          <div className={cn('min-w-0', !v.browsingHidden && v.currentTitle && 'text-xs text-fg-2')}>
+            <PageCell url={v.currentUrl} title={v.currentTitle} hidden={v.browsingHidden} />
+          </div>
         </div>
-      </td>
-      <td className={cell}>
-        {v.browsingHidden ? null : v.referrerOrigin ? (
-          <span className="block truncate" title={v.referrerOrigin} dir="auto">
-            {originLabel(v.referrerOrigin)}
-          </span>
-        ) : (
-          <span className="text-fg-2">{t('visitors.live.direct')}</span>
-        )}
       </td>
       <td className={cell}>
         <Elapsed ms={onSite} />
       </td>
       <td className={cell}>
-        <Elapsed ms={dwell} />
+        <span className="tabular">{v.sessionCount === null ? '' : formatNumber(v.sessionCount)}</span>
       </td>
       <td className={cell}>
-        {v.browsingHidden ? null : <ApproxCountry code={v.country} className="max-w-full" />}
-      </td>
-      <td className={cell}>
-        <DeviceLabel category={v.deviceCategory} />
-      </td>
-      <td className={cell}>
-        <div className="flex flex-col gap-0.5">
-          <span className="tabular">{v.sessionCount === null ? '' : formatNumber(v.sessionCount)}</span>
-          {liveTabs > 1 && (
-            <span className="text-xs text-fg-2">{t('visitors.live.tabsOpen', { count: liveTabs })}</span>
-          )}
-        </div>
-      </td>
-      <td className={cell}>
-        {v.tags.length ? (
-          <span className="flex min-w-0 items-center gap-1 overflow-hidden">
-            {v.tags.slice(0, 2).map((tag) => (
-              <Badge key={tag.id} tone="primary" className="max-w-[88px] shrink" dir="auto">
-                {tag.label}
-              </Badge>
-            ))}
-            {v.tags.length > 2 && (
-              <Tooltip content={v.tags.map((tag) => tag.label).join(', ')}>
-                <span
-                  tabIndex={0}
-                  className="shrink-0 text-xs text-fg-2"
-                  aria-label={t('visitors.live.moreTags', {
-                    count: v.tags.length - 2,
-                    tags: v.tags
-                      .slice(2)
-                      .map((tag) => isolate(tag.label))
-                      .join(', '),
-                  })}
-                >
-                  +{v.tags.length - 2}
-                </span>
-              </Tooltip>
+        {v.chat ? (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 font-medium',
+              v.group === 'incoming' ? 'text-warning' : 'text-success',
+            )}
+          >
+            {v.group === 'incoming' ? (
+              <Timer className="size-3.5" aria-hidden />
+            ) : (
+              <MessageSquare className="size-3.5" aria-hidden />
+            )}
+            {v.group === 'incoming' ? (
+              <span
+                className="tabular"
+                aria-label={
+                  wait === null
+                    ? undefined
+                    : t('visitors.live.waiting', { duration: formatDurationLong(wait) })
+                }
+              >
+                {wait === null
+                  ? t('visitors.group.incoming')
+                  : t('visitors.live.waiting', { duration: formatDuration(wait) })}
+              </span>
+            ) : (
+              t('visitors.live.inChat')
             )}
           </span>
         ) : null}
       </td>
-      <td className={cell}>
-        {v.chat ? (
-          <div className="flex min-w-0 flex-col gap-0.5">
-            <span
-              className={cn(
-                'inline-flex items-center gap-1.5 font-medium',
-                v.group === 'incoming' ? 'text-warning' : 'text-success',
-              )}
-            >
-              {v.group === 'incoming' ? (
-                <Timer className="size-3.5" aria-hidden />
-              ) : (
-                <MessageSquare className="size-3.5" aria-hidden />
-              )}
-              {v.group === 'incoming' ? (
-                <span
-                  className="tabular"
-                  aria-label={
-                    wait === null
-                      ? undefined
-                      : t('visitors.live.waiting', { duration: formatDurationLong(wait) })
-                  }
-                >
-                  {wait === null ? null : t('visitors.live.waiting', { duration: formatDuration(wait) })}
-                </span>
-              ) : (
-                t('visitors.live.inChat')
-              )}
-            </span>
-            <span className="truncate text-xs text-fg-2" dir="auto">
-              {v.chat.departmentName ?? t('visitors.live.noDepartment')}
-            </span>
-          </div>
-        ) : (
-          <span className="text-fg-3">{t('visitors.live.noChat')}</span>
-        )}
+      <td className={cn(cell, 'px-1 text-center')}>
+        <button
+          type="button"
+          onClick={() => onDetails(v.visitorId)}
+          aria-haspopup="dialog"
+          aria-label={t('visitors.live.details', { name: v.displayName })}
+          className="inline-flex size-9 items-center justify-center rounded-md text-fg-2 hover:bg-surface-3 hover:text-fg"
+        >
+          <Info className="size-4" aria-hidden />
+        </button>
       </td>
     </tr>
   );

@@ -27,6 +27,11 @@ import { CodeBlock, CopyButton } from './copy-button';
 import { richT, slots } from './rich-text';
 import { siteKey } from './site-general';
 
+// Code identifiers shown inside <code>, never translated.
+const SECRET_ENV = 'TALKIVIO_IDENTITY_SECRET'; // i18n-ignore: environment variable name
+const JTI_CLAIM = 'jti'; // i18n-ignore: JWT claim name
+const IDENTIFY_CALL = "Talkivio('identify', { externalIdToken })"; // i18n-ignore: JavaScript API call
+
 const OVERLAPS: ReadonlyArray<{ value: string; label: MessageKey; description?: MessageKey }> = [
   { value: '0', label: 'sites.security.overlap.none', description: 'sites.security.overlap.noneHint' },
   { value: '900', label: 'sites.security.overlap.15m' },
@@ -179,8 +184,8 @@ export function SiteSecurity({ site }: { site: Site }) {
               <p className="text-sm">
                 {richT(t('sites.security.storeSecret', slots(1)), [
                   <code key="env" className="font-mono" dir="ltr">
-                    TALKIVIO_IDENTITY_SECRET
-                  </code>, // i18n-ignore: environment variable name
+                    {SECRET_ENV}
+                  </code>,
                 ])}
               </p>
               <div className="flex flex-wrap items-center gap-3">
@@ -237,11 +242,11 @@ export function SiteSecurity({ site }: { site: Site }) {
               </Badge>
               {richT(t('sites.security.signBody', slots(2)), [
                 <code key="jti" className="font-mono" dir="ltr">
-                  jti
-                </code>, // i18n-ignore: JWT claim name
+                  {JTI_CLAIM}
+                </code>,
                 <code key="call" className="font-mono text-xs" dir="ltr">
-                  Talkivio(&apos;identify&apos;, {'{'} externalIdToken {'}'})
-                </code>, // i18n-ignore: JavaScript API call
+                  {IDENTIFY_CALL}
+                </code>,
               ])}
             </p>
             <CodeBlock what={t('sites.security.whatNodeSample')} code={nodeSample(site.id, tenantId)} />

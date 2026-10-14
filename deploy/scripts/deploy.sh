@@ -16,6 +16,7 @@ source "$(dirname "$0")/lib.sh"
 sha=${1:-}
 [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || die "usage: scripts/deploy.sh <full 40-character commit SHA of main>"
 scripts/check-env.sh --quiet
+ensure_backups_dir
 
 repo=$(setting TALKIVIO_IMAGE_REPO ghcr.io/ryanthomas57/talkivio)
 source_repo=$(setting TALKIVIO_SOURCE_REPO ryanthomas57/talkivio)

@@ -13,6 +13,7 @@ source "$(dirname "$0")/lib.sh"
 
 dump=${1:-}
 [ "${2:-}" = --yes-replace-all-data ] || die "usage: scripts/restore.sh <dump file name | latest> --yes-replace-all-data"
+ensure_backups_dir
 if [ "$dump" = latest ]; then
   dump=$(find backups -maxdepth 1 -name 'talkivio-*.dump' -exec basename {} \; 2> /dev/null | sort | tail -n 1)
   [ -n "$dump" ] || die "no local dump in deploy/backups (name one that exists in the off-server bucket instead)"

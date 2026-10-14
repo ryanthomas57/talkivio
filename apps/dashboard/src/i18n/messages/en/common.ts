@@ -117,6 +117,8 @@ export const common = {
   'common.error.CHAT_CLOSED': 'This chat has ended.',
   'common.error.CHAT_ALREADY_ASSIGNED': 'Another agent already has this chat.',
   'common.error.CAPACITY_EXCEEDED': 'No free chat capacity right now.',
+  'common.error.VISITOR_OFFLINE': 'This visitor is no longer on your site.',
+  'common.error.CHAT_EXISTS': 'This visitor already has an open chat.',
   'common.error.OFFER_EXPIRED': 'This offer has expired.',
   'common.error.OFFER_WITHDRAWN': 'This offer is no longer available.',
   'common.error.DEPARTMENT_UNAVAILABLE': 'This department is not available.',

@@ -1,5 +1,6 @@
 'use client';
 import type { ReactNode } from 'react';
+import { ChatDock } from '@/components/dock/chat-dock';
 import { InboxSync } from '@/components/inbox/inbox-sync';
 import { OfferCenter, OfferSkipLink } from '@/components/inbox/offer-center';
 import { NotificationsBell } from '@/components/notifications/bell';
@@ -17,6 +18,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <>
               <InboxSync />
               <OfferCenter />
+              <ChatDock />
             </>
           ),
         }}

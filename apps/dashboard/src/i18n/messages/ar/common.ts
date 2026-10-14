@@ -121,6 +121,8 @@ export const common: Record<keyof typeof source, string> = {
   'common.error.CHAT_CLOSED': 'انتهت هذه المحادثة.',
   'common.error.CHAT_ALREADY_ASSIGNED': 'هذه المحادثة لدى موظف آخر بالفعل.',
   'common.error.CAPACITY_EXCEEDED': 'لا توجد سعة متاحة للمحادثات حاليًا.',
+  'common.error.VISITOR_OFFLINE': 'لم يعد هذا الزائر على موقعك.',
+  'common.error.CHAT_EXISTS': 'لدى هذا الزائر محادثة مفتوحة بالفعل.',
   'common.error.OFFER_EXPIRED': 'انتهت صلاحية هذا العرض.',
   'common.error.OFFER_WITHDRAWN': 'لم يعد هذا العرض متاحًا.',
   'common.error.DEPARTMENT_UNAVAILABLE': 'هذا القسم غير متاح.',

@@ -44,6 +44,11 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.live.col.device': 'الجهاز',
   'visitors.live.col.visits': 'الزيارات',
   'visitors.live.col.tags': 'الوسوم',
+  'visitors.live.col.ip': 'عنوان IP',
+  'visitors.live.col.viewing': 'يشاهد',
+  'visitors.live.col.details': 'التفاصيل',
+  'visitors.live.openChat': 'محادثة مع {name}',
+  'visitors.live.details': 'تفاصيل {name}',
   'visitors.live.groupLoaded': '(تم تحميل {count})',
   'visitors.live.direct': 'مباشر',
   'visitors.live.tabsOpen':
@@ -77,6 +82,13 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.page.sortArrival': 'وقت الوصول (الأحدث أولًا)',
   'visitors.page.activity': 'النشاط',
   'visitors.page.clearFilters': 'مسح عوامل التصفية',
+  'visitors.page.filters': 'عوامل التصفية',
+  'visitors.page.filtersCount': 'عوامل التصفية ({count})',
+  'visitors.page.ipOffTitle': 'عناوين IP للزوار متوقفة',
+  'visitors.page.ipOffBody':
+    'فعّل «إظهار عناوين IP للزوار» لرؤية عنوان IP والشبكة لكل زائر، مثلًا لاكتشاف شبكات VPN.',
+  'visitors.page.ipOffAction': 'فتح الإعدادات',
+  'visitors.page.ipOffDismiss': 'إخفاء',
   'visitors.page.highLoad': 'وضع الضغط العالي',
   'visitors.page.highLoadHint': 'عرض المحادثات الواردة وقيد الخدمة فقط',
   'visitors.page.highLoadBannerTitle': 'وضع الضغط العالي: الزوار المتصفحون غير معروضين',
@@ -86,6 +98,10 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.page.emptyFilteredTitle': 'لا يوجد زوار يطابقون عوامل التصفية هذه',
   'visitors.page.emptyHighLoadTitle': 'لا توجد محادثات واردة أو قيد الخدمة الآن',
   'visitors.page.emptyTitle': 'لا يوجد زوار على مواقعك الآن',
+  'visitors.page.noSiteTitle': 'أضف موقعك لرؤية الزوار',
+  'visitors.page.noSiteBody':
+    'يظهر الزوار هنا لحظة فتحهم صفحة تحتوي على أداة الدردشة. أضف موقعك والصق المقتطف في كل صفحة.',
+  'visitors.page.noSiteAction': 'إضافة موقعك',
   'visitors.page.emptyFilteredBody': 'يظهر الزوار المباشرون هنا فور مطابقتهم. جرّب إزالة أحد عوامل التصفية.',
   'visitors.page.emptyHighLoadBody': 'الزوار المتصفحون مخفيون في وضع الضغط العالي.',
   'visitors.page.emptyBody':

@@ -68,6 +68,9 @@ export interface LiveVisitor {
   arrivedAt: string | null;
   timeOnSiteMs: number | null;
   country: string | null;
+  /** Address and network owner of the most recent session; null unless the workspace shows visitor IPs (Settings, General). */
+  ipAddress: string | null;
+  network: string | null;
   deviceCategory: string | null;
   sessionCount: number | null;
   lastActivityAt: string | null;
@@ -137,7 +140,12 @@ export interface VisitorProfile {
   lastSeenAt: string;
   visitCount: number;
   chatCount: number;
-  location: { countryCode: string | null; region: string | null; city: string | null; approximate: true } | null;
+  location: {
+    countryCode: string | null;
+    region: string | null;
+    city: string | null;
+    approximate: true;
+  } | null;
   device: { category: string | null; browser: string | null; os: string | null };
   language: string | null;
   timezone: string | null;

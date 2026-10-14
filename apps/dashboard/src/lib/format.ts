@@ -137,6 +137,12 @@ export function initials(name: string): string {
   return (parts[0]![0]! + (parts.length > 1 ? parts[parts.length - 1]![0]! : '')).toUpperCase();
 }
 
+/** Regional-indicator flag for an ISO country code ("DE" → 🇩🇪); null for anything else. */
+export function flagEmoji(code: string | null | undefined): string | null {
+  if (!code || !/^[A-Za-z]{2}$/.test(code)) return null;
+  return String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+}
+
 export function countryName(code: string | null | undefined): string | null {
   if (!code) return null;
   try {

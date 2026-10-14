@@ -9,8 +9,7 @@ set -euo pipefail
 source "$(dirname "$0")/lib.sh"
 
 ts=$(date -u +%Y%m%dT%H%M%SZ)
-mkdir -p backups
-chmod 700 backups
+ensure_backups_dir
 dump="talkivio-$ts.dump"
 note "database dump"
 # Streamed through stdout/stdin, so the file belongs to this host user (postgres runs as uid 999 in its container).

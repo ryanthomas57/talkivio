@@ -12,6 +12,14 @@ die() {
 }
 note() { echo "$(date -u +%H:%M:%S) $*"; }
 
+# deploy/backups belongs to the deploying user: dumps are streamed into it from this shell, and the backup job
+# container mounts it. Create it before any container does (Docker makes a missing bind-mount source as root).
+ensure_backups_dir() {
+  mkdir -p backups
+  [ -O backups ] || die "deploy/backups belongs to $(ls -ld backups | awk '{print $3}'), not $(id -un). Fix it with: sudo chown -R $(id -un) $DEPLOY_DIR/backups"
+  chmod 700 backups
+}
+
 setting() { # setting NAME [default]
   local v
   v=$(grep -E "^$1=" talkivio.env 2> /dev/null | tail -n 1 | cut -d= -f2-) || true

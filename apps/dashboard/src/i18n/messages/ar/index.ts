@@ -22,6 +22,7 @@ import { team } from './team';
 import { analytics } from './analytics';
 import { history } from './history';
 import { monitor } from './monitor';
+import { dock } from './dock';
 
 export const ar: Record<MessageKey, string> = {
   ...common,
@@ -47,5 +48,30 @@ export const ar: Record<MessageKey, string> = {
   ...analytics,
   ...history,
   ...monitor,
+  ...dock,
 };
-export const AREAS = { common, format, shell, ui, inbox, auth, pages, notifications, settings, sites, customFields, bans, offline, triggers, integrations, privacy, audit, shortcuts, visitors, team, analytics, history, monitor };
+export const AREAS = {
+  common,
+  format,
+  shell,
+  ui,
+  inbox,
+  auth,
+  pages,
+  notifications,
+  settings,
+  sites,
+  customFields,
+  bans,
+  offline,
+  triggers,
+  integrations,
+  privacy,
+  audit,
+  shortcuts,
+  visitors,
+  team,
+  analytics,
+  history,
+  monitor,
+};

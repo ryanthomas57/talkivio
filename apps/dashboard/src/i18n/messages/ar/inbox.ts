@@ -53,6 +53,11 @@ export const inbox: Record<keyof typeof source, string> = {
   'inbox.offers.secondsLeft':
     '{count, plural, zero {انتهى الوقت} one {تبقّت ثانية واحدة} two {تبقّت ثانيتان} few {تبقّت # ثوانٍ} many {تبقّت # ثانية} other {تبقّت # ثانية}}',
   'inbox.offers.noMessage': 'لا رسالة بعد',
+  'inbox.requests.title': 'طلب محادثة جديد',
+  'inbox.requests.dismiss': 'ليس الآن',
+  'inbox.requests.more':
+    '{count, plural, zero {لا محادثات أخرى في الانتظار} one {محادثة أخرى في الانتظار} two {محادثتان أخريان في الانتظار} few {# محادثات أخرى في الانتظار} many {# محادثة أخرى في الانتظار} other {# محادثة أخرى في الانتظار}}',
+  'inbox.requests.announce': 'طلب محادثة جديد من {name}. اضغط {shortcut} للمراجعة.',
   'inbox.offers.waiting': 'في الانتظار منذ {duration}',
   'inbox.offers.handoffNote': 'ملاحظة التسليم: {note}',
   'inbox.offers.decline': 'رفض',
