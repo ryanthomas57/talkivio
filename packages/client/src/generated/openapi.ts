@@ -807,6 +807,176 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/billing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/billing */
+        get: operations["billingSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/billing/cancel */
+        post: operations["billingCancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/card": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** PUT /api/v1/billing/card */
+        put: operations["billingUpdateCard"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/card-session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/billing/card-session */
+        post: operations["billingCardSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/charges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/billing/charges */
+        get: operations["billingCharges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/quote": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/billing/quote */
+        get: operations["billingQuote"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/resume": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/billing/resume */
+        post: operations["billingResume"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** GET /api/v1/billing/status */
+        get: operations["billingStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/subscribe": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** POST /api/v1/billing/subscribe */
+        post: operations["billingSubscribe"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/billing/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** PATCH /api/v1/billing/subscription */
+        patch: operations["billingChange"];
+        trace?: never;
+    };
     "/api/v1/chats": {
         parameters: {
             query?: never;
@@ -5871,6 +6041,89 @@ export interface components {
             created_at: string;
             last_error_code: string | null;
         };
+        BillingStatus: {
+            enabled: boolean;
+            state: ("incomplete" | "trialing" | "active" | "past_due" | "suspended" | "ended") | null;
+            plan: string | null;
+            trial_ends_at: string | null;
+        };
+        BillingSummary: {
+            enabled: boolean;
+            exempt?: boolean;
+            /** @enum {string} */
+            provider?: "converge" | "fake";
+            /** @enum {string} */
+            state?: "incomplete" | "trialing" | "active" | "past_due" | "suspended" | "ended";
+            /** @enum {string} */
+            plan?: "starter" | "team" | "business";
+            /** @enum {string} */
+            cycle?: "monthly" | "yearly";
+            seats?: number;
+            seats_in_use?: number;
+            unit_price_cents?: number;
+            period_cents?: number;
+            trial_ends_at?: string | null;
+            current_period_start?: string | null;
+            current_period_end?: string | null;
+            cancel_at_period_end?: boolean;
+            grace_ends_at?: string | null;
+            next_charge_at?: string | null;
+            next_charge_cents?: number | null;
+            pending?: {
+                /** @enum {string} */
+                plan: "starter" | "team" | "business";
+                /** @enum {string} */
+                cycle: "monthly" | "yearly";
+                seats: number;
+            } | null;
+            card?: {
+                brand: string | null;
+                last4: string;
+                exp: string | null;
+            } | null;
+            last_error?: string | null;
+            terms_version?: string;
+        };
+        BillingQuote: {
+            /** @enum {string} */
+            plan: "starter" | "team" | "business";
+            /** @enum {string} */
+            cycle: "monthly" | "yearly";
+            seats: number;
+            /** @enum {string} */
+            kind: "trial" | "subscribe" | "upgrade" | "scheduled" | "unchanged";
+            unit_cents: number;
+            period_cents: number;
+            due_now_cents: number;
+            next_charge_at: string | null;
+            trial_ends_at: string | null;
+            disclosure: string;
+            disclosure_hash: string;
+        };
+        BillingCardSession: {
+            /** @enum {string} */
+            provider: "converge" | "fake";
+            token: string;
+            script_url: string | null;
+        };
+        BillingCharge: {
+            /** Format: uuid */
+            id: string;
+            kind: string;
+            invoice_number: string;
+            amount_cents: number;
+            currency: string;
+            /** @enum {string} */
+            status: "approved" | "declined" | "error";
+            plan: string;
+            cycle: string;
+            seats: number;
+            period_start: string | null;
+            period_end: string | null;
+            card_last4: string | null;
+            /** Format: date-time */
+            created_at: string;
+        };
         Meta: {
             /** @description Echoed X-Request-Id */
             request_id: string;
@@ -5885,7 +6138,7 @@ export interface components {
          * @description Stable machine codes (ch. 76 inventory: AUTH_REQUIRED, MFA_REQUIRED, TOKEN_EXPIRED, TOKEN_USED, VALIDATION_FAILED, ORIGIN_NOT_ALLOWED, CONSENT_REQUIRED, PERMISSION_DENIED, NOT_FOUND, VERSION_CONFLICT, IDEMPOTENCY_MISMATCH, CHAT_CLOSED, CAPACITY_EXCEEDED, OFFER_EXPIRED, OFFER_WITHDRAWN, DEPARTMENT_UNAVAILABLE, QUEUE_FULL, FILE_TOO_LARGE, FILE_TYPE_BLOCKED, FILE_SCAN_PENDING, FILE_REJECTED, EXPORT_EXPIRED, RATE_LIMITED, CURSOR_EXPIRED, SERVICE_UNAVAILABLE, INTEGRATION_UNAVAILABLE; plus server extensions). Human messages localize; `retryable` only means a retry with the same command identity may help.
          * @enum {string}
          */
-        ErrorCode: "AUTH_REQUIRED" | "MFA_REQUIRED" | "RECENT_AUTH_REQUIRED" | "TOKEN_EXPIRED" | "TOKEN_USED" | "VALIDATION_FAILED" | "ORIGIN_NOT_ALLOWED" | "CONSENT_REQUIRED" | "PERMISSION_DENIED" | "NOT_FOUND" | "VERSION_CONFLICT" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_MISMATCH" | "IDEMPOTENCY_IN_PROGRESS" | "CHAT_CLOSED" | "CHAT_ALREADY_ASSIGNED" | "CAPACITY_EXCEEDED" | "OFFER_EXPIRED" | "OFFER_WITHDRAWN" | "DEPARTMENT_UNAVAILABLE" | "QUEUE_FULL" | "VISITOR_OFFLINE" | "CHAT_EXISTS" | "FILE_TOO_LARGE" | "FILE_TYPE_BLOCKED" | "FILE_SCAN_PENDING" | "FILE_REJECTED" | "EXPORT_EXPIRED" | "RATE_LIMITED" | "CURSOR_EXPIRED" | "SERVICE_UNAVAILABLE" | "INTEGRATION_UNAVAILABLE" | "CONFLICT" | "EMAIL_NOT_VERIFIED" | "INVALID_CREDENTIALS" | "PLAN_LIMIT" | "INTERNAL";
+        ErrorCode: "AUTH_REQUIRED" | "MFA_REQUIRED" | "RECENT_AUTH_REQUIRED" | "TOKEN_EXPIRED" | "TOKEN_USED" | "VALIDATION_FAILED" | "ORIGIN_NOT_ALLOWED" | "CONSENT_REQUIRED" | "PERMISSION_DENIED" | "NOT_FOUND" | "VERSION_CONFLICT" | "PRECONDITION_REQUIRED" | "IDEMPOTENCY_MISMATCH" | "IDEMPOTENCY_IN_PROGRESS" | "CHAT_CLOSED" | "CHAT_ALREADY_ASSIGNED" | "CAPACITY_EXCEEDED" | "OFFER_EXPIRED" | "OFFER_WITHDRAWN" | "DEPARTMENT_UNAVAILABLE" | "QUEUE_FULL" | "VISITOR_OFFLINE" | "CHAT_EXISTS" | "FILE_TOO_LARGE" | "FILE_TYPE_BLOCKED" | "FILE_SCAN_PENDING" | "FILE_REJECTED" | "EXPORT_EXPIRED" | "RATE_LIMITED" | "CURSOR_EXPIRED" | "SERVICE_UNAVAILABLE" | "INTEGRATION_UNAVAILABLE" | "CONFLICT" | "EMAIL_NOT_VERIFIED" | "INVALID_CREDENTIALS" | "PLAN_LIMIT" | "PAYMENT_REQUIRED" | "INTERNAL";
         ErrorEnvelope: {
             error: {
                 code: components["schemas"]["ErrorCode"];
@@ -7610,6 +7863,10 @@ export interface operations {
                     /** @default UTC */
                     timezone?: string;
                     display_name?: string;
+                    /** @enum {string} */
+                    plan?: "starter" | "team" | "business";
+                    /** @enum {string} */
+                    cycle?: "monthly" | "yearly";
                 };
             };
         };
@@ -7792,6 +8049,326 @@ export interface operations {
             403: components["responses"]["Forbidden"];
             404: components["responses"]["NotFound"];
             409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingCancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingUpdateCard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    card_token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingCardSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingCardSession"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingCharges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingCharge"][];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingQuote: {
+        parameters: {
+            query: {
+                plan: "starter" | "team" | "business";
+                cycle: "monthly" | "yearly";
+                seats: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingQuote"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingResume: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingStatus"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingSubscribe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan: "starter" | "team" | "business";
+                    /** @enum {string} */
+                    cycle: "monthly" | "yearly";
+                    seats: number;
+                    /** @constant */
+                    accepted_terms: true;
+                    disclosure_hash: string;
+                    card_token: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
+            429: components["responses"]["RateLimited"];
+            default: components["responses"]["Error"];
+        };
+    };
+    billingChange: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** @enum {string} */
+                    plan: "starter" | "team" | "business";
+                    /** @enum {string} */
+                    cycle: "monthly" | "yearly";
+                    seats: number;
+                    /** @constant */
+                    accepted_terms: true;
+                    disclosure_hash: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Success */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        data: components["schemas"]["BillingSummary"];
+                        meta: components["schemas"]["Meta"];
+                    };
+                };
+            };
+            400: components["responses"]["BadRequest"];
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationFailed"];
             429: components["responses"]["RateLimited"];
             default: components["responses"]["Error"];
         };
@@ -11359,6 +11936,10 @@ export interface operations {
                     tenant_name: string;
                     /** @default UTC */
                     timezone?: string;
+                    /** @enum {string} */
+                    plan?: "starter" | "team" | "business";
+                    /** @enum {string} */
+                    cycle?: "monthly" | "yearly";
                 };
             };
         };

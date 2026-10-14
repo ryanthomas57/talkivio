@@ -127,12 +127,15 @@ export const MessageBubble = memo(function MessageBubble({
   grouped,
   readByVisitor,
   deliveredToVisitor = false,
+  visitorName,
 }: {
   m: Message;
   own: boolean;
   grouped: boolean;
   readByVisitor: boolean;
   deliveredToVisitor?: boolean;
+  /** The visitor's current name, so a rename by the agent shows on earlier lines too. */
+  visitorName?: string;
 }) {
   const t = useT();
   if (m.type === 'system' || (m.sender.type === 'system' && !m.automated)) return <SystemRow m={m} />;
@@ -161,7 +164,7 @@ export const MessageBubble = memo(function MessageBubble({
           )}
         >
           <span className="font-medium text-fg" dir="auto">
-            {m.sender.displayName}
+            {(!agentSide && visitorName) || m.sender.displayName}
           </span>
           {m.automated && (
             <span className="inline-flex items-center gap-1 rounded-full bg-surface-3 px-1.5 py-px text-[11px]">
@@ -283,12 +286,15 @@ export const LogMessage = memo(function LogMessage({
   grouped,
   readByVisitor,
   deliveredToVisitor = false,
+  visitorName,
 }: {
   m: Message;
   own: boolean;
   grouped: boolean;
   readByVisitor: boolean;
   deliveredToVisitor?: boolean;
+  /** The visitor's current name, so a rename by the agent shows on earlier lines too. */
+  visitorName?: string;
 }) {
   const t = useT();
   if (m.type === 'system' || (m.sender.type === 'system' && !m.automated))
@@ -311,7 +317,7 @@ export const LogMessage = memo(function LogMessage({
       {!grouped && (
         <div className="mb-0.5 flex items-baseline gap-2">
           <span className={cn('truncate font-semibold', staff ? 'text-primary' : 'text-fg')} dir="auto">
-            {m.sender.displayName}
+            {(!staff && visitorName) || m.sender.displayName}
           </span>
           {m.automated && (
             <span className="inline-flex shrink-0 items-center gap-1 text-[11px] text-fg-2">

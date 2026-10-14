@@ -29,6 +29,7 @@ import { AuditedRequire, SecurityTelemetry } from './authz';
 import { integrationsConfig } from './config';
 import { WEBHOOK_EVENT_TYPES } from './webhook-events';
 import { parseIfMatch, type WebhookResource, WebhooksService } from './webhooks.service';
+import { RequiresPlan } from '../billing/plan-gate';
 
 const eventTypes = z.array(z.enum(WEBHOOK_EVENT_TYPES)).min(1).max(WEBHOOK_EVENT_TYPES.length);
 const createSchema = z
@@ -64,6 +65,7 @@ const ifMatchRequired = () =>
  * token with the `webhooks:manage` scope. Signing secrets are shown once (create and
  * rotate) and never returned by GET. PATCH/DELETE require If-Match (428/409).
  */
+@RequiresPlan('integrations')
 @Controller('webhooks')
 export class WebhooksController {
   constructor(
@@ -255,6 +257,7 @@ export class WebhooksController {
   }
 }
 
+@RequiresPlan('integrations')
 @Controller('webhook-deliveries')
 export class WebhookDeliveriesController {
   constructor(

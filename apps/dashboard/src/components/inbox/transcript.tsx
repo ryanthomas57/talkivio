@@ -242,6 +242,7 @@ export function Transcript({
                   grouped={grouped}
                   readByVisitor={visitorRead >= m.seq}
                   deliveredToVisitor={visitorDelivered >= m.seq}
+                  visitorName={chat.visitor.displayName}
                 />
               ) : (
                 <MessageBubble
@@ -250,6 +251,7 @@ export function Transcript({
                   grouped={grouped}
                   readByVisitor={visitorRead >= m.seq}
                   deliveredToVisitor={visitorDelivered >= m.seq}
+                  visitorName={chat.visitor.displayName}
                 />
               )}
             </Fragment>

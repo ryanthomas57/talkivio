@@ -1,6 +1,6 @@
 {
-  "operations": 227,
-  "json_typed": 195,
+  "operations": 237,
+  "json_typed": 205,
   "no_content": 22,
   "untyped_media": 10,
   "untyped_media_operations": [
@@ -15,7 +15,7 @@
     "GET /widget/v1/attachments/{id}/content (*/*)",
     "GET /widget/v1/exports/{id}/content (*/*)"
   ],
-  "components": 130,
+  "components": 135,
   "typed_operations": [
     "GET /api/v1/agents",
     "GET /api/v1/agents/invitations",
@@ -52,6 +52,16 @@
     "POST /api/v1/auth/verify-email/resend",
     "GET /api/v1/bans",
     "POST /api/v1/bans",
+    "GET /api/v1/billing",
+    "POST /api/v1/billing/cancel",
+    "PUT /api/v1/billing/card",
+    "POST /api/v1/billing/card-session",
+    "GET /api/v1/billing/charges",
+    "GET /api/v1/billing/quote",
+    "POST /api/v1/billing/resume",
+    "GET /api/v1/billing/status",
+    "POST /api/v1/billing/subscribe",
+    "PATCH /api/v1/billing/subscription",
     "GET /api/v1/chats",
     "GET /api/v1/chats/counts",
     "GET /api/v1/chats/history",

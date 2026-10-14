@@ -19,6 +19,8 @@ import { NAV_ITEMS } from './nav';
 import { Sidebar } from './sidebar';
 import { TopbarSlots } from './topbar-slots';
 import { StatusMenu } from './status-menu';
+import { ThemeToggle } from '@/components/theme-toggle';
+import { PastDueBanner } from '@/components/billing/billing-gate';
 
 /**
  * Responsive application shell (ch. 06). Desktop ≥ 1024 px: 224 px sidebar and
@@ -90,10 +92,12 @@ export function AppShell({
             </div>
             <div ref={setActionsSlot} className="hidden min-w-0 items-center gap-2 md:flex" />
             {slots?.topbar}
+            <ThemeToggle />
             <StatusMenu />
             <AccountMenu />
           </header>
           <ConnectionBanner />
+          <PastDueBanner />
           <VerificationNotice />
           <main id="main" className="min-h-0 min-w-0 flex-1 overflow-y-auto scroll-thin" tabIndex={-1}>
             {children}

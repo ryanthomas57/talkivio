@@ -108,63 +108,6 @@ export type WebhookEvent = (typeof WEBHOOK_EVENTS)[number];
 export const API_KEY_SCOPES = ['read', 'write'] as const;
 export type ApiKeyScope = (typeof API_KEY_SCOPES)[number];
 
-export const PLANS = ['FREE', 'TEAM', 'BUSINESS', 'ENTERPRISE'] as const;
-export type Plan = (typeof PLANS)[number];
-
-export interface PlanLimits {
-  agents: number;
-  websites: number;
-  historyDays: number | null;
-  triggers: number;
-  apiAccess: boolean;
-  webhooks: boolean;
-  removeBranding: boolean;
-  priceMonthlyPerAgent: number;
-}
-
-export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  FREE: {
-    agents: 1,
-    websites: 1,
-    historyDays: 30,
-    triggers: 3,
-    apiAccess: false,
-    webhooks: false,
-    removeBranding: false,
-    priceMonthlyPerAgent: 0,
-  },
-  TEAM: {
-    agents: 10,
-    websites: 3,
-    historyDays: 365,
-    triggers: 25,
-    apiAccess: true,
-    webhooks: true,
-    removeBranding: false,
-    priceMonthlyPerAgent: 19,
-  },
-  BUSINESS: {
-    agents: 100,
-    websites: 20,
-    historyDays: null,
-    triggers: 200,
-    apiAccess: true,
-    webhooks: true,
-    removeBranding: true,
-    priceMonthlyPerAgent: 49,
-  },
-  ENTERPRISE: {
-    agents: 10_000,
-    websites: 1_000,
-    historyDays: null,
-    triggers: 10_000,
-    apiAccess: true,
-    webhooks: true,
-    removeBranding: true,
-    priceMonthlyPerAgent: 99,
-  },
-};
-
 export const ROLE_RANK: Record<Role, number> = { AGENT: 1, ADMIN: 2, OWNER: 3 };
 
 export function roleAtLeast(role: Role, required: Role): boolean {

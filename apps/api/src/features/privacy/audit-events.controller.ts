@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { Auth, type AuthContext, body } from '../../common/http';
 import { AuditedRequire } from '../integrations/authz';
 import { AuditEventsService } from './audit-events.service';
+import { RequiresPlan } from '../billing/plan-gate';
 
 const querySchema = z
   .object({
@@ -30,6 +31,7 @@ const querySchema = z
   .strict();
 
 /** Audit trail (ch. 45/54): `audit.view`; safe diffs only; append-only (the app role cannot update or delete rows). */
+@RequiresPlan('auditLog')
 @Controller('audit-events')
 export class AuditEventsController {
   constructor(private readonly events: AuditEventsService) {}

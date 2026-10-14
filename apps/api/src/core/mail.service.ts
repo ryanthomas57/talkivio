@@ -25,7 +25,14 @@ export type MailTemplate =
   | 'export_ready'
   | 'transcript_export'
   | 'tenant_deletion_scheduled'
-  | 'tenant_deletion_cancelled';
+  | 'tenant_deletion_cancelled'
+  | 'trial_started'
+  | 'trial_reminder'
+  | 'payment_receipt'
+  | 'payment_failed'
+  | 'billing_suspended'
+  | 'subscription_canceled'
+  | 'subscription_ended';
 
 interface Rendered {
   subject: string;
@@ -48,10 +55,107 @@ function emailRetryBaseMs(): number {
   return !isProd() && Number.isFinite(override) && override > 0 ? override : 5000;
 }
 
+/**
+ * Subscription emails share these values: plan, workspace, amount, card ("Visa ending 4242"), seats, cycle
+ * ("monthly"/"yearly"), dates already formatted, and url (Settings, Billing).
+ */
+function billingTerms(vars: Record<string, unknown>): { agents: string; every: string; billed: string } {
+  const seats = Number(vars.seats) || 1;
+  const yearly = vars.cycle === 'yearly';
+  return {
+    agents: `${seats} agent${seats === 1 ? '' : 's'}`,
+    every: yearly ? 'year' : 'month',
+    billed: yearly ? 'yearly' : 'monthly',
+  };
+}
+
 /** Templates: every interpolated value is escaped; no user-supplied headers. */
 function render(t: MailTemplate, vars: Record<string, unknown>): Rendered {
   const brand = env().BRAND_NAME;
+  const manage = { label: 'Manage billing', url: str(vars.url) };
   switch (t) {
+    case 'trial_started': {
+      const b = billingTerms(vars);
+      return {
+        subject: `Your ${brand} free trial has started`,
+        heading: 'Your free trial has started',
+        paragraphs: [
+          `Your ${str(vars.trialDays)}-day free trial of the ${str(vars.plan)} plan for ${str(vars.workspace)} is now active.`,
+          `Unless you cancel before ${str(vars.trialEnd)}, your ${str(vars.card)} will be charged ${str(vars.amount)} on ${str(vars.trialEnd)} for ${b.agents} on the ${str(vars.plan)} plan, billed ${b.billed}, and then ${str(vars.amount)} every ${b.every} until you cancel.`,
+          `We will send you a reminder on ${str(vars.reminderDate)}. Cancel at any time in Settings, Billing; if you cancel before the trial ends you will not be charged.`,
+          `Payments are non-refundable. You agreed to our Terms of Use (${str(vars.termsUrl)}) and Refund Policy (${str(vars.refundUrl)}) when you started the trial.`,
+        ],
+        action: manage,
+      };
+    }
+    case 'trial_reminder': {
+      const b = billingTerms(vars);
+      return {
+        subject: `Your ${brand} free trial ends on ${str(vars.trialEnd)}`,
+        heading: `Your free trial ends on ${str(vars.trialEnd)}`,
+        paragraphs: [
+          `Your free trial of the ${str(vars.plan)} plan for ${str(vars.workspace)} ends on ${str(vars.trialEnd)}.`,
+          `On that date your ${str(vars.card)} will be charged ${str(vars.amount)} for ${b.agents}, billed ${b.billed}, and then ${str(vars.amount)} every ${b.every} until you cancel.`,
+          `Not ready to continue? Cancel before ${str(vars.trialEnd)} in Settings, Billing and you will not be charged.`,
+        ],
+        action: manage,
+      };
+    }
+    case 'payment_receipt': {
+      const b = billingTerms(vars);
+      return {
+        subject: `Receipt for your ${brand} payment (${str(vars.invoice)})`,
+        heading: 'Payment received',
+        paragraphs: [
+          `We charged ${str(vars.amount)} to your ${str(vars.card)} for ${str(vars.workspace)}.`,
+          `${str(vars.description) || `${str(vars.plan)} plan, ${b.agents}, billed ${b.billed}`}. Service period: ${str(vars.periodStart)} to ${str(vars.periodEnd)}.`,
+          `Invoice number ${str(vars.invoice)}, charged on ${str(vars.date)}.`,
+        ],
+        action: manage,
+        footer: 'Payments are non-refundable. Cancel or change your plan at any time in Settings, Billing.',
+      };
+    }
+    case 'payment_failed':
+      return {
+        subject: `Action needed: your ${brand} payment did not go through`,
+        heading: 'Your payment did not go through',
+        paragraphs: [
+          `We could not charge ${str(vars.amount)} to your ${str(vars.card)} for ${str(vars.workspace)} (${str(vars.reason)}).`,
+          `We will try again automatically. Update your card in Settings, Billing before ${str(vars.graceEnd)} to keep your workspace running.`,
+        ],
+        action: { label: 'Update card', url: str(vars.url) },
+      };
+    case 'billing_suspended':
+      return {
+        subject: `Your ${brand} workspace is paused`,
+        heading: 'Your workspace is paused',
+        paragraphs: [
+          `We could not collect ${str(vars.amount)} for ${str(vars.workspace)}, so the workspace is paused: the chat widget is hidden from your website and agents cannot answer chats.`,
+          'Update your card in Settings, Billing to pay what is owed and switch everything back on.',
+        ],
+        action: { label: 'Update card', url: str(vars.url) },
+      };
+    case 'subscription_canceled':
+      return {
+        subject: `Your ${brand} subscription is cancelled`,
+        heading: 'Your subscription is cancelled',
+        paragraphs: [
+          `You cancelled the ${str(vars.plan)} plan for ${str(vars.workspace)}. You will not be charged again.`,
+          `You keep full access until ${str(vars.endDate)}. After that the workspace stops working, and its data may be deleted 30 days later, so export anything you need before then.`,
+          `Changed your mind? Resume the subscription in Settings, Billing before ${str(vars.endDate)}.`,
+        ],
+        action: manage,
+      };
+    case 'subscription_ended':
+      return {
+        subject: `Your ${brand} subscription has ended`,
+        heading: 'Your subscription has ended',
+        paragraphs: [
+          `The ${str(vars.plan)} plan for ${str(vars.workspace)} ended on ${str(vars.endDate)}. The chat widget is hidden and agents can no longer answer chats.`,
+          'To start again, choose a plan in Settings, Billing. Workspace data may be deleted 30 days after the subscription ended.',
+        ],
+        action: manage,
+      };
     case 'verify_email':
       return {
         subject: 'Confirm your email address',

@@ -439,6 +439,13 @@ jobs:
       - name: 'e2e: history search across the 23- and 25-hour London DST days equals the raw rows, list and full-text, owner and department-scoped agent (HIST01)'
         if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         run: node apps/api/test/history.e2e.mjs 2>&1 | tee reports/integration/history.log
+      - name: 'e2e: subscriptions on the test gateway — trial with a card and the agreed wording, reminder, first charge, upgrade/downgrade, declined renewal, grace, pause and recovery, cancel/restart, unknown outcome held for review, plan limits (BILL01-03)'
+        if: ${{ !cancelled() && steps.start.outcome == 'success' }}
+        env:
+          BUILD_DIR: dist
+        run: |
+          redis-cli --scan --pattern 'rl:*' | xargs -r redis-cli del > /dev/null
+          node apps/api/test/billing.e2e.mjs 2>&1 | tee reports/integration/billing.log
       - name: 'e2e: slow consumer — a stalled reader is cut off once, others unaffected, the queue is released and the client resumes without loss (WS04)'
         if: ${{ !cancelled() && steps.start.outcome == 'success' }}
         run: node apps/api/test/backpressure.e2e.mjs 2>&1 | tee reports/integration/backpressure.log

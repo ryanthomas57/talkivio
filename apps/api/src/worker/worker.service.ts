@@ -38,6 +38,7 @@ export class WorkerService implements OnModuleDestroy {
   private schedulerTimer: NodeJS.Timeout | null = null;
   private readonly timerHandlers: TimerHandler[] = [];
   private readonly maintenanceHandlers = new Map<string, () => Promise<void>>();
+  private readonly maintenanceEvery = new Map<string, number>();
 
   constructor(
     private readonly db: TenantDb,
@@ -59,8 +60,10 @@ export class WorkerService implements OnModuleDestroy {
     this.timerHandlers.push(handler);
   }
 
-  onMaintenance(id: string, fn: () => Promise<void>): void {
+  /** Feature maintenance, run once per `everyMs` across the cluster (default once a minute). */
+  onMaintenance(id: string, fn: () => Promise<void>, everyMs = 60_000): void {
     this.maintenanceHandlers.set(id, fn);
+    this.maintenanceEvery.set(id, everyMs);
   }
 
   async start(): Promise<void> {
@@ -70,10 +73,17 @@ export class WorkerService implements OnModuleDestroy {
         try {
           await fn(job);
         } finally {
-          this.metrics.jobDuration.observe(this.metrics.labels({ queue: name }), Number(process.hrtime.bigint() - started) / 1e9);
+          this.metrics.jobDuration.observe(
+            this.metrics.labels({ queue: name }),
+            Number(process.hrtime.bigint() - started) / 1e9,
+          );
         }
       };
-      const w = new Worker<T>(name, timed, { connection: this.redis.create(`worker:${name}`, { forBullMQ: true }), prefix: 'rd', concurrency });
+      const w = new Worker<T>(name, timed, {
+        connection: this.redis.create(`worker:${name}`, { forBullMQ: true }),
+        prefix: 'rd',
+        concurrency,
+      });
       w.on('failed', (job, err) => {
         this.metrics.jobFailures.inc(this.metrics.labels({ queue: name }));
         this.logger.warn(`${name}/${job?.name} failed (attempt ${job?.attemptsMade}): ${err.message}`);
@@ -83,14 +93,22 @@ export class WorkerService implements OnModuleDestroy {
       this.workers.push(w);
     };
     make<InternalEvent>(QUEUES.events, 8, (job) => this.consumers.dispatch(job.data));
-    make<{ emailId: string }>(QUEUES.email, 5, (job) => this.mail.deliver(job.data.emailId, { finalAttempt: job.attemptsMade + 1 >= (job.opts.attempts ?? 1) }));
+    make<{ emailId: string }>(QUEUES.email, 5, (job) =>
+      this.mail.deliver(job.data.emailId, { finalAttempt: job.attemptsMade + 1 >= (job.opts.attempts ?? 1) }),
+    );
     make<TimerJob>(QUEUES.timers, 10, (job) => this.timer(job.name, job.data));
     make<Record<string, never>>(QUEUES.maintenance, 1, (job) => this.maintenance(job.name));
 
     await this.ensureSchedulers();
     // Schedulers live in Redis: re-assert them so maintenance resumes after a Redis restart or failover
     // without restarting the worker (upserts are idempotent).
-    this.schedulerTimer = setInterval(() => void this.ensureSchedulers().catch((err) => this.logger.warn(`scheduler upsert failed: ${(err as Error).message}`)), 60_000);
+    this.schedulerTimer = setInterval(
+      () =>
+        void this.ensureSchedulers().catch((err) =>
+          this.logger.warn(`scheduler upsert failed: ${(err as Error).message}`),
+        ),
+      60_000,
+    );
     this.schedulerTimer.unref();
     await this.publisher.start();
     this.logger.log(`Worker started: ${this.workers.length} queues, outbox publisher running`);
@@ -98,9 +116,19 @@ export class WorkerService implements OnModuleDestroy {
 
   private async ensureSchedulers(): Promise<void> {
     const q = this.queues.queue(QUEUES.maintenance);
-    for (const s of SCHEDULES) await q.upsertJobScheduler(s.id, { every: s.every }, { name: s.id, data: {}, opts: { removeOnComplete: true, removeOnFail: 50 } });
+    for (const s of SCHEDULES)
+      await q.upsertJobScheduler(
+        s.id,
+        { every: s.every },
+        { name: s.id, data: {}, opts: { removeOnComplete: true, removeOnFail: 50 } },
+      );
     for (const id of this.maintenanceHandlers.keys()) {
-      if (!SCHEDULES.some((s) => s.id === id)) await q.upsertJobScheduler(id, { every: 60_000 }, { name: id, data: {}, opts: { removeOnComplete: true, removeOnFail: 50 } });
+      if (!SCHEDULES.some((s) => s.id === id))
+        await q.upsertJobScheduler(
+          id,
+          { every: this.maintenanceEvery.get(id) ?? 60_000 },
+          { name: id, data: {}, opts: { removeOnComplete: true, removeOnFail: 50 } },
+        );
     }
   }
 
@@ -137,26 +165,48 @@ export class WorkerService implements OnModuleDestroy {
       case 'offer-sweep':
         // Backup for lost timer jobs (e.g. Redis restart): expire overdue offers per tenant.
         for (const tenantId of await this.db.activeTenantIds()) {
-          const due = await this.db.read(tenantId, (tx) => tx.assignmentOffer.findMany({ where: { tenantId, status: 'pending', expiresAt: { lt: new Date() } }, select: { id: true }, take: 200 }));
+          const due = await this.db.read(tenantId, (tx) =>
+            tx.assignmentOffer.findMany({
+              where: { tenantId, status: 'pending', expiresAt: { lt: new Date() } },
+              select: { id: true },
+              take: 200,
+            }),
+          );
           for (const o of due) await this.routing.expireOffer(tenantId, o.id).catch(() => undefined);
         }
         return;
       case 'availability':
-        for (const tenantId of await this.db.activeTenantIds()) await this.broadcaster.refresh(tenantId).catch(() => undefined);
+        for (const tenantId of await this.db.activeTenantIds())
+          await this.broadcaster.refresh(tenantId).catch(() => undefined);
         return;
       case 'interval-reconcile':
-        for (const tenantId of await this.db.activeTenantIds()) await this.team.reconcileIntervals(tenantId).catch(() => undefined);
+        for (const tenantId of await this.db.activeTenantIds())
+          await this.team.reconcileIntervals(tenantId).catch(() => undefined);
         return;
       case 'queue-drain':
-        for (const tenantId of await this.presence.agentTenants()) await this.routing.drainQueue(tenantId, 50).catch(() => undefined);
+        for (const tenantId of await this.presence.agentTenants())
+          await this.routing.drainQueue(tenantId, 50).catch(() => undefined);
         return;
       case 'purge': {
-        const purged = await this.db.root.$queryRaw<Array<{ rd_purge_outbox: bigint }>>`SELECT rd_purge_outbox(interval '24 hours')`;
+        const purged = await this.db.root.$queryRaw<
+          Array<{ rd_purge_outbox: bigint }>
+        >`SELECT rd_purge_outbox(interval '24 hours')`;
         for (const tenantId of await this.db.activeTenantIds()) {
-          await this.db.tx(tenantId, (tx) => tx.commandIdempotency.deleteMany({ where: { tenantId, expiresAt: { lt: new Date() } } }));
+          await this.db.tx(tenantId, (tx) =>
+            tx.commandIdempotency.deleteMany({ where: { tenantId, expiresAt: { lt: new Date() } } }),
+          );
         }
-        await this.db.root.authToken.deleteMany({ where: { expiresAt: { lt: new Date(Date.now() - 7 * 86_400_000) } } });
-        await this.db.root.authSession.deleteMany({ where: { OR: [{ expiresAt: { lt: new Date() } }, { revokedAt: { lt: new Date(Date.now() - 30 * 86_400_000) } }] } });
+        await this.db.root.authToken.deleteMany({
+          where: { expiresAt: { lt: new Date(Date.now() - 7 * 86_400_000) } },
+        });
+        await this.db.root.authSession.deleteMany({
+          where: {
+            OR: [
+              { expiresAt: { lt: new Date() } },
+              { revokedAt: { lt: new Date(Date.now() - 30 * 86_400_000) } },
+            ],
+          },
+        });
         this.logger.log(`Purged ${purged[0]?.rd_purge_outbox ?? 0} outbox rows`);
         return;
       }

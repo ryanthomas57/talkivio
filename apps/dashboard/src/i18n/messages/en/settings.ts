@@ -12,6 +12,7 @@ export const settings = {
   'settings.nav.integrations': 'Integrations',
   'settings.nav.privacy': 'Privacy',
   'settings.nav.audit': 'Audit log',
+  'settings.nav.billing': 'Billing',
   'settings.form.wholeNumber': 'Enter a whole number.',
   'settings.form.range': 'Use a value from {min} to {max}.',
   'settings.form.rangeMinutes': 'Use a value from {min} to {max} minutes.',

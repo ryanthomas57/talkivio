@@ -9,7 +9,6 @@ import type {
   ConversationStatus,
   DeviceType,
   MessageType,
-  Plan,
   Priority,
   Rating,
   Role,
@@ -232,7 +231,8 @@ export interface MeDTO {
     orgName: string;
     orgSlug: string;
     role: Role;
-    plan: Plan;
+    /** starter, team, business or enterprise. */
+    plan: string;
     onboardingCompleted: boolean;
   }>;
 }

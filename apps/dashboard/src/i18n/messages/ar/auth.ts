@@ -57,6 +57,7 @@ export const auth: Record<keyof typeof source, string> = {
   'auth.field.timezone': 'المنطقة الزمنية للعرض',
   'auth.field.timezoneHelp': 'تُستخدم في التقارير وساعات العمل. يمكنك تغييرها لاحقًا.',
   'auth.signup.submit': 'إنشاء مساحة العمل',
+  'auth.signup.planSummary': 'خطة {plan}، فوترة {cycle}، مع تجربة مجانية لمدة {days} يومًا',
   'auth.verify.workingTitle': 'جارٍ تأكيد بريدك الإلكتروني',
   'auth.verify.checking': 'جارٍ التحقق من الرابط…',
   'auth.verify.doneTitle': 'تم تأكيد البريد الإلكتروني',

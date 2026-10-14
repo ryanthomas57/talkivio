@@ -323,6 +323,18 @@ export const RESPONSES = {
   'PrivacyController.run': { data: 'RetentionReport' },
   'JobsController.get': { data: 'JobStatus' },
 
+  // ───── billing ─────
+  'BillingController.status': { data: 'BillingStatus' },
+  'BillingController.summary': { data: 'BillingSummary' },
+  'BillingController.charges': { list: 'BillingCharge' },
+  'BillingController.quote': { data: 'BillingQuote' },
+  'BillingController.cardSession': { data: 'BillingCardSession' },
+  'BillingController.subscribe': { data: 'BillingSummary' },
+  'BillingController.updateCard': { data: 'BillingSummary' },
+  'BillingController.change': { data: 'BillingSummary' },
+  'BillingController.cancel': { data: 'BillingSummary' },
+  'BillingController.resume': { data: 'BillingSummary' },
+
   // ───── public widget API ─────
   'WidgetController.bootstrap': { data: 'WidgetBootstrap' },
   'WidgetController.sessions': { data: 'WidgetSession' },

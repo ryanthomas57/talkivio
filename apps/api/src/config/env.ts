@@ -76,11 +76,20 @@ const schema = z.object({
   GITHUB_CLIENT_ID: z.string().optional(),
   GITHUB_CLIENT_SECRET: z.string().optional(),
 
-  // Billing
-  STRIPE_SECRET_KEY: z.string().optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().optional(),
-  STRIPE_PRICE_TEAM: z.string().optional(),
-  STRIPE_PRICE_BUSINESS: z.string().optional(),
+  // Billing (subscriptions with a free trial, charged through Converge by Elavon)
+  /** none: no billing (every workspace has every feature); converge: real cards; fake: test cards, refused in production. */
+  BILLING_PROVIDER: z.enum(['none', 'converge', 'fake']).default('none'),
+  /** Converge environment: demo (api.demo.convergepay.com) or production (api.convergepay.com). */
+  CONVERGE_ENV: z.enum(['demo', 'production']).default('demo'),
+  CONVERGE_MERCHANT_ID: z.string().optional(),
+  CONVERGE_USER_ID: z.string().optional(),
+  CONVERGE_PIN: z.string().optional(),
+  /** Overrides for the three Converge endpoints (normally derived from CONVERGE_ENV). */
+  CONVERGE_TOKEN_URL: z.string().url().optional(),
+  CONVERGE_XML_URL: z.string().url().optional(),
+  CONVERGE_LIGHTBOX_URL: z.string().url().optional(),
+  /** Seconds between billing sweeps in the worker (trial reminders, charges, retries). */
+  BILLING_SWEEP_SECONDS: z.coerce.number().int().min(10).max(3600).default(300),
 
   // Geo
   /** MaxMind-format city/country database (e.g. DB-IP City Lite, CC BY 4.0); reloaded when the file changes. */
@@ -145,7 +154,16 @@ export function env(): Env {
  */
 export function productionRefusals(
   e: Pick<Env, 'NODE_ENV' | 'EMAIL_PROVIDER' | 'SCAN_MODE'> &
-    Partial<Pick<Env, 'TENANT_DELETION_GRACE_SECONDS'>>,
+    Partial<
+      Pick<
+        Env,
+        | 'TENANT_DELETION_GRACE_SECONDS'
+        | 'BILLING_PROVIDER'
+        | 'CONVERGE_MERCHANT_ID'
+        | 'CONVERGE_USER_ID'
+        | 'CONVERGE_PIN'
+      >
+    >,
 ): string[] {
   if (e.NODE_ENV !== 'production') return [];
   const out: string[] = [];
@@ -156,6 +174,10 @@ export function productionRefusals(
     out.push(
       'TENANT_DELETION_GRACE_SECONDS is a test-only override and is refused in production (use TENANT_DELETION_GRACE_DAYS)',
     );
+  if (e.BILLING_PROVIDER === 'fake')
+    out.push('BILLING_PROVIDER=fake is refused in production (use converge or none)');
+  if (e.BILLING_PROVIDER === 'converge' && !(e.CONVERGE_MERCHANT_ID && e.CONVERGE_USER_ID && e.CONVERGE_PIN))
+    out.push('BILLING_PROVIDER=converge needs CONVERGE_MERCHANT_ID, CONVERGE_USER_ID and CONVERGE_PIN');
   return out;
 }
 

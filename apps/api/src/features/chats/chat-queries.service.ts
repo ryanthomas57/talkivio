@@ -6,8 +6,16 @@ import { sha256 } from '../../common/crypto';
 import { badRequest, denied, notFound, type AuthContext, type VisitorContext } from '../../common/http';
 import { decodeCursor, encodeCursor, page, type Page } from '../../common/wire';
 import { PresenceService } from '../../core/presence.service';
+import { PlanGate } from '../billing/plan-gate';
 import { ChatStore } from './chat.store';
-import { messageInclude, messageResource, publicMessage, type MessageResource, type PublicChat, type StaffChat } from './chat.projections';
+import {
+  messageInclude,
+  messageResource,
+  publicMessage,
+  type MessageResource,
+  type PublicChat,
+  type StaffChat,
+} from './chat.projections';
 
 /**
  * ts_headline match markers. Control characters are removed from the body first, so message
@@ -24,8 +32,12 @@ const HEADLINE_OPTIONS = `MaxWords=18,MinWords=6,StartSel=${HEADLINE_START},Stop
 const SEARCH_BATCH = 500;
 const SEARCH_ROUNDS = 4;
 type Keyset = { t: string; id: string };
-const keysetOf = (r: { requestedAt: Date; id: string }): Keyset => ({ t: r.requestedAt.toISOString(), id: r.id });
-const newerFirst = (a: Keyset, b: Keyset) => (a.t === b.t ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.t < b.t ? 1 : -1);
+const keysetOf = (r: { requestedAt: Date; id: string }): Keyset => ({
+  t: r.requestedAt.toISOString(),
+  id: r.id,
+});
+const newerFirst = (a: Keyset, b: Keyset) =>
+  a.t === b.t ? (a.id < b.id ? 1 : a.id > b.id ? -1 : 0) : a.t < b.t ? 1 : -1;
 interface Headline {
   text: string;
   highlights: Array<[number, number]>;
@@ -78,6 +90,7 @@ export class ChatQueriesService {
     private readonly db: TenantDb,
     private readonly store: ChatStore,
     private readonly presence: PresenceService,
+    private readonly plans: PlanGate,
   ) {}
 
   /** Row-level visibility for staff (ch. 04 department scoping). */
@@ -94,7 +107,9 @@ export class ChatQueriesService {
   }
 
   async getVisible(tx: Tx, auth: AuthContext, chatId: string): Promise<Chat> {
-    const chat = await tx.chat.findFirst({ where: { AND: [{ tenantId: auth.tenantId, id: chatId }, this.scopeWhere(auth)] } });
+    const chat = await tx.chat.findFirst({
+      where: { AND: [{ tenantId: auth.tenantId, id: chatId }, this.scopeWhere(auth)] },
+    });
     if (!chat) throw notFound('Chat');
     return chat;
   }
@@ -125,7 +140,11 @@ export class ChatQueriesService {
     return new Map(rows.map((r) => [r.chat_id, Number(r.unread)]));
   }
 
-  async inbox(auth: AuthContext, view: InboxView, opts: { departmentId?: string; limit?: number } = {}): Promise<Page<StaffChat>> {
+  async inbox(
+    auth: AuthContext,
+    view: InboxView,
+    opts: { departmentId?: string; limit?: number } = {},
+  ): Promise<Page<StaffChat>> {
     if (!auth.permissions.has('chats.serve') && !auth.permissions.has('chats.monitor')) throw denied();
     const limit = Math.min(opts.limit ?? 100, 200);
     return this.db.read(auth.tenantId, async (tx) => {
@@ -133,17 +152,24 @@ export class ChatQueriesService {
       let where: Prisma.ChatWhereInput;
       switch (view) {
         case 'mine':
-          where = { status: { in: ['active', 'offered', 'queued'] }, participants: { some: { membershipId: me, leftAt: null } } };
+          where = {
+            status: { in: ['active', 'offered', 'queued'] },
+            participants: { some: { membershipId: me, leftAt: null } },
+          };
           break;
         case 'queue':
           where = {
             status: { in: ['queued', 'offered'] },
-            ...(auth.departmentScope === 'all' ? {} : { OR: [{ departmentId: null }, { departmentId: { in: auth.servedDepartmentIds } }] }),
+            ...(auth.departmentScope === 'all'
+              ? {}
+              : { OR: [{ departmentId: null }, { departmentId: { in: auth.servedDepartmentIds } }] }),
           };
           break;
         case 'department':
-          if (!opts.departmentId) throw badRequest('department_id is required', { department_id: ['Required'] });
-          if (auth.departmentScope !== 'all' && !auth.departmentScope.includes(opts.departmentId)) throw notFound('Department');
+          if (!opts.departmentId)
+            throw badRequest('department_id is required', { department_id: ['Required'] });
+          if (auth.departmentScope !== 'all' && !auth.departmentScope.includes(opts.departmentId))
+            throw notFound('Department');
           where = { status: { not: 'closed' }, departmentId: opts.departmentId };
           break;
         case 'all':
@@ -152,17 +178,37 @@ export class ChatQueriesService {
       }
       const rows = await tx.chat.findMany({
         where: { AND: [{ tenantId: auth.tenantId, isPreview: false }, where] },
-        orderBy: view === 'queue' ? [{ priority: 'desc' }, { requestedAt: 'asc' }, { id: 'asc' }] : [{ lastMessageAt: 'desc' }, { id: 'desc' }],
+        orderBy:
+          view === 'queue'
+            ? [{ priority: 'desc' }, { requestedAt: 'asc' }, { id: 'asc' }]
+            : [{ lastMessageAt: 'desc' }, { id: 'desc' }],
         take: limit,
         select: { id: true, priority: true, requestedAt: true },
       });
-      const ordered = view === 'queue' ? sortQueue(rows.map((r) => ({ ...r, requestedAt: r.requestedAt.getTime() })), Date.now()) : rows;
+      const ordered =
+        view === 'queue'
+          ? sortQueue(
+              rows.map((r) => ({ ...r, requestedAt: r.requestedAt.getTime() })),
+              Date.now(),
+            )
+          : rows;
       const items: StaffChat[] = [];
       for (const r of ordered) items.push(await this.store.staff(tx, auth.tenantId, r.id));
-      const unread = await this.unreadFor(tx, auth, items.map((i) => i.id));
-      const online = await this.presence.onlineVisitorIds(auth.tenantId, items.map((i) => i.visitorId));
+      const unread = await this.unreadFor(
+        tx,
+        auth,
+        items.map((i) => i.id),
+      );
+      const online = await this.presence.onlineVisitorIds(
+        auth.tenantId,
+        items.map((i) => i.visitorId),
+      );
       return page(
-        items.map((i) => ({ ...i, unreadCount: unread.get(i.id) ?? 0, visitor: { ...i.visitor, online: online.has(i.visitorId) } })),
+        items.map((i) => ({
+          ...i,
+          unreadCount: unread.get(i.id) ?? 0,
+          visitor: { ...i.visitor, online: online.has(i.visitorId) },
+        })),
         null,
       );
     });
@@ -173,17 +219,39 @@ export class ChatQueriesService {
     return this.db.read(auth.tenantId, async (tx) => {
       const me = auth.membershipId ?? '__none__';
       const [mine, queue, all, offers] = await Promise.all([
-        tx.chat.count({ where: { tenantId: auth.tenantId, status: 'active', participants: { some: { membershipId: me, leftAt: null } } } }),
+        tx.chat.count({
+          where: {
+            tenantId: auth.tenantId,
+            status: 'active',
+            participants: { some: { membershipId: me, leftAt: null } },
+          },
+        }),
         tx.chat.count({
           where: {
             tenantId: auth.tenantId,
             isPreview: false,
             status: { in: ['queued', 'offered'] },
-            ...(auth.departmentScope === 'all' ? {} : { OR: [{ departmentId: null }, { departmentId: { in: auth.servedDepartmentIds } }] }),
+            ...(auth.departmentScope === 'all'
+              ? {}
+              : { OR: [{ departmentId: null }, { departmentId: { in: auth.servedDepartmentIds } }] }),
           },
         }),
-        tx.chat.count({ where: { AND: [{ tenantId: auth.tenantId, isPreview: false, status: { not: 'closed' } }, this.scopeWhere(auth)] } }),
-        tx.assignmentOffer.count({ where: { tenantId: auth.tenantId, membershipId: me, status: 'pending', expiresAt: { gt: new Date() } } }),
+        tx.chat.count({
+          where: {
+            AND: [
+              { tenantId: auth.tenantId, isPreview: false, status: { not: 'closed' } },
+              this.scopeWhere(auth),
+            ],
+          },
+        }),
+        tx.assignmentOffer.count({
+          where: {
+            tenantId: auth.tenantId,
+            membershipId: me,
+            status: 'pending',
+            expiresAt: { gt: new Date() },
+          },
+        }),
       ]);
       const unreadMine = await tx.$queryRaw<Array<{ n: bigint }>>`
         SELECT COUNT(*)::bigint AS n FROM messages m
@@ -197,13 +265,26 @@ export class ChatQueriesService {
   async pendingOffers(auth: AuthContext) {
     return this.db.read(auth.tenantId, async (tx) => {
       const offers = await tx.assignmentOffer.findMany({
-        where: { tenantId: auth.tenantId, membershipId: auth.membershipId ?? '__none__', status: 'pending', expiresAt: { gt: new Date() } },
+        where: {
+          tenantId: auth.tenantId,
+          membershipId: auth.membershipId ?? '__none__',
+          status: 'pending',
+          expiresAt: { gt: new Date() },
+        },
         orderBy: { createdAt: 'asc' },
       });
       const out = [];
       for (const o of offers) {
         out.push({
-          offer: { id: o.id, chatId: o.chatId, mode: o.mode, expiresAt: o.expiresAt, note: o.note, fromMembershipId: o.fromMembershipId, version: o.version },
+          offer: {
+            id: o.id,
+            chatId: o.chatId,
+            mode: o.mode,
+            expiresAt: o.expiresAt,
+            note: o.note,
+            fromMembershipId: o.fromMembershipId,
+            version: o.version,
+          },
           chatPreview: await this.store.staff(tx, auth.tenantId, o.chatId),
         });
       }
@@ -212,22 +293,34 @@ export class ChatQueriesService {
   }
 
   /** Staff message page (ascending seq). Internal notes require notes permission. */
-  async messages(auth: AuthContext, chatId: string, q: { afterSeq?: number; beforeSeq?: number; limit?: number }): Promise<MessagePage> {
+  async messages(
+    auth: AuthContext,
+    chatId: string,
+    q: { afterSeq?: number; beforeSeq?: number; limit?: number },
+  ): Promise<MessagePage> {
     // Same rule as the chat snapshot: transcripts need chat or history access, whatever the member's data scope.
     if (!auth.permissions.has('chats.serve') && !auth.permissions.has('history.view')) throw denied();
     const limit = Math.min(Math.max(q.limit ?? 50, 1), 100);
     return this.db.read(auth.tenantId, async (tx) => {
       const chat = await this.getVisible(tx, auth, chatId);
       const notes = auth.permissions.has('notes.view');
-      return this.pageMessages(tx, chat, { ...q, limit }, (m) => (m.visibility === 'internal' && !notes ? null : m));
+      return this.pageMessages(tx, chat, { ...q, limit }, (m) =>
+        m.visibility === 'internal' && !notes ? null : m,
+      );
     });
   }
 
   /** Visitor message page: public projection only; internal seq gaps are covered by through_seq. */
-  async visitorMessages(v: VisitorContext, chatId: string, q: { afterSeq?: number; beforeSeq?: number; limit?: number }): Promise<MessagePage> {
+  async visitorMessages(
+    v: VisitorContext,
+    chatId: string,
+    q: { afterSeq?: number; beforeSeq?: number; limit?: number },
+  ): Promise<MessagePage> {
     const limit = Math.min(Math.max(q.limit ?? 50, 1), 100);
     return this.db.read(v.tenantId, async (tx) => {
-      const chat = await tx.chat.findFirst({ where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId } });
+      const chat = await tx.chat.findFirst({
+        where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId },
+      });
       if (!chat) throw notFound('Chat');
       return this.pageMessages(tx, chat, { ...q, limit }, publicMessage);
     });
@@ -250,47 +343,77 @@ export class ChatQueriesService {
     } else {
       order = 'desc'; // latest page by default
     }
-    const rows = await tx.message.findMany({ where, orderBy: { seq: order }, take: q.limit + 1, include: messageInclude });
+    const rows = await tx.message.findMany({
+      where,
+      orderBy: { seq: order },
+      take: q.limit + 1,
+      include: messageInclude,
+    });
     const hasMore = rows.length > q.limit;
     const slice = rows.slice(0, q.limit);
     const asc = order === 'desc' ? slice.reverse() : slice;
-    const throughSeq = order === 'asc' ? (hasMore ? Number(asc[asc.length - 1]?.seq ?? q.afterSeq ?? 0) : lastSeq) : lastSeq;
+    const throughSeq =
+      order === 'asc' ? (hasMore ? Number(asc[asc.length - 1]?.seq ?? q.afterSeq ?? 0) : lastSeq) : lastSeq;
     const items = asc.map((m) => project(messageResource(m))).filter((m): m is MessageResource => !!m);
     return { items, throughSeq, lastSeq, hasMore };
   }
 
   async visitorChat(v: VisitorContext, chatId: string): Promise<PublicChat> {
     return this.db.read(v.tenantId, async (tx) => {
-      const chat = await tx.chat.findFirst({ where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId } });
+      const chat = await tx.chat.findFirst({
+        where: { tenantId: v.tenantId, id: chatId, visitorId: v.visitorId, siteId: v.siteId },
+      });
       if (!chat) throw notFound('Chat');
       return this.store.publicChat(tx, chatId);
     });
   }
 
   /** History list with full-text search (permission + department scope applied before ranking). */
-  async history(auth: AuthContext, q: HistoryQuery): Promise<Page<StaffChat & { snippet?: string | null; snippetHighlights?: Array<[number, number]> }>> {
+  async history(
+    auth: AuthContext,
+    q: HistoryQuery,
+  ): Promise<Page<StaffChat & { snippet?: string | null; snippetHighlights?: Array<[number, number]> }>> {
     if (!auth.permissions.has('history.view')) throw denied();
     const limit = Math.min(q.limit || 50, 100);
     const filterHash = sha256(JSON.stringify({ ...q, cursor: undefined })).slice(0, 16);
     const cur = decodeCursor<{ t: string; id: string }>(q.cursor, filterHash);
-    if (q.cursor && !cur) throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
+    if (q.cursor && !cur)
+      throw badRequest('This cursor does not match the current filters', { cursor: ['Invalid cursor'] });
     const to = q.to ? new Date(q.to) : new Date();
     const from = q.from ? new Date(q.from) : new Date(to.getTime() - 30 * 86_400_000);
-    if (to.getTime() - from.getTime() > 365 * 86_400_000) throw badRequest('Date range is limited to 365 days', { from: ['Maximum range is 365 days'] });
+    if (to.getTime() - from.getTime() > 365 * 86_400_000)
+      throw badRequest('Date range is limited to 365 days', { from: ['Maximum range is 365 days'] });
     return this.db.read(auth.tenantId, async (tx) => {
       const and: Prisma.ChatWhereInput[] = [
         { tenantId: auth.tenantId, isPreview: false, requestedAt: { gte: from, lt: to } },
         this.scopeWhere(auth),
       ];
+      // The plan's history window (Starter: 60 days); nothing is deleted, older chats are just not listed.
+      const since = await this.plans.historySince(tx, auth.tenantId);
+      if (since) and.push({ requestedAt: { gte: since } });
       if (q.siteId) and.push({ siteId: q.siteId });
       if (q.departmentId) and.push({ departmentId: q.departmentId });
-      if (q.agentId) and.push({ OR: [{ ownerMembershipId: q.agentId }, { participants: { some: { membershipId: q.agentId } } }] });
-      if (q.status) and.push(q.status === 'queued' ? { status: { in: ['queued', 'offered'] } } : { status: q.status });
+      if (q.agentId)
+        and.push({
+          OR: [{ ownerMembershipId: q.agentId }, { participants: { some: { membershipId: q.agentId } } }],
+        });
+      if (q.status)
+        and.push(q.status === 'queued' ? { status: { in: ['queued', 'offered'] } } : { status: q.status });
       if (q.rating) and.push(q.rating === 'none' ? { rating: null } : { rating: { rating: q.rating } });
       if (q.tagId) and.push({ tags: { some: { tagId: q.tagId } } });
       const select = { id: true, requestedAt: true } as const;
       const orderBy: Prisma.ChatOrderByWithRelationInput[] = [{ requestedAt: 'desc' }, { id: 'desc' }];
-      const after = (k: Keyset | null): Prisma.ChatWhereInput[] => (k ? [{ OR: [{ requestedAt: { lt: new Date(k.t) } }, { requestedAt: new Date(k.t), id: { lt: k.id } }] }] : []);
+      const after = (k: Keyset | null): Prisma.ChatWhereInput[] =>
+        k
+          ? [
+              {
+                OR: [
+                  { requestedAt: { lt: new Date(k.t) } },
+                  { requestedAt: new Date(k.t), id: { lt: k.id } },
+                ],
+              },
+            ]
+          : [];
       let rows: Array<{ id: string; requestedAt: Date }>;
       let search: { term: string; includeNotes: boolean } | null = null;
       // Keyset of the last candidate read when the candidates were cut off: the next page resumes behind it.
@@ -310,10 +433,18 @@ export class ChatQueriesService {
               FROM rd_search_chat_ids(${search.term}, ${from}, ${to}, ${search.includeNotes},
                                       ${position ? new Date(position.t) : null}::timestamptz, ${position?.id ?? null}::uuid, ${batch}::int)`;
           const ids = candidates.map((c) => c.chat_id);
-          const hits = await tx.chat.findMany({ where: { AND: [...and, { OR: [{ id: { in: ids } }, ...byNumber] }, ...after(position)] }, orderBy, take: limit + 1, select });
+          const hits = await tx.chat.findMany({
+            where: { AND: [...and, { OR: [{ id: { in: ids } }, ...byNumber] }, ...after(position)] },
+            orderBy,
+            take: limit + 1,
+            select,
+          });
           for (const h of hits) found.set(h.id, h);
           const last = candidates[candidates.length - 1];
-          resumeAt = candidates.length === batch && last ? { t: last.requested_at.toISOString(), id: last.chat_id } : null;
+          resumeAt =
+            candidates.length === batch && last
+              ? { t: last.requested_at.toISOString(), id: last.chat_id }
+              : null;
           if (!resumeAt || found.size > limit) break;
           position = resumeAt;
         }
@@ -321,14 +452,32 @@ export class ChatQueriesService {
         // Only rows ahead of the resume point are complete; anything behind it is fetched again by the next page.
         if (resumeAt) rows = rows.filter((r) => newerFirst(keysetOf(r), resumeAt!) <= 0);
       } else {
-        rows = await tx.chat.findMany({ where: { AND: [...and, ...after(cur)] }, orderBy, take: limit + 1, select });
+        rows = await tx.chat.findMany({
+          where: { AND: [...and, ...after(cur)] },
+          orderBy,
+          take: limit + 1,
+          select,
+        });
       }
       const slice = rows.slice(0, limit);
-      const snippets = search && slice.length ? await this.headlines(tx, auth.tenantId, slice.map((r) => r.id), search.term, search.includeNotes) : new Map<string, Headline>();
+      const snippets =
+        search && slice.length
+          ? await this.headlines(
+              tx,
+              auth.tenantId,
+              slice.map((r) => r.id),
+              search.term,
+              search.includeNotes,
+            )
+          : new Map<string, Headline>();
       const items = [];
       for (const r of slice) {
         const h = snippets.get(r.id);
-        items.push({ ...(await this.store.staff(tx, auth.tenantId, r.id)), snippet: h?.text ?? null, snippetHighlights: h?.highlights ?? [] });
+        items.push({
+          ...(await this.store.staff(tx, auth.tenantId, r.id)),
+          snippet: h?.text ?? null,
+          snippetHighlights: h?.highlights ?? [],
+        });
       }
       const last = slice[slice.length - 1];
       const next = rows.length > limit && last ? keysetOf(last) : resumeAt;
@@ -337,7 +486,13 @@ export class ChatQueriesService {
   }
 
   /** Snippet from the first matching message of each chat on the page (ts_headline is the expensive part). */
-  private async headlines(tx: Tx, tenantId: string, chatIds: string[], term: string, includeNotes: boolean): Promise<Map<string, Headline>> {
+  private async headlines(
+    tx: Tx,
+    tenantId: string,
+    chatIds: string[],
+    term: string,
+    includeNotes: boolean,
+  ): Promise<Map<string, Headline>> {
     const hits = await tx.$queryRaw<Array<{ chat_id: string; snippet: string }>>`
       SELECT h.chat_id,
              ts_headline('simple', translate(h.body, ${HEADLINE_MARKS}, ''), websearch_to_tsquery('simple', ${term}), ${HEADLINE_OPTIONS}) AS snippet

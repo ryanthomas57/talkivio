@@ -31,7 +31,10 @@ const EXEMPT = [
   ['POST /shortcuts/*/render', 'read-only rendering of a reply'],
   ['POST /shortcuts/render-preview', 'read-only rendering of a draft reply'],
   ['POST /shortcuts/import-preview', 'read-only validation of an import file (the import itself is audited)'],
-  ['POST /integrations/connectors/*/health-check', 'connectivity probe; denied attempts are recorded by AuditedRequire'],
+  [
+    'POST /integrations/connectors/*/health-check',
+    'connectivity probe; denied attempts are recorded by AuditedRequire',
+  ],
   ['POST /attachments/uploads', 'upload lifecycle (attachment rows and scan state are the record)'],
   ['PUT /attachments/*/content', 'upload body'],
   ['POST /attachments/*/finalize', 'upload lifecycle'],
@@ -46,12 +49,17 @@ const EXEMPT = [
   ['POST /auth/verify-email', 'confirms the caller’s own address (users.email_verified_at is the record)'],
   ['POST /auth/verify-email/resend', 're-sends the verification email (rate limited)'],
   ['POST /auth/mfa/enroll', 'starts an enrollment; nothing changes until mfa/confirm, which is audited'],
-  ['PATCH /tenants/current/onboarding', 'onboarding checklist progress (each setting it leads to is audited where it is saved)'],
+  [
+    'PATCH /tenants/current/onboarding',
+    'onboarding checklist progress (each setting it leads to is audited where it is saved)',
+  ],
   ['POST /chats/*/request-rating', 'asks the visitor for a rating (a system message in the transcript)'],
   ['POST /auth/logout', 'ends the caller’s own session'],
   ['PUT /agents/me/presence', 'presence (availability intervals are the record)'],
   ['PATCH /agents/me/preferences', 'personal UI preferences'],
   ['POST /notifications/**', 'marking notifications read'],
+  // Billing: opening the gateway's hosted card form writes nothing (saving the card and every charge are audited).
+  ['POST /billing/card-session', 'opens the payment form; nothing is stored'],
   // Read-only computations sent as POST.
   ['POST /exports/preview', 'preview count, nothing created'],
   ['POST /triggers/*/simulate', 'simulation, nothing changes'],
@@ -60,13 +68,28 @@ const EXEMPT = [
   ['DELETE /sites/*/widget-config/draft', 'discarding a draft'],
   ['PUT /triggers/*/draft', 'saving a draft (publish is audited)'],
 ];
-const toRe = (pattern) => new RegExp(`^${pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*\*/g, '\u0000').replace(/\*/g, '[^/]+').replace(/\u0000/g, '.*')}$`);
+const toRe = (pattern) =>
+  new RegExp(
+    `^${pattern
+      .replace(/[.+?^${}()|[\]\\]/g, '\\$&')
+      .replace(/\*\*/g, '\u0000')
+      .replace(/\*/g, '[^/]+')
+      .replace(/\u0000/g, '.*')}$`,
+  );
 const exemptions = EXEMPT.map(([p, why]) => ({ re: toRe(p), p, why, used: false }));
 
-const cfg = ts.parseJsonConfigFileContent(ts.readConfigFile(resolve(app, 'tsconfig.json'), ts.sys.readFile).config, ts.sys, app);
+const cfg = ts.parseJsonConfigFileContent(
+  ts.readConfigFile(resolve(app, 'tsconfig.json'), ts.sys.readFile).config,
+  ts.sys,
+  app,
+);
 const program = ts.createProgram(cfg.fileNames, { ...cfg.options, noEmit: true });
 const checker = program.getTypeChecker();
-const sources = program.getSourceFiles().filter((f) => f.fileName.startsWith(src) && !f.fileName.endsWith('.spec.ts') && !f.fileName.includes('/._'));
+const sources = program
+  .getSourceFiles()
+  .filter(
+    (f) => f.fileName.startsWith(src) && !f.fileName.endsWith('.spec.ts') && !f.fileName.includes('/._'),
+  );
 
 const decorators = (node) => (ts.canHaveDecorators(node) ? (ts.getDecorators(node) ?? []) : []);
 const decoratorCall = (d) => (ts.isCallExpression(d.expression) ? d.expression : null);
@@ -75,7 +98,8 @@ const decoArg = (d) => {
   const a = decoratorCall(d)?.arguments[0];
   return a && ts.isStringLiteral(a) ? a.text : '';
 };
-const join = (...parts) => `/${parts.filter(Boolean).join('/')}`.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
+const join = (...parts) =>
+  `/${parts.filter(Boolean).join('/')}`.replace(/\/+/g, '/').replace(/\/$/, '') || '/';
 
 const AUDIT_METHODS = new Set(['inTx', 'log', 'system']);
 const memo = new Map();
@@ -96,9 +120,17 @@ function reachesAudit(fn, depth = 0, seen = new Set()) {
       }
     }
     if (ts.isCallExpression(n)) {
-      const sym = checker.getSymbolAtLocation(ts.isPropertyAccessExpression(n.expression) ? n.expression.name : n.expression);
+      const sym = checker.getSymbolAtLocation(
+        ts.isPropertyAccessExpression(n.expression) ? n.expression.name : n.expression,
+      );
       const decl = sym?.valueDeclaration ?? sym?.declarations?.[0];
-      if (decl && decl.getSourceFile().fileName.startsWith(src) && (ts.isMethodDeclaration(decl) || ts.isFunctionDeclaration(decl) || (ts.isPropertyDeclaration(decl) && decl.initializer && ts.isArrowFunction(decl.initializer)))) {
+      if (
+        decl &&
+        decl.getSourceFile().fileName.startsWith(src) &&
+        (ts.isMethodDeclaration(decl) ||
+          ts.isFunctionDeclaration(decl) ||
+          (ts.isPropertyDeclaration(decl) && decl.initializer && ts.isArrowFunction(decl.initializer)))
+      ) {
         const target = ts.isPropertyDeclaration(decl) ? decl.initializer : decl;
         if (reachesAudit(target, depth + 1, seen)) {
           found = true;
@@ -129,7 +161,12 @@ for (const sf of sources) {
       const audited = reachesAudit(m);
       const ex = exemptions.find((e) => e.re.test(route));
       if (ex) ex.used = true;
-      routes.push({ route, audited, exempt: ex?.why ?? null, where: `${relative(app, sf.fileName)}:${sf.getLineAndCharacterOfPosition(m.getStart(sf)).line + 1}` });
+      routes.push({
+        route,
+        audited,
+        exempt: ex?.why ?? null,
+        where: `${relative(app, sf.fileName)}:${sf.getLineAndCharacterOfPosition(m.getStart(sf)).line + 1}`,
+      });
     }
   });
 }
@@ -137,12 +174,26 @@ for (const sf of sources) {
 const missing = routes.filter((r) => !r.audited && !r.exempt);
 const stale = exemptions.filter((e) => !e.used).map((e) => e.p);
 const auditedExempt = routes.filter((r) => r.audited && r.exempt);
-if (LIST) for (const r of routes.sort((a, b) => a.route.localeCompare(b.route))) console.log(`${r.audited ? 'AUDIT ' : r.exempt ? 'exempt' : 'MISSING'}  ${r.route}${r.exempt ? `  — ${r.exempt}` : ''}`);
-console.log(`${routes.length} write routes: ${routes.filter((r) => r.audited).length} audited, ${routes.filter((r) => !r.audited && r.exempt).length} exempt (reason given), ${missing.length} missing`);
-if (auditedExempt.length) console.log(`note: ${auditedExempt.length} exempt routes audit anyway (fine): ${auditedExempt.map((r) => r.route).join(', ')}`);
-if (stale.length) console.error(`✗ exemptions that match no route (remove them, so the list stays a true record): ${stale.join(', ')}`);
+if (LIST)
+  for (const r of routes.sort((a, b) => a.route.localeCompare(b.route)))
+    console.log(
+      `${r.audited ? 'AUDIT ' : r.exempt ? 'exempt' : 'MISSING'}  ${r.route}${r.exempt ? `  — ${r.exempt}` : ''}`,
+    );
+console.log(
+  `${routes.length} write routes: ${routes.filter((r) => r.audited).length} audited, ${routes.filter((r) => !r.audited && r.exempt).length} exempt (reason given), ${missing.length} missing`,
+);
+if (auditedExempt.length)
+  console.log(
+    `note: ${auditedExempt.length} exempt routes audit anyway (fine): ${auditedExempt.map((r) => r.route).join(', ')}`,
+  );
+if (stale.length)
+  console.error(
+    `✗ exemptions that match no route (remove them, so the list stays a true record): ${stale.join(', ')}`,
+  );
 if (missing.length) {
-  console.error(`✗ write routes with no audit event and no exemption:\n  ${missing.map((r) => `${r.route}  (${r.where})`).join('\n  ')}`);
+  console.error(
+    `✗ write routes with no audit event and no exemption:\n  ${missing.map((r) => `${r.route}  (${r.where})`).join('\n  ')}`,
+  );
 }
 if (missing.length || stale.length) process.exit(1);
 console.log('✓ every write route audits or is exempt with a reason');

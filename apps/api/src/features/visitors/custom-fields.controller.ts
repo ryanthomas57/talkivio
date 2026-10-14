@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { Auth, body, Require, type AuthContext } from '../../common/http';
 import { CUSTOM_FIELD_TYPES, CustomFieldsService } from './custom-fields.service';
 import { requireVersion } from './visitor-common';
+import { RequiresPlan } from '../billing/plan-gate';
 
 const createSchema = z
   .object({
@@ -50,6 +51,7 @@ export class CustomFieldsController {
     return this.fields.list(auth, q.includeArchived === 'true');
   }
 
+  @RequiresPlan('customFields')
   @Post()
   @Require('custom_fields.manage')
   create(@Auth() auth: AuthContext, @Body(body(createSchema)) input: z.infer<typeof createSchema>) {

@@ -1478,8 +1478,79 @@ model BillingAccount {
   graceEndsAt            DateTime? @map("grace_ends_at") @db.Timestamptz(3)
   providerRevision       BigInt    @default(0) @map("provider_revision")
   updatedAt              DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  /// Subscription billing (ch. billing): monthly or yearly, the per-agent monthly price locked at sign-up, and the
+  /// plan/seat changes that wait for the next renewal.
+  cycle                  String    @default("monthly") @db.VarChar(10)
+  unitPriceCents         Int       @default(0) @map("unit_price_cents")
+  planNext               Plan?     @map("plan_next")
+  cycleNext              String?   @map("cycle_next") @db.VarChar(10)
+  seatsNext              Int?      @map("seats_next")
+  currentPeriodStart     DateTime? @map("current_period_start") @db.Timestamptz(3)
+  /// The gateway's stored-card reference, encrypted at rest; the card number itself never reaches us.
+  cardTokenCiphertext    String?   @map("card_token_ciphertext") @db.VarChar(1000)
+  cardBrand              String?   @map("card_brand") @db.VarChar(40)
+  cardLast4              String?   @map("card_last4") @db.VarChar(4)
+  cardExp                String?   @map("card_exp") @db.VarChar(5)
+  trialReminderSentAt    DateTime? @map("trial_reminder_sent_at") @db.Timestamptz(3)
+  nextAttemptAt          DateTime? @map("next_attempt_at") @db.Timestamptz(3)
+  failedAttempts         Int       @default(0) @map("failed_attempts")
+  lastError              String?   @map("last_error") @db.VarChar(500)
+  canceledAt             DateTime? @map("canceled_at") @db.Timestamptz(3)
+  endedAt                DateTime? @map("ended_at") @db.Timestamptz(3)
+  /// Set while one worker charges this account, so two never charge it at once.
+  chargingUntil          DateTime? @map("charging_until") @db.Timestamptz(3)
+  /// A charge whose outcome is unknown (timeout after sending): never retried automatically.
+  needsReview            Boolean   @default(false) @map("needs_review")
+  createdAt              DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
 
+  @@index([state, nextAttemptAt])
   @@map("billing_accounts")
+}
+
+/// Every charge attempt, approved or not: the receipts in Settings, Billing and the record for disputes.
+model BillingCharge {
+  id            String    @id @default(uuid()) @db.Uuid
+  tenantId      String    @map("tenant_id") @db.Uuid
+  kind          String    @db.VarChar(20)
+  invoiceNumber String    @map("invoice_number") @db.VarChar(40)
+  amountCents   Int       @map("amount_cents")
+  currency      String    @default("USD") @db.VarChar(3)
+  status        String    @db.VarChar(20)
+  plan          Plan
+  cycle         String    @db.VarChar(10)
+  seats         Int
+  periodStart   DateTime? @map("period_start") @db.Timestamptz(3)
+  periodEnd     DateTime? @map("period_end") @db.Timestamptz(3)
+  provider      String    @db.VarChar(20)
+  providerTxnId String?   @map("provider_txn_id") @db.VarChar(100)
+  cardLast4     String?   @map("card_last4") @db.VarChar(4)
+  message       String?   @db.VarChar(500)
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, invoiceNumber])
+  @@map("billing_charges")
+}
+
+/// The automatic-renewal disclosure a workspace owner agreed to, word for word, with when and from where.
+model BillingConsent {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @map("tenant_id") @db.Uuid
+  userId       String    @map("user_id") @db.Uuid
+  kind         String    @db.VarChar(30)
+  termsVersion String    @map("terms_version") @db.VarChar(40)
+  disclosure   String    @db.VarChar(4000)
+  plan         Plan
+  cycle        String    @db.VarChar(10)
+  seats        Int
+  amountCents  Int       @map("amount_cents")
+  trialEndsAt  DateTime? @map("trial_ends_at") @db.Timestamptz(3)
+  ipAddress    String?   @map("ip_address") @db.VarChar(64)
+  userAgent    String?   @map("user_agent") @db.VarChar(400)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([tenantId, createdAt])
+  @@map("billing_consents")
 }
 
 model BillingEvent {

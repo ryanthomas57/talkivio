@@ -36,6 +36,8 @@ import { EMAIL_RE } from '../visitors/visitor-common';
 import { VisitorMonitorService } from '../visitors/visitor-monitor.service';
 import { normalizeOrigin, originAllowed, originOfUrl, sanitizeTrackedUrl, type OriginRule } from './origins';
 import { signCapability } from './capability';
+import { billingOn } from '../billing/plan-gate';
+import { billingBlockMessage } from '../billing/states';
 
 /** Persistent anonymous identity only with analytics consent (ch. 25/26); otherwise a short service credential. */
 const CREDENTIAL_TTL_MS = 180 * 86_400_000;
@@ -138,6 +140,13 @@ export class WidgetService {
       SELECT * FROM rd_resolve_site_key(${siteKey})`;
     const r = rows[0];
     if (!r || !r.active) throw notFound('Site');
+    // A workspace without a card, paused for an unpaid balance or whose subscription ended shows no widget.
+    if (billingOn()) {
+      const billing = await this.db.read(r.tenant_id, (tx) =>
+        tx.billingAccount.findUnique({ where: { tenantId: r.tenant_id }, select: { state: true } }),
+      );
+      if (billingBlockMessage(billing?.state)) throw notFound('Site');
+    }
     return { tenantId: r.tenant_id, siteId: r.site_id, active: r.active, keyStatus: r.key_status };
   }
 

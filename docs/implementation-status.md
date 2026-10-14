@@ -1,6 +1,6 @@
 # Talkivio: implementation status
 
-_Last updated: 2026-10-14. Authority: `docs/master-prompt.txt`. Ledger: `docs/traceability.csv` (256 rows, gate
+_Last updated: 2026-10-14. Authority: `docs/master-prompt.txt`. Ledger: `docs/traceability.csv` (259 rows, gate
 `scripts/ledger-check.mjs`). Sign-off: `docs/release-audit.md`. Code: https://github.com/ryanthomas57/talkivio (main);
 every push runs the full CI pipeline in `.github/workflows/ci.yml`._
 
@@ -30,6 +30,16 @@ Added on 2026-10-14 (each with tests that run in CI):
   congestion room), visitors appear the moment they land, country/region/city from DB-IP City Lite, consent upgrade
   for workspaces that do not require consent.
 - **No em dashes in user-facing text** (dashboard EN/AR, widget, emails, transcripts, starter content, demo shop).
+- **Public website** at `/`: one-page home (hero, real product screenshots from `apps/dashboard/scripts/site-shots.mjs`,
+  how it works, features, security, pricing from the shared plan catalog, FAQ), Terms of Use, Privacy Policy and Refund
+  Policy for Desverso LLC, all in the axe/motion/links sweeps.
+- **Light and dark mode** switchable from the top right of the dashboard, the sign-in pages and the website; the choice
+  is saved to the member's preferences and applied before the first paint.
+- **Subscriptions on Converge** (off until configured, `docs/operations/billing.md`): Starter/Team/Business per agent,
+  monthly or yearly; 14-day trial with a card and the exact renewal wording kept as evidence; reminder 7 days before;
+  automatic first charge and renewals; prorated upgrades, downgrades at renewal; retries, 7-day grace, suspension;
+  cancel/resume online; receipts; plan limits enforced by the API (`billing.e2e.mjs`, 68 checks;
+  `converge.gateway.spec.ts`).
 - **Deployment:** `deploy/` bundle (Compose, Caddy with automatic HTTPS, env checks, deploy/rollback, backup,
   off-server object backup, restore, GeoIP job), images published to GHCR with signed SLSA provenance and SBOM
   attestations that `deploy.sh` verifies before running.
@@ -104,6 +114,10 @@ restore point; RPO ≈ 1.3 s to the end of the WAL archive).
 - **SMTP:** any provider with the sending domain verified (SPF, DKIM, DMARC); sign-up, invitations and password
   resets depend on it.
 - **An off-server backup bucket:** any S3-compatible bucket at another provider, with a key limited to it.
+- **Converge (Elavon) merchant account** with tokenization and recurring payments enabled, an API user and PIN, the
+  server IP and dashboard domain allow-listed; test on a Converge demo account first (`docs/operations/billing.md`).
+- **Legal review** of the Terms of Use, Privacy Policy and Refund Policy, and confirmed mailboxes support@, billing@,
+  privacy@ and legal@desverso.com (set in `apps/dashboard/src/components/site/site-config.ts`).
 
 ## Descoped by the owner
 
@@ -118,6 +132,8 @@ restore point; RPO ≈ 1.3 s to the end of the WAL archive).
 - Legal holds are not modelled; merge requests have no approve/execute step; `APP_SECRET`-derived key rotation is not
   implemented (key-version columns exist).
 - PDF export: Arabic is shaped but not bidi-reordered; emoji/CJK render as replacement glyphs.
+- Billing: the Converge request fields are proven against the test gateway only; confirm them on a Converge demo
+  account before switching `BILLING_PROVIDER=converge`. A charge with an unknown outcome waits for a manual review.
 - Tech debt: `packages/contracts/src/enums.ts` holds early enumerations (e.g. roles OWNER/ADMIN/AGENT) used only by
   the legacy DTO layer; the live wire contracts are the OpenAPI/AsyncAPI documents and the database CHECKs.
 

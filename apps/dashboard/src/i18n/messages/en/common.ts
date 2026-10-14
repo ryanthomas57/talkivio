@@ -2,6 +2,8 @@
 export const common = {
   'common.skipToContent': 'Skip to content',
   'common.closeNotification': 'Close notification',
+  'common.theme.toLight': 'Switch to light mode',
+  'common.theme.toDark': 'Switch to dark mode',
   'common.save': 'Save',
   'common.saving': 'Saving…',
   'common.saved': 'Saved',
@@ -136,6 +138,7 @@ export const common = {
   'common.error.EMAIL_NOT_VERIFIED': 'Confirm your email address first.',
   'common.error.INVALID_CREDENTIALS': 'Incorrect email or password.',
   'common.error.PLAN_LIMIT': 'Your plan’s limit was reached.',
+  'common.error.PAYMENT_REQUIRED': 'Billing needs attention before this workspace can be used.',
   'common.error.INTERNAL': 'Something went wrong on our side. Try again.',
   'common.error.network': 'Network unavailable. Check your connection and try again.',
   'common.error.notConnected': 'Not connected',

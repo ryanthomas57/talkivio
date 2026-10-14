@@ -47,8 +47,8 @@ const TABLE_W = COLS.reduce((n, c) => n + c.width, 0);
 
 /** The activity square at the start of each row (a raised hand asks for a chat, as in classic live chat). */
 const ACTIVITY: Record<LiveGroup, { Icon: typeof Hand; cls: string }> = {
-  incoming: { Icon: Hand, cls: 'bg-warning text-white' },
-  served: { Icon: MessageSquare, cls: 'bg-success text-white' },
+  incoming: { Icon: Hand, cls: 'bg-warning text-white dark:text-canvas' },
+  served: { Icon: MessageSquare, cls: 'bg-success text-white dark:text-canvas' },
   browsing: { Icon: Eye, cls: 'bg-primary-tint text-primary' },
   idle: { Icon: Moon, cls: 'bg-surface-3 text-fg-2' },
 };
@@ -286,17 +286,18 @@ function GroupRow({
           <span className="min-w-0 truncate text-[15px] font-semibold" dir="auto">
             {group.label}
           </span>
-          {group.hint && (
-            <span className="hidden truncate text-xs text-primary-fg lg:inline">{group.hint}</span>
-          )}
-          <span className="ms-auto shrink-0 pe-1 text-sm font-medium">
+          {/* Beside the name, not at the row's far end: the table is wider than the window and scrolls sideways. */}
+          <span className="shrink-0 rounded-full border border-primary-fg/50 px-2 py-px text-xs font-semibold">
             {t('visitors.live.groupCount', { count: formatNumber(group.total) })}
             {group.total > group.rows.length && (
-              <span className="ms-1.5 text-xs">
+              <span className="ms-1.5 font-normal">
                 {t('visitors.live.groupLoaded', { count: group.rows.length })}
               </span>
             )}
           </span>
+          {group.hint && (
+            <span className="hidden truncate text-xs text-primary-fg lg:inline">{group.hint}</span>
+          )}
         </div>
       </th>
     </tr>

@@ -55,6 +55,7 @@ export const auth = {
   'auth.field.timezone': 'Display timezone',
   'auth.field.timezoneHelp': 'Used for reports and operating hours. You can change it later.',
   'auth.signup.submit': 'Create workspace',
+  'auth.signup.planSummary': '{plan} plan, billed {cycle}, with a {days}-day free trial',
   'auth.verify.workingTitle': 'Confirming your email',
   'auth.verify.checking': 'Checking your link…',
   'auth.verify.doneTitle': 'Email confirmed',

@@ -23,6 +23,7 @@ import { analytics } from './analytics';
 import { history } from './history';
 import { monitor } from './monitor';
 import { dock } from './dock';
+import { billing } from './billing';
 
 export const ar: Record<MessageKey, string> = {
   ...common,
@@ -49,6 +50,7 @@ export const ar: Record<MessageKey, string> = {
   ...history,
   ...monitor,
   ...dock,
+  ...billing,
 };
 export const AREAS = {
   common,

@@ -6,8 +6,21 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { BrandLockup } from '@/components/brand';
+import { BillingGate } from '@/components/billing/billing-gate';
+import { ThemeToggle } from '@/components/theme-toggle';
 import { SessionGate } from '@/components/shell/session-gate';
-import { Banner, Button, Card, Field, Input, RadioGroup, Select, Spinner, Textarea, TimezonePicker } from '@/components/ui';
+import {
+  Banner,
+  Button,
+  Card,
+  Field,
+  Input,
+  RadioGroup,
+  Select,
+  Spinner,
+  Textarea,
+  TimezonePicker,
+} from '@/components/ui';
 import { WidgetPreview, PREVIEW_STATES, type PreviewState } from '@/components/widget-preview';
 import { api, errorMessage, isApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
@@ -17,7 +30,10 @@ import type { Department, Site } from '@/lib/types';
 import { useSession } from '@/stores/session';
 import { isolate, useT, type MessageKey } from '@/i18n';
 
-const STEPS: ReadonlyArray<{ id: 'workspace' | 'site' | 'department' | 'widget' | 'install'; label: MessageKey }> = [
+const STEPS: ReadonlyArray<{
+  id: 'workspace' | 'site' | 'department' | 'widget' | 'install';
+  label: MessageKey;
+}> = [
   { id: 'workspace', label: 'auth.onboarding.step.workspace' },
   { id: 'site', label: 'auth.onboarding.step.site' },
   { id: 'department', label: 'auth.onboarding.step.department' },
@@ -42,7 +58,9 @@ function Onboarding() {
   const setTenant = useSession((s) => s.setTenant);
   const canManage = useSession((s) => s.permissions.has('tenant.manage'));
   const saved = (tenant?.onboardingState ?? {}) as { step?: string; siteId?: string };
-  const [step, setStep] = useState<StepId>(() => (STEPS.some((s) => s.id === saved.step) ? (saved.step as StepId) : 'workspace'));
+  const [step, setStep] = useState<StepId>(() =>
+    STEPS.some((s) => s.id === saved.step) ? (saved.step as StepId) : 'workspace',
+  );
   const [siteId, setSiteId] = useState<string | null>(saved.siteId ?? null);
   const index = STEPS.findIndex((s) => s.id === step);
 
@@ -61,7 +79,10 @@ function Onboarding() {
   };
 
   const finish = async () => {
-    const done = await api.patch<NonNullable<typeof tenant>>('/tenants/current/onboarding', { step: 'done', completed: true });
+    const done = await api.patch<NonNullable<typeof tenant>>('/tenants/current/onboarding', {
+      step: 'done',
+      completed: true,
+    });
     setTenant(done);
     await useSession.getState().load();
     router.replace('/inbox');
@@ -89,9 +110,20 @@ function Onboarding() {
             <li key={s.id} className="flex items-center gap-2">
               <span
                 aria-current={s.id === step ? 'step' : undefined}
-                className={cn('inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium', i < index ? 'bg-success-tint text-success' : s.id === step ? 'bg-primary text-primary-fg' : 'bg-surface-3 text-fg-2')}
+                className={cn(
+                  'inline-flex h-8 items-center gap-1.5 rounded-full px-3 text-sm font-medium',
+                  i < index
+                    ? 'bg-success-tint text-success'
+                    : s.id === step
+                      ? 'bg-primary text-primary-fg'
+                      : 'bg-surface-3 text-fg-2',
+                )}
               >
-                {i < index ? <Check className="size-3.5" aria-hidden /> : <span className="tabular">{i + 1}</span>}
+                {i < index ? (
+                  <Check className="size-3.5" aria-hidden />
+                ) : (
+                  <span className="tabular">{i + 1}</span>
+                )}
                 {t(s.label)}
                 {i < index && <span className="sr-only">{t('auth.onboarding.stepDone')}</span>}
               </span>
@@ -101,12 +133,34 @@ function Onboarding() {
         </ol>
       </nav>
       {step === 'workspace' && <WorkspaceStep onNext={() => go('site')} />}
-      {step === 'site' && <SiteStep siteId={siteId} onBack={() => go('workspace')} onNext={(id) => { setSiteId(id); void go('department', { siteId: id }); }} />}
-      {step === 'department' && <DepartmentStep siteId={siteId} onBack={() => go('site')} onNext={() => go('widget')} />}
-      {step === 'widget' && siteId && <WidgetStep siteId={siteId} onBack={() => go('department')} onNext={() => go('install')} />}
-      {step === 'install' && siteId && <InstallStep siteId={siteId} onBack={() => go('widget')} onFinish={finish} />}
+      {step === 'site' && (
+        <SiteStep
+          siteId={siteId}
+          onBack={() => go('workspace')}
+          onNext={(id) => {
+            setSiteId(id);
+            void go('department', { siteId: id });
+          }}
+        />
+      )}
+      {step === 'department' && (
+        <DepartmentStep siteId={siteId} onBack={() => go('site')} onNext={() => go('widget')} />
+      )}
+      {step === 'widget' && siteId && (
+        <WidgetStep siteId={siteId} onBack={() => go('department')} onNext={() => go('install')} />
+      )}
+      {step === 'install' && siteId && (
+        <InstallStep siteId={siteId} onBack={() => go('widget')} onFinish={finish} />
+      )}
       {(step === 'widget' || step === 'install') && !siteId && (
-        <Banner tone="warning" action={<Button size="sm" onClick={() => go('site')}>{t('auth.onboarding.addWebsite')}</Button>}>
+        <Banner
+          tone="warning"
+          action={
+            <Button size="sm" onClick={() => go('site')}>
+              {t('auth.onboarding.addWebsite')}
+            </Button>
+          }
+        >
           {t('auth.onboarding.addWebsiteFirst')}
         </Banner>
       )}
@@ -121,9 +175,12 @@ function Shell({ children }: { children: React.ReactNode }) {
       <div className="mx-auto w-full max-w-[920px]">
         <div className="mb-8 flex items-center justify-between">
           <BrandLockup />
-          <Link href="/inbox" className="text-sm font-medium text-fg-2 hover:text-fg">
-            {t('auth.onboarding.skip')}
-          </Link>
+          <div className="flex items-center gap-4">
+            <Link href="/inbox" className="text-sm font-medium text-fg-2 hover:text-fg">
+              {t('auth.onboarding.skip')}
+            </Link>
+            <ThemeToggle className="bg-surface" />
+          </div>
         </div>
         {children}
       </div>
@@ -131,7 +188,17 @@ function Shell({ children }: { children: React.ReactNode }) {
   );
 }
 
-function StepCard({ title, description, children, footer }: { title: string; description: string; children: React.ReactNode; footer: React.ReactNode }) {
+function StepCard({
+  title,
+  description,
+  children,
+  footer,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}) {
   return (
     <Card>
       <div className="border-b border-line-subtle px-6 py-5">
@@ -139,7 +206,9 @@ function StepCard({ title, description, children, footer }: { title: string; des
         <p className="mt-1 text-sm text-fg-2">{description}</p>
       </div>
       <div className="px-6 py-6">{children}</div>
-      <div className="flex items-center justify-between gap-3 border-t border-line-subtle px-6 py-4">{footer}</div>
+      <div className="flex items-center justify-between gap-3 border-t border-line-subtle px-6 py-4">
+        {footer}
+      </div>
     </Card>
   );
 }
@@ -157,7 +226,14 @@ function WorkspaceStep({ onNext }: { onNext: () => void }) {
     setBusy(true);
     setError(null);
     try {
-      if (name.trim() !== tenant.name || tz !== tenant.timezone) setTenant(await api.patch('/tenants/current', { name: name.trim(), timezone: tz, expectedVersion: tenant.version }));
+      if (name.trim() !== tenant.name || tz !== tenant.timezone)
+        setTenant(
+          await api.patch('/tenants/current', {
+            name: name.trim(),
+            timezone: tz,
+            expectedVersion: tenant.version,
+          }),
+        );
       onNext();
     } catch (e) {
       setError(errorMessage(e));
@@ -191,7 +267,15 @@ function WorkspaceStep({ onNext }: { onNext: () => void }) {
   );
 }
 
-function SiteStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: () => void; onNext: (id: string) => void }) {
+function SiteStep({
+  siteId,
+  onBack,
+  onNext,
+}: {
+  siteId: string | null;
+  onBack: () => void;
+  onNext: (id: string) => void;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const [loading, setLoading] = useState(!!siteId);
@@ -208,7 +292,11 @@ function SiteStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: (
       .get<Site>(`/sites/${siteId}`)
       .then((s) => {
         setName(s.name);
-        setRows(s.origins.length ? s.origins.map((o) => ({ origin: o.origin, patternType: o.patternType })) : [{ origin: '', patternType: 'exact' }]);
+        setRows(
+          s.origins.length
+            ? s.origins.map((o) => ({ origin: o.origin, patternType: o.patternType }))
+            : [{ origin: '', patternType: 'exact' }],
+        );
         setVersion(s.version);
       })
       .catch(() => undefined)
@@ -219,16 +307,27 @@ function SiteStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: (
     setError(null);
     setFieldErrors({});
     if (!name.trim()) return setFieldErrors({ name: t('auth.onboarding.siteNameRequired') });
-    const origins = rows.filter((r) => r.origin.trim()).map((r) => ({ origin: r.origin.trim(), patternType: r.patternType }));
-    if (!origins.length) return setFieldErrors({ 'origins.0.origin': t('auth.onboarding.originRequired', { example: 'https://www.example.com' }) });
+    const origins = rows
+      .filter((r) => r.origin.trim())
+      .map((r) => ({ origin: r.origin.trim(), patternType: r.patternType }));
+    if (!origins.length)
+      return setFieldErrors({
+        'origins.0.origin': t('auth.onboarding.originRequired', { example: 'https://www.example.com' }),
+      });
     setBusy(true);
     try {
-      const site = siteId ? await api.patch<Site>(`/sites/${siteId}`, { name: name.trim(), origins, expectedVersion: version }) : await api.post<Site>('/sites', { name: name.trim(), origins });
+      const site = siteId
+        ? await api.patch<Site>(`/sites/${siteId}`, { name: name.trim(), origins, expectedVersion: version })
+        : await api.post<Site>('/sites', { name: name.trim(), origins });
       void qc.invalidateQueries({ queryKey: qk.sites });
       onNext(site.id);
     } catch (e) {
       if (isApiError(e) && Object.keys(e.fieldErrors).length) {
-        setFieldErrors(Object.fromEntries(Object.entries(e.fieldErrors).map(([k, v]) => [k, v[0] ?? t('auth.onboarding.invalid')])));
+        setFieldErrors(
+          Object.fromEntries(
+            Object.entries(e.fieldErrors).map(([k, v]) => [k, v[0] ?? t('auth.onboarding.invalid')]),
+          ),
+        );
         setError(e.message);
       } else setError(errorMessage(e));
     } finally {
@@ -254,28 +353,67 @@ function SiteStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: (
     >
       <div className="flex max-w-xl flex-col gap-5">
         {error && <Banner tone="danger">{error}</Banner>}
-        <Field label={t('auth.onboarding.siteName')} description={t('auth.onboarding.siteNameHelp')} error={fieldErrors.name} required>
+        <Field
+          label={t('auth.onboarding.siteName')}
+          description={t('auth.onboarding.siteNameHelp')}
+          error={fieldErrors.name}
+          required
+        >
           <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} />
         </Field>
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-sm font-medium">{t('auth.onboarding.origins')}</legend>
           {rows.map((r, i) => (
             <div key={i} className="flex items-start gap-2">
-              <Field label={t('auth.onboarding.originN', { n: i + 1 })} hideLabel error={fieldErrors[`origins.${i}.origin`]} className="flex-1">
-                <Input value={r.origin} placeholder="https://www.example.com" /* i18n-ignore: example URL */ dir="ltr" inputMode="url" onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, origin: e.target.value } : x)))} />
+              <Field
+                label={t('auth.onboarding.originN', { n: i + 1 })}
+                hideLabel
+                error={fieldErrors[`origins.${i}.origin`]}
+                className="flex-1"
+              >
+                <Input
+                  value={r.origin}
+                  placeholder="https://www.example.com" // i18n-ignore: example URL
+                  dir="ltr"
+                  inputMode="url"
+                  onChange={(e) =>
+                    setRows(rows.map((x, j) => (j === i ? { ...x, origin: e.target.value } : x)))
+                  }
+                />
               </Field>
               <Field label={t('auth.onboarding.matchN', { n: i + 1 })} hideLabel className="w-44">
-                <Select value={r.patternType} onChange={(e) => setRows(rows.map((x, j) => (j === i ? { ...x, patternType: e.target.value as OriginRow['patternType'] } : x)))}>
+                <Select
+                  value={r.patternType}
+                  onChange={(e) =>
+                    setRows(
+                      rows.map((x, j) =>
+                        j === i ? { ...x, patternType: e.target.value as OriginRow['patternType'] } : x,
+                      ),
+                    )
+                  }
+                >
                   <option value="exact">{t('auth.onboarding.matchExact')}</option>
                   <option value="subdomain">{t('auth.onboarding.matchSubdomains')}</option>
                 </Select>
               </Field>
-              <Button variant="ghost" size="icon" aria-label={t('auth.onboarding.removeOriginN', { n: i + 1 })} disabled={rows.length === 1} onClick={() => setRows(rows.filter((_, j) => j !== i))}>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={t('auth.onboarding.removeOriginN', { n: i + 1 })}
+                disabled={rows.length === 1}
+                onClick={() => setRows(rows.filter((_, j) => j !== i))}
+              >
                 <Trash2 className="size-4" />
               </Button>
             </div>
           ))}
-          <Button variant="secondary" size="sm" className="self-start" onClick={() => setRows([...rows, { origin: '', patternType: 'exact' }])} disabled={rows.length >= 50}>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="self-start"
+            onClick={() => setRows([...rows, { origin: '', patternType: 'exact' }])}
+            disabled={rows.length >= 50}
+          >
             <Plus className="size-4" aria-hidden /> {t('auth.onboarding.addOrigin')}
           </Button>
         </fieldset>
@@ -284,7 +422,15 @@ function SiteStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: (
   );
 }
 
-function DepartmentStep({ siteId, onBack, onNext }: { siteId: string | null; onBack: () => void; onNext: () => void }) {
+function DepartmentStep({
+  siteId,
+  onBack,
+  onNext,
+}: {
+  siteId: string | null;
+  onBack: () => void;
+  onNext: () => void;
+}) {
   const t = useT();
   const qc = useQueryClient();
   const departments = useDepartments();
@@ -307,7 +453,13 @@ function DepartmentStep({ siteId, onBack, onNext }: { siteId: string | null; onB
     setBusy(true);
     setError(null);
     try {
-      const dept = first ? await api.patch<Department>(`/departments/${first.id}`, { name: name.trim(), routingMode: mode, expectedVersion: first.version }) : await api.post<Department>('/departments', { name: name.trim(), routingMode: mode });
+      const dept = first
+        ? await api.patch<Department>(`/departments/${first.id}`, {
+            name: name.trim(),
+            routingMode: mode,
+            expectedVersion: first.version,
+          })
+        : await api.post<Department>('/departments', { name: name.trim(), routingMode: mode });
       if (siteId) await api.patch(`/sites/${siteId}`, { defaultDepartmentId: dept.id });
       await qc.invalidateQueries({ queryKey: qk.departments });
       onNext();
@@ -347,8 +499,16 @@ function DepartmentStep({ siteId, onBack, onNext }: { siteId: string | null; onB
             value={mode}
             onChange={setMode}
             options={[
-              { value: 'broadcast', label: t('auth.routing.broadcast'), description: t('auth.routing.broadcastHelp') },
-              { value: 'assigned', label: t('auth.routing.assigned'), description: t('auth.routing.assignedHelp') },
+              {
+                value: 'broadcast',
+                label: t('auth.routing.broadcast'),
+                description: t('auth.routing.broadcastHelp'),
+              },
+              {
+                value: 'assigned',
+                label: t('auth.routing.assigned'),
+                description: t('auth.routing.assignedHelp'),
+              },
               { value: 'manual', label: t('auth.routing.manual'), description: t('auth.routing.manualHelp') },
             ]}
           />
@@ -367,7 +527,12 @@ function WidgetStep({ siteId, onBack, onNext }: { siteId: string; onBack: () => 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    Promise.all([api.get<Site>(`/sites/${siteId}`), api.get<{ draft: { config: WidgetConfig } | null; published: { config: WidgetConfig } | null }>(`/sites/${siteId}/widget-config`)])
+    Promise.all([
+      api.get<Site>(`/sites/${siteId}`),
+      api.get<{ draft: { config: WidgetConfig } | null; published: { config: WidgetConfig } | null }>(
+        `/sites/${siteId}/widget-config`,
+      ),
+    ])
       .then(([s, c]) => {
         setSite(s);
         setConfig(mergeWidgetConfig(c.draft?.config ?? c.published?.config ?? {}));
@@ -375,8 +540,10 @@ function WidgetStep({ siteId, onBack, onNext }: { siteId: string; onBack: () => 
       .catch((e) => setError(errorMessage(e)));
   }, [siteId]);
 
-  const setAppearance = (patch: Partial<WidgetConfig['appearance']>) => setConfig((c) => (c ? { ...c, appearance: { ...c.appearance, ...patch } } : c));
-  const setContent = (patch: Partial<WidgetConfig['content']>) => setConfig((c) => (c ? { ...c, content: { ...c.content, ...patch } } : c));
+  const setAppearance = (patch: Partial<WidgetConfig['appearance']>) =>
+    setConfig((c) => (c ? { ...c, appearance: { ...c.appearance, ...patch } } : c));
+  const setContent = (patch: Partial<WidgetConfig['content']>) =>
+    setConfig((c) => (c ? { ...c, content: { ...c.content, ...patch } } : c));
 
   const save = async () => {
     if (!config) return;
@@ -408,7 +575,11 @@ function WidgetStep({ siteId, onBack, onNext }: { siteId: string; onBack: () => 
         </>
       }
     >
-      {error && <Banner tone="danger" className="mb-4">{error}</Banner>}
+      {error && (
+        <Banner tone="danger" className="mb-4">
+          {error}
+        </Banner>
+      )}
       {!config || !site ? (
         <Spinner />
       ) : (
@@ -416,21 +587,51 @@ function WidgetStep({ siteId, onBack, onNext }: { siteId: string; onBack: () => 
           <div className="flex flex-col gap-4">
             <Field label={t('auth.onboarding.brandColor')} description={t('auth.onboarding.brandColorHelp')}>
               <div className="flex items-center gap-2">
-                <input type="color" aria-label={t('auth.onboarding.pickColor')} value={config.appearance.primaryColor} onChange={(e) => setAppearance({ primaryColor: e.target.value })} className="h-10 w-12 cursor-pointer rounded-md border border-line bg-surface p-1" />
-                <Input value={config.appearance.primaryColor} onChange={(e) => setAppearance({ primaryColor: e.target.value })} maxLength={7} className="w-32 font-mono" dir="ltr" />
+                <input
+                  type="color"
+                  aria-label={t('auth.onboarding.pickColor')}
+                  value={config.appearance.primaryColor}
+                  onChange={(e) => setAppearance({ primaryColor: e.target.value })}
+                  className="h-10 w-12 cursor-pointer rounded-md border border-line bg-surface p-1"
+                />
+                <Input
+                  value={config.appearance.primaryColor}
+                  onChange={(e) => setAppearance({ primaryColor: e.target.value })}
+                  maxLength={7}
+                  className="w-32 font-mono"
+                  dir="ltr"
+                />
               </div>
             </Field>
             <Field label={t('auth.onboarding.companyName')}>
-              <Input value={config.appearance.companyName} onChange={(e) => setAppearance({ companyName: e.target.value })} maxLength={60} />
+              <Input
+                value={config.appearance.companyName}
+                onChange={(e) => setAppearance({ companyName: e.target.value })}
+                maxLength={60}
+              />
             </Field>
             <Field label={t('auth.onboarding.headerTitle')}>
-              <Input value={config.appearance.title} onChange={(e) => setAppearance({ title: e.target.value })} maxLength={60} />
+              <Input
+                value={config.appearance.title}
+                onChange={(e) => setAppearance({ title: e.target.value })}
+                maxLength={60}
+              />
             </Field>
             <Field label={t('auth.onboarding.welcomeMessage')}>
-              <Textarea value={config.content.welcomeMessage} onChange={(e) => setContent({ welcomeMessage: e.target.value })} maxLength={300} className="min-h-20" />
+              <Textarea
+                value={config.content.welcomeMessage}
+                onChange={(e) => setContent({ welcomeMessage: e.target.value })}
+                maxLength={300}
+                className="min-h-20"
+              />
             </Field>
             <Field label={t('auth.onboarding.position')}>
-              <Select value={config.appearance.position} onChange={(e) => setAppearance({ position: e.target.value as WidgetConfig['appearance']['position'] })}>
+              <Select
+                value={config.appearance.position}
+                onChange={(e) =>
+                  setAppearance({ position: e.target.value as WidgetConfig['appearance']['position'] })
+                }
+              >
                 <option value="bottom-right">{t('auth.onboarding.bottomRight')}</option>
                 <option value="bottom-left">{t('auth.onboarding.bottomLeft')}</option>
               </Select>
@@ -463,7 +664,15 @@ interface Installation {
   diagnostics: string[];
 }
 
-function InstallStep({ siteId, onBack, onFinish }: { siteId: string; onBack: () => void; onFinish: () => Promise<void> }) {
+function InstallStep({
+  siteId,
+  onBack,
+  onFinish,
+}: {
+  siteId: string;
+  onBack: () => void;
+  onFinish: () => Promise<void>;
+}) {
   const t = useT();
   const [info, setInfo] = useState<Installation | null>(null);
   const [copied, setCopied] = useState(false);
@@ -521,16 +730,28 @@ function InstallStep({ siteId, onBack, onFinish }: { siteId: string; onBack: () 
         </>
       }
     >
-      {error && <Banner tone="danger" className="mb-4">{error}</Banner>}
+      {error && (
+        <Banner tone="danger" className="mb-4">
+          {error}
+        </Banner>
+      )}
       {!info ? (
         <Spinner />
       ) : (
         <div className="flex flex-col gap-5">
           <div className="relative">
-            <pre dir="ltr" className="overflow-x-auto rounded-[var(--radius-control)] border border-line bg-surface-2 p-4 pe-24 font-mono text-xs leading-5 text-fg scroll-thin">
+            <pre
+              dir="ltr"
+              className="overflow-x-auto rounded-[var(--radius-control)] border border-line bg-surface-2 p-4 pe-24 font-mono text-xs leading-5 text-fg scroll-thin"
+            >
               <code>{info.snippet}</code>
             </pre>
-            <Button size="sm" variant="secondary" className="absolute end-2 top-2" onClick={() => void copy()}>
+            <Button
+              size="sm"
+              variant="secondary"
+              className="absolute end-2 top-2"
+              onClick={() => void copy()}
+            >
               {copied ? <Check className="size-4" aria-hidden /> : <Copy className="size-4" aria-hidden />}
               {copied ? t('common.copied') : t('common.copy')}
             </Button>
@@ -540,7 +761,16 @@ function InstallStep({ siteId, onBack, onFinish }: { siteId: string; onBack: () 
             <CheckItem done label={t('auth.onboarding.checkPublished')} />
             <CheckItem
               done={verified || info.status === 'seen_before'}
-              label={verified ? t('auth.onboarding.detectedOn', { origin: isolate(info.lastVerifiedOrigin ?? t('auth.onboarding.yourSite')), when: formatRelative(info.lastVerifiedAt) }) : info.status === 'seen_before' ? t('auth.onboarding.lastDetected', { when: formatRelative(info.lastVerifiedAt) }) : t('auth.onboarding.waitingDetection')}
+              label={
+                verified
+                  ? t('auth.onboarding.detectedOn', {
+                      origin: isolate(info.lastVerifiedOrigin ?? t('auth.onboarding.yourSite')),
+                      when: formatRelative(info.lastVerifiedAt),
+                    })
+                  : info.status === 'seen_before'
+                    ? t('auth.onboarding.lastDetected', { when: formatRelative(info.lastVerifiedAt) })
+                    : t('auth.onboarding.waitingDetection')
+              }
               pending={!verified && info.status === 'not_detected'}
             />
           </ul>
@@ -559,7 +789,13 @@ function CheckItem({ done, label, pending }: { done: boolean; label: string; pen
   const t = useT();
   return (
     <li className="flex items-center gap-2.5 text-sm">
-      {done ? <CheckCircle2 className="size-5 text-success" aria-hidden /> : pending ? <Spinner className="size-5" label={t('auth.onboarding.checking')} /> : <Circle className="size-5 text-fg-3" aria-hidden />}
+      {done ? (
+        <CheckCircle2 className="size-5 text-success" aria-hidden />
+      ) : pending ? (
+        <Spinner className="size-5" label={t('auth.onboarding.checking')} />
+      ) : (
+        <Circle className="size-5 text-fg-3" aria-hidden />
+      )}
       <span className={done ? 'text-fg' : 'text-fg-2'}>{label}</span>
       <span className="sr-only">{done ? t('auth.onboarding.complete') : t('auth.onboarding.notYet')}</span>
     </li>
@@ -569,7 +805,9 @@ function CheckItem({ done, label, pending }: { done: boolean; label: string; pen
 export default function OnboardingPage() {
   return (
     <SessionGate>
-      <Onboarding />
+      <BillingGate>
+        <Onboarding />
+      </BillingGate>
     </SessionGate>
   );
 }

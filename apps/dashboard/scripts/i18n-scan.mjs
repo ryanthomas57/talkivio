@@ -25,11 +25,58 @@ const maxIdx = args.indexOf('--max');
 const max = maxIdx >= 0 ? Number(args[maxIdx + 1]) : null;
 const prefixes = args.filter((a, i) => !a.startsWith('--') && (maxIdx < 0 || i !== maxIdx + 1));
 
-// i18n: the catalogs themselves; design-system: developer-only component stories (English, not served in production).
-const SKIP_DIRS = new Set(['i18n', 'design-system']);
+// i18n: the catalogs themselves; design-system: developer-only component stories (English, not served in production);
+// (site) and site: the public website and its legal pages, published in English only (the legal text is the binding
+// English version, so it is deliberately not run through the interface catalogs).
+const SKIP_DIRS = new Set(['i18n', 'design-system', '(site)', 'site']);
 const SKIP_FILES = [/\.test\.tsx?$/, /\.spec\.tsx?$/, /^\._/, /\.d\.ts$/];
-const UI_ATTRS = new Set(['aria-label', 'aria-description', 'aria-roledescription', 'aria-valuetext', 'placeholder', 'title', 'label', 'description', 'alt', 'hint', 'help', 'emptyText', 'emptyTitle', 'emptyDescription', 'confirmLabel', 'cancelLabel', 'actionLabel', 'heading', 'subtitle', 'caption', 'tooltip', 'message', 'reason', 'loadingLabel']);
-const UI_PROPS = new Set(['label', 'title', 'description', 'placeholder', 'hint', 'help', 'message', 'text', 'heading', 'subtitle', 'caption', 'tooltip', 'emptyTitle', 'emptyDescription', 'confirmLabel', 'actionLabel', 'summary', 'reason', 'error']);
+const UI_ATTRS = new Set([
+  'aria-label',
+  'aria-description',
+  'aria-roledescription',
+  'aria-valuetext',
+  'placeholder',
+  'title',
+  'label',
+  'description',
+  'alt',
+  'hint',
+  'help',
+  'emptyText',
+  'emptyTitle',
+  'emptyDescription',
+  'confirmLabel',
+  'cancelLabel',
+  'actionLabel',
+  'heading',
+  'subtitle',
+  'caption',
+  'tooltip',
+  'message',
+  'reason',
+  'loadingLabel',
+]);
+const UI_PROPS = new Set([
+  'label',
+  'title',
+  'description',
+  'placeholder',
+  'hint',
+  'help',
+  'message',
+  'text',
+  'heading',
+  'subtitle',
+  'caption',
+  'tooltip',
+  'emptyTitle',
+  'emptyDescription',
+  'confirmLabel',
+  'actionLabel',
+  'summary',
+  'reason',
+  'error',
+]);
 const LETTERS = /[A-Za-z]{2,}/;
 
 const files = [];
@@ -49,7 +96,13 @@ for (const file of files) {
   if (prefixes.length && !prefixes.some((p) => rel.startsWith(p) || rel.startsWith(`src/${p}`))) continue;
   const text = readFileSync(file, 'utf8');
   const lines = text.split('\n');
-  const sf = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+  const sf = ts.createSourceFile(
+    file,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    file.endsWith('x') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
   const add = (node, kind, value) => {
     const { line } = sf.getLineAndCharacterOfPosition(node.getStart(sf));
     if (/i18n-ignore/.test(lines[line] ?? '')) return;
@@ -57,13 +110,25 @@ for (const file of files) {
     if (!LETTERS.test(v) || /^[a-z][a-zA-Z0-9]*(\.[a-zA-Z0-9]+)+$/.test(v)) return; // message keys are not copy
     findings.push({ file: rel, line: line + 1, kind, text: v.slice(0, 100) });
   };
-  const literal = (n) => (ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n) ? n.text : ts.isTemplateExpression(n) ? n.head.text + n.templateSpans.map((s) => '…' + s.literal.text).join('') : null);
+  const literal = (n) =>
+    ts.isStringLiteral(n) || ts.isNoSubstitutionTemplateLiteral(n)
+      ? n.text
+      : ts.isTemplateExpression(n)
+        ? n.head.text + n.templateSpans.map((s) => '…' + s.literal.text).join('')
+        : null;
   // String literals an expression can evaluate to: a ? 'x' : 'y', a ?? 'x', cond && 'x', ('x'), `x${y}`.
   const outcomes = (n, kind) => {
     if (!n) return;
     if (ts.isParenthesizedExpression(n)) return outcomes(n.expression, kind);
     if (ts.isConditionalExpression(n)) return (outcomes(n.whenTrue, kind), outcomes(n.whenFalse, kind));
-    if (ts.isBinaryExpression(n) && [ts.SyntaxKind.QuestionQuestionToken, ts.SyntaxKind.BarBarToken, ts.SyntaxKind.AmpersandAmpersandToken].includes(n.operatorToken.kind)) {
+    if (
+      ts.isBinaryExpression(n) &&
+      [
+        ts.SyntaxKind.QuestionQuestionToken,
+        ts.SyntaxKind.BarBarToken,
+        ts.SyntaxKind.AmpersandAmpersandToken,
+      ].includes(n.operatorToken.kind)
+    ) {
       if (n.operatorToken.kind !== ts.SyntaxKind.AmpersandAmpersandToken) outcomes(n.left, kind);
       return outcomes(n.right, kind);
     }
@@ -72,7 +137,12 @@ for (const file of files) {
   };
   const visit = (node) => {
     if (ts.isJsxText(node)) add(node, 'jsx-text', node.text);
-    else if (ts.isJsxExpression(node) && node.expression && (ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent))) outcomes(node.expression, 'jsx-expr');
+    else if (
+      ts.isJsxExpression(node) &&
+      node.expression &&
+      (ts.isJsxElement(node.parent) || ts.isJsxFragment(node.parent))
+    )
+      outcomes(node.expression, 'jsx-expr');
     else if (ts.isJsxAttribute(node) && node.initializer) {
       const name = node.name.getText(sf);
       if (UI_ATTRS.has(name)) {
@@ -82,29 +152,47 @@ for (const file of files) {
       }
     } else if (ts.isCallExpression(node)) {
       const callee = node.expression.getText(sf);
-      if (/^toast(\.(success|error|info|warning|message|loading))?$/.test(callee) || /^set\w*(Error|Errors|Notice|Message|FieldErr\w*)$/.test(callee)) {
+      if (
+        /^toast(\.(success|error|info|warning|message|loading))?$/.test(callee) ||
+        /^set\w*(Error|Errors|Notice|Message|FieldErr\w*)$/.test(callee)
+      ) {
         outcomes(node.arguments[0], `call:${callee}`);
       }
     } else if (ts.isPropertyAssignment(node)) {
       const v = literal(node.initializer);
       const prop = node.name.getText(sf).replace(/['"]/g, '');
       // UI-named properties, or any sentence-like value (lookup maps such as reason → label).
-      if (v !== null && ((UI_PROPS.has(prop) && /[A-Z ]/.test(v)) || /^[A-Z][a-z]+( [A-Za-z'’,.:()-]+)+[.!?]?$/.test(v) || /^[A-Z][a-z]{2,}$/.test(v))) add(node, `prop:${prop}`, v);
+      if (
+        v !== null &&
+        ((UI_PROPS.has(prop) && /[A-Z ]/.test(v)) ||
+          /^[A-Z][a-z]+( [A-Za-z'’,.:()-]+)+[.!?]?$/.test(v) ||
+          /^[A-Z][a-z]{2,}$/.test(v))
+      )
+        add(node, `prop:${prop}`, v);
     } else if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
       // errors.email = 'Enter your email address'
       const v = literal(node.right);
       if (v !== null && /^[A-Z][a-z]+ [^]*[a-z]/.test(v)) add(node, `assign:${node.left.getText(sf)}`, v);
-    } else if (ts.isVariableDeclaration(node) && node.initializer && ts.isIdentifier(node.name) && /^(title|description|label|message|text|heading|summary)$|(Label|Text|Title|Message|Description)$/.test(node.name.text)) {
+    } else if (
+      ts.isVariableDeclaration(node) &&
+      node.initializer &&
+      ts.isIdentifier(node.name) &&
+      /^(title|description|label|message|text|heading|summary)$|(Label|Text|Title|Message|Description)$/.test(
+        node.name.text,
+      )
+    ) {
       outcomes(node.initializer, `const:${node.name.text}`);
     } else if (ts.isBindingElement(node) && node.initializer) {
       // Default props: ({ placeholder = 'Select…', emptyText = 'No matches' })
       const name = node.name.getText(sf);
-      if (UI_ATTRS.has(name) || UI_PROPS.has(name) || /(Label|Text|Placeholder|Title|Message)$/.test(name)) outcomes(node.initializer, `default:${name}`);
+      if (UI_ATTRS.has(name) || UI_PROPS.has(name) || /(Label|Text|Placeholder|Title|Message)$/.test(name))
+        outcomes(node.initializer, `default:${name}`);
     } else if (ts.isReturnStatement(node) && node.expression) {
       let fn = node.parent;
       while (fn && !ts.isFunctionLike(fn)) fn = fn.parent;
       const name = fn && fn.name ? fn.name.getText(sf) : '';
-      if (/(Label|Text|Title|Message|Description|label|text)$/.test(name)) outcomes(node.expression, `return:${name}`);
+      if (/(Label|Text|Title|Message|Description|label|text)$/.test(name))
+        outcomes(node.expression, `return:${name}`);
     }
     ts.forEachChild(node, visit);
   };
@@ -119,6 +207,8 @@ else {
     console.log(`${file} (${list.length})`);
     for (const f of list) console.log(`  ${f.line}  ${f.kind}  ${f.text}`);
   }
-  console.log(`\n${findings.length} hard-coded strings in ${byFile.size} files${prefixes.length ? ` under ${prefixes.join(', ')}` : ''}`);
+  console.log(
+    `\n${findings.length} hard-coded strings in ${byFile.size} files${prefixes.length ? ` under ${prefixes.join(', ')}` : ''}`,
+  );
 }
 if (max !== null && findings.length > max) process.exit(1);

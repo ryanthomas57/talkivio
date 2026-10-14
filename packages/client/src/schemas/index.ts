@@ -4,6 +4,7 @@
  */
 import * as auth from './auth.ts';
 import * as automation from './automation.ts';
+import * as billing from './billing.ts';
 import * as chats from './chats.ts';
 import * as common from './common.ts';
 import * as files from './files.ts';
@@ -16,6 +17,7 @@ import * as widget from './widget.ts';
 
 export * from './auth.ts';
 export * from './automation.ts';
+export * from './billing.ts';
 export * from './chats.ts';
 export * from './common.ts';
 export * from './files.ts';
@@ -165,6 +167,12 @@ export const ResourceSchemas = {
   HealthLive: ops.HealthLiveSchema,
   // jobs
   JobStatus: jobs.JobStatusSchema,
+  // billing
+  BillingStatus: billing.BillingStatusSchema,
+  BillingSummary: billing.BillingSummarySchema,
+  BillingQuote: billing.BillingQuoteSchema,
+  BillingCardSession: billing.BillingCardSessionSchema,
+  BillingCharge: billing.BillingChargeSchema,
 } as const;
 
 export type ResourceName = keyof typeof ResourceSchemas;

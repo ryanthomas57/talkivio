@@ -14,6 +14,7 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.nav.integrations': 'التكاملات',
   'settings.nav.privacy': 'الخصوصية',
   'settings.nav.audit': 'سجل التدقيق',
+  'settings.nav.billing': 'الفوترة',
   'settings.form.wholeNumber': 'أدخل عددًا صحيحًا.',
   'settings.form.range': 'استخدم قيمة من {min} إلى {max}.',
   'settings.form.rangeMinutes': 'استخدم قيمة من {min} إلى {max} دقيقة.',

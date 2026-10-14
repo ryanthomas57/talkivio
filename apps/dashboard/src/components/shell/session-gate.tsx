@@ -11,7 +11,13 @@ import { useSession } from '@/stores/session';
  * Loads the signed-in session once, redirects anonymous visitors to sign in
  * (keeping the destination), and opens the realtime connection for the tenant.
  */
-export function SessionGate({ children, requireTenant = true }: { children: ReactNode; requireTenant?: boolean }) {
+export function SessionGate({
+  children,
+  requireTenant = true,
+}: {
+  children: ReactNode;
+  requireTenant?: boolean;
+}) {
   const t = useT();
   const router = useRouter();
   const pathname = usePathname();
@@ -53,7 +59,7 @@ export function SessionGate({ children, requireTenant = true }: { children: Reac
 }
 
 /** Initial load skeleton shaped like the final layout (ch. 06). */
-function ShellSkeleton() {
+export function ShellSkeleton() {
   const t = useT();
   return (
     <div className="flex h-dvh bg-canvas" aria-busy="true" aria-label={t('shell.gate.loading')}>

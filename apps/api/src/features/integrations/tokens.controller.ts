@@ -19,6 +19,7 @@ import { IdempotencyService, validateIdempotencyKey } from '../../common/idempot
 import { TOKEN_SCOPES } from '../../common/permissions';
 import { AuditedRequire, routeOf, SecurityTelemetry } from './authz';
 import { IntegrationTokensService, type TokenResource } from './tokens.service';
+import { RequiresPlan } from '../billing/plan-gate';
 
 const createSchema = z
   .object({
@@ -35,6 +36,7 @@ const listSchema = z.object({ includeRevoked: z.enum(['true', 'false']).optional
  * once in the 201/200 response; idempotent replays return metadata with `token: null`
  * because secrets are never persisted (only sha256 hashes).
  */
+@RequiresPlan('integrations')
 @Controller('integration-tokens')
 export class IntegrationTokensController {
   constructor(

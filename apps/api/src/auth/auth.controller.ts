@@ -1,9 +1,31 @@
-import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Patch, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  Req,
+  Res,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
-import { isValidTimezone } from '@talkivio/contracts';
+import { isValidTimezone, BILLING_CYCLES, PLAN_IDS } from '@talkivio/contracts';
 import { TenantDb } from '../db/tenant-db';
-import { AllowPendingMfa, body, CurrentUser, notFound, Public, RecentAuth, UserScoped, type UserContext } from '../common/http';
+import {
+  AllowPendingMfa,
+  body,
+  CurrentUser,
+  notFound,
+  Public,
+  RecentAuth,
+  UserScoped,
+  type UserContext,
+} from '../common/http';
 import { AuthService, securityContext, type SecurityContext } from './auth.service';
 import { OAuthService } from './oauth.service';
 import { SessionService } from './session.service';
@@ -17,18 +39,47 @@ const signupSchema = z
     tenantName: z.string().trim().min(1, 'Enter a workspace name').max(120),
     timezone: z.string().refine(isValidTimezone, 'Unknown timezone').default('UTC'),
     displayName: z.string().trim().min(1).max(120).optional(),
+    /** The plan and billing cycle picked on the pricing page (used when billing is on). */
+    plan: z.enum(PLAN_IDS).optional(),
+    cycle: z.enum(BILLING_CYCLES).optional(),
   })
   .strict();
-const loginSchema = z.object({ email, password: z.string().min(1).max(128), totpCode: z.string().trim().max(20).optional(), challenge: z.string().min(16).max(64).optional(), rememberDevice: z.boolean().optional() }).strict();
+const loginSchema = z
+  .object({
+    email,
+    password: z.string().min(1).max(128),
+    totpCode: z.string().trim().max(20).optional(),
+    challenge: z.string().min(16).max(64).optional(),
+    rememberDevice: z.boolean().optional(),
+  })
+  .strict();
 const tokenSchema = z.object({ token: z.string().min(10).max(200) }).strict();
 const resetSchema = z.object({ token: z.string().min(10).max(200), newPassword: password }).strict();
-const changeSchema = z.object({ currentPassword: z.string().min(1).max(128), newPassword: password }).strict();
-const reauthSchema = z.object({ password: z.string().min(1).max(128), totpCode: z.string().max(20).optional() }).strict();
-const profileSchema = z.object({ displayName: z.string().trim().min(1).max(120).optional(), avatarUrl: z.string().url().max(500).nullable().optional() }).strict();
-const mfaConfirmSchema = z.object({ enrollmentId: z.string().min(8).max(64), code: z.string().trim().min(6).max(20) }).strict();
+const changeSchema = z
+  .object({ currentPassword: z.string().min(1).max(128), newPassword: password })
+  .strict();
+const reauthSchema = z
+  .object({ password: z.string().min(1).max(128), totpCode: z.string().max(20).optional() })
+  .strict();
+const profileSchema = z
+  .object({
+    displayName: z.string().trim().min(1).max(120).optional(),
+    avatarUrl: z.string().url().max(500).nullable().optional(),
+  })
+  .strict();
+const mfaConfirmSchema = z
+  .object({ enrollmentId: z.string().min(8).max(64), code: z.string().trim().min(6).max(20) })
+  .strict();
 const codeSchema = z.object({ code: z.string().trim().min(6).max(20) }).strict();
 const switchSchema = z.object({ tenantId: z.string().uuid() }).strict();
-const createTenantSchema = z.object({ tenantName: z.string().trim().min(1).max(120), timezone: z.string().refine(isValidTimezone, 'Unknown timezone').default('UTC') }).strict();
+const createTenantSchema = z
+  .object({
+    tenantName: z.string().trim().min(1).max(120),
+    timezone: z.string().refine(isValidTimezone, 'Unknown timezone').default('UTC'),
+    plan: z.enum(PLAN_IDS).optional(),
+    cycle: z.enum(BILLING_CYCLES).optional(),
+  })
+  .strict();
 const ctxOf = (user: UserContext): SecurityContext => ({ requestId: user.requestId, ipHash: user.ipHash });
 
 @Controller('auth')
@@ -48,14 +99,22 @@ export class AuthController {
 
   @Public()
   @Post('signup')
-  signup(@Body(body(signupSchema)) input: z.infer<typeof signupSchema>, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  signup(
+    @Body(body(signupSchema)) input: z.infer<typeof signupSchema>,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return this.auth.signup(input, req, res);
   }
 
   @Public()
   @Post('login')
   @HttpCode(200)
-  login(@Body(body(loginSchema)) input: z.infer<typeof loginSchema>, @Req() req: Request, @Res({ passthrough: true }) res: Response) {
+  login(
+    @Body(body(loginSchema)) input: z.infer<typeof loginSchema>,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return this.auth.login(input, req, res);
   }
 
@@ -78,7 +137,10 @@ export class AuthController {
 
   @UserScoped()
   @Patch('profile')
-  async profile(@CurrentUser() user: UserContext, @Body(body(profileSchema)) input: z.infer<typeof profileSchema>) {
+  async profile(
+    @CurrentUser() user: UserContext,
+    @Body(body(profileSchema)) input: z.infer<typeof profileSchema>,
+  ) {
     await this.db.root.user.update({ where: { id: user.userId }, data: input });
     const s = await this.db.root.authSession.findUniqueOrThrow({ where: { id: user.sessionId } });
     return this.auth.me(user.userId, s.activeTenantId);
@@ -102,7 +164,10 @@ export class AuthController {
   @Public()
   @Post('password/reset-request')
   @HttpCode(202)
-  async resetRequest(@Body(body(z.object({ email }).strict())) input: { email: string }, @Req() req: Request) {
+  async resetRequest(
+    @Body(body(z.object({ email }).strict())) input: { email: string },
+    @Req() req: Request,
+  ) {
     await this.auth.requestReset(input.email, req.ip ?? null, securityContext(req));
     return { accepted: true };
   }
@@ -118,22 +183,44 @@ export class AuthController {
   @RecentAuth()
   @Post('password/change')
   @HttpCode(204)
-  async change(@CurrentUser() user: UserContext, @Body(body(changeSchema)) input: z.infer<typeof changeSchema>) {
-    await this.auth.changePassword(user.userId, user.sessionId, input.currentPassword, input.newPassword, ctxOf(user));
+  async change(
+    @CurrentUser() user: UserContext,
+    @Body(body(changeSchema)) input: z.infer<typeof changeSchema>,
+  ) {
+    await this.auth.changePassword(
+      user.userId,
+      user.sessionId,
+      input.currentPassword,
+      input.newPassword,
+      ctxOf(user),
+    );
   }
 
   @UserScoped()
   @Post('reauthenticate')
   @HttpCode(204)
-  async reauth(@CurrentUser() user: UserContext, @Body(body(reauthSchema)) input: z.infer<typeof reauthSchema>) {
+  async reauth(
+    @CurrentUser() user: UserContext,
+    @Body(body(reauthSchema)) input: z.infer<typeof reauthSchema>,
+  ) {
     await this.auth.reauthenticate(user.userId, user.sessionId, input.password, input.totpCode, ctxOf(user));
   }
 
   @UserScoped()
   @Get('sessions')
   async sessionsList(@CurrentUser() user: UserContext) {
-    const rows = await this.db.root.authSession.findMany({ where: { userId: user.userId, revokedAt: null, expiresAt: { gt: new Date() } }, orderBy: { lastSeenAt: 'desc' } });
-    return rows.map((s) => ({ id: s.id, browser: s.uaSummary, location: s.locationLabel, lastActiveAt: s.lastSeenAt, createdAt: s.createdAt, current: s.id === user.sessionId }));
+    const rows = await this.db.root.authSession.findMany({
+      where: { userId: user.userId, revokedAt: null, expiresAt: { gt: new Date() } },
+      orderBy: { lastSeenAt: 'desc' },
+    });
+    return rows.map((s) => ({
+      id: s.id,
+      browser: s.uaSummary,
+      location: s.locationLabel,
+      lastActiveAt: s.lastSeenAt,
+      createdAt: s.createdAt,
+      current: s.id === user.sessionId,
+    }));
   }
 
   @UserScoped()
@@ -151,7 +238,10 @@ export class AuthController {
   @HttpCode(200)
   async revokeOthers(@CurrentUser() user: UserContext) {
     const revoked = await this.sessions.revokeAllForUser(user.userId, user.sessionId);
-    await this.auth.recordSecurity(user.userId, 'security.other_sessions_revoked', { safeDiff: { revoked }, ...ctxOf(user) });
+    await this.auth.recordSecurity(user.userId, 'security.other_sessions_revoked', {
+      safeDiff: { revoked },
+      ...ctxOf(user),
+    });
     return { revoked };
   }
 
@@ -168,7 +258,10 @@ export class AuthController {
   @RecentAuth()
   @Post('mfa/confirm')
   @HttpCode(200)
-  confirm(@CurrentUser() user: UserContext, @Body(body(mfaConfirmSchema)) input: z.infer<typeof mfaConfirmSchema>) {
+  confirm(
+    @CurrentUser() user: UserContext,
+    @Body(body(mfaConfirmSchema)) input: z.infer<typeof mfaConfirmSchema>,
+  ) {
     return this.auth.mfaConfirm(user.userId, input.enrollmentId, input.code, ctxOf(user));
   }
 
@@ -177,7 +270,11 @@ export class AuthController {
   @RecentAuth()
   @Delete('mfa')
   @HttpCode(204)
-  async disableMfa(@CurrentUser() user: UserContext, @Body(body(codeSchema)) input: z.infer<typeof codeSchema>, @Res({ passthrough: true }) res: Response) {
+  async disableMfa(
+    @CurrentUser() user: UserContext,
+    @Body(body(codeSchema)) input: z.infer<typeof codeSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.auth.mfaDisable(user.userId, input.code, ctxOf(user));
     await this.sessions.rotate(user.sessionId, res);
   }
@@ -187,7 +284,11 @@ export class AuthController {
   @RecentAuth()
   @Post('mfa/disable')
   @HttpCode(204)
-  async disable(@CurrentUser() user: UserContext, @Body(body(codeSchema)) input: z.infer<typeof codeSchema>, @Res({ passthrough: true }) res: Response) {
+  async disable(
+    @CurrentUser() user: UserContext,
+    @Body(body(codeSchema)) input: z.infer<typeof codeSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     await this.disableMfa(user, input, res);
   }
 
@@ -200,14 +301,24 @@ export class AuthController {
 
   @Public()
   @Get('oauth/:provider/start')
-  oauthStart(@Param('provider') provider: string, @Query('redirect') redirect: string | undefined, @Res() res: Response) {
+  oauthStart(
+    @Param('provider') provider: string,
+    @Query('redirect') redirect: string | undefined,
+    @Res() res: Response,
+  ) {
     if (provider !== 'google' && provider !== 'github') throw notFound('Provider');
     return this.oauth.start(provider, redirect, res);
   }
 
   @Public()
   @Get('oauth/:provider/callback')
-  oauthCallback(@Param('provider') provider: string, @Query('code') code: string | undefined, @Query('state') state: string | undefined, @Req() req: Request, @Res() res: Response) {
+  oauthCallback(
+    @Param('provider') provider: string,
+    @Query('code') code: string | undefined,
+    @Query('state') state: string | undefined,
+    @Req() req: Request,
+    @Res() res: Response,
+  ) {
     if (provider !== 'google' && provider !== 'github') throw notFound('Provider');
     return this.oauth.callback(provider, code, state, req, res);
   }
@@ -220,15 +331,26 @@ export class TenantSwitchController {
   @UserScoped()
   @Post('switch')
   @HttpCode(200)
-  switch(@CurrentUser() user: UserContext, @Body(body(switchSchema)) input: z.infer<typeof switchSchema>, @Res({ passthrough: true }) res: Response) {
+  switch(
+    @CurrentUser() user: UserContext,
+    @Body(body(switchSchema)) input: z.infer<typeof switchSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     return this.auth.switchTenant(user.userId, user.sessionId, input.tenantId, res);
   }
 
   /** Additional workspace for an existing user. */
   @UserScoped()
   @Post()
-  async create(@CurrentUser() user: UserContext, @Body(body(createTenantSchema)) input: z.infer<typeof createTenantSchema>, @Res({ passthrough: true }) res: Response) {
-    const t = await this.auth.createTenant(user.userId, input.tenantName, input.timezone, ctxOf(user));
+  async create(
+    @CurrentUser() user: UserContext,
+    @Body(body(createTenantSchema)) input: z.infer<typeof createTenantSchema>,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const t = await this.auth.createTenant(user.userId, input.tenantName, input.timezone, ctxOf(user), {
+      plan: input.plan,
+      cycle: input.cycle,
+    });
     return this.auth.switchTenant(user.userId, user.sessionId, t.id, res);
   }
 }

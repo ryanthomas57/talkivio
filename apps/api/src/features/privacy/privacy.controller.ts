@@ -20,6 +20,7 @@ import { AuditedRequire, SecurityTelemetry } from '../integrations/authz';
 import { PrivacyJobRunner } from './privacy-jobs';
 import { PrivacyService } from './privacy.service';
 import { RetentionService } from './retention.service';
+import { RequiresPlan } from '../billing/plan-gate';
 
 const createSchema = z
   .object({
@@ -146,6 +147,7 @@ export class PrivacyController {
   }
 
   /** Dry run: what the next retention batch would remove. */
+  @RequiresPlan('auditLog')
   @Get('retention/preview')
   @AuditedRequire('retention', 'privacy.manage')
   preview(@Auth() auth: AuthContext) {
@@ -153,6 +155,7 @@ export class PrivacyController {
   }
 
   /** Apply one bounded retention batch now (the worker also runs it periodically). */
+  @RequiresPlan('auditLog')
   @Post('retention/run')
   @HttpCode(200)
   @RecentAuth()

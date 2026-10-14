@@ -22,6 +22,7 @@ import { analytics } from './analytics';
 import { history } from './history';
 import { monitor } from './monitor';
 import { dock } from './dock';
+import { billing } from './billing';
 
 /** Every area, flattened. Keys are unique because each area prefixes its own keys. */
 export const en = {
@@ -49,6 +50,7 @@ export const en = {
   ...history,
   ...monitor,
   ...dock,
+  ...billing,
 };
 
 export type MessageKey = keyof typeof en;

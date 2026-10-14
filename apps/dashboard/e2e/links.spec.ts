@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { APP_ROUTES, PUBLIC_ROUTES, settle } from './routes';
+import { ANON_ROUTES, APP_ROUTES, settle } from './routes';
 
 /**
  * AUD-71-35 (links half; buttons and menu items are covered statically by scripts/dead-controls.mjs): every link a
@@ -16,18 +16,24 @@ async function collect(page: import('@playwright/test').Page, routes: readonly s
     await page.goto(route);
     await settle(page);
     // Sample content in the design-system gallery (marked data-demo) is example data, not navigation.
-    const hrefs = await page.$$eval('a[href]', (as) => as.filter((a) => !a.closest('[data-demo]')).map((a) => a.getAttribute('href') ?? ''));
+    const hrefs = await page.$$eval('a[href]', (as) =>
+      as.filter((a) => !a.closest('[data-demo]')).map((a) => a.getAttribute('href') ?? ''),
+    );
     for (const href of hrefs) {
       if (/^(mailto|tel):/.test(href)) continue;
       if (href.startsWith('#')) {
         // In-page links (skip links): the target must exist on this page.
         const id = decodeURIComponent(href.slice(1));
-        expect(id && (await page.locator(`[id="${id}"]`).count()) > 0, `"${href}" on ${route} points at an element that exists`).toBe(true);
+        expect(
+          id && (await page.locator(`[id="${id}"]`).count()) > 0,
+          `"${href}" on ${route} points at an element that exists`,
+        ).toBe(true);
         continue;
       }
       if (/^https?:\/\//.test(href)) {
         const u = new URL(href);
-        if (u.origin === new URL(page.url()).origin) internal.set(u.pathname, internal.get(u.pathname) ?? route);
+        if (u.origin === new URL(page.url()).origin)
+          internal.set(u.pathname, internal.get(u.pathname) ?? route);
         else external.add(href);
         continue;
       }
@@ -52,8 +58,17 @@ async function visitAll(page: import('@playwright/test').Page, internal: Map<str
     await settle(page);
     const status = res?.status() ?? 0;
     const body = await page.locator('body').innerText();
-    if (status >= 400 || NOT_FOUND.test(await page.title()) || /This page could not be found|Page not found/.test(body)) broken.push(`${path} (linked from ${from}): HTTP ${status}`);
-    else if (/Something went wrong/.test(body) && !(await page.getByRole('button', { name: /retry|try again/i }).count())) broken.push(`${path} (linked from ${from}): error boundary`);
+    if (
+      status >= 400 ||
+      NOT_FOUND.test(await page.title()) ||
+      /This page could not be found|Page not found/.test(body)
+    )
+      broken.push(`${path} (linked from ${from}): HTTP ${status}`);
+    else if (
+      /Something went wrong/.test(body) &&
+      !(await page.getByRole('button', { name: /retry|try again/i }).count())
+    )
+      broken.push(`${path} (linked from ${from}): error boundary`);
   }
   return broken;
 }
@@ -71,7 +86,7 @@ test('every link on the signed-in dashboard leads to a real page', async ({ page
 test.describe('signed out', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
   test('every link on the public pages leads to a real page', async ({ page }) => {
-    const { internal, external } = await collect(page, PUBLIC_ROUTES);
+    const { internal, external } = await collect(page, ANON_ROUTES);
     expect(internal.size).toBeGreaterThan(2);
     expect(await visitAll(page, internal)).toEqual([]);
     expect([...external].filter((h) => !h.startsWith('https://'))).toEqual([]);

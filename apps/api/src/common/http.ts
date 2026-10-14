@@ -84,6 +84,8 @@ export const REQUIRE = 'rd:require';
 export const ALLOW_PENDING_MFA = 'rd:allow-pending-mfa';
 export const TOKEN_ALLOWED = 'rd:token-allowed';
 export const RECENT_AUTH = 'rd:recent-auth';
+/** Routes that keep working while a workspace's billing blocks it (paying, the account summary, sign-out). */
+export const BILLING_EXEMPT = 'rd:billing-exempt';
 
 export const Public = () => SetMetadata(IS_PUBLIC, true);
 export const UserScoped = () => SetMetadata(USER_SCOPED, true);
@@ -93,6 +95,7 @@ export const AllowPendingMfa = () => SetMetadata(ALLOW_PENDING_MFA, true);
 export const TokenAccess = () => SetMetadata(TOKEN_ALLOWED, true);
 /** Requires authentication within the last 15 minutes (credential/ownership changes). */
 export const RecentAuth = () => SetMetadata(RECENT_AUTH, true);
+export const BillingExempt = () => SetMetadata(BILLING_EXEMPT, true);
 
 const fromReq = <K extends keyof AppRequest>(key: K) =>
   createParamDecorator((_d: unknown, ctx: ExecutionContext) => {
@@ -148,6 +151,7 @@ export type ErrorCode =
   | 'EMAIL_NOT_VERIFIED'
   | 'INVALID_CREDENTIALS'
   | 'PLAN_LIMIT'
+  | 'PAYMENT_REQUIRED'
   | 'INTERNAL';
 
 export class AppError extends HttpException {

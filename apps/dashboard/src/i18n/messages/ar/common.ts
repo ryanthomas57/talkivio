@@ -4,6 +4,8 @@ import type { common as source } from '../en/common';
 export const common: Record<keyof typeof source, string> = {
   'common.skipToContent': 'تخطَّ إلى المحتوى',
   'common.closeNotification': 'إغلاق الإشعار',
+  'common.theme.toLight': 'التبديل إلى الوضع الفاتح',
+  'common.theme.toDark': 'التبديل إلى الوضع الداكن',
   'common.save': 'حفظ',
   'common.saving': 'جارٍ الحفظ…',
   'common.saved': 'تم الحفظ',
@@ -139,7 +141,8 @@ export const common: Record<keyof typeof source, string> = {
   'common.error.CONFLICT': 'يتعارض هذا مع الحالة الحالية. أعد التحميل وحاول مرة أخرى.',
   'common.error.EMAIL_NOT_VERIFIED': 'أكّد عنوان بريدك الإلكتروني أولًا.',
   'common.error.INVALID_CREDENTIALS': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
-  'common.error.PLAN_LIMIT': 'تم بلوغ حد خطتك.',
+  'common.error.PLAN_LIMIT': 'هذه الميزة غير متاحة في خطتك الحالية. قم بالترقية من الإعدادات، الفوترة.',
+  'common.error.PAYMENT_REQUIRED': 'يجب معالجة الفوترة قبل استخدام مساحة العمل هذه.',
   'common.error.INTERNAL': 'حدث خطأ من جهتنا. حاول مرة أخرى.',
   'common.error.network': 'الشبكة غير متاحة. تحقّق من اتصالك وحاول مرة أخرى.',
   'common.error.notConnected': 'غير متصل',

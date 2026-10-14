@@ -5,7 +5,6 @@ import {
   API_KEY_SCOPES,
   CONVERSATION_STATUSES,
   INBOX_VIEWS,
-  PLANS,
   PRIORITIES,
   RATINGS,
   ROLES,
@@ -16,11 +15,16 @@ import { TRIGGER_EVENTS, TRIGGER_OPERATORS, TRIGGER_RUN_MODES } from './logic/tr
 import { WEEKDAYS, isValidTimezone } from './logic/hours';
 import { SHORTCUT_NAME_RE } from './logic/shortcuts';
 import { WIDGET_LANGUAGES } from './widget-config';
+import { BILLING_CYCLES, PLAN_IDS } from './plans';
 
 const trimmed = (max: number) => z.string().trim().max(max);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a 6-digit hex color');
 /** Image URLs rendered by the widget/dashboard: https only (no javascript:, data:, file: or mixed content). */
-const httpsImageUrl = z.string().max(500).url().refine((u) => /^https:\/\//i.test(u), 'Use an https:// image URL');
+const httpsImageUrl = z
+  .string()
+  .max(500)
+  .url()
+  .refine((u) => /^https:\/\//i.test(u), 'Use an https:// image URL');
 const timezone = z.string().refine(isValidTimezone, 'Unknown timezone');
 const cuidish = z.string().min(1).max(64);
 
@@ -50,13 +54,19 @@ export type LoginInput = z.infer<typeof loginSchema>;
 export const forgotPasswordSchema = z.object({ email: z.string().trim().toLowerCase().email() });
 export const resetPasswordSchema = z.object({ token: z.string().min(10), password: passwordSchema });
 export const verifyEmailSchema = z.object({ token: z.string().min(10) });
-export const changePasswordSchema = z.object({ currentPassword: z.string().min(1), newPassword: passwordSchema });
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: passwordSchema,
+});
 export const updateProfileSchema = z.object({
   name: trimmed(80).min(1).optional(),
   avatarUrl: z.string().url().max(500).nullable().optional(),
 });
 export const mfaVerifySchema = z.object({ code: z.string().trim().min(6).max(20) });
-export const mfaDisableSchema = z.object({ password: z.string().min(1), code: z.string().trim().min(6).max(20) });
+export const mfaDisableSchema = z.object({
+  password: z.string().min(1),
+  code: z.string().trim().min(6).max(20),
+});
 
 // ───────────────────────────── Organizations ─────────────────────────────
 export const createOrgSchema = z.object({
@@ -111,10 +121,12 @@ export const timeRangeSchema = z
 
 export const weeklyScheduleSchema = z.object({
   timezone,
-  days: z.object(Object.fromEntries(WEEKDAYS.map((d) => [d, z.array(timeRangeSchema).max(6)])) as Record<
-    (typeof WEEKDAYS)[number],
-    z.ZodArray<typeof timeRangeSchema>
-  >),
+  days: z.object(
+    Object.fromEntries(WEEKDAYS.map((d) => [d, z.array(timeRangeSchema).max(6)])) as Record<
+      (typeof WEEKDAYS)[number],
+      z.ZodArray<typeof timeRangeSchema>
+    >,
+  ),
   holidays: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), name: trimmed(80) })).max(100),
 });
 
@@ -134,7 +146,8 @@ export const ipRuleSchema = z
   .refine((v) => {
     const [addr, bits, extra] = v.split('/');
     if (extra !== undefined || !addr) return false;
-    if (bits === undefined) return IPV4.test(addr) || (IPV6.test(addr) && addr.includes(':') && addr.split('::').length <= 2);
+    if (bits === undefined)
+      return IPV4.test(addr) || (IPV6.test(addr) && addr.includes(':') && addr.split('::').length <= 2);
     return IPV4.test(addr) && /^\d{1,2}$/.test(bits) && Number(bits) >= 8 && Number(bits) <= 32;
   }, 'Use an IPv4/IPv6 address or an IPv4 CIDR range such as 203.0.113.0/24');
 
@@ -150,9 +163,17 @@ export const orgSettingsPatchSchema = z
       .partial(),
     chat: z
       .object({
-        idleTimeoutMinutes: z.number().int().min(1).max(24 * 60),
+        idleTimeoutMinutes: z
+          .number()
+          .int()
+          .min(1)
+          .max(24 * 60),
         missedAfterSeconds: z.number().int().min(10).max(3600),
-        agentAutoAwayMinutes: z.number().int().min(0).max(24 * 60),
+        agentAutoAwayMinutes: z
+          .number()
+          .int()
+          .min(0)
+          .max(24 * 60),
         allowVisitorEndChat: z.boolean(),
         requestRatingOnEnd: z.boolean(),
         maskCreditCards: z.boolean(),
@@ -177,12 +198,21 @@ export const orgSettingsPatchSchema = z
     availability: z.object({ defaultScheduleId: z.string().uuid().nullable() }).partial(),
     offline: z.object({ rateLimitPerHour: z.number().int().min(1).max(100) }).partial(),
     analytics: z.object({ excludeQuickCancellations: z.boolean() }).partial(),
-    files: z.object({ dailyQuotaMb: z.number().int().min(1).max(100_000).nullable(), dailyQuotaFiles: z.number().int().min(1).max(100_000).nullable() }).partial(),
+    files: z
+      .object({
+        dailyQuotaMb: z.number().int().min(1).max(100_000).nullable(),
+        dailyQuotaFiles: z.number().int().min(1).max(100_000).nullable(),
+      })
+      .partial(),
     operatingHours: operatingHoursSchema,
     security: z
       .object({
         requireMfa: z.boolean(),
-        sessionTimeoutHours: z.number().int().min(1).max(24 * 90),
+        sessionTimeoutHours: z
+          .number()
+          .int()
+          .min(1)
+          .max(24 * 90),
         ipAllowlist: z.array(ipRuleSchema).max(200),
         anonymizeIps: z.boolean(),
         dataRetentionDays: z.number().int().min(7).max(3650).nullable(),
@@ -213,7 +243,10 @@ export const originSchema = z
   .string()
   .trim()
   .max(300)
-  .refine((o) => /^(https?:\/\/)?(\*\.)?[a-z0-9.-]+(:\d+)?$/i.test(o), 'Use an origin like https://example.com or *.example.com');
+  .refine(
+    (o) => /^(https?:\/\/)?(\*\.)?[a-z0-9.-]+(:\d+)?$/i.test(o),
+    'Use an origin like https://example.com or *.example.com',
+  );
 
 export const createWebsiteSchema = z.object({
   name: trimmed(80).min(1),
@@ -287,7 +320,10 @@ export const widgetConfigSchema = z.object({
     sound: z.boolean(),
     hideOnMobile: z.boolean(),
     hideWhenOffline: z.boolean(),
-    visibility: z.object({ mode: z.enum(['all', 'include', 'exclude']), patterns: z.array(trimmed(300)).max(50) }),
+    visibility: z.object({
+      mode: z.enum(['all', 'include', 'exclude']),
+      patterns: z.array(trimmed(300)).max(50),
+    }),
     trackPages: z.boolean(),
     openOnAgentMessage: z.boolean(),
     showQueuePosition: z.boolean(),
@@ -372,7 +408,10 @@ export const updateVisitorSchema = z.object({
   attributes: z.record(z.unknown()).optional(),
 });
 
-export const banVisitorSchema = z.object({ reason: trimmed(300).default(''), includeIp: z.boolean().default(true) });
+export const banVisitorSchema = z.object({
+  reason: trimmed(300).default(''),
+  includeIp: z.boolean().default(true),
+});
 
 export const listVisitorsSchema = z.object({
   q: z.string().trim().max(200).optional(),
@@ -387,7 +426,11 @@ export const listVisitorsSchema = z.object({
 
 // ───────────────────────────── Triggers ─────────────────────────────
 const triggerActionSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('send_message'), senderName: trimmed(60).min(1), message: trimmed(2000).min(1) }),
+  z.object({
+    type: z.literal('send_message'),
+    senderName: trimmed(60).min(1),
+    message: trimmed(2000).min(1),
+  }),
   z.object({ type: z.literal('wait'), seconds: z.number().int().min(1).max(3600) }),
   z.object({ type: z.literal('set_name'), name: trimmed(100).min(1) }),
   z.object({ type: z.literal('add_tags'), tags: z.array(trimmed(50).min(1)).min(1).max(20) }),
@@ -451,7 +494,8 @@ export const apiKeySchema = z.object({
 });
 
 export const checkoutSchema = z.object({
-  plan: z.enum(PLANS).refine((p) => p !== 'FREE' && p !== 'ENTERPRISE', 'Choose a self-serve plan'),
+  plan: z.enum(PLAN_IDS),
+  cycle: z.enum(BILLING_CYCLES),
   seats: z.number().int().min(1).max(500),
 });
 
@@ -466,4 +510,7 @@ export const analyticsRangeSchema = z.object({
 });
 export type AnalyticsRange = z.infer<typeof analyticsRangeSchema>;
 
-export const ratingSchema = z.object({ rating: z.enum(RATINGS).nullable(), comment: trimmed(1000).optional() });
+export const ratingSchema = z.object({
+  rating: z.enum(RATINGS).nullable(),
+  comment: trimmed(1000).optional(),
+});

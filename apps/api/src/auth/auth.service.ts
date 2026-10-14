@@ -13,6 +13,8 @@ import { env } from '../config/env';
 import { MailService } from '../core/mail.service';
 import { RateLimitService } from '../core/rate-limit.service';
 import { DEVICE_COOKIE, SessionService } from './session.service';
+import type { BillingCycle, PlanId } from '@talkivio/contracts';
+import { openBillingAccount } from '../features/billing/open-account';
 
 authenticator.options = { window: 1 };
 
@@ -152,7 +154,15 @@ export class AuthService {
   // ───────── Signup / tenant creation ─────────
 
   async signup(
-    input: { email: string; password: string; tenantName: string; timezone?: string; displayName?: string },
+    input: {
+      email: string;
+      password: string;
+      tenantName: string;
+      timezone?: string;
+      displayName?: string;
+      plan?: PlanId;
+      cycle?: BillingCycle;
+    },
     req: Request,
     res: Response,
   ) {
@@ -175,6 +185,7 @@ export class AuthService {
       input.tenantName,
       input.timezone ?? 'UTC',
       securityContext(req),
+      { plan: input.plan, cycle: input.cycle },
     );
     await this.sendVerification(user.id, user.email, user.displayName);
     await this.sessions.create(user, req, res, tenant.id);
@@ -187,7 +198,13 @@ export class AuthService {
   }
 
   /** Create a tenant with its owner membership and safe defaults (one transaction). */
-  async createTenant(userId: string, name: string, timezone: string, ctx: SecurityContext = {}) {
+  async createTenant(
+    userId: string,
+    name: string,
+    timezone: string,
+    ctx: SecurityContext = {},
+    billing: { plan?: PlanId; cycle?: BillingCycle } = {},
+  ) {
     const tenantName = name.trim().slice(0, 120);
     if (!tenantName) throw badRequest('Enter a workspace name', { tenant_name: ['Required'] });
     let slug = slugify(tenantName);
@@ -253,6 +270,7 @@ export class AuthService {
           },
         });
       }
+      await openBillingAccount(tx, tenantId, billing.plan, billing.cycle);
       await tx.auditEvent.create({
         data: {
           tenantId,

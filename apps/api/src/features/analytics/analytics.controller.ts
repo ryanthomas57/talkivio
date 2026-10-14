@@ -17,6 +17,7 @@ import {
   type InvitationsQuery,
   type MonitorQuery,
 } from './schemas';
+import { RequiresPlan } from '../billing/plan-gate';
 
 /** Analytics reports and exports (ch. 45/51). */
 @Controller('analytics')
@@ -33,6 +34,7 @@ export class AnalyticsController {
     return this.analytics.chatsReport(auth, q);
   }
 
+  @RequiresPlan('analytics')
   @Get('agents')
   @TokenAccess()
   @Require('analytics.view', 'analytics.agents')
@@ -40,6 +42,7 @@ export class AnalyticsController {
     return this.analytics.agentsReport(auth, q);
   }
 
+  @RequiresPlan('analytics')
   @Get('invitations')
   @TokenAccess()
   @Require('analytics.view')
@@ -47,6 +50,7 @@ export class AnalyticsController {
     return this.analytics.invitationsReport(auth, q);
   }
 
+  @RequiresPlan('analytics')
   @Post('exports')
   @Require('analytics.view')
   async createExport(
@@ -68,7 +72,11 @@ export class AnalyticsController {
 
   @Get('exports/:id/download')
   @Require('analytics.view')
-  async download(@Auth() auth: AuthContext, @Param('id', ParseUUIDPipe) id: string, @Res() res: Response): Promise<void> {
+  async download(
+    @Auth() auth: AuthContext,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ): Promise<void> {
     const file = await this.exports.download(auth, id);
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${file.filename.replace(/[^\w.-]/g, '_')}"`);
@@ -80,6 +88,7 @@ export class AnalyticsController {
 }
 
 /** Supervisor monitoring (ch. 49). */
+@RequiresPlan('monitor')
 @Controller('monitor')
 export class MonitorController {
   constructor(private readonly monitor: MonitorService) {}

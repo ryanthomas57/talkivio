@@ -15,6 +15,7 @@ tags:
   - name: AuditEvents
   - name: Auth
   - name: Bans
+  - name: Billing
   - name: Chats
   - name: Connectors
   - name: CustomFields
@@ -2618,6 +2619,17 @@ paths:
                   type: string
                   minLength: 1
                   maxLength: 120
+                plan:
+                  type: string
+                  enum:
+                    - starter
+                    - team
+                    - business
+                cycle:
+                  type: string
+                  enum:
+                    - monthly
+                    - yearly
               required:
                 - email
                 - password
@@ -2918,6 +2930,493 @@ paths:
       x-talkivio-handler: BansController.revoke
       x-talkivio-permissions:
         - bans.manage
+  /api/v1/billing:
+    get:
+      operationId: billingSummary
+      tags:
+        - Billing
+      summary: GET /api/v1/billing
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+      x-talkivio-handler: BillingController.summary
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/cancel:
+    post:
+      operationId: billingCancel
+      tags:
+        - Billing
+      summary: POST /api/v1/billing/cancel
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.cancel
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/card:
+    put:
+      operationId: billingUpdateCard
+      tags:
+        - Billing
+      summary: PUT /api/v1/billing/card
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                card_token:
+                  type: string
+                  minLength: 4
+                  maxLength: 200
+              required:
+                - card_token
+              additionalProperties: false
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.updateCard
+      x-talkivio-permissions:
+        - billing.manage
+      x-talkivio-recent-auth: true
+  /api/v1/billing/card-session:
+    post:
+      operationId: billingCardSession
+      tags:
+        - Billing
+      summary: POST /api/v1/billing/card-session
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingCardSession"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.cardSession
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/charges:
+    get:
+      operationId: billingCharges
+      tags:
+        - Billing
+      summary: GET /api/v1/billing/charges
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/BillingCharge"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+      x-talkivio-handler: BillingController.charges
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/quote:
+    get:
+      operationId: billingQuote
+      tags:
+        - Billing
+      summary: GET /api/v1/billing/quote
+      parameters:
+        - name: plan
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - starter
+              - team
+              - business
+        - name: cycle
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - monthly
+              - yearly
+        - name: seats
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingQuote"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+      x-talkivio-handler: BillingController.quote
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/resume:
+    post:
+      operationId: billingResume
+      tags:
+        - Billing
+      summary: POST /api/v1/billing/resume
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.resume
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/status:
+    get:
+      operationId: billingStatus
+      tags:
+        - Billing
+      summary: GET /api/v1/billing/status
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingStatus"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+      x-talkivio-handler: BillingController.status
+  /api/v1/billing/subscribe:
+    post:
+      operationId: billingSubscribe
+      tags:
+        - Billing
+      summary: POST /api/v1/billing/subscribe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan:
+                  type: string
+                  enum:
+                    - starter
+                    - team
+                    - business
+                cycle:
+                  type: string
+                  enum:
+                    - monthly
+                    - yearly
+                seats:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+                accepted_terms:
+                  type: boolean
+                  const: true
+                disclosure_hash:
+                  type: string
+                  pattern: ^[a-f0-9]{32}$
+                card_token:
+                  type: string
+                  minLength: 4
+                  maxLength: 200
+              required:
+                - plan
+                - cycle
+                - seats
+                - accepted_terms
+                - disclosure_hash
+                - card_token
+              additionalProperties: false
+      responses:
+        "201":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.subscribe
+      x-talkivio-permissions:
+        - billing.manage
+  /api/v1/billing/subscription:
+    patch:
+      operationId: billingChange
+      tags:
+        - Billing
+      summary: PATCH /api/v1/billing/subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                plan:
+                  type: string
+                  enum:
+                    - starter
+                    - team
+                    - business
+                cycle:
+                  type: string
+                  enum:
+                    - monthly
+                    - yearly
+                seats:
+                  type: integer
+                  minimum: 1
+                  maximum: 500
+                accepted_terms:
+                  type: boolean
+                  const: true
+                disclosure_hash:
+                  type: string
+                  pattern: ^[a-f0-9]{32}$
+              required:
+                - plan
+                - cycle
+                - seats
+                - accepted_terms
+                - disclosure_hash
+              additionalProperties: false
+      responses:
+        "200":
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - data
+                  - meta
+                properties:
+                  data:
+                    $ref: "#/components/schemas/BillingSummary"
+                  meta:
+                    $ref: "#/components/schemas/Meta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationFailed"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        default:
+          $ref: "#/components/responses/Error"
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      x-talkivio-handler: BillingController.change
+      x-talkivio-permissions:
+        - billing.manage
   /api/v1/chats:
     get:
       operationId: chatsInbox
@@ -8738,6 +9237,17 @@ paths:
                 timezone:
                   type: string
                   default: UTC
+                plan:
+                  type: string
+                  enum:
+                    - starter
+                    - team
+                    - business
+                cycle:
+                  type: string
+                  enum:
+                    - monthly
+                    - yearly
               required:
                 - tenant_name
               additionalProperties: false
@@ -21920,6 +22430,287 @@ components:
         - completed_at
         - created_at
         - last_error_code
+    BillingStatus:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        state:
+          anyOf:
+            - type: string
+              enum:
+                - incomplete
+                - trialing
+                - active
+                - past_due
+                - suspended
+                - ended
+            - type: "null"
+        plan:
+          type:
+            - string
+            - "null"
+        trial_ends_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+      required:
+        - enabled
+        - state
+        - plan
+        - trial_ends_at
+    BillingSummary:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        exempt:
+          type: boolean
+        provider:
+          type: string
+          enum:
+            - converge
+            - fake
+        state:
+          type: string
+          enum:
+            - incomplete
+            - trialing
+            - active
+            - past_due
+            - suspended
+            - ended
+        plan:
+          type: string
+          enum:
+            - starter
+            - team
+            - business
+        cycle:
+          type: string
+          enum:
+            - monthly
+            - yearly
+        seats:
+          type: integer
+        seats_in_use:
+          type: integer
+        unit_price_cents:
+          type: integer
+        period_cents:
+          type: integer
+        trial_ends_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        current_period_start:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        current_period_end:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        cancel_at_period_end:
+          type: boolean
+        grace_ends_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        next_charge_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        next_charge_cents:
+          anyOf:
+            - type: integer
+            - type: "null"
+        pending:
+          anyOf:
+            - type: object
+              properties:
+                plan:
+                  type: string
+                  enum:
+                    - starter
+                    - team
+                    - business
+                cycle:
+                  type: string
+                  enum:
+                    - monthly
+                    - yearly
+                seats:
+                  type: integer
+              required:
+                - plan
+                - cycle
+                - seats
+            - type: "null"
+        card:
+          anyOf:
+            - type: object
+              properties:
+                brand:
+                  type:
+                    - string
+                    - "null"
+                last4:
+                  type: string
+                exp:
+                  type:
+                    - string
+                    - "null"
+              required:
+                - brand
+                - last4
+                - exp
+            - type: "null"
+        last_error:
+          type:
+            - string
+            - "null"
+        terms_version:
+          type: string
+      required:
+        - enabled
+    BillingQuote:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum:
+            - starter
+            - team
+            - business
+        cycle:
+          type: string
+          enum:
+            - monthly
+            - yearly
+        seats:
+          type: integer
+        kind:
+          type: string
+          enum:
+            - trial
+            - subscribe
+            - upgrade
+            - scheduled
+            - unchanged
+        unit_cents:
+          type: integer
+        period_cents:
+          type: integer
+        due_now_cents:
+          type: integer
+        next_charge_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        trial_ends_at:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        disclosure:
+          type: string
+        disclosure_hash:
+          type: string
+      required:
+        - plan
+        - cycle
+        - seats
+        - kind
+        - unit_cents
+        - period_cents
+        - due_now_cents
+        - next_charge_at
+        - trial_ends_at
+        - disclosure
+        - disclosure_hash
+    BillingCardSession:
+      type: object
+      properties:
+        provider:
+          type: string
+          enum:
+            - converge
+            - fake
+        token:
+          type: string
+        script_url:
+          type:
+            - string
+            - "null"
+      required:
+        - provider
+        - token
+        - script_url
+    BillingCharge:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+        invoice_number:
+          type: string
+        amount_cents:
+          type: integer
+        currency:
+          type: string
+        status:
+          type: string
+          enum:
+            - approved
+            - declined
+            - error
+        plan:
+          type: string
+        cycle:
+          type: string
+        seats:
+          type: integer
+        period_start:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        period_end:
+          anyOf:
+            - type: string
+              format: date-time
+            - type: "null"
+        card_last4:
+          type:
+            - string
+            - "null"
+        created_at:
+          type: string
+          format: date-time
+      required:
+        - id
+        - kind
+        - invoice_number
+        - amount_cents
+        - currency
+        - status
+        - plan
+        - cycle
+        - seats
+        - period_start
+        - period_end
+        - card_last4
+        - created_at
     Meta:
       type: object
       required:
@@ -21982,6 +22773,7 @@ components:
         - EMAIL_NOT_VERIFIED
         - INVALID_CREDENTIALS
         - PLAN_LIMIT
+        - PAYMENT_REQUIRED
         - INTERNAL
       description: "Stable machine codes (ch. 76 inventory: AUTH_REQUIRED, MFA_REQUIRED, TOKEN_EXPIRED, TOKEN_USED, VALIDATION_FAILED, ORIGIN_NOT_ALLOWED, CONSENT_REQUIRED, PERMISSION_DENIED, NOT_FOUND, VERSION_CONFLICT, IDEMPOTENCY_MISMATCH, CHAT_CLOSED, CAPACITY_EXCEEDED, OFFER_EXPIRED, OFFER_WITHDRAWN, DEPARTMENT_UNAVAILABLE, QUEUE_FULL, FILE_TOO_LARGE, FILE_TYPE_BLOCKED, FILE_SCAN_PENDING, FILE_REJECTED, EXPORT_EXPIRED, RATE_LIMITED, CURSOR_EXPIRED, SERVICE_UNAVAILABLE, INTEGRATION_UNAVAILABLE; plus server extensions). Human messages localize; `retryable` only means a retry with the same command identity may help."
     ErrorEnvelope:
