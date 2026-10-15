@@ -188,6 +188,14 @@ await owner.must('POST', '/auth/verify-email', {
 const tenantId = sql(
   `SELECT tenant_id FROM memberships m JOIN users u ON u.id = m.user_id WHERE u.email = '${ownerEmail}'`,
 );
+// CONS01 covers consent mode, which new workspaces leave off (every visitor is listed at once): switch it on here.
+{
+  const t = await owner.must('GET', '/tenants/current');
+  await owner.must('PATCH', '/tenants/current', {
+    settings: { tracking: { analytics_consent_required: true } },
+    expected_version: t.version,
+  });
+}
 const support = (await owner.must('GET', '/departments')).find((d) => d.name === 'Support');
 async function invite(role, capacity, label, departmentIds = [support.id]) {
   const email = `life-${label.toLowerCase()}+${stamp}@example.com`;
