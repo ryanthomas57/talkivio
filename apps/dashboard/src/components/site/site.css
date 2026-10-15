@@ -495,3 +495,90 @@ html:not(.dark) .site .site-glow {
     padding: 84px 18px;
   }
 }
+
+/* Phones and tablets: comfortable tap targets (44 px) for text links, and no grid item may push the page wider
+   than the screen (a long line such as the install snippet scrolls inside its own box instead). */
+.site .grid > * {
+  min-width: 0;
+}
+@media (max-width: 1023px) {
+  .site-tap {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+  .site-toc a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+  .site-pill-outline {
+    height: 40px;
+  }
+}
+
+/* Phone and tablet hero (the column layout below 1100 px). */
+.site-h1-m {
+  font-size: 40px;
+  line-height: 46px;
+}
+.site-h1-m .site-emph {
+  font-size: 44px;
+}
+@media (min-width: 640px) {
+  .site-h1-m {
+    font-size: 60px;
+    line-height: 68px;
+  }
+  .site-h1-m .site-emph {
+    font-size: 66px;
+  }
+}
+.site-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--site-pill-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--site-paper);
+  cursor: pointer;
+}
+.site-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  padding: 10px 18px 18px;
+  border: 1px solid var(--site-line);
+  border-radius: 18px;
+  background: rgba(8, 11, 15, 0.96);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 30px 80px -30px rgba(0, 0, 0, 0.8);
+}
+.site-menu a:not(.site-cta) {
+  display: flex;
+  align-items: center;
+  min-height: 48px;
+  border-bottom: 1px solid var(--site-line);
+  color: var(--site-paper);
+  font-size: 16px;
+  font-weight: 300;
+  text-decoration: none;
+}
+
+/* Hero: both layouts are server-rendered; the column one below 1100 px, the artboard from 1100 px. */
+.site-hero-art {
+  display: none;
+}
+@media (min-width: 1100px) {
+  .site-hero-col {
+    display: none;
+  }
+  .site-hero-art {
+    display: block;
+  }
+}

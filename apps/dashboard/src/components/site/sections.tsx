@@ -6,6 +6,7 @@
 import Link from 'next/link';
 import { useState, type ReactNode } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
+import { FAQS } from './faq-data';
 import { COMPANY, PLANS, TRIAL_DAYS, TRIAL_REMINDER_DAYS, usd, type Cycle } from './site-config';
 
 /** Fade and lift into place the first time a block scrolls into view. */
@@ -66,6 +67,8 @@ function Shot({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
+        srcSet={[640, 768, 960, 1200].map((w) => `${src.replace(/\.webp$/, `-${w}.webp`)} ${w}w`).concat(`${src} 1600w`).join(', ')}
+        sizes="(min-width: 1240px) 700px, (min-width: 1024px) 57vw, calc(100vw - 36px)"
         alt={alt}
         width={width}
         height={height}
@@ -165,7 +168,7 @@ function FeatureSplit({
           opacity: 0.22,
         }}
       />
-      <div className="site-wrap grid items-center gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="site-wrap grid grid-cols-1 items-center gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <Reveal className={flip ? 'lg:order-2' : undefined}>
           <Kicker>{kicker}</Kicker>
           <h2 className="site-h2">{title}</h2>
@@ -299,11 +302,11 @@ export function HowItWorks() {
             Live on your website <em>in five minutes.</em>
           </h2>
         </Reveal>
-        <div className="mt-16 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-          <div className="grid gap-5">
+        <div className="mt-16 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
+          <div className="grid grid-cols-1 gap-5">
             {STEPS.map((s, i) => (
               <Reveal key={s.n} delay={i * 0.12}>
-                <div className="site-card flex gap-6 p-7">
+                <div className="site-card flex gap-5 p-6 sm:gap-6 sm:p-7">
                   <span className="text-[38px] font-extralight leading-none text-[var(--site-teal)]">
                     {s.n}
                   </span>
@@ -325,7 +328,7 @@ export function HowItWorks() {
                   index.html
                 </span>
               </div>
-              <pre className="m-0 overflow-x-auto p-7 font-mono text-[13px] leading-7 text-[var(--site-muted)]">
+              <pre className="m-0 overflow-x-auto p-5 font-mono text-[12px] leading-6 text-[var(--site-muted)] sm:p-7 sm:text-[13px] sm:leading-7">
                 <code>
                   <span className="text-[var(--site-subtle)]">{'<!-- Talkivio chat -->'}</span>
                   {'\n'}
@@ -402,7 +405,7 @@ export function FeatureGrid() {
             Everything a support team needs, <em>nothing it does not.</em>
           </h2>
         </Reveal>
-        <div className="mt-14 grid gap-px overflow-hidden rounded-[22px] border border-[var(--site-line)] bg-[var(--site-line)] sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-px overflow-hidden rounded-[22px] border border-[var(--site-line)] bg-[var(--site-line)] sm:grid-cols-2 lg:grid-cols-3">
           {GRID.map((g, i) => (
             <Reveal key={g.t} delay={(i % 3) * 0.08} y={18}>
               <div className="group h-full bg-[var(--site-ink-2)] p-8 transition-colors hover:bg-[var(--site-ink-3)]">
@@ -446,7 +449,7 @@ export function Security() {
         className="site-glow"
         style={{ width: 600, height: 600, background: '#6a44c9', bottom: 0, left: -200, opacity: 0.2 }}
       />
-      <div className="site-wrap grid gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+      <div className="site-wrap grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
         <Reveal>
           <Kicker>Security and privacy</Kicker>
           <h2 className="site-h2">
@@ -457,7 +460,7 @@ export function Security() {
             built so that trust is kept by design.
           </p>
         </Reveal>
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {SECURITY.map((s, i) => (
             <Reveal key={s.t} delay={(i % 2) * 0.1} y={20}>
               <div className="site-card h-full p-6">
@@ -498,7 +501,7 @@ export function Pricing() {
             Every plan starts with a {TRIAL_DAYS}-day free trial. Add as many agents as you need and change
             plans at any time.
           </p>
-          <div className="mt-9 flex items-center justify-center gap-4">
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-4">
             <div className="site-toggle" role="group" aria-label="Billing cycle">
               <button type="button" aria-pressed={cycle === 'monthly'} onClick={() => setCycle('monthly')}>
                 Monthly
@@ -511,7 +514,7 @@ export function Pricing() {
           </div>
         </Reveal>
 
-        <div className="mt-14 grid gap-6 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {PLANS.map((p, i) => {
             const price = cycle === 'yearly' ? p.yearly : p.monthly;
             return (
@@ -589,54 +592,25 @@ export function Pricing() {
   );
 }
 
-const FAQS: Array<{ q: string; a: ReactNode }> = [
-  {
-    q: 'How does the free trial work?',
-    a: `You get every feature of the plan you choose for ${TRIAL_DAYS} days. A credit or debit card is required to start. We remind you by email ${TRIAL_REMINDER_DAYS} days before the trial ends. If you do not cancel before the end of the trial, the card is charged automatically for your plan and number of agents.`,
-  },
-  {
-    q: 'Can I cancel at any time?',
-    a: 'Yes. Cancel in Settings, Billing, in a couple of clicks. Your plan stays active until the end of the period you have paid for and is not renewed after that.',
-  },
-  {
-    q: 'Do you offer refunds?',
-    a: (
-      <>
-        No. Subscriptions are billed in advance and all payments are final, including partial periods and
-        unused agents. Cancel before your trial ends to avoid any charge. The full terms are in our{' '}
-        <Link href="/legal/refund-policy" className="text-[var(--site-teal)] underline underline-offset-2">
-          Refund Policy
-        </Link>
-        .
-      </>
-    ),
-  },
-  {
-    q: 'How is the price calculated?',
-    a: 'Per agent, per month. An agent is any team member who can sign in to answer chats. Add or remove agents whenever you like; additions are charged for the rest of the current period.',
-  },
-  {
-    q: 'Can I see a visitor’s IP address and network?',
-    a: 'Yes. Each visitor shows an IP address and the network that owns it, such as a home internet provider, a mobile carrier or a hosting company. A hosting company or VPN provider is a good sign the visitor is hiding their real location.',
-  },
-  {
-    q: 'Which websites does it work with?',
-    a: 'Any website where you can add a script tag: WordPress, Shopify, Webflow, Wix, Squarespace or your own code. Single-page applications are supported too.',
-  },
-  {
-    q: 'Which languages does the widget speak?',
-    a: 'English, Arabic, Spanish, French, German, Portuguese, Italian, Dutch and Japanese. It follows the visitor’s browser language, or you can fix one.',
-  },
-  {
-    q: 'Is my data safe?',
-    a: 'Workspaces are isolated at the database level, visitor contact details are encrypted, uploads are virus scanned and sign-in supports two-factor authentication. Read the Privacy Policy for the details.',
-  },
-];
+/** An FAQ answer with its named phrase (if any) as a link. */
+function Answer({ text, link }: { text: string; link?: { text: string; href: string } }) {
+  if (!link || !text.includes(link.text)) return <>{text}</>;
+  const [before, after] = text.split(link.text);
+  return (
+    <>
+      {before}
+      <Link href={link.href} className="text-[var(--site-teal)] underline underline-offset-2">
+        {link.text}
+      </Link>
+      {after}
+    </>
+  );
+}
 
 export function Faq() {
   return (
     <section id="faq" className="site-section site-faq" style={{ scrollMarginTop: 40 }}>
-      <div className="site-wrap grid gap-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
+      <div className="site-wrap grid grid-cols-1 gap-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)]">
         <Reveal>
           <Kicker>FAQ</Kicker>
           <h2 className="site-h2">
@@ -656,7 +630,7 @@ export function Faq() {
         <div className="border-t border-[var(--site-line)]">
           {FAQS.map((f) => (
             <details key={f.q} className="border-b border-[var(--site-line)]">
-              <summary className="flex items-center justify-between gap-6 py-6 text-[17px] font-normal">
+              <summary className="flex min-h-[64px] cursor-pointer items-center justify-between gap-4 py-5 text-[16px] font-normal sm:gap-6 sm:py-6 sm:text-[17px]">
                 {f.q}
                 <span
                   className="site-faq-icon flex h-8 w-8 flex-none items-center justify-center rounded-full border border-[var(--site-line)] text-[var(--site-teal)] transition-transform duration-300"
@@ -665,8 +639,8 @@ export function Faq() {
                   +
                 </span>
               </summary>
-              <div className="pb-6 pr-12 text-[15px] font-light leading-7 text-[var(--site-muted)]">
-                {f.a}
+              <div className="pb-6 pr-2 text-[15px] font-light leading-7 text-[var(--site-muted)] sm:pr-12">
+                <Answer text={f.a} link={f.link} />
               </div>
             </details>
           ))}
@@ -680,7 +654,7 @@ export function FinalCta({ signedIn }: { signedIn: boolean }) {
   return (
     <section className="site-section">
       <Reveal>
-        <div className="site-wrap site-card relative overflow-hidden px-8 py-20 text-center sm:px-16">
+        <div className="site-wrap site-card relative overflow-hidden px-6 py-16 text-center sm:px-16 sm:py-20">
           <div
             className="site-glow"
             style={{

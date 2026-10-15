@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalDoc, Mail, type LegalSection } from '@/components/site/legal';
+import { pageMetadata } from '@/components/site/seo';
 import { COMPANY } from '@/components/site/site-config';
 
-export const metadata: Metadata = {
-  title: { absolute: 'Privacy Policy | Talkivio' },
-  description: `How ${COMPANY.legalName} collects, uses and protects personal information in ${COMPANY.product}.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: 'Privacy Policy | Talkivio',
+    description: `How ${COMPANY.legalName} collects, uses and protects personal information in ${COMPANY.product}.`,
+    path: '/legal/privacy',
+  });
+}
 
 const C = COMPANY;
 

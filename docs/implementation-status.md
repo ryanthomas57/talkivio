@@ -31,6 +31,14 @@ Added on 2026-10-14 (each with tests that run in CI):
 - **Live visitor list fixes:** bursts of updates are no longer dropped (Socket.IO volatile frames replaced by a
   congestion room), visitors appear the moment they land, country/region/city from DB-IP City Lite, consent upgrade
   for workspaces that do not require consent.
+- **Website SEO and mobile (2026-10-15):** robots.txt (app screens and APIs disallowed), sitemap.xml, a web app
+  manifest, canonical URLs, Open Graph and Twitter cards with a 1200x630 image, JSON-LD (Organization, WebSite,
+  SoftwareApplication with each plan's price, FAQPage from the same text as the visible FAQ), metadata in <head> for
+  every client (htmlLimitedBots), inlined CSS. Hero: both layouts server-rendered and chosen by CSS (column below
+  1100 px, so tablets are readable), a mobile menu, a poster-backed video that starts after load (720p on phones,
+  none for Save-Data), the headline as plain text. Responsive screenshots (640 to 1600 px), a 6 KB favicon, 44 px tap
+  targets, no grid overflow on phones. Lighthouse mobile: Performance 79 to 85-91, SEO 91 to 100, Best Practices 96
+  to 100, Accessibility 100; desktop 99/100/100/100.
 - **No em dashes in user-facing text** (dashboard EN/AR, widget, emails, transcripts, starter content, demo shop).
 - **Public website** at `/`: one-page home (hero, real product screenshots from `apps/dashboard/scripts/site-shots.mjs`,
   how it works, features, security, pricing from the shared plan catalog, FAQ), Terms of Use, Privacy Policy and Refund

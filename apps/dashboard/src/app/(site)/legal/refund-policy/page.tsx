@@ -1,12 +1,16 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { LegalDoc, Mail, type LegalSection } from '@/components/site/legal';
+import { pageMetadata } from '@/components/site/seo';
 import { COMPANY, TRIAL_DAYS, TRIAL_REMINDER_DAYS } from '@/components/site/site-config';
 
-export const metadata: Metadata = {
-  title: { absolute: 'Refund Policy | Talkivio' },
-  description: `${COMPANY.product} subscriptions are non-refundable. How free trials, cancellation and billing disputes work.`,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  return pageMetadata({
+    title: 'Refund Policy | Talkivio',
+    description: `${COMPANY.product} subscriptions are non-refundable. How free trials, cancellation and billing disputes work.`,
+    path: '/legal/refund-policy',
+  });
+}
 
 const C = COMPANY;
 
