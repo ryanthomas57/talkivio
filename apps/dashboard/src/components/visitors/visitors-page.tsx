@@ -72,6 +72,7 @@ function useUrlState() {
 }
 
 const IP_HINT_KEY = 'rd_visitors_ip_hint';
+const CONSENT_HINT_KEY = 'rd_visitors_consent_hint';
 
 type GroupBy = 'activity' | 'country' | 'page';
 
@@ -79,6 +80,7 @@ export function VisitorsPage() {
   const t = useT();
   const { params, set } = useUrlState();
   const perms = useSession((s) => s.permissions);
+  const tracking = useSession((s) => s.tenant?.settings.tracking);
   const sites = useSites();
   const departments = useDepartments();
   const tags = useTags();
@@ -202,7 +204,8 @@ export function VisitorsPage() {
     (filters.highLoad ? 1 : 0);
   const [showFilters, setShowFilters] = useState(() => advancedCount > 0);
 
-  // Owners and admins are told once where visitor IPs are switched on (they are off by default).
+  // Owners and admins are told once where visitor IPs are switched on (they are off by default). The hint follows the
+  // setting itself: rows can lack an IP for other reasons (hidden by consent mode, or no consent yet).
   const [ipHintDismissed, setIpHintDismissed] = useState(() => {
     try {
       return localStorage.getItem(IP_HINT_KEY) === '1';
@@ -218,12 +221,25 @@ export function VisitorsPage() {
       /* not persisted */
     }
   };
-  const ipHint =
-    !ipHintDismissed &&
-    perms.has('tenant.manage') &&
-    state.status === 'ready' &&
-    sorted.length > 0 &&
-    !sorted.some((r) => r.v.ipAddress);
+  const ipHint = !ipHintDismissed && perms.has('tenant.manage') && tracking?.retainIp === false;
+  // Consent mode keeps browsing visitors (and their IPs) hidden until they accept analytics; say so where it shows.
+  const consentMode = tracking?.analyticsConsentRequired === true;
+  const [consentHintDismissed, setConsentHintDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(CONSENT_HINT_KEY) === '1';
+    } catch {
+      return false;
+    }
+  });
+  const dismissConsentHint = () => {
+    setConsentHintDismissed(true);
+    try {
+      localStorage.setItem(CONSENT_HINT_KEY, '1');
+    } catch {
+      /* not persisted */
+    }
+  };
+  const consentHint = consentMode && !consentHintDismissed && perms.has('tenant.manage');
 
   // A click on a visitor opens their chat in a docked window; a browsing visitor gets a new-chat window.
   const openChat = useCallback(
@@ -418,6 +434,25 @@ export function VisitorsPage() {
         )}
       </div>
 
+      {consentHint && (
+        <Banner
+          tone="info"
+          title={t('visitors.page.consentOnTitle')}
+          action={
+            <span className="flex items-center gap-1">
+              <Button asChild variant="secondary" size="sm">
+                <Link href="/settings/general">{t('visitors.page.ipOffAction')}</Link>
+              </Button>
+              <Button variant="ghost" size="sm" onClick={dismissConsentHint}>
+                {t('visitors.page.ipOffDismiss')}
+              </Button>
+            </span>
+          }
+        >
+          {t('visitors.page.consentOnBody')}
+        </Banner>
+      )}
+
       {ipHint && (
         <Banner
           tone="info"
@@ -479,7 +514,9 @@ export function VisitorsPage() {
                 ? t('visitors.page.emptyFilteredBody')
                 : filters.highLoad
                   ? t('visitors.page.emptyHighLoadBody')
-                  : t('visitors.page.emptyBody')
+                  : consentMode
+                    ? t('visitors.page.emptyBodyConsent')
+                    : t('visitors.page.emptyBody')
             }
             action={
               activeFilters ? (

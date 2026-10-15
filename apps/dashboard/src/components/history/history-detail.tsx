@@ -481,9 +481,14 @@ function Metadata({
   const events = messages.filter(
     (m) =>
       m.type === 'system' &&
-      ['chat.agent_joined', 'chat.transferred', 'chat.agent_left', 'chat.closed'].includes(
-        m.systemEvent?.kind ?? '',
-      ),
+      [
+        'chat.agent_joined',
+        'chat.transferred',
+        'chat.agent_left',
+        'chat.visitor_left',
+        'chat.visitor_returned',
+        'chat.closed',
+      ].includes(m.systemEvent?.kind ?? ''),
   );
   const pageHref = safeHref(c.pageUrl);
 

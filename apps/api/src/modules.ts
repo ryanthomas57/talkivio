@@ -37,7 +37,13 @@ import { WidgetService } from './features/widget/widget.service';
 import { WidgetController, WidgetFrameController } from './features/widget/widget.controller';
 import { TeamService } from './features/workspace/team.service';
 import { SitesService } from './features/workspace/sites.service';
-import { AgentsController, DepartmentsController, SitesController, TagsController, TenantController } from './features/workspace/workspace.controller';
+import {
+  AgentsController,
+  DepartmentsController,
+  SitesController,
+  TagsController,
+  TenantController,
+} from './features/workspace/workspace.controller';
 import { HealthController } from './health.controller';
 import { MetricsService } from './core/metrics.service';
 import { WorkerService } from './worker/worker.service';
@@ -56,7 +62,12 @@ export class ChatPresenceHooks implements OnModuleInit {
   onModuleInit(): void {
     this.presence.onVisitorConnection(async (tenantId, visitorId, _sessionId, event) => {
       if (event === 'connected') await this.chats.visitorReconnected(tenantId, visitorId);
-      else await this.chats.visitorDisconnected(tenantId, visitorId);
+      else {
+        await this.chats.visitorDisconnected(tenantId, visitorId);
+        // 'disconnected' also fires for a page navigation; 'gone' only once the visitor stayed away past the
+        // reconnect grace, so only then does the team see "left the website" in open chats.
+        if (event === 'gone') await this.chats.visitorLeftSite(tenantId, visitorId);
+      }
     });
   }
 }
@@ -138,7 +149,10 @@ const httpProviders = [
 @Module({
   imports: [CoreModule, DomainModule],
   controllers: httpControllers,
-  providers: [...httpProviders, ...(process.env.GATEWAY_SEPARATE === 'true' ? [] : [AgentGateway, VisitorGateway])],
+  providers: [
+    ...httpProviders,
+    ...(process.env.GATEWAY_SEPARATE === 'true' ? [] : [AgentGateway, VisitorGateway]),
+  ],
 })
 export class ApiModule {}
 

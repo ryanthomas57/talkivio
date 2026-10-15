@@ -36,7 +36,7 @@ import { api, errorMessage, isApiError } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { byId, useAgents } from '@/lib/queries';
 import { realtime } from '@/lib/realtime';
-import type { StaffChat } from '@/lib/types';
+import type { Message, StaffChat } from '@/lib/types';
 import { useInbox } from '@/stores/inbox';
 import { useCan, useSession } from '@/stores/session';
 import { chatMuted, setChatMuted } from './attention';
@@ -147,6 +147,20 @@ export function Conversation({ chatId }: { chatId: string }) {
   );
 }
 
+/**
+ * True while the visitor's latest presence line in this chat is "left the website" (staff-only lines the API writes
+ * once the visitor stays away past the reconnect grace, cleared by "is back on the website").
+ */
+export function visitorAway(items: Message[] | undefined): boolean {
+  if (!items) return false;
+  for (let i = items.length - 1; i >= 0; i--) {
+    const kind = items[i]!.systemEvent?.kind;
+    if (kind === 'chat.visitor_left') return true;
+    if (kind === 'chat.visitor_returned') return false;
+  }
+  return false;
+}
+
 /** Reply/note composer, or an Accept bar while the chat waits for someone else to take it. Shared with the chat dock. */
 export function ComposerArea({
   chat,
@@ -162,6 +176,7 @@ export function ComposerArea({
   const canNotes = useCan('notes.view');
   const canMonitor = useCan('chats.monitor');
   const participant = !!me && (chat.ownerMembershipId === me || chat.collaboratorIds.includes(me));
+  const away = useInbox((s) => visitorAway(s.transcripts[chat.id]?.items));
   const waiting = chat.status === 'queued' || chat.status === 'offered';
   const canReply = canServe && participant && chat.status === 'active';
   const canNote = canNotes && (participant || canMonitor) && chat.status !== 'closed';
@@ -175,13 +190,27 @@ export function ComposerArea({
       </div>
     );
   return (
-    <Composer
-      chat={chat}
-      canReply={canReply}
-      canNote={canNote}
-      compact={compact}
-      disabledReason={!canReply && !canNote ? t(reason ?? 'inbox.conversation.reasonCannotWrite') : null}
-    />
+    <>
+      {away && chat.status !== 'closed' && (
+        <p
+          role="status"
+          className={cn(
+            'flex shrink-0 items-center gap-2 border-t border-warning/30 bg-warning-tint py-2 text-sm text-warning',
+            compact ? 'px-3' : 'px-5',
+          )}
+        >
+          <LogOut className="size-4 shrink-0" aria-hidden />
+          {t('inbox.conversation.visitorAway')}
+        </p>
+      )}
+      <Composer
+        chat={chat}
+        canReply={canReply}
+        canNote={canNote}
+        compact={compact}
+        disabledReason={!canReply && !canNote ? t(reason ?? 'inbox.conversation.reasonCannotWrite') : null}
+      />
+    </>
   );
 }
 

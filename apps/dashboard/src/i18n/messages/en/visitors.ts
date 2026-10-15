@@ -99,6 +99,9 @@ export const visitors = {
   'visitors.page.ipOffBody':
     'Turn on “Show visitor IP addresses” to see each visitor’s IP and network, for example to spot VPNs.',
   'visitors.page.ipOffAction': 'Open settings',
+  'visitors.page.consentOnTitle': 'Visitors are hidden until they consent',
+  'visitors.page.consentOnBody':
+    '“Require analytics consent” is on, so a visitor appears here (with IP and location) only after accepting analytics on your website. Turn it off to see every visitor the moment they arrive.',
   'visitors.page.ipOffDismiss': 'Dismiss',
   'visitors.page.highLoad': 'High-load mode',
   'visitors.page.highLoadHint': 'List incoming and served chats only',
@@ -116,8 +119,9 @@ export const visitors = {
   'visitors.page.emptyFilteredBody':
     'Live visitors appear here as soon as they match. Try removing a filter.',
   'visitors.page.emptyHighLoadBody': 'Browsing visitors are hidden in high-load mode.',
-  'visitors.page.emptyBody':
-    'Visitors who open a page with your widget appear here in real time. Browsing visitors appear only with analytics consent.',
+  'visitors.page.emptyBody': 'Visitors who open a page with your widget appear here in real time.',
+  'visitors.page.emptyBodyConsent':
+    'Visitors who open a page with your widget appear here in real time. “Require analytics consent” is on, so browsing visitors appear only after they accept analytics.',
   'visitors.page.tableLabel': 'Live visitors, {count} loaded',
   'visitors.page.showing': '{count, plural, one {Showing # visitor} other {Showing # visitors}}',
   'visitors.page.showingOf': 'Showing {shown} of {total, plural, one {# visitor} other {# visitors}}',

@@ -1455,6 +1455,55 @@ export class ChatCommandsService {
         data: { visitorDisconnectedAt: null },
       }),
     );
+    await this.announceVisitorPresence(tenantId, visitorId, 'chat.visitor_returned');
+  }
+
+  /** The visitor stayed away past the reconnect grace (presence 'gone'): tell the team in each open chat. */
+  async visitorLeftSite(tenantId: string, visitorId: string): Promise<void> {
+    await this.announceVisitorPresence(tenantId, visitorId, 'chat.visitor_left');
+  }
+
+  /**
+   * Staff-only timeline line in the visitor's open chats ("left the website" / "is back on the website"). The widget
+   * never shows these kinds (not in PUBLIC_SYSTEM_EVENTS). A chat gets "returned" only after an announced "left",
+   * and "left" only once per absence, so page navigations and repeated sweeps add nothing.
+   */
+  private async announceVisitorPresence(
+    tenantId: string,
+    visitorId: string,
+    kind: 'chat.visitor_left' | 'chat.visitor_returned',
+  ): Promise<void> {
+    const open = await this.db.read(tenantId, (tx) =>
+      tx.chat.findMany({
+        where: {
+          tenantId,
+          visitorId,
+          status: { not: 'closed' },
+          ...(kind === 'chat.visitor_left' ? { visitorDisconnectedAt: { not: null } } : {}),
+        },
+        select: { id: true },
+      }),
+    );
+    for (const { id } of open) {
+      await this.db.tx(tenantId, async (tx) => {
+        const chat = await this.store.lockChat(tx, tenantId, id);
+        if (chat.status === 'closed') return;
+        if (kind === 'chat.visitor_left' && !chat.visitorDisconnectedAt) return;
+        const [last] = await tx.$queryRaw<Array<{ kind: string }>>`
+          SELECT system_event->>'kind' AS kind FROM messages
+          WHERE tenant_id = ${tenantId}::uuid AND chat_id = ${id}::uuid AND type = 'system'
+            AND system_event->>'kind' IN ('chat.visitor_left', 'chat.visitor_returned')
+          ORDER BY seq DESC LIMIT 1`;
+        const away = last?.kind === 'chat.visitor_left';
+        if (kind === 'chat.visitor_left' ? away : !away) return;
+        const settings = await this.store.settings(tx, tenantId);
+        const text =
+          kind === 'chat.visitor_left'
+            ? 'The visitor left the website'
+            : 'The visitor is back on the website';
+        await this.store.systemEvent(tx, chat, kind, text, {}, settings, {});
+      });
+    }
   }
 
   /** Timer: close the chat if the visitor never came back within the grace window. */

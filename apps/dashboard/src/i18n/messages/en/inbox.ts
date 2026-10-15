@@ -74,6 +74,8 @@ export const inbox = {
   'inbox.conversation.reasonAccept': 'Accept the chat to reply',
   'inbox.conversation.reasonParticipants': 'Only participants can reply',
   'inbox.conversation.reasonCannotWrite': 'You cannot write in this chat',
+  'inbox.conversation.visitorAway':
+    'The visitor left the website. The chat ends automatically if they do not come back.',
   'inbox.conversation.acceptPrompt': '{name} is waiting. Accepting assigns the chat to you.',
   'inbox.conversation.acceptChat': 'Accept chat',
   'inbox.header.back': 'Back to chat list',
@@ -229,6 +231,8 @@ export const inbox = {
   'inbox.event.joined': '{name} joined the chat',
   'inbox.event.joinedAnon': 'An agent joined the chat',
   'inbox.event.left': '{name} left the chat',
+  'inbox.event.visitorLeft': 'The visitor left the website',
+  'inbox.event.visitorReturned': 'The visitor is back on the website',
   'inbox.event.leftAnon': 'An agent left the chat',
   'inbox.event.transferredDepartment': 'Transferred to {department}',
   'inbox.event.reassigning': 'Reassigning to another agent',

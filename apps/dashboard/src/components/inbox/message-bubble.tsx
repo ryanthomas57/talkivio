@@ -112,6 +112,10 @@ export function systemText(t: Translate, m: Message): string {
           ? t('inbox.event.transferredAgent', { name: isolate(p.name) })
           : t('inbox.event.transferredAnon');
       break;
+    case 'chat.visitor_left':
+      return t('inbox.event.visitorLeft');
+    case 'chat.visitor_returned':
+      return t('inbox.event.visitorReturned');
     case 'chat.closed':
       if (p.by === 'visitor') return t('inbox.event.closedVisitor');
       if (p.by === 'agent' && p.name) return t('inbox.event.closedBy', { name: isolate(p.name) });

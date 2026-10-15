@@ -105,6 +105,9 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.page.ipOffBody':
     'فعّل «إظهار عناوين IP للزوار» لرؤية عنوان IP والشبكة لكل زائر، مثلًا لاكتشاف شبكات VPN.',
   'visitors.page.ipOffAction': 'فتح الإعدادات',
+  'visitors.page.consentOnTitle': 'الزوار مخفيون حتى يوافقوا',
+  'visitors.page.consentOnBody':
+    'خيار «اشتراط الموافقة على التحليلات» مفعّل، لذلك لا يظهر الزائر هنا (مع عنوان IP والموقع) إلا بعد موافقته على التحليلات في موقعك. أوقفه لرؤية كل زائر لحظة وصوله.',
   'visitors.page.ipOffDismiss': 'إخفاء',
   'visitors.page.highLoad': 'وضع الضغط العالي',
   'visitors.page.highLoadHint': 'عرض المحادثات الواردة وقيد الخدمة فقط',
@@ -121,8 +124,9 @@ export const visitors: Record<keyof typeof source, string> = {
   'visitors.page.noSiteAction': 'إضافة موقعك',
   'visitors.page.emptyFilteredBody': 'يظهر الزوار المباشرون هنا فور مطابقتهم. جرّب إزالة أحد عوامل التصفية.',
   'visitors.page.emptyHighLoadBody': 'الزوار المتصفحون مخفيون في وضع الضغط العالي.',
-  'visitors.page.emptyBody':
-    'يظهر هنا فورًا الزوار الذين يفتحون صفحة تحتوي على أداة الدردشة. لا يظهر الزوار المتصفحون إلا بعد موافقتهم على التحليلات.',
+  'visitors.page.emptyBody': 'يظهر هنا فورًا الزوار الذين يفتحون صفحة تحتوي على أداة الدردشة.',
+  'visitors.page.emptyBodyConsent':
+    'يظهر هنا فورًا الزوار الذين يفتحون صفحة تحتوي على أداة الدردشة. خيار «اشتراط الموافقة على التحليلات» مفعّل، لذلك لا يظهر الزوار المتصفحون إلا بعد موافقتهم على التحليلات.',
   'visitors.page.tableLabel': 'الزوار المباشرون، تم تحميل {count}',
   'visitors.page.showing':
     '{count, plural, zero {لا يُعرض أي زائر} one {يُعرض زائر واحد} two {يُعرض زائران} few {يُعرض # زوار} many {يُعرض # زائرًا} other {يُعرض # زائر}}',
