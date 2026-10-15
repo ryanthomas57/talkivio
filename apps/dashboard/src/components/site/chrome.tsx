@@ -7,7 +7,10 @@ import { SiteThemeToggle } from './theme-switch';
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-20 border-b border-[var(--site-line)] bg-[var(--site-header-bg)] backdrop-blur-md">
-      <nav aria-label="Main" className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6">
+      <nav
+        aria-label="Main"
+        className="mx-auto flex h-16 max-w-[1200px] items-center justify-between px-4 sm:px-6"
+      >
         <Link href="/" className="flex items-center gap-2.5 no-underline" aria-label="Talkivio home">
           <SiteLogo small />
         </Link>

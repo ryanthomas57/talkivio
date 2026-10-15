@@ -67,7 +67,10 @@ function Shot({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
-        srcSet={[640, 768, 960, 1200].map((w) => `${src.replace(/\.webp$/, `-${w}.webp`)} ${w}w`).concat(`${src} 1600w`).join(', ')}
+        srcSet={[640, 768, 960, 1200]
+          .map((w) => `${src.replace(/\.webp$/, `-${w}.webp`)} ${w}w`)
+          .concat(`${src} 1600w`)
+          .join(', ')}
         sizes="(min-width: 1240px) 700px, (min-width: 1024px) 57vw, calc(100vw - 36px)"
         alt={alt}
         width={width}

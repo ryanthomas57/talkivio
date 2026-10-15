@@ -26,7 +26,9 @@ const config: NextConfig = {
       // The home page's largest first paint (the hero still): fetched as soon as the response headers arrive.
       {
         source: '/',
-        headers: [{ key: 'Link', value: '</site/hero-1440.webp>; rel=preload; as=image; fetchpriority=high' }],
+        headers: [
+          { key: 'Link', value: '</site/hero-1440.webp>; rel=preload; as=image; fetchpriority=high' },
+        ],
       },
       {
         source: '/((?!widget/).*)',
