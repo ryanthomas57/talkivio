@@ -24,8 +24,10 @@ Added on 2026-10-14 (each with tests that run in CI):
 - **Chat requests pop up with Accept on any page** (queued chats in broadcast/manual departments, plus assigned
   offers); Accept opens a docked window (`dock.spec.ts` DOCK02).
 - **Visitors list simplified:** visitor with flag, IP address and network owner (DB-IP ASN Lite), page, time on site,
-  visits, chat; advanced filters behind one button. IPs are stored only when a workspace turns on "Show visitor IP
-  addresses" (off by default), are erased with the visitor and on consent withdrawal, and appear in access exports.
+  visits, chat; advanced filters behind one button. IPs are shown while "Show visitor IP addresses" is on (on by
+  default since 2026-10-15), are erased with the visitor and on consent withdrawal, and appear in access exports.
+- **Visible visitors by default (2026-10-15):** new workspaces do not require analytics consent, so every visitor is
+  listed the moment they open a page with the widget; "Require analytics consent" turns consent mode on per workspace.
 - **Live visitor list fixes:** bursts of updates are no longer dropped (Socket.IO volatile frames replaced by a
   congestion room), visitors appear the moment they land, country/region/city from DB-IP City Lite, consent upgrade
   for workspaces that do not require consent.

@@ -126,6 +126,20 @@ await owner.must('POST', '/auth/verify-email', {
   token: decodeURIComponent((verifyText.match(/[?/]token[=/]([^\s&]+)/) ?? [])[1] ?? ''),
 });
 const tenantA = signup.me.active_tenant_id;
+// New workspaces list every visitor with IP and network at once (no consent mode). The checks below were written for
+// a consent-mode workspace that keeps no IPs, so this one is switched to that explicitly; CONS03/CONS04 flip it back.
+const pinPrivacyFirst = async (client) => {
+  const t = await client.must('GET', '/tenants/current');
+  ok(
+    t.settings.tracking.analytics_consent_required === false && t.settings.tracking.retain_ip === true,
+    'a new workspace shows every visitor with IP and network (no consent mode by default)',
+  );
+  await client.must('PATCH', '/tenants/current', {
+    settings: { tracking: { analytics_consent_required: true, retain_ip: false } },
+    expected_version: t.version,
+  });
+};
+await pinPrivacyFirst(owner);
 const site = await owner.must('POST', '/sites', {
   name: 'Store',
   origins: [{ origin: ORIGIN, pattern_type: 'exact' }],
@@ -1090,6 +1104,7 @@ await beta.must(
   },
   runIp,
 );
+await pinPrivacyFirst(beta);
 const betaSite = await beta.must('POST', '/sites', {
   name: 'Beta',
   origins: [{ origin: 'http://localhost:5175', pattern_type: 'exact' }],

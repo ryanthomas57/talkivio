@@ -107,7 +107,7 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.general.chat.maxAttachmentOff': 'فعّل المرفقات لتغيير هذا.',
   'settings.general.tracking.title': 'التتبّع والموافقة',
   'settings.general.tracking.description':
-    'ما يمكن لأداة الدردشة تسجيله عن التصفح. الإعدادات الافتراضية تفضّل جمع الحد الأدنى.',
+    'ما تسجّله أداة الدردشة عن الزوار. يظهر كل زائر مع عنوان IP والموقع ما لم تشترط الموافقة أولًا.',
   'settings.general.tracking.consent': 'اشتراط الموافقة على التحليلات',
   'settings.general.tracking.consentHint':
     'إلى أن يوافق الزائر على التحليلات، لا تُنشأ هوية تصفح ولا أحداث صفحات ولا دعوات مبنية على السلوك.',

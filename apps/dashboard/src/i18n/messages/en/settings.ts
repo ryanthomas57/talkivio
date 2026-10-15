@@ -104,7 +104,7 @@ export const settings = {
   'settings.general.chat.maxAttachmentOff': 'Turn on attachments to change this.',
   'settings.general.tracking.title': 'Tracking and consent',
   'settings.general.tracking.description':
-    'What the widget may record about browsing. Defaults favour collecting the minimum.',
+    'What the widget records about visitors. Every visitor is listed with IP and location unless you require consent first.',
   'settings.general.tracking.consent': 'Require analytics consent',
   'settings.general.tracking.consentHint':
     'Until a visitor grants analytics consent, no browsing identity, page events or behaviour-based invitations are created.',
