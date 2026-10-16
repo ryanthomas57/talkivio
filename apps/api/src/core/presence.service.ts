@@ -20,7 +20,12 @@ export interface VisitorLiveState {
 }
 
 type AgentHook = (tenantId: string, membershipId: string, connected: boolean) => Promise<void> | void;
-type VisitorHook = (tenantId: string, visitorId: string, sessionId: string, event: 'connected' | 'disconnected' | 'gone') => Promise<void> | void;
+type VisitorHook = (
+  tenantId: string,
+  visitorId: string,
+  sessionId: string,
+  event: 'connected' | 'disconnected' | 'gone',
+) => Promise<void> | void;
 
 const k = {
   agentConn: (t: string) => `pa:conn:${t}`,
@@ -32,7 +37,18 @@ const k = {
   visitorTenants: 'pv:tenants',
 };
 
+/**
+ * How long a visitor whose last tab disconnected stays listed: a full-page navigation reconnects within it (measured
+ * on a WordPress site: 3 s on a cached page, 8.4 s on a cold first load, so 15 s leaves room for slow phones), a
+ * visitor who closed the site is gone after it.
+ */
 const RECONNECT_GRACE_MS = 15_000;
+
+/** Claims a visitor whose presence score has expired (ZREM only if still stale), atomically against a reconnect. */
+const CLAIM_STALE_VISITOR = `
+local s = redis.call('ZSCORE', KEYS[1], ARGV[1])
+if s and tonumber(s) <= tonumber(ARGV[2]) then return redis.call('ZREM', KEYS[1], ARGV[1]) end
+return 0`;
 
 /**
  * Ephemeral presence in Redis (ch. 09/11). Desired agent status is durable in
@@ -83,7 +99,11 @@ export class PresenceService {
 
   async agentConnected(tenantId: string, membershipId: string, connectionId: string): Promise<boolean> {
     const before = await this.connectedAgentIds(tenantId);
-    await this.r.multi().zadd(k.agentConn(tenantId), Date.now(), `${membershipId}|${connectionId}`).sadd(k.agentTenants, tenantId).exec();
+    await this.r
+      .multi()
+      .zadd(k.agentConn(tenantId), Date.now(), `${membershipId}|${connectionId}`)
+      .sadd(k.agentTenants, tenantId)
+      .exec();
     await this.recordAgentActivity(tenantId, membershipId);
     return !before.has(membershipId);
   }
@@ -98,7 +118,11 @@ export class PresenceService {
     const changed = await this.r.zadd(k.agentConn(tenantId), 'XX', 'CH', Date.now(), member);
     if (Number(changed) > 0) return;
     const wasConnected = (await this.connectedAgentIds(tenantId)).has(membershipId);
-    await this.r.multi().zadd(k.agentConn(tenantId), Date.now(), member).sadd(k.agentTenants, tenantId).exec();
+    await this.r
+      .multi()
+      .zadd(k.agentConn(tenantId), Date.now(), member)
+      .sadd(k.agentTenants, tenantId)
+      .exec();
     if (!wasConnected) {
       this.logger.log(`Re-registered agent connection ${membershipId} (presence entry was missing)`);
       await this.runAgentHooks(tenantId, membershipId, true);
@@ -112,12 +136,20 @@ export class PresenceService {
   }
 
   async connectedAgentIds(tenantId: string): Promise<Set<string>> {
-    const members = await this.r.zrangebyscore(k.agentConn(tenantId), Date.now() - env().AGENT_TIMEOUT_MS, '+inf');
+    const members = await this.r.zrangebyscore(
+      k.agentConn(tenantId),
+      Date.now() - env().AGENT_TIMEOUT_MS,
+      '+inf',
+    );
     return new Set(members.map((m) => m.split('|')[0]));
   }
 
   async agentConnectionCount(tenantId: string, membershipId: string): Promise<number> {
-    const members = await this.r.zrangebyscore(k.agentConn(tenantId), Date.now() - env().AGENT_TIMEOUT_MS, '+inf');
+    const members = await this.r.zrangebyscore(
+      k.agentConn(tenantId),
+      Date.now() - env().AGENT_TIMEOUT_MS,
+      '+inf',
+    );
     return members.filter((m) => m.startsWith(`${membershipId}|`)).length;
   }
 
@@ -159,16 +191,33 @@ export class PresenceService {
 
   // ───────── Visitors ─────────
 
-  async visitorConnected(tenantId: string, visitorId: string, sessionId: string, connectionId: string, siteId: string): Promise<void> {
+  async visitorConnected(
+    tenantId: string,
+    visitorId: string,
+    sessionId: string,
+    connectionId: string,
+    siteId: string,
+  ): Promise<void> {
     const ttl = Math.ceil((env().VISITOR_TIMEOUT_MS * 4) / 1000);
     const now = Date.now();
     const wasOnline = await this.isVisitorOnline(tenantId, visitorId);
     await this.r
       .multi()
-      .hset(k.visitorConn(tenantId, visitorId), connectionId, JSON.stringify({ sessionId, siteId, ts: now, visible: true }))
+      .hset(
+        k.visitorConn(tenantId, visitorId),
+        connectionId,
+        JSON.stringify({ sessionId, siteId, ts: now, visible: true }),
+      )
       .expire(k.visitorConn(tenantId, visitorId), ttl)
       .hsetnx(k.visitorState(tenantId, visitorId), 'sessionStartedAt', String(now))
-      .hset(k.visitorState(tenantId, visitorId), { tenantId, visitorId, siteId, sessionId, lastSeenAt: now, lastActivityAt: now })
+      .hset(k.visitorState(tenantId, visitorId), {
+        tenantId,
+        visitorId,
+        siteId,
+        sessionId,
+        lastSeenAt: now,
+        lastActivityAt: now,
+      })
       .expire(k.visitorState(tenantId, visitorId), ttl)
       .zadd(k.visitorZ(tenantId), now, visitorId)
       .sadd(k.visitorTenants, tenantId)
@@ -176,7 +225,14 @@ export class PresenceService {
     await this.runVisitorHooks(tenantId, visitorId, sessionId, wasOnline ? 'connected' : 'connected');
   }
 
-  async visitorHeartbeat(tenantId: string, visitorId: string, sessionId: string, connectionId: string, active = false, siteId?: string): Promise<void> {
+  async visitorHeartbeat(
+    tenantId: string,
+    visitorId: string,
+    sessionId: string,
+    connectionId: string,
+    active = false,
+    siteId?: string,
+  ): Promise<void> {
     const now = Date.now();
     const raw = await this.r.hget(k.visitorConn(tenantId, visitorId), connectionId);
     if (!raw) {
@@ -199,19 +255,56 @@ export class PresenceService {
     await m.exec();
   }
 
-  async visitorDisconnected(tenantId: string, visitorId: string, sessionId: string, connectionId: string): Promise<void> {
+  async visitorDisconnected(
+    tenantId: string,
+    visitorId: string,
+    sessionId: string,
+    connectionId: string,
+  ): Promise<void> {
     await this.r.hdel(k.visitorConn(tenantId, visitorId), connectionId);
     const remaining = await this.r.hlen(k.visitorConn(tenantId, visitorId));
     if (remaining === 0) {
-      // Let the sweeper expire the visitor after a short grace (full-page navigations reconnect quickly).
+      // Expire the visitor after a short grace (full-page navigations reconnect within it). The timer makes the
+      // visitor leave on time; the sweeper (every 5 s) is the backstop if this process stops first.
       const score = Date.now() - env().VISITOR_TIMEOUT_MS + RECONNECT_GRACE_MS;
       await this.r.zadd(k.visitorZ(tenantId), 'XX', 'LT', score, visitorId);
       await this.runVisitorHooks(tenantId, visitorId, sessionId, 'disconnected');
+      setTimeout(
+        () =>
+          void this.expireVisitor(tenantId, visitorId).catch((err) =>
+            this.logger.warn(`visitor expiry failed: ${(err as Error).message}`),
+          ),
+        RECONNECT_GRACE_MS + 100,
+      ).unref();
     }
   }
 
-  async patchVisitorState(tenantId: string, visitorId: string, patch: Partial<Record<keyof VisitorLiveState, string | number | null>>): Promise<void> {
-    const entries = Object.entries(patch).map(([key, v]) => [key, v === null || v === undefined ? '' : String(v)]);
+  /**
+   * Ends a visitor's presence if it is still expired: claimed once across processes (a reconnect in between keeps it),
+   * then its live state is dropped and the 'gone' hooks run. Returns the session it ended, or null if not claimed.
+   */
+  private async expireVisitor(
+    tenantId: string,
+    visitorId: string,
+  ): Promise<{ sessionId: string | null } | null> {
+    const cutoff = Date.now() - env().VISITOR_TIMEOUT_MS;
+    if (!Number(await this.r.eval(CLAIM_STALE_VISITOR, 1, k.visitorZ(tenantId), visitorId, cutoff)))
+      return null;
+    const sessionId = (await this.r.hget(k.visitorState(tenantId, visitorId), 'sessionId')) || null;
+    await this.r.del(k.visitorConn(tenantId, visitorId), k.visitorState(tenantId, visitorId));
+    await this.runVisitorHooks(tenantId, visitorId, sessionId ?? '', 'gone');
+    return { sessionId };
+  }
+
+  async patchVisitorState(
+    tenantId: string,
+    visitorId: string,
+    patch: Partial<Record<keyof VisitorLiveState, string | number | null>>,
+  ): Promise<void> {
+    const entries = Object.entries(patch).map(([key, v]) => [
+      key,
+      v === null || v === undefined ? '' : String(v),
+    ]);
     if (entries.length) await this.r.hset(k.visitorState(tenantId, visitorId), Object.fromEntries(entries));
   }
 
@@ -220,7 +313,9 @@ export class PresenceService {
     if (!raw?.visitorId) return null;
     const conns = await this.r.hvals(k.visitorConn(tenantId, visitorId));
     const cutoff = Date.now() - env().VISITOR_TIMEOUT_MS;
-    const live = conns.map((c) => JSON.parse(c) as { ts: number; visible: boolean }).filter((c) => c.ts > cutoff);
+    const live = conns
+      .map((c) => JSON.parse(c) as { ts: number; visible: boolean })
+      .filter((c) => c.ts > cutoff);
     return {
       tenantId,
       visitorId,
@@ -252,7 +347,14 @@ export class PresenceService {
   }
 
   async liveVisitorIds(tenantId: string, limit = 10_000): Promise<string[]> {
-    return this.r.zrevrangebyscore(k.visitorZ(tenantId), '+inf', Date.now() - env().VISITOR_TIMEOUT_MS, 'LIMIT', 0, limit);
+    return this.r.zrevrangebyscore(
+      k.visitorZ(tenantId),
+      '+inf',
+      Date.now() - env().VISITOR_TIMEOUT_MS,
+      'LIMIT',
+      0,
+      limit,
+    );
   }
 
   async countOnline(tenantId: string): Promise<number> {
@@ -266,11 +368,8 @@ export class PresenceService {
     for (const tenantId of await this.r.smembers(k.visitorTenants)) {
       const stale = await this.r.zrangebyscore(k.visitorZ(tenantId), '-inf', cutoff);
       for (const visitorId of stale) {
-        if (!(await this.r.zrem(k.visitorZ(tenantId), visitorId))) continue;
-        const sessionId = (await this.r.hget(k.visitorState(tenantId, visitorId), 'sessionId')) || null;
-        await this.r.del(k.visitorConn(tenantId, visitorId), k.visitorState(tenantId, visitorId));
-        gone.push({ tenantId, visitorId, sessionId });
-        await this.runVisitorHooks(tenantId, visitorId, sessionId ?? '', 'gone');
+        const ended = await this.expireVisitor(tenantId, visitorId);
+        if (ended) gone.push({ tenantId, visitorId, sessionId: ended.sessionId });
       }
       if ((await this.r.zcard(k.visitorZ(tenantId))) === 0) await this.r.srem(k.visitorTenants, tenantId);
     }
@@ -278,6 +377,10 @@ export class PresenceService {
   }
 
   async forgetVisitor(tenantId: string, visitorId: string): Promise<void> {
-    await this.r.multi().zrem(k.visitorZ(tenantId), visitorId).del(k.visitorConn(tenantId, visitorId), k.visitorState(tenantId, visitorId)).exec();
+    await this.r
+      .multi()
+      .zrem(k.visitorZ(tenantId), visitorId)
+      .del(k.visitorConn(tenantId, visitorId), k.visitorState(tenantId, visitorId))
+      .exec();
   }
 }

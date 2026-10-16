@@ -42,6 +42,16 @@ const RECONCILE_MS = 5_000;
 const FLUSH_BATCH = 2_000;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Sessions a present visitor is on: their open connections' sessions, or, while the last tab is disconnected but
+ * presence still holds them (the reconnect grace, e.g. a full-page navigation), the session they were last on. They
+ * leave the list when presence expires them ('gone'), not on every page change.
+ */
+function presentSessionIds(p: PresenceSnapshot): string[] {
+  if (p.connections.length) return p.connections.map((c) => c.sessionId);
+  return p.sessionId ? [p.sessionId] : [];
+}
+
 const K = {
   dirty: (t: string) => `vm:dirty:${t}`,
   dirtyTenants: 'vm:dirty:tenants',
@@ -437,7 +447,7 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
     const sessionIds = new Set<string>();
     for (const p of presence.values())
       if (this.reader.isOnline(p))
-        for (const c of p.connections) if (UUID_RE.test(c.sessionId)) sessionIds.add(c.sessionId);
+        for (const id of presentSessionIds(p)) if (UUID_RE.test(id)) sessionIds.add(id);
     const sessions = sessionIds.size
       ? await this.db.read(
           tenantId,
@@ -487,8 +497,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       const liveSessions: SessionLite[] = [];
       if (online && p) {
         const seen = new Set<string>();
-        for (const c of p.connections) {
-          const s = sessionById.get(c.sessionId);
+        for (const id of presentSessionIds(p)) {
+          const s = sessionById.get(id);
           if (!s || seen.has(s.id) || s.visitorId !== visitorId || s.endedAt) continue;
           seen.add(s.id);
           liveSessions.push(s);
@@ -498,7 +508,8 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
       const lastActivityAt = p?.lastActivityAt ?? null;
       const idle = online && (lastActivityAt === null || now - lastActivityAt > IDLE_AFTER_MS);
       let group: LiveGroup | null = null;
-      if (chat) group = chat.status === 'active' ? 'served' : 'incoming';
+      // A visitor who left the website leaves the list with their presence (their open chat stays in the inbox).
+      if (chat && online) group = chat.status === 'active' ? 'served' : 'incoming';
       else if (online && liveSessions.length && consenting) group = idle ? 'idle' : 'browsing';
       const arrived = liveSessions.length
         ? Math.min(...liveSessions.map((s) => s.startedAt.getTime()))

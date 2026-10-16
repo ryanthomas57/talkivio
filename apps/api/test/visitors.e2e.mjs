@@ -1174,16 +1174,26 @@ ok(
 );
 
 // ───────────────────────────────────────────────────────────────────────
-console.log('Session lifecycle — visitor.session.left when the tab disconnects');
+console.log(
+  'Session lifecycle — a page navigation (reconnect within the 15 s grace) keeps the visitor listed',
+);
+const zLeft = () =>
+  ownerSock.ephemeral.find(
+    (f) => f.type === 'visitor.session.left' && f.payload.session_id === zSess.session_id,
+  );
 zSock.close();
-const left = await waitFor(
-  () =>
-    ownerSock.ephemeral.find(
-      (f) => f.type === 'visitor.session.left' && f.payload.session_id === zSess.session_id,
-    ),
-  15_000,
-  'visitor.session.left',
-).catch((err) => {
+await sleep(1500); // the next page loads and its widget reconnects
+const zSock2 = await socket('/visitor', await ticketFor(zSess.capability));
+await sleep(16_500);
+ok(
+  !zLeft() && (await live()).items.some((i) => i.visitor_id === zSess.visitor.id),
+  'reconnected within the grace: still listed, no visitor.session.left',
+);
+
+console.log('Session lifecycle — visitor.session.left 15 s after the last tab disconnects');
+const closedAt = Date.now();
+zSock2.close();
+const left = await waitFor(zLeft, 25_000, 'visitor.session.left').catch((err) => {
   console.error(
     'owner socket connected:',
     ownerSock.connected,
@@ -1207,6 +1217,12 @@ const left = await waitFor(
   );
   throw err;
 });
+const leftAfterMs = Date.now() - closedAt;
+// The per-visitor expiry timer ends it on time; with only the 5 s sweep it took 15-20 s.
+ok(
+  leftAfterMs >= 14_500 && leftAfterMs <= 18_000,
+  `left the list ${(leftAfterMs / 1000).toFixed(1)} s after the last tab closed (grace 15 s)`,
+);
 ok(
   left.payload.visitor_id === zSess.visitor.id && left.payload.last_seen_at,
   'visitor.session.left published with server last_seen_at',
@@ -1224,12 +1240,51 @@ const blinkLeft = await waitFor(
     ownerSock.ephemeral.find(
       (f) => f.type === 'visitor.session.left' && f.payload.session_id === blink.session_id,
     ),
-  15_000,
+  25_000,
   'short session left',
 );
 ok(
   blinkLeft.payload.visitor_id === blink.visitor.id,
   'a session shorter than one flush window still publishes visitor.session.left',
+);
+
+console.log(
+  'Session lifecycle — a visitor with an open chat also leaves the list 15 s after closing the site',
+);
+const cSess = (await newSession({ page: { url: `${ORIGIN}/contact` } }, { 'x-forwarded-for': '192.0.2.42' }))
+  .data;
+const cSock = await socket('/visitor', await ticketFor(cSess.capability));
+const cChat = await W(
+  'POST',
+  '/chats',
+  { client_request_id: randomUUID(), message: 'Are you there?' },
+  cSess.capability,
+);
+ok(cChat.status === 201, 'the visitor started a chat');
+await waitFor(
+  async () =>
+    (await live()).items.some(
+      (i) => i.visitor_id === cSess.visitor.id && ['incoming', 'served'].includes(i.group),
+    ),
+  6000,
+  'chatting visitor listed',
+);
+const cClosedAt = Date.now();
+cSock.close();
+await waitFor(
+  async () => !(await live()).items.some((i) => i.visitor_id === cSess.visitor.id),
+  25_000,
+  'chatting visitor removed',
+);
+const cLeftAfterMs = Date.now() - cClosedAt;
+ok(
+  cLeftAfterMs >= 14_500 && cLeftAfterMs <= 18_000,
+  `the chatting visitor left the list ${(cLeftAfterMs / 1000).toFixed(1)} s after closing the site (it used to stay until the chat closed)`,
+);
+const cChats = await owner.must('GET', `/visitors/${cSess.visitor.id}/chats`);
+ok(
+  cChats.length === 1 && cChats[0].status !== 'closed',
+  'their chat stays open in the inbox (it closes on its own reconnect grace)',
 );
 
 console.log('CONS03 — turning the consent requirement off applies to visitors already browsing');

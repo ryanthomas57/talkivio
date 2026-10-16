@@ -31,6 +31,10 @@ Added on 2026-10-14 (each with tests that run in CI):
 - **Live visitor list fixes:** bursts of updates are no longer dropped (Socket.IO volatile frames replaced by a
   congestion room), visitors appear the moment they land, country/region/city from DB-IP City Lite, consent upgrade
   for workspaces that do not require consent.
+- **Visitors leave the list 15 s after leaving the website (2026-10-16):** a visitor stays listed through the 15 s
+  reconnect grace (a full-page navigation reconnects within it, so rows no longer blink on every page change) and is
+  removed when it ends, by a per-visitor timer rather than the next 5 s sweep. Visitors with an open chat follow the
+  same rule; the chat stays in the inbox and closes on its own reconnect grace.
 - **Website SEO and mobile (2026-10-15):** robots.txt (app screens and APIs disallowed), sitemap.xml, a web app
   manifest, canonical URLs, Open Graph and Twitter cards with a 1200x630 image, JSON-LD (Organization, WebSite,
   SoftwareApplication with each plan's price, FAQPage from the same text as the visible FAQ), metadata in <head> for
