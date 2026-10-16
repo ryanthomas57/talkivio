@@ -1140,6 +1140,15 @@ await waitFor(
   6000,
   'browsing visitor',
 );
+const zArrivals = () =>
+  ownerSock.ephemeral.filter(
+    (f) => f.type === 'visitor.arrived' && f.payload.visitor_id === zSess.visitor.id,
+  );
+const zArrived = await waitFor(() => zArrivals()[0], 6000, 'visitor.arrived');
+ok(
+  zArrived.payload.display_name && zArrived.payload.page && 'country' in zArrived.payload,
+  'visitor.arrived (the arrival alert) reached the agent with name, page and country',
+);
 const high = await live('?mode=high_load');
 ok(high.omitted_browsing === true && high.mode === 'high_load', 'high-load snapshot flags omitted browsing');
 ok(
@@ -1189,6 +1198,7 @@ ok(
   !zLeft() && (await live()).items.some((i) => i.visitor_id === zSess.visitor.id),
   'reconnected within the grace: still listed, no visitor.session.left',
 );
+ok(zArrivals().length === 1, 'a page change is not a new arrival: visitor.arrived once for the visit');
 
 console.log('Session lifecycle — visitor.session.left 15 s after the last tab disconnects');
 const closedAt = Date.now();

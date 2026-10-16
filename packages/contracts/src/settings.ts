@@ -169,6 +169,9 @@ export function mergeOrgSettings(stored: unknown): OrgSettings {
 export interface MemberPreferences {
   sendOnEnter: boolean;
   sound: boolean;
+  /** Alert when a visitor arrives on the website: a chime (with `sound`) and a desktop notification (with
+   * `desktopNotifications`), muted like the chat alerts. */
+  visitorAlerts: boolean;
   desktopNotifications: boolean;
   theme: 'light' | 'dark' | 'system';
   /** Generic notification text without visitor names or message content (ch. 14). */
@@ -180,6 +183,7 @@ export interface MemberPreferences {
 export const DEFAULT_MEMBER_PREFERENCES: MemberPreferences = {
   sendOnEnter: true,
   sound: true,
+  visitorAlerts: true,
   desktopNotifications: true,
   theme: 'system',
   privacyMode: false,

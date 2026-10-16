@@ -14,7 +14,10 @@ import type { Message, Offer, PendingOffer, StaffChat } from '@/lib/types';
 import { dockChatIds, useDock } from '@/stores/dock';
 import { acknowledgeDelivery, useInbox } from '@/stores/inbox';
 import { useSession } from '@/stores/session';
-import { notifyIncoming } from './attention';
+import { notifyIncoming, notifyVisitorArrived, type VisitorArrived } from './attention';
+
+/** The live visitor feed (the Visitors page subscribes to it too); it carries `visitor.arrived`. */
+const VISITOR_FEED: Scope[] = [{ kind: 'visitor', id: 'all' }];
 
 export function InboxSync() {
   const t = useT();
@@ -26,6 +29,11 @@ export function InboxSync() {
   const ended = useInbox((s) => s.endedOpen);
   const focused = useInbox((s) => s.focusedChatId);
   const docked = useDock((s) => s.windows);
+  const canSeeVisitors = useSession((s) => s.permissions.has('visitors.view'));
+  const visitorAlerts = useSession((s) => {
+    const p = s.agent?.preferences;
+    return !!p && p.visitorAlerts !== false && (!!p.sound || !!p.desktopNotifications);
+  });
 
   useEffect(() => {
     if (!membershipId || !canServe) return;
@@ -54,6 +62,14 @@ export function InboxSync() {
     return ids.size ? [...ids].map((id) => ({ kind: 'chat' as const, id })) : null;
   }, [mine, ended, focused, docked]);
   useScopes(chatScopes);
+
+  // Arrival alerts come wherever the agent is in the dashboard, so the visitor feed is held on every page while they
+  // are switched on.
+  useScopes(canSeeVisitors && visitorAlerts ? VISITOR_FEED : null);
+  useEphemeralEvent<VisitorArrived>(
+    'visitor.arrived',
+    (e) => e.payload?.visitorId && notifyVisitorArrived(e.payload),
+  );
 
   const inbox = useInbox;
 

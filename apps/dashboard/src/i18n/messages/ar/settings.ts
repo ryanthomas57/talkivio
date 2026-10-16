@@ -218,6 +218,10 @@ export const settings: Record<keyof typeof source, string> = {
   'settings.prefs.soundHint':
     'تشغيل نغمة للمحادثات وعروض المحادثات والرسائل الجديدة. كتم الصوت لا يخفي قائمة الانتظار المرئية أبدًا.',
   'settings.prefs.playPreview': 'تشغيل معاينة',
+  'settings.prefs.visitorAlerts': 'نبّهني عند وصول زائر',
+  'settings.prefs.visitorAlertsHint':
+    'نغمة، وإشعار على سطح المكتب عندما يعمل {brand} في الخلفية، في كل مرة يدخل فيها شخص إلى موقعك. يتبع إعدادَي الصوت وإشعارات سطح المكتب أعلاه.',
+  'settings.prefs.playVisitorPreview': 'تشغيل صوت الوصول',
   'settings.prefs.desktop': 'إشعارات سطح المكتب',
   'settings.prefs.desktopHint': 'إظهار إشعار من النظام عندما يعمل {brand} في الخلفية.',
   'settings.prefs.enable': 'تفعيل الإشعارات',

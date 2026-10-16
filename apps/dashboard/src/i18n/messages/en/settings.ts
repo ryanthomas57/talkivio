@@ -211,6 +211,10 @@ export const settings = {
   'settings.prefs.soundHint':
     'Play a chime for new chats, offers and messages. Muting never hides the visual queue.',
   'settings.prefs.playPreview': 'Play preview',
+  'settings.prefs.visitorAlerts': 'Alert me when a visitor arrives',
+  'settings.prefs.visitorAlertsHint':
+    'A chime and, when {brand} is in the background, a desktop notification each time someone lands on your website. Uses the sound and desktop notification settings above.',
+  'settings.prefs.playVisitorPreview': 'Play arrival sound',
   'settings.prefs.desktop': 'Desktop notifications',
   'settings.prefs.desktopHint': 'Show a system notification when {brand} is in the background.',
   'settings.prefs.enable': 'Enable notifications',

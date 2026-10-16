@@ -35,6 +35,11 @@ Added on 2026-10-14 (each with tests that run in CI):
   reconnect grace (a full-page navigation reconnects within it, so rows no longer blink on every page change) and is
   removed when it ends, by a per-visitor timer rather than the next 5 s sweep. Visitors with an open chat follow the
   same rule; the chat stays in the inbox and closes on its own reconnect grace.
+- **Visitor arrival alerts (2026-10-16):** when a visitor arrives on the website (appears in the live list; page
+  changes within a visit do not count) agents hear a chime and, with the dashboard in the background, get a desktop
+  notification naming the visitor, country and page, on any dashboard page. One tab per browser alerts, at most one
+  alert per 4 s, following the sound / desktop / privacy settings, the mute and a new per-agent switch "Alert me when
+  a visitor arrives" (on by default). Server: `visitor.arrived` on the `visitor:all` feed (`visitors.view`).
 - **Website SEO and mobile (2026-10-15):** robots.txt (app screens and APIs disallowed), sitemap.xml, a web app
   manifest, canonical URLs, Open Graph and Twitter cards with a 1200x630 image, JSON-LD (Organization, WebSite,
   SoftwareApplication with each plan's price, FAQPage from the same text as the visible FAQ), metadata in <head> for

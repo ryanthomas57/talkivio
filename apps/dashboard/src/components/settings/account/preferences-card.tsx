@@ -14,6 +14,7 @@ import { isEqual, SaveBar } from '../form-kit';
 interface PrefsForm {
   sound: boolean;
   desktopNotifications: boolean;
+  visitorAlerts: boolean;
   privacyMode: boolean;
   theme: 'light' | 'dark' | 'system';
   sendOnEnter: boolean;
@@ -25,7 +26,10 @@ function currentPermission(): Permission {
   return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
 }
 
-const PERMISSION_LABEL: Record<Permission, { text: MessageKey; tone: 'success' | 'danger' | 'neutral' | 'warning' }> = {
+const PERMISSION_LABEL: Record<
+  Permission,
+  { text: MessageKey; tone: 'success' | 'danger' | 'neutral' | 'warning' }
+> = {
   granted: { text: 'settings.prefs.permission.granted', tone: 'success' },
   denied: { text: 'settings.prefs.permission.denied', tone: 'danger' },
   default: { text: 'settings.prefs.permission.default', tone: 'warning' },
@@ -33,14 +37,27 @@ const PERMISSION_LABEL: Record<Permission, { text: MessageKey; tone: 'success' |
 };
 
 /** Notification and workspace preferences (ch. 14); saved per membership. */
-export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange: (d: boolean) => void; registerSave: (fn: () => Promise<boolean>) => void }) {
+export function PreferencesCard({
+  onDirtyChange,
+  registerSave,
+}: {
+  onDirtyChange: (d: boolean) => void;
+  registerSave: (fn: () => Promise<boolean>) => void;
+}) {
   const t = useT();
   const agent = useSession((s) => s.agent);
   const setAgent = useSession((s) => s.setAgent);
   const baseline = useMemo<PrefsForm | null>(() => {
     if (!agent) return null;
     const p = agent.preferences;
-    return { sound: !!p.sound, desktopNotifications: !!p.desktopNotifications, privacyMode: !!p.privacyMode, theme: (p.theme as PrefsForm['theme']) ?? 'system', sendOnEnter: p.sendOnEnter !== false };
+    return {
+      sound: !!p.sound,
+      desktopNotifications: !!p.desktopNotifications,
+      visitorAlerts: p.visitorAlerts !== false,
+      privacyMode: !!p.privacyMode,
+      theme: (p.theme as PrefsForm['theme']) ?? 'system',
+      sendOnEnter: p.sendOnEnter !== false,
+    };
   }, [agent]);
   const [draft, setDraft] = useState<PrefsForm | null>(null);
   const [saving, setSaving] = useState(false);
@@ -59,7 +76,9 @@ export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange
 
   const save = async (): Promise<boolean> => {
     if (!draft || !baseline || !dirty) return true;
-    const changed = Object.fromEntries(Object.entries(draft).filter(([k, v]) => baseline[k as keyof PrefsForm] !== v));
+    const changed = Object.fromEntries(
+      Object.entries(draft).filter(([k, v]) => baseline[k as keyof PrefsForm] !== v),
+    );
     setSaving(true);
     setMessage(null);
     try {
@@ -99,7 +118,12 @@ export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange
       <CardBody className="flex flex-col gap-2">
         {message && <Banner tone="danger">{message}</Banner>}
         <div className="flex flex-col gap-1 border-b border-line-subtle pb-3">
-          <SwitchField label={t('settings.prefs.sound')} description={t('settings.prefs.soundHint')} checked={value.sound} onCheckedChange={(v) => set({ sound: v })} />
+          <SwitchField
+            label={t('settings.prefs.sound')}
+            description={t('settings.prefs.soundHint')}
+            checked={value.sound}
+            onCheckedChange={(v) => set({ sound: v })}
+          />
           <div>
             <Button size="sm" variant="secondary" onClick={() => playChime('queue')}>
               <Volume2 className="size-3.5" aria-hidden />
@@ -126,7 +150,23 @@ export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange
           {permission === 'denied' && value.desktopNotifications && (
             <p className="text-xs text-fg-2">{t('settings.prefs.blocked')}</p>
           )}
-          {permission === 'default' && value.desktopNotifications && <p className="text-xs text-fg-2">{t('settings.prefs.notYetAllowed')}</p>}
+          {permission === 'default' && value.desktopNotifications && (
+            <p className="text-xs text-fg-2">{t('settings.prefs.notYetAllowed')}</p>
+          )}
+        </div>
+        <div className="flex flex-col gap-1 border-b border-line-subtle pb-3">
+          <SwitchField
+            label={t('settings.prefs.visitorAlerts')}
+            description={t('settings.prefs.visitorAlertsHint', { brand: BRAND_NAME })}
+            checked={value.visitorAlerts}
+            onCheckedChange={(v) => set({ visitorAlerts: v })}
+          />
+          <div>
+            <Button size="sm" variant="secondary" onClick={() => playChime('visitor')}>
+              <Volume2 className="size-3.5" aria-hidden />
+              {t('settings.prefs.playVisitorPreview')}
+            </Button>
+          </div>
         </div>
         <div className="border-b border-line-subtle pb-3">
           <SwitchField
@@ -139,7 +179,9 @@ export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange
         <div className="border-b border-line-subtle pb-3">
           <SwitchField
             label={t('settings.prefs.sendOnEnter')}
-            description={value.sendOnEnter ? t('settings.prefs.sendOnEnterOn') : t('settings.prefs.sendOnEnterOff')}
+            description={
+              value.sendOnEnter ? t('settings.prefs.sendOnEnterOn') : t('settings.prefs.sendOnEnterOff')
+            }
             checked={value.sendOnEnter}
             onCheckedChange={(v) => set({ sendOnEnter: v })}
           />
@@ -152,12 +194,21 @@ export function PreferencesCard({ onDirtyChange, registerSave }: { onDirtyChange
           options={[
             { value: 'light', label: t('settings.prefs.themeLight') },
             { value: 'dark', label: t('settings.prefs.themeDark') },
-            { value: 'system', label: t('settings.prefs.themeSystem'), description: t('settings.prefs.themeSystemHint') },
+            {
+              value: 'system',
+              label: t('settings.prefs.themeSystem'),
+              description: t('settings.prefs.themeSystemHint'),
+            },
           ]}
           className="pt-2"
         />
       </CardBody>
-      <SaveBar dirty={dirty} saving={saving} onSave={() => void save()} onDiscard={() => (setDraft(null), setMessage(null))} />
+      <SaveBar
+        dirty={dirty}
+        saving={saving}
+        onSave={() => void save()}
+        onDiscard={() => (setDraft(null), setMessage(null))}
+      />
     </Card>
   );
 }

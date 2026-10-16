@@ -919,6 +919,24 @@ export class VisitorMonitorService implements OnModuleInit, OnModuleDestroy {
           { visitorId, allowedPatch: null, asOf },
           10_000,
         );
+      // A visitor who was not listed now is, browsing: they arrived on the website (page changes keep them listed
+      // through the reconnect grace, so this is once per visit). Dashboards chime and show a desktop notification; the
+      // same room already receives the full item, so the summary exposes nothing new.
+      if (item && !p?.v && (item.group === 'browsing' || item.group === 'idle'))
+        this.realtime.ephemeral(
+          AGENT_NS,
+          allRoom,
+          'visitor.arrived',
+          { kind: 'visitor', id: 'all' },
+          {
+            visitorId,
+            displayName: item.displayName,
+            country: item.country,
+            page: item.currentTitle || item.currentUrl,
+            asOf,
+          },
+          10_000,
+        );
       if (c && (c.online || c.chat)) sigWrites[visitorId] = JSON.stringify(sig);
       else sigDeletes.push(visitorId);
     }

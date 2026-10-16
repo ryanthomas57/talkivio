@@ -1,6 +1,7 @@
 'use client';
 /**
- * Attention: sounds and desktop alerts for incoming chats, offers and messages (ch. 14).
+ * Attention: sounds and desktop alerts for incoming chats, offers and messages (ch. 14), and a chime when a visitor
+ * arrives on the website.
  *
  * - Exactly one tab per browser alerts: the tab holding the `talkivio-attention` Web Lock is the leader. The
  *   browser grants the lock to one tab at a time and hands it to a waiting tab the moment the holder closes,
@@ -15,13 +16,15 @@
  */
 import { BRAND_NAME } from '@/components/brand';
 import { isolate, tStatic } from '@/i18n';
+import { countryName } from '@/lib/format';
 import type { Message, StaffChat } from '@/lib/types';
 import { useSession } from '@/stores/session';
 
 const CHANNEL = 'talkivio-attention';
 const MUTE_KEY = 'rd-attention-mute-until';
 const CHAT_MUTE_KEY = 'rd-attention-muted-chats';
-const tabId = typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Math.random());
+const tabId =
+  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : String(Math.random());
 
 let channel: BroadcastChannel | null = null;
 let leader: { id: string; at: number } | null = null;
@@ -80,7 +83,8 @@ export function startAttention(): void {
     } else if (msg.type === 'heartbeat') {
       // Lowest id wins: a leader answers a higher competing claim at once instead of on its next (possibly throttled) tick.
       if (isLeader() && msg.id > tabId) claim();
-      else if (!leader || msg.id === leader.id || msg.id < leader.id || Date.now() - leader.at > 6000) leader = { id: msg.id, at: Date.now() };
+      else if (!leader || msg.id === leader.id || msg.id < leader.id || Date.now() - leader.at > 6000)
+        leader = { id: msg.id, at: Date.now() };
     }
   };
   // Ask first; claim only if no leader answered by the first tick.
@@ -105,7 +109,8 @@ export function stopAttention(): void {
 }
 
 // A page restored from the back/forward cache rejoins the election it left on pagehide.
-if (typeof window !== 'undefined') window.addEventListener('pageshow', (e) => e.persisted && startAttention());
+if (typeof window !== 'undefined')
+  window.addEventListener('pageshow', (e) => e.persisted && startAttention());
 
 export function muteForOneHour(): void {
   localStorage.setItem(MUTE_KEY, String(Date.now() + 3600_000));
@@ -152,13 +157,20 @@ export async function enableDesktopNotifications(): Promise<NotificationPermissi
 
 let audio: AudioContext | null = null;
 
-/** Short synthesized two-tone chime (no external asset). */
-export function playChime(kind: 'queue' | 'message' | 'offer' = 'message'): void {
+/** Short synthesized chime (no external asset); a visitor arriving is a falling two-tone "ding-dong". */
+export function playChime(kind: 'queue' | 'message' | 'offer' | 'visitor' = 'message'): void {
   try {
     audio ??= new AudioContext();
     if (audio.state === 'suspended') void audio.resume();
     const now = audio.currentTime;
-    const notes = kind === 'message' ? [880] : kind === 'offer' ? [660, 880, 1046] : [660, 880];
+    const notes =
+      kind === 'message'
+        ? [880]
+        : kind === 'offer'
+          ? [660, 880, 1046]
+          : kind === 'visitor'
+            ? [1046, 784]
+            : [660, 880];
     notes.forEach((f, i) => {
       const osc = audio!.createOscillator();
       const gain = audio!.createGain();
@@ -177,7 +189,10 @@ export function playChime(kind: 'queue' | 'message' | 'offer' = 'message'): void
   }
 }
 
-type Incoming = { kind: 'queue'; chat: StaffChat } | { kind: 'offer'; chat: StaffChat; from?: string } | { kind: 'message'; chat: StaffChat; message: Message };
+type Incoming =
+  | { kind: 'queue'; chat: StaffChat }
+  | { kind: 'offer'; chat: StaffChat; from?: string }
+  | { kind: 'message'; chat: StaffChat; message: Message };
 
 export function notifyIncoming(evt: Incoming): void {
   if (typeof window === 'undefined' || !isLeader()) return;
@@ -188,10 +203,22 @@ export function notifyIncoming(evt: Incoming): void {
   // A visible conversation already shows the message; don't chime for it.
   if (evt.kind === 'message' && visibleAndFocused && window.location.pathname.includes(evt.chat.id)) return;
   if (prefs.sound) playChime(evt.kind);
-  if (!prefs.desktopNotifications || visibleAndFocused || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  if (
+    !prefs.desktopNotifications ||
+    visibleAndFocused ||
+    typeof Notification === 'undefined' ||
+    Notification.permission !== 'granted'
+  )
+    return;
   const privacy = prefs.privacyMode === true;
   // Generated outside React: tStatic follows the active UI language (privacy mode text included).
-  const title = tStatic(evt.kind === 'queue' ? 'inbox.attention.queueTitle' : evt.kind === 'offer' ? 'inbox.attention.offerTitle' : 'inbox.attention.messageTitle');
+  const title = tStatic(
+    evt.kind === 'queue'
+      ? 'inbox.attention.queueTitle'
+      : evt.kind === 'offer'
+        ? 'inbox.attention.offerTitle'
+        : 'inbox.attention.messageTitle',
+  );
   const name = isolate(evt.chat.visitor.displayName);
   const body = privacy
     ? tStatic('inbox.attention.privateBody', { brand: BRAND_NAME })
@@ -199,12 +226,75 @@ export function notifyIncoming(evt: Incoming): void {
       ? typeof evt.message.body === 'string'
         ? tStatic('inbox.attention.messageBody', { name, text: isolate(evt.message.body.slice(0, 120)) })
         : tStatic('inbox.attention.attachmentBody', { name })
-      : tStatic('inbox.attention.chatBody', { name, preview: isolate(evt.chat.lastMessagePreview.slice(0, 100)) });
+      : tStatic('inbox.attention.chatBody', {
+          name,
+          preview: isolate(evt.chat.lastMessagePreview.slice(0, 100)),
+        });
   try {
     const n = new Notification(title, { body, tag: `rd-${evt.kind}-${evt.chat.id}`, silent: true });
     n.onclick = () => {
       window.focus();
       window.location.assign(`/inbox/${evt.chat.id}`);
+      n.close();
+    };
+  } catch {
+    /* notification constructor unavailable (e.g. some mobile browsers) */
+  }
+}
+
+/** `visitor.arrived`: a visitor appeared on the website (once per visit, page changes excluded). */
+export interface VisitorArrived {
+  visitorId: string;
+  displayName?: string | null;
+  country?: string | null;
+  page?: string | null;
+}
+
+const VISITOR_ALERT_GAP_MS = 4000;
+let lastVisitorAlert = 0;
+
+/**
+ * A visitor arrived on the website: a chime and, while the dashboard is in the background, a desktop notification
+ * (one at a time, a newer arrival replaces it). Leader tab only, and at most one alert every few seconds however
+ * many visitors land together (a busy site would otherwise ring constantly). Follows the sound and desktop switches,
+ * the visitor-alert switch, privacy mode and the mute.
+ */
+export function notifyVisitorArrived(v: VisitorArrived): void {
+  if (typeof window === 'undefined' || !isLeader()) return;
+  const prefs = useSession.getState().agent?.preferences;
+  if (!prefs || prefs.visitorAlerts === false || mutedUntil()) return;
+  const now = Date.now();
+  if (now - lastVisitorAlert < VISITOR_ALERT_GAP_MS) return;
+  lastVisitorAlert = now;
+  if (prefs.sound) playChime('visitor');
+  const visibleAndFocused = document.visibilityState === 'visible' && document.hasFocus();
+  if (
+    !prefs.desktopNotifications ||
+    visibleAndFocused ||
+    typeof Notification === 'undefined' ||
+    Notification.permission !== 'granted'
+  )
+    return;
+  const name = isolate(v.displayName || tStatic('common.visitor'));
+  const country = countryName(v.country);
+  const page = v.page ? isolate(v.page.slice(0, 100)) : null;
+  const body =
+    prefs.privacyMode === true
+      ? tStatic('inbox.attention.privateBody', { brand: BRAND_NAME })
+      : page && country
+        ? tStatic('inbox.attention.visitorBodyFrom', { name, country: isolate(country), page })
+        : page
+          ? tStatic('inbox.attention.visitorBodyPage', { name, page })
+          : tStatic('inbox.attention.visitorBody', { name });
+  try {
+    const n = new Notification(tStatic('inbox.attention.visitorTitle'), {
+      body,
+      tag: 'rd-visitor-arrived',
+      silent: true,
+    });
+    n.onclick = () => {
+      window.focus();
+      window.location.assign('/visitors');
       n.close();
     };
   } catch {

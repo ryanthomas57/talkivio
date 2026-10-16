@@ -107,6 +107,7 @@ export const updateMemberSchema = z.object({
 export const updatePreferencesSchema = z.object({
   sendOnEnter: z.boolean().optional(),
   sound: z.boolean().optional(),
+  visitorAlerts: z.boolean().optional(),
   desktopNotifications: z.boolean().optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),
   displayName: trimmed(80).nullable().optional(),

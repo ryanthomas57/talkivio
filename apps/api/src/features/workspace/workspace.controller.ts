@@ -242,6 +242,7 @@ const prefsSchema = z
   .object({
     sendOnEnter: z.boolean().optional(),
     sound: z.boolean().optional(),
+    visitorAlerts: z.boolean().optional(),
     desktopNotifications: z.boolean().optional(),
     theme: z.enum(['light', 'dark', 'system']).optional(),
     privacyMode: z.boolean().optional(),
