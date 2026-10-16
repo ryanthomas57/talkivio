@@ -29,7 +29,13 @@ export const APP_ROUTES = [
 export const PUBLIC_ROUTES = ['/login', '/signup', '/forgot-password'] as const;
 
 /** The public website: the one-page home and the legal pages (English only, so not part of the RTL sweep). */
-export const SITE_ROUTES = ['/', '/legal/terms', '/legal/privacy', '/legal/refund-policy'] as const;
+export const SITE_ROUTES = [
+  '/',
+  '/download',
+  '/legal/terms',
+  '/legal/privacy',
+  '/legal/refund-policy',
+] as const;
 
 /** Routes opened signed out by the sweeps. */
 export const ANON_ROUTES: readonly string[] = [...PUBLIC_ROUTES, ...SITE_ROUTES];

@@ -156,6 +156,15 @@ export async function enableDesktopNotifications(): Promise<NotificationPermissi
   return Notification.requestPermission();
 }
 
+/** The Talkivio desktop app's bridge (desktop/src/preload.ts); absent in a browser. */
+type DesktopBridge = { isDesktop: true; focus: () => void };
+
+/** Bring the dashboard forward for a clicked notification: in the desktop app also a hidden or closed window. */
+function focusApp(): void {
+  (window as unknown as { talkivioDesktop?: DesktopBridge }).talkivioDesktop?.focus();
+  window.focus();
+}
+
 let audio: AudioContext | null = null;
 
 /** One note: frequency (Hz), start and length (s), optional glide target, waveform and peak volume. */
@@ -278,7 +287,7 @@ export function notifyIncoming(evt: Incoming): void {
   try {
     const n = new Notification(title, { body, tag: `rd-${evt.kind}-${evt.chat.id}`, silent: true });
     n.onclick = () => {
-      window.focus();
+      focusApp();
       window.location.assign(`/inbox/${evt.chat.id}`);
       n.close();
     };
@@ -338,7 +347,7 @@ export function notifyVisitorArrived(v: VisitorArrived): void {
       silent: true,
     });
     n.onclick = () => {
-      window.focus();
+      focusApp();
       window.location.assign('/visitors');
       n.close();
     };

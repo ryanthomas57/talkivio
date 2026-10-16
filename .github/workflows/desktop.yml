@@ -1,0 +1,119 @@
+# Talkivio Desktop (desktop/): builds the Mac and Windows installers and tests the app on both systems.
+#
+#  - push to main touching desktop/ (or a manual run): build + test, installers kept as workflow artifacts;
+#  - tag vX.Y.Z (must equal desktop/package.json "version"): the same, then a GitHub release "Talkivio Desktop X.Y.Z"
+#    with Talkivio-mac-universal.dmg/.zip, Talkivio-win-x64.exe and the update feeds (latest-mac.yml, latest.yml).
+#    talkivio.com/download links to the latest release's files; installed apps update from its feeds.
+#
+# Signing (optional, picked up when the secrets exist): MAC_CSC_LINK + MAC_CSC_KEY_PASSWORD (Developer ID
+# Application .p12, base64) with APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD + APPLE_TEAM_ID for notarization;
+# WIN_CSC_LINK + WIN_CSC_KEY_PASSWORD for the Windows installer. Without them the builds are unsigned (ad-hoc on Mac).
+name: Desktop
+
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', '.github/workflows/desktop.yml']
+    tags: ['v*.*.*']
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release-draft:
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tag matches desktop/package.json
+        run: |
+          want="v$(node -p "require('./desktop/package.json').version")"
+          test "$GITHUB_REF_NAME" = "$want" || { echo "tag $GITHUB_REF_NAME but desktop/package.json says $want"; exit 1; }
+      - name: Draft release (filled by the build jobs, published once both succeed)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" --draft \
+            --title "Talkivio Desktop ${GITHUB_REF_NAME#v}" \
+            --notes "Talkivio for Mac and Windows ${GITHUB_REF_NAME#v}. Download from https://talkivio.com/download"
+
+  build:
+    needs: [release-draft]
+    if: always() && (needs.release-draft.result == 'success' || needs.release-draft.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            target: --mac --universal
+          - os: windows-latest
+            target: --win --x64
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - name: App checks against talkivio.com (signed out)
+        env:
+          TALKIVIO_URL: https://talkivio.com
+        run: npx playwright test
+      - name: Installers
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Empty unless the signing secrets exist; electron-builder.config.js signs only when CSC_LINK is set.
+          CSC_LINK: ${{ runner.os == 'macOS' && secrets.MAC_CSC_LINK || secrets.WIN_CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ runner.os == 'macOS' && secrets.MAC_CSC_KEY_PASSWORD || secrets.WIN_CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [ -z "$CSC_LINK" ]; then unset CSC_LINK CSC_KEY_PASSWORD; export CSC_IDENTITY_AUTO_DISCOVERY=false; fi
+          publish=never
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then publish=always; fi
+          npx electron-builder --config electron-builder.config.js ${{ matrix.target }} --publish "$publish"
+      - name: Packaged app checks (Mac)
+        if: runner.os == 'macOS'
+        env:
+          TALKIVIO_URL: https://talkivio.com
+          TALKIVIO_APP_PATH: ${{ github.workspace }}/desktop/release/mac-universal/Talkivio.app/Contents/MacOS/Talkivio
+        run: npx playwright test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: talkivio-desktop-${{ runner.os }}
+          path: |
+            desktop/release/*.dmg
+            desktop/release/*.zip
+            desktop/release/*.exe
+            desktop/release/*.yml
+          retention-days: 14
+
+  publish:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the release (both installers built)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest

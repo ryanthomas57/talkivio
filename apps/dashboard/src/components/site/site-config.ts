@@ -17,6 +17,21 @@ export const COMPANY = {
   legalUpdated: 'October 14, 2026',
 } as const;
 
+/**
+ * The desktop app (desktop/): installers attached to the latest GitHub release under fixed names, so these links
+ * always serve the newest version. `signed` turns off the "opening it the first time" help once the Mac build is
+ * notarized and the Windows installer is code signed.
+ */
+const RELEASES = 'https://github.com/ryanthomas57/talkivio/releases/latest';
+export const DESKTOP = {
+  mac: `${RELEASES}/download/Talkivio-mac-universal.dmg`,
+  windows: `${RELEASES}/download/Talkivio-win-x64.exe`,
+  releaseNotes: RELEASES,
+  macRequirement: 'macOS 13 Ventura or later, Apple silicon and Intel',
+  windowsRequirement: 'Windows 10 or 11, 64-bit',
+  signed: false,
+} as const;
+
 /** Trial length and reminder lead time come from the shared plan catalog, like the prices below. */
 export { TRIAL_DAYS, TRIAL_REMINDER_DAYS } from '@talkivio/contracts';
 

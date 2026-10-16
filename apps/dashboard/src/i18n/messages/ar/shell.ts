@@ -47,6 +47,7 @@ export const shell: Record<keyof typeof source, string> = {
   'shell.account.workspaces': 'مساحات العمل',
   'shell.account.currentWorkspace': 'مساحة العمل الحالية',
   'shell.account.createWorkspace': 'إنشاء مساحة عمل',
+  'shell.account.desktopApp': 'تنزيل تطبيق سطح المكتب',
   'shell.account.signOut': 'تسجيل الخروج',
   'shell.language.saveFailed': 'تغيّرت اللغة هنا، لكن لم تُحفظ في حسابك: {error}',
 };

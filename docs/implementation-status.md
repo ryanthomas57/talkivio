@@ -40,6 +40,14 @@ Added on 2026-10-14 (each with tests that run in CI):
   notification naming the visitor, country and page, on any dashboard page. One tab per browser alerts, at most one
   alert per 4 s, following the sound / desktop / privacy settings, the mute and a new per-agent switch "Alert me when
   a visitor arrives" (on by default). Server: `visitor.arrived` on the `visitor:all` feed (`visitors.view`).
+- **Desktop app for Mac and Windows (2026-10-16):** `desktop/` (Electron 44): the live dashboard in its own window,
+  running in the menu bar / notification area when closed (alerts keep coming), unread count on the Dock icon or as a
+  taskbar overlay with bounce/flash, native notifications (clicks bring the window forward via the preload bridge),
+  sounds without a first click, Open at Login, auto-update from GitHub releases, downloads, spell check, offline page,
+  Go menu. Only dashboard pages load in the window; one permission (notifications). Installers: a universal Mac .dmg and
+  a per-user Windows NSIS .exe, built and tested by `.github/workflows/desktop.yml`, released on `vX.Y.Z` tags.
+  Unsigned until Apple / Windows certificates are added as secrets (see `desktop/README.md`). Website:
+  talkivio.com/download (OS-aware buttons, install help), header and footer links, account menu "Get the desktop app".
 - **A sound per alert (2026-10-16):** in Notifications and preferences each alert (new chat waiting, chat offered or
   transferred, new message, visitor arrives) has its own sound with a Play button: nine synthesized sounds (Chime,
   Rising, Blip, Ding-dong, Bell, Pop, Marimba, Alert, Soft) or None. Per-agent `sounds` preference (patched per alert);

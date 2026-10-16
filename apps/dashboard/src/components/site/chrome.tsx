@@ -19,6 +19,9 @@ export function SiteHeader() {
           <Link href="/#pricing" className="site-navlink hidden text-[13px] font-light sm:inline">
             Pricing
           </Link>
+          <Link href="/download" className="site-navlink hidden text-[13px] font-light sm:inline">
+            Download
+          </Link>
           <Link href="/login" className="site-navlink site-tap text-[13px] font-light">
             Sign in
           </Link>
@@ -40,6 +43,7 @@ const COLUMNS = [
       { label: 'Automation', href: '/#features' },
       { label: 'Security', href: '/#security' },
       { label: 'Pricing', href: '/#pricing' },
+      { label: 'Desktop app', href: '/download' },
     ],
   },
   {

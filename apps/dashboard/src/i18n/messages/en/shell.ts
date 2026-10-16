@@ -45,6 +45,7 @@ export const shell = {
   'shell.account.workspaces': 'Workspaces',
   'shell.account.currentWorkspace': 'Current workspace',
   'shell.account.createWorkspace': 'Create workspace',
+  'shell.account.desktopApp': 'Get the desktop app',
   'shell.account.signOut': 'Sign out',
   'shell.language.saveFailed': 'Language changed here, but not saved to your account: {error}',
 } satisfies Record<string, string>;
