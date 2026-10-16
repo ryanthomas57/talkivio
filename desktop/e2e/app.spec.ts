@@ -36,11 +36,23 @@ async function launch(
     app,
     page,
     close: async () => {
-      await app.evaluate(({ app: a }) => {
-        a.emit('before-quit');
-        a.quit();
-      });
-      await app.close().catch(() => undefined);
+      // Quit after this evaluate has answered: quitting inside it can race the reply and hang the test.
+      await app
+        .evaluate(({ app: a }) => {
+          setTimeout(() => {
+            a.emit('before-quit');
+            a.quit();
+          }, 0);
+        })
+        .catch(() => undefined);
+      const exited = await Promise.race([
+        app.close().then(
+          () => true,
+          () => true,
+        ),
+        new Promise<boolean>((r) => setTimeout(() => r(false), 15_000)),
+      ]);
+      if (!exited) app.process().kill('SIGKILL');
       rmSync(profile, { recursive: true, force: true });
     },
   };
