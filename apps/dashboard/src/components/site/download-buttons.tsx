@@ -1,6 +1,7 @@
 'use client';
-import { Download, Laptop, Monitor } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { AppleLogo, WindowsLogo } from './os-logos';
 import { DESKTOP } from './site-config';
 
 type Os = 'mac' | 'windows' | null;
@@ -19,7 +20,7 @@ const PLATFORMS = [
   {
     os: 'mac' as const,
     name: 'Mac',
-    icon: Laptop,
+    icon: AppleLogo,
     href: DESKTOP.mac,
     requirement: DESKTOP.macRequirement,
     file: 'Talkivio-mac-universal.dmg',
@@ -27,7 +28,7 @@ const PLATFORMS = [
   {
     os: 'windows' as const,
     name: 'Windows',
-    icon: Monitor,
+    icon: WindowsLogo,
     href: DESKTOP.windows,
     requirement: DESKTOP.windowsRequirement,
     file: 'Talkivio-win-x64.exe',
@@ -37,14 +38,39 @@ const PLATFORMS = [
 export function DownloadButtons() {
   const [os, setOs] = useState<Os>(null);
   const [inApp, setInApp] = useState(false);
+  // Arriving from a hero download link (?started=mac|windows): the download is already under way.
+  const [started, setStarted] = useState<Os>(null);
   useEffect(() => {
     setOs(detectOs());
     setInApp(!!(window as unknown as { talkivioDesktop?: unknown }).talkivioDesktop);
+    const s = new URLSearchParams(window.location.search).get('started');
+    setStarted(s === 'mac' || s === 'windows' ? s : null);
   }, []);
   // The detected computer first; until then (and on phones) Mac, then Windows.
   const ordered = os === 'windows' ? [...PLATFORMS].reverse() : PLATFORMS;
   return (
     <div className="mt-10">
+      {started && (
+        <div className="site-card mb-6 p-5" role="status">
+          <p className="m-0 text-[15px] font-normal">
+            Your download of Talkivio for {started === 'mac' ? 'Mac' : 'Windows'} has started.
+          </p>
+          <p className="m-0 mt-1 text-[14px] font-light text-[var(--site-muted)]">
+            When it finishes, open it and follow the{' '}
+            <a href="#desktop-install" className="site-navlink underline underline-offset-4">
+              installing steps
+            </a>{' '}
+            below. If it did not start,{' '}
+            <a
+              href={started === 'mac' ? DESKTOP.mac : DESKTOP.windows}
+              className="site-navlink underline underline-offset-4"
+            >
+              download it again
+            </a>
+            .
+          </p>
+        </div>
+      )}
       {inApp && (
         <p className="mb-6 text-[15px] font-light text-[var(--site-muted)]">
           You are already using the Talkivio desktop app. It updates itself.

@@ -582,3 +582,49 @@ html:not(.dark) .site .site-glow {
     display: block;
   }
 }
+
+/* Desktop app links under the hero's trial button (and the download page cards' logos). */
+.site-applinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.site-applinks-label {
+  margin-right: 4px;
+  color: rgba(238, 246, 247, 0.62);
+  text-decoration: none;
+}
+.site-applinks-label:hover {
+  color: var(--site-teal);
+}
+.site-app-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 15px;
+  border-radius: 999px;
+  border: 1px solid rgba(238, 246, 247, 0.25);
+  background: rgba(5, 7, 10, 0.35);
+  color: #eef6f7;
+  font-size: 13.5px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    border-color 0.2s,
+    background 0.2s;
+}
+.site-app-link:hover {
+  border-color: var(--site-teal);
+  background: rgba(55, 229, 231, 0.1);
+}
+.site-app-logo {
+  width: 15px;
+  height: 15px;
+  flex: none;
+}
+.site-app-logo-win {
+  width: 13px;
+  height: 13px;
+}

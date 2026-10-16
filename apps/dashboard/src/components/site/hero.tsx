@@ -23,6 +23,7 @@ import { useSession } from '@/stores/session';
 import { SiteLogo } from './mark';
 import { Particles } from './particles';
 import { SiteThemeToggle } from './theme-switch';
+import { DesktopAppLinks } from './desktop-app-links';
 import { TRIAL_DAYS } from './site-config';
 
 const STAGE_W = 1440;
@@ -383,12 +384,22 @@ export function Hero() {
               </div>
             </motion.div>
 
+            {/* ---- desktop app ---- */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={cut ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
+              transition={rise(1.15)}
+              style={{ ...box(42, 663) }}
+            >
+              <DesktopAppLinks />
+            </motion.div>
+
             {/* ---- spec strip ---- */}
             <motion.div
               initial={{ opacity: 0, y: 24 }}
               animate={cut ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }}
               transition={rise(1.25)}
-              style={{ ...box(42, 700, 470) }}
+              style={{ ...box(42, 714, 470) }}
             >
               <div className="site-hair" style={{ width: '100%' }} />
               <div style={{ display: 'flex', marginTop: 18 }}>
@@ -733,6 +744,9 @@ function MobileHero({
             <Link href={trialHref} className="site-cta">
               Start {TRIAL_DAYS}-day free trial
             </Link>
+          </motion.div>
+          <motion.div {...fade(0.52)} className="mt-4">
+            <DesktopAppLinks />
           </motion.div>
           <motion.dl
             {...fade(0.6)}
