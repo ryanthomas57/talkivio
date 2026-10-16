@@ -66,15 +66,47 @@ export const AgentSchema = z.object({
   version: z.number().int(),
 });
 
+/** A built-in dashboard alert sound ('none' is silent). */
+export const AlertSoundSchema = z.enum([
+  'chime',
+  'rising',
+  'blip',
+  'dingdong',
+  'bell',
+  'pop',
+  'marimba',
+  'alert',
+  'soft',
+  'none',
+]);
+
 /** The signed-in member (`GET /agents/me`). */
 export const AgentMeSchema = z.object({
   agent: AgentSchema,
-  preferences: z.object({ sendOnEnter: z.boolean(), sound: z.boolean(), desktopNotifications: z.boolean(), theme: z.enum(['system', 'light', 'dark']), privacyMode: z.boolean(), locale: z.enum(['en', 'ar']).nullable() }),
+  preferences: z.object({
+    sendOnEnter: z.boolean(),
+    sound: z.boolean(),
+    sounds: z.object({
+      queue: AlertSoundSchema,
+      offer: AlertSoundSchema,
+      message: AlertSoundSchema,
+      visitor: AlertSoundSchema,
+    }),
+    visitorAlerts: z.boolean(),
+    desktopNotifications: z.boolean(),
+    theme: z.enum(['system', 'light', 'dark']),
+    privacyMode: z.boolean(),
+    locale: z.enum(['en', 'ar']).nullable(),
+  }),
   permissions: z.array(PermissionSchema),
   departmentScope: DepartmentScopeSchema,
 });
 
-export const PresenceStateSchema = z.object({ desiredStatus: DesiredStatusSchema, effectiveStatus: EffectiveStatusSchema, connected: z.boolean() });
+export const PresenceStateSchema = z.object({
+  desiredStatus: DesiredStatusSchema,
+  effectiveStatus: EffectiveStatusSchema,
+  connected: z.boolean(),
+});
 
 export const AgentInvitationSchema = z.object({
   id: Uuid,
@@ -85,8 +117,20 @@ export const AgentInvitationSchema = z.object({
   createdAt: DateTime,
   expiresAt: DateTime,
 });
-export const AgentInvitationCreatedSchema = z.object({ id: Uuid, email: z.string(), role: RoleSchema, expiresAt: DateTime, mailId: z.string() });
-export const InvitationLookupSchema = z.object({ tenantName: z.string(), email: z.string(), role: RoleSchema, hasAccount: z.boolean(), expiresAt: DateTime });
+export const AgentInvitationCreatedSchema = z.object({
+  id: Uuid,
+  email: z.string(),
+  role: RoleSchema,
+  expiresAt: DateTime,
+  mailId: z.string(),
+});
+export const InvitationLookupSchema = z.object({
+  tenantName: z.string(),
+  email: z.string(),
+  role: RoleSchema,
+  hasAccount: z.boolean(),
+  expiresAt: DateTime,
+});
 
 export const DepartmentSchema = z.object({
   id: Uuid,

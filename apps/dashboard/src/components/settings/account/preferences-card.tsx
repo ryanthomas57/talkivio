@@ -3,8 +3,25 @@ import { BellRing, Volume2 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { BRAND_NAME } from '@/components/brand';
-import { enableDesktopNotifications, playChime } from '@/components/inbox/attention';
-import { Badge, Banner, Button, Card, CardBody, CardHeader, RadioGroup, SwitchField } from '@/components/ui';
+import {
+  ALERT_SOUND_KINDS,
+  ALERT_SOUNDS,
+  DEFAULT_MEMBER_PREFERENCES,
+  type AlertSound,
+  type AlertSoundKind,
+} from '@talkivio/contracts';
+import { enableDesktopNotifications, playSound } from '@/components/inbox/attention';
+import {
+  Badge,
+  Banner,
+  Button,
+  Card,
+  CardBody,
+  CardHeader,
+  RadioGroup,
+  Select,
+  SwitchField,
+} from '@/components/ui';
 import { useT, type MessageKey } from '@/i18n';
 import { api, errorMessage } from '@/lib/api';
 import type { AgentMe } from '@/lib/types';
@@ -13,6 +30,7 @@ import { isEqual, SaveBar } from '../form-kit';
 
 interface PrefsForm {
   sound: boolean;
+  sounds: Record<AlertSoundKind, AlertSound>;
   desktopNotifications: boolean;
   visitorAlerts: boolean;
   privacyMode: boolean;
@@ -25,6 +43,26 @@ type Permission = NotificationPermission | 'unsupported';
 function currentPermission(): Permission {
   return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission;
 }
+
+const SOUND_KIND_LABEL: Record<AlertSoundKind, MessageKey> = {
+  queue: 'settings.prefs.sounds.kind.queue',
+  offer: 'settings.prefs.sounds.kind.offer',
+  message: 'settings.prefs.sounds.kind.message',
+  visitor: 'settings.prefs.sounds.kind.visitor',
+};
+
+const SOUND_LABEL: Record<AlertSound, MessageKey> = {
+  chime: 'settings.prefs.sounds.name.chime',
+  rising: 'settings.prefs.sounds.name.rising',
+  blip: 'settings.prefs.sounds.name.blip',
+  dingdong: 'settings.prefs.sounds.name.dingdong',
+  bell: 'settings.prefs.sounds.name.bell',
+  pop: 'settings.prefs.sounds.name.pop',
+  marimba: 'settings.prefs.sounds.name.marimba',
+  alert: 'settings.prefs.sounds.name.alert',
+  soft: 'settings.prefs.sounds.name.soft',
+  none: 'settings.prefs.sounds.name.none',
+};
 
 const PERMISSION_LABEL: Record<
   Permission,
@@ -52,6 +90,7 @@ export function PreferencesCard({
     const p = agent.preferences;
     return {
       sound: !!p.sound,
+      sounds: { ...DEFAULT_MEMBER_PREFERENCES.sounds, ...(p.sounds ?? {}) },
       desktopNotifications: !!p.desktopNotifications,
       visitorAlerts: p.visitorAlerts !== false,
       privacyMode: !!p.privacyMode,
@@ -124,12 +163,41 @@ export function PreferencesCard({
             checked={value.sound}
             onCheckedChange={(v) => set({ sound: v })}
           />
-          <div>
-            <Button size="sm" variant="secondary" onClick={() => playChime('queue')}>
-              <Volume2 className="size-3.5" aria-hidden />
-              {t('settings.prefs.playPreview')}
-            </Button>
-          </div>
+          <fieldset disabled={!value.sound} className="mt-1 flex flex-col gap-2 disabled:opacity-60">
+            <legend className="mb-1 text-sm font-medium">{t('settings.prefs.sounds.legend')}</legend>
+            {ALERT_SOUND_KINDS.map((kind) => (
+              <div
+                key={kind}
+                className="grid grid-cols-1 items-center gap-2 sm:grid-cols-[minmax(0,1fr)_200px_auto]"
+              >
+                <label htmlFor={`alert-sound-${kind}`} className="text-sm text-fg-2">
+                  {t(SOUND_KIND_LABEL[kind])}
+                </label>
+                <Select
+                  id={`alert-sound-${kind}`}
+                  compact
+                  value={value.sounds[kind]}
+                  onChange={(e) => set({ sounds: { ...value.sounds, [kind]: e.target.value as AlertSound } })}
+                >
+                  {ALERT_SOUNDS.map((s) => (
+                    <option key={s} value={s}>
+                      {t(SOUND_LABEL[s])}
+                    </option>
+                  ))}
+                </Select>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={value.sounds[kind] === 'none'}
+                  onClick={() => playSound(value.sounds[kind])}
+                  aria-label={t('settings.prefs.sounds.play', { kind: t(SOUND_KIND_LABEL[kind]) })}
+                >
+                  <Volume2 className="size-3.5" aria-hidden />
+                  {t('settings.prefs.sounds.playShort')}
+                </Button>
+              </div>
+            ))}
+          </fieldset>
         </div>
         <div className="flex flex-col gap-2 border-b border-line-subtle pb-3">
           <SwitchField
@@ -161,12 +229,6 @@ export function PreferencesCard({
             checked={value.visitorAlerts}
             onCheckedChange={(v) => set({ visitorAlerts: v })}
           />
-          <div>
-            <Button size="sm" variant="secondary" onClick={() => playChime('visitor')}>
-              <Volume2 className="size-3.5" aria-hidden />
-              {t('settings.prefs.playVisitorPreview')}
-            </Button>
-          </div>
         </div>
         <div className="border-b border-line-subtle pb-3">
           <SwitchField

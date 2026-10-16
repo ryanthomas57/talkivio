@@ -17,6 +17,7 @@ import { SHORTCUT_NAME_RE } from './logic/shortcuts';
 import { parseIpRule } from './logic/ip';
 import { WIDGET_LANGUAGES } from './widget-config';
 import { BILLING_CYCLES, PLAN_IDS } from './plans';
+import { ALERT_SOUNDS } from './settings';
 
 const trimmed = (max: number) => z.string().trim().max(max);
 const hexColor = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Use a 6-digit hex color');
@@ -107,6 +108,16 @@ export const updateMemberSchema = z.object({
 export const updatePreferencesSchema = z.object({
   sendOnEnter: z.boolean().optional(),
   sound: z.boolean().optional(),
+  sounds: z
+    .object({
+      queue: z.enum(ALERT_SOUNDS),
+      offer: z.enum(ALERT_SOUNDS),
+      message: z.enum(ALERT_SOUNDS),
+      visitor: z.enum(ALERT_SOUNDS),
+    })
+    .partial()
+    .strict()
+    .optional(),
   visitorAlerts: z.boolean().optional(),
   desktopNotifications: z.boolean().optional(),
   theme: z.enum(['light', 'dark', 'system']).optional(),

@@ -18,6 +18,7 @@ import type { Request, Response } from 'express';
 import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import {
+  ALERT_SOUNDS,
   hasFallbackCycle,
   isValidTimezone,
   mergeOrgSettings,
@@ -242,6 +243,16 @@ const prefsSchema = z
   .object({
     sendOnEnter: z.boolean().optional(),
     sound: z.boolean().optional(),
+    sounds: z
+      .object({
+        queue: z.enum(ALERT_SOUNDS),
+        offer: z.enum(ALERT_SOUNDS),
+        message: z.enum(ALERT_SOUNDS),
+        visitor: z.enum(ALERT_SOUNDS),
+      })
+      .partial()
+      .strict()
+      .optional(),
     visitorAlerts: z.boolean().optional(),
     desktopNotifications: z.boolean().optional(),
     theme: z.enum(['light', 'dark', 'system']).optional(),

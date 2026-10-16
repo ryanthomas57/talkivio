@@ -444,6 +444,25 @@ try {
   });
   const meAgent = await owner.must('GET', '/api/v1/agents/me');
   await owner.call('PATCH', '/api/v1/agents/me/preferences', { body: { sound: false }, expect: 200 });
+  // Alert sounds: one alert's sound changes alone (the others keep theirs); only built-in sounds are accepted.
+  const sounds = (
+    await owner.must('PATCH', '/api/v1/agents/me/preferences', { body: { sounds: { visitor: 'bell' } } })
+  ).preferences.sounds;
+  if (
+    sounds.visitor !== 'bell' ||
+    sounds.queue !== 'chime' ||
+    sounds.message !== 'blip' ||
+    sounds.offer !== 'rising'
+  )
+    throw new Error(`choosing one alert sound changed the others: ${JSON.stringify(sounds)}`);
+  await owner.call('PATCH', '/api/v1/agents/me/preferences', {
+    body: { sounds: { visitor: 'https://example.com/x.mp3' } },
+    expect: 422,
+  });
+  await owner.call('PATCH', '/api/v1/agents/me/preferences', {
+    body: { sounds: { payroll: 'bell' } },
+    expect: 422,
+  });
   await owner.call('PUT', '/api/v1/agents/me/presence', { body: { status: 'online' }, expect: 200 });
   await owner.call('GET', '/api/v1/agents', { expect: 200 });
   const depts = await owner.must('GET', '/api/v1/departments');

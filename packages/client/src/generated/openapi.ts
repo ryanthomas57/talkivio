@@ -3750,6 +3750,17 @@ export interface components {
             preferences: {
                 send_on_enter: boolean;
                 sound: boolean;
+                sounds: {
+                    /** @enum {string} */
+                    queue: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                    /** @enum {string} */
+                    offer: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                    /** @enum {string} */
+                    message: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                    /** @enum {string} */
+                    visitor: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                };
+                visitor_alerts: boolean;
                 desktop_notifications: boolean;
                 /** @enum {string} */
                 theme: "system" | "light" | "dark";
@@ -6512,6 +6523,17 @@ export interface operations {
                 "application/json": {
                     send_on_enter?: boolean;
                     sound?: boolean;
+                    sounds?: {
+                        /** @enum {string} */
+                        queue?: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                        /** @enum {string} */
+                        offer?: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                        /** @enum {string} */
+                        message?: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                        /** @enum {string} */
+                        visitor?: "chime" | "rising" | "blip" | "dingdong" | "bell" | "pop" | "marimba" | "alert" | "soft" | "none";
+                    };
+                    visitor_alerts?: boolean;
                     desktop_notifications?: boolean;
                     /** @enum {string} */
                     theme?: "light" | "dark" | "system";

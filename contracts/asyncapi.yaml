@@ -105,6 +105,8 @@ channels:
         $ref: "#/components/messages/AgentEphemeralVisitorUpdated"
       AgentEphemeralVisitorSessionLeft:
         $ref: "#/components/messages/AgentEphemeralVisitorSessionLeft"
+      AgentEphemeralVisitorArrived:
+        $ref: "#/components/messages/AgentEphemeralVisitorArrived"
       AgentEphemeralQueueWaitExceeded:
         $ref: "#/components/messages/AgentEphemeralQueueWaitExceeded"
       AgentEphemeralMonitorUpdated:
@@ -320,6 +322,7 @@ operations:
       - $ref: "#/channels/agent/messages/AgentEphemeralPresenceUpdated"
       - $ref: "#/channels/agent/messages/AgentEphemeralVisitorUpdated"
       - $ref: "#/channels/agent/messages/AgentEphemeralVisitorSessionLeft"
+      - $ref: "#/channels/agent/messages/AgentEphemeralVisitorArrived"
       - $ref: "#/channels/agent/messages/AgentEphemeralQueueWaitExceeded"
       - $ref: "#/channels/agent/messages/AgentEphemeralMonitorUpdated"
       - $ref: "#/channels/agent/messages/AgentEphemeralNotificationCreated"
@@ -3402,6 +3405,31 @@ components:
         - visitor_id
         - session_id
         - last_seen_at
+    VisitorArrivedEphemeralPayload:
+      type: object
+      properties:
+        visitor_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+        country:
+          type:
+            - string
+            - "null"
+        page:
+          type:
+            - string
+            - "null"
+        as_of:
+          type: string
+          format: date-time
+      required:
+        - visitor_id
+        - display_name
+        - country
+        - page
+        - as_of
     QueueWaitExceededEphemeralPayload:
       type: object
       properties:
@@ -7010,6 +7038,44 @@ components:
             $ref: "#/components/schemas/VisitorSessionLeftEphemeralPayload"
       x-socketio-event: ephemeral
       x-talkivio-event-type: visitor.session.left
+      x-talkivio-audience: staff
+    AgentEphemeralVisitorArrived:
+      name: ephemeral
+      title: visitor.arrived
+      summary: A visitor arrived on the website (first listed; page changes within a visit are not arrivals). Scope `visitor:all`.
+      payload:
+        type: object
+        required:
+          - v
+          - type
+          - scope
+          - expires_at
+          - payload
+        properties:
+          v:
+            const: 1
+          type:
+            const: visitor.arrived
+          scope:
+            type: object
+            required:
+              - kind
+              - id
+            properties:
+              kind:
+                type: string
+                enum:
+                  - visitor
+              id:
+                type: string
+                maxLength: 64
+          expires_at:
+            type: string
+            format: date-time
+          payload:
+            $ref: "#/components/schemas/VisitorArrivedEphemeralPayload"
+      x-socketio-event: ephemeral
+      x-talkivio-event-type: visitor.arrived
       x-talkivio-audience: staff
     AgentEphemeralQueueWaitExceeded:
       name: ephemeral

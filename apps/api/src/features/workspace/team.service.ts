@@ -1,5 +1,5 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import type { DesiredStatus, Role } from '@prisma/client';
+import type { DesiredStatus, Prisma, Role } from '@prisma/client';
 import { DEFAULT_MEMBER_PREFERENCES, type MemberPreferences } from '@talkivio/contracts';
 import { TenantDb } from '../../db/tenant-db';
 import { randomToken, sha256 } from '../../common/crypto';
@@ -67,6 +67,14 @@ export interface AgentResource {
 }
 
 /** Agent roster, invitations, roles, capacity and presence (ch. 09). */
+/** Stored preferences with a patch applied; `sounds` merges per kind (a patch may change one alert's sound). */
+function mergePreferences(stored: unknown, patch: Record<string, unknown>): Prisma.InputJsonObject {
+  const prev = (stored && typeof stored === 'object' ? stored : {}) as Record<string, unknown>;
+  const next: Record<string, unknown> = { ...prev, ...patch };
+  if (patch.sounds) next.sounds = { ...((prev.sounds as object) ?? {}), ...(patch.sounds as object) };
+  return next as Prisma.InputJsonObject;
+}
+
 @Injectable()
 export class TeamService implements OnModuleInit {
   private readonly logger = new Logger('Team');
@@ -253,11 +261,14 @@ export class TeamService implements OnModuleInit {
     const m = await this.db.read(auth.tenantId, (tx) =>
       tx.membership.findUniqueOrThrow({ where: { id: auth.membershipId! } }),
     );
+    const stored = (m.preferences as Partial<MemberPreferences>) ?? {};
     return {
       agent,
       preferences: {
         ...DEFAULT_MEMBER_PREFERENCES,
-        ...((m.preferences as Partial<MemberPreferences>) ?? {}),
+        ...stored,
+        // Per kind, so a kind added later starts on its default sound.
+        sounds: { ...DEFAULT_MEMBER_PREFERENCES.sounds, ...(stored.sounds ?? {}) },
       },
       permissions: [...auth.permissions],
       departmentScope: auth.departmentScope,
@@ -266,7 +277,11 @@ export class TeamService implements OnModuleInit {
 
   async updatePreferences(
     auth: AuthContext,
-    patch: Partial<MemberPreferences> & { displayName?: string | null; title?: string | null },
+    patch: Omit<Partial<MemberPreferences>, 'sounds'> & {
+      sounds?: Partial<MemberPreferences['sounds']>;
+      displayName?: string | null;
+      title?: string | null;
+    },
   ) {
     if (!auth.membershipId) throw denied();
     const { displayName, title, ...prefs } = patch;
@@ -275,7 +290,7 @@ export class TeamService implements OnModuleInit {
       await tx.membership.update({
         where: { id: m.id },
         data: {
-          preferences: { ...((m.preferences as object) ?? {}), ...prefs },
+          preferences: mergePreferences(m.preferences, prefs),
           ...(displayName !== undefined ? { displayName } : {}),
           ...(title !== undefined ? { title } : {}),
         },

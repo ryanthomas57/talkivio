@@ -166,9 +166,30 @@ export function mergeOrgSettings(stored: unknown): OrgSettings {
   return merge(DEFAULT_ORG_SETTINGS, stored) as OrgSettings;
 }
 
+/** Activities that play an alert sound in the dashboard (ch. 14). */
+export const ALERT_SOUND_KINDS = ['queue', 'offer', 'message', 'visitor'] as const;
+export type AlertSoundKind = (typeof ALERT_SOUND_KINDS)[number];
+
+/** Built-in alert sounds (synthesized in the dashboard, no audio files); 'none' keeps that activity silent. */
+export const ALERT_SOUNDS = [
+  'chime',
+  'rising',
+  'blip',
+  'dingdong',
+  'bell',
+  'pop',
+  'marimba',
+  'alert',
+  'soft',
+  'none',
+] as const;
+export type AlertSound = (typeof ALERT_SOUNDS)[number];
+
 export interface MemberPreferences {
   sendOnEnter: boolean;
   sound: boolean;
+  /** The sound for each kind of alert (with `sound` on). */
+  sounds: Record<AlertSoundKind, AlertSound>;
   /** Alert when a visitor arrives on the website: a chime (with `sound`) and a desktop notification (with
    * `desktopNotifications`), muted like the chat alerts. */
   visitorAlerts: boolean;
@@ -183,6 +204,7 @@ export interface MemberPreferences {
 export const DEFAULT_MEMBER_PREFERENCES: MemberPreferences = {
   sendOnEnter: true,
   sound: true,
+  sounds: { queue: 'chime', offer: 'rising', message: 'blip', visitor: 'dingdong' },
   visitorAlerts: true,
   desktopNotifications: true,
   theme: 'system',

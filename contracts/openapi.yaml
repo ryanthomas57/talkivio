@@ -376,6 +376,64 @@ paths:
                   type: boolean
                 sound:
                   type: boolean
+                sounds:
+                  type: object
+                  properties:
+                    queue:
+                      type: string
+                      enum:
+                        - chime
+                        - rising
+                        - blip
+                        - dingdong
+                        - bell
+                        - pop
+                        - marimba
+                        - alert
+                        - soft
+                        - none
+                    offer:
+                      type: string
+                      enum:
+                        - chime
+                        - rising
+                        - blip
+                        - dingdong
+                        - bell
+                        - pop
+                        - marimba
+                        - alert
+                        - soft
+                        - none
+                    message:
+                      type: string
+                      enum:
+                        - chime
+                        - rising
+                        - blip
+                        - dingdong
+                        - bell
+                        - pop
+                        - marimba
+                        - alert
+                        - soft
+                        - none
+                    visitor:
+                      type: string
+                      enum:
+                        - chime
+                        - rising
+                        - blip
+                        - dingdong
+                        - bell
+                        - pop
+                        - marimba
+                        - alert
+                        - soft
+                        - none
+                  additionalProperties: false
+                visitor_alerts:
+                  type: boolean
                 desktop_notifications:
                   type: boolean
                 theme:
@@ -15201,6 +15259,68 @@ components:
               type: boolean
             sound:
               type: boolean
+            sounds:
+              type: object
+              properties:
+                queue:
+                  type: string
+                  enum:
+                    - chime
+                    - rising
+                    - blip
+                    - dingdong
+                    - bell
+                    - pop
+                    - marimba
+                    - alert
+                    - soft
+                    - none
+                offer:
+                  type: string
+                  enum:
+                    - chime
+                    - rising
+                    - blip
+                    - dingdong
+                    - bell
+                    - pop
+                    - marimba
+                    - alert
+                    - soft
+                    - none
+                message:
+                  type: string
+                  enum:
+                    - chime
+                    - rising
+                    - blip
+                    - dingdong
+                    - bell
+                    - pop
+                    - marimba
+                    - alert
+                    - soft
+                    - none
+                visitor:
+                  type: string
+                  enum:
+                    - chime
+                    - rising
+                    - blip
+                    - dingdong
+                    - bell
+                    - pop
+                    - marimba
+                    - alert
+                    - soft
+                    - none
+              required:
+                - queue
+                - offer
+                - message
+                - visitor
+            visitor_alerts:
+              type: boolean
             desktop_notifications:
               type: boolean
             theme:
@@ -15221,6 +15341,8 @@ components:
           required:
             - send_on_enter
             - sound
+            - sounds
+            - visitor_alerts
             - desktop_notifications
             - theme
             - privacy_mode

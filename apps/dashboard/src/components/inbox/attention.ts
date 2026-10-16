@@ -14,6 +14,7 @@
  * - Privacy mode uses generic text with no visitor names or message bodies.
  * - Mute for one hour and per-chat mute never hide the visual queue.
  */
+import { DEFAULT_MEMBER_PREFERENCES, type AlertSound, type AlertSoundKind } from '@talkivio/contracts';
 import { BRAND_NAME } from '@/components/brand';
 import { isolate, tStatic } from '@/i18n';
 import { countryName } from '@/lib/format';
@@ -157,36 +158,80 @@ export async function enableDesktopNotifications(): Promise<NotificationPermissi
 
 let audio: AudioContext | null = null;
 
-/** Short synthesized chime (no external asset); a visitor arriving is a falling two-tone "ding-dong". */
-export function playChime(kind: 'queue' | 'message' | 'offer' | 'visitor' = 'message'): void {
+/** One note: frequency (Hz), start and length (s), optional glide target, waveform and peak volume. */
+type Tone = { f: number; at: number; dur: number; to?: number; wave?: OscillatorType; peak?: number };
+
+/** The built-in sounds, synthesized (no audio files). The first four are the original alert sounds. */
+const SOUNDS: Record<Exclude<AlertSound, 'none'>, Tone[]> = {
+  chime: [
+    { f: 660, at: 0, dur: 0.32 },
+    { f: 880, at: 0.13, dur: 0.32 },
+  ],
+  rising: [
+    { f: 660, at: 0, dur: 0.32 },
+    { f: 880, at: 0.13, dur: 0.32 },
+    { f: 1046, at: 0.26, dur: 0.32 },
+  ],
+  blip: [{ f: 880, at: 0, dur: 0.32 }],
+  dingdong: [
+    { f: 1046, at: 0, dur: 0.32 },
+    { f: 784, at: 0.13, dur: 0.32 },
+  ],
+  bell: [
+    { f: 1318, at: 0, dur: 1.2 },
+    { f: 2637, at: 0, dur: 0.5, peak: 0.05 },
+  ],
+  pop: [{ f: 1200, to: 500, at: 0, dur: 0.09 }],
+  marimba: [
+    { f: 523, at: 0, dur: 0.22, wave: 'triangle', peak: 0.25 },
+    { f: 659, at: 0.09, dur: 0.22, wave: 'triangle', peak: 0.25 },
+    { f: 784, at: 0.18, dur: 0.3, wave: 'triangle', peak: 0.25 },
+  ],
+  alert: [
+    { f: 988, at: 0, dur: 0.12, wave: 'square', peak: 0.06 },
+    { f: 988, at: 0.18, dur: 0.12, wave: 'square', peak: 0.06 },
+    { f: 988, at: 0.36, dur: 0.12, wave: 'square', peak: 0.06 },
+  ],
+  soft: [
+    { f: 523, at: 0, dur: 0.6, peak: 0.12 },
+    { f: 659, at: 0.2, dur: 0.7, peak: 0.12 },
+  ],
+};
+
+/** Play one of the built-in sounds ('none' is silent). */
+export function playSound(sound: AlertSound): void {
+  if (sound === 'none') return;
   try {
     audio ??= new AudioContext();
     if (audio.state === 'suspended') void audio.resume();
     const now = audio.currentTime;
-    const notes =
-      kind === 'message'
-        ? [880]
-        : kind === 'offer'
-          ? [660, 880, 1046]
-          : kind === 'visitor'
-            ? [1046, 784]
-            : [660, 880];
-    notes.forEach((f, i) => {
-      const osc = audio!.createOscillator();
-      const gain = audio!.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      const t = now + i * 0.13;
+    for (const n of SOUNDS[sound] ?? SOUNDS.blip) {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = n.wave ?? 'sine';
+      osc.frequency.value = n.f;
+      const t = now + n.at;
+      if (n.to) osc.frequency.exponentialRampToValueAtTime(n.to, t + n.dur);
       gain.gain.setValueAtTime(0, t);
-      gain.gain.linearRampToValueAtTime(0.18, t + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.32);
-      osc.connect(gain).connect(audio!.destination);
+      gain.gain.linearRampToValueAtTime(n.peak ?? 0.18, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur);
+      osc.connect(gain).connect(audio.destination);
       osc.start(t);
-      osc.stop(t + 0.34);
-    });
+      osc.stop(t + n.dur + 0.02);
+    }
   } catch {
     /* audio blocked until the first user interaction */
   }
+}
+
+/** The sound this agent chose for a kind of alert (their preference, else the default). */
+export function soundFor(kind: AlertSoundKind): AlertSound {
+  return useSession.getState().agent?.preferences.sounds?.[kind] ?? DEFAULT_MEMBER_PREFERENCES.sounds[kind];
+}
+
+/** The alert sound for a kind of activity, as the agent chose it. */
+export function playChime(kind: AlertSoundKind = 'message'): void {
+  playSound(soundFor(kind));
 }
 
 type Incoming =

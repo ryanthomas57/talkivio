@@ -40,6 +40,10 @@ Added on 2026-10-14 (each with tests that run in CI):
   notification naming the visitor, country and page, on any dashboard page. One tab per browser alerts, at most one
   alert per 4 s, following the sound / desktop / privacy settings, the mute and a new per-agent switch "Alert me when
   a visitor arrives" (on by default). Server: `visitor.arrived` on the `visitor:all` feed (`visitors.view`).
+- **A sound per alert (2026-10-16):** in Notifications and preferences each alert (new chat waiting, chat offered or
+  transferred, new message, visitor arrives) has its own sound with a Play button: nine synthesized sounds (Chime,
+  Rising, Blip, Ding-dong, Bell, Pop, Marimba, Alert, Soft) or None. Per-agent `sounds` preference (patched per alert);
+  defaults are the original sounds. Contracts: `sounds` / `visitor_alerts` in OpenAPI, `visitor.arrived` in AsyncAPI.
 - **Website SEO and mobile (2026-10-15):** robots.txt (app screens and APIs disallowed), sitemap.xml, a web app
   manifest, canonical URLs, Open Graph and Twitter cards with a 1200x630 image, JSON-LD (Organization, WebSite,
   SoftwareApplication with each plan's price, FAQPage from the same text as the visible FAQ), metadata in <head> for
